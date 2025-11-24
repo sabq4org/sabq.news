@@ -89,13 +89,13 @@ const categoryIcons = {
 };
 
 const categoryColors = {
-  "ai-news": "from-violet-500 to-purple-600",
-  "ai-voice": "from-blue-500 to-cyan-600",
-  "ai-tools": "from-pink-500 to-rose-600",
-  "ai-academy": "from-amber-500 to-orange-600",
-  "ai-community": "from-green-500 to-emerald-600",
-  "ai-insights": "from-indigo-500 to-purple-600",
-  "ai-opinions": "from-red-500 to-pink-600"
+  "ai-news": "from-[hsl(var(--ifox-accent-primary)/1)] to-[hsl(var(--ifox-accent-secondary)/1)]",
+  "ai-voice": "from-[hsl(var(--ifox-info)/1)] to-[hsl(var(--ifox-info-muted)/1)]",
+  "ai-tools": "from-[hsl(var(--ifox-error)/1)] to-[hsl(var(--ifox-error-muted)/1)]",
+  "ai-academy": "from-[hsl(var(--ifox-warning)/1)] to-[hsl(var(--ifox-warning-muted)/1)]",
+  "ai-community": "from-[hsl(var(--ifox-success)/1)] to-[hsl(var(--ifox-success-muted)/1)]",
+  "ai-insights": "from-[hsl(var(--ifox-accent-primary)/1)] to-[hsl(var(--ifox-accent-secondary)/1)]",
+  "ai-opinions": "from-[hsl(var(--ifox-error)/1)] to-[hsl(var(--ifox-error-muted)/1)]"
 };
 
 export default function IFoxMedia() {
@@ -241,11 +241,11 @@ export default function IFoxMedia() {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-violet-500 to-cyan-600 shadow-lg shadow-violet-500/30">
-                    <Image className="w-8 h-8 text-white" />
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-[hsl(var(--ifox-accent-primary)/1)] to-[hsl(var(--ifox-info)/1)] shadow-[0_10px_15px_hsl(var(--ifox-surface-overlay)/.1)] shadow-[hsl(var(--ifox-accent-primary)/.3)]">
+                    <Image className="w-8 h-8 text-[hsl(var(--ifox-text-primary))]" />
                   </div>
                   <div>
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">
+                    <h1 className="text-3xl font-bold bg-gradient-to-r from-[hsl(var(--ifox-accent-primary)/1)] to-[hsl(var(--ifox-info)/1)] bg-clip-text text-transparent">
                       مكتبة الوسائط
                     </h1>
                     <p className="text-[hsl(var(--ifox-text-secondary))]">إدارة ملفات الوسائط المتعددة</p>
@@ -264,7 +264,7 @@ export default function IFoxMedia() {
                   )}
                   <Button
                     onClick={() => setIsUploaderOpen(true)}
-                    className="gap-2 bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-700 hover:to-cyan-700"
+                    className="gap-2 bg-gradient-to-r from-[hsl(var(--ifox-accent-primary)/1)] to-[hsl(var(--ifox-info)/1)] hover:from-[hsl(var(--ifox-accent-muted)/1)] hover:to-[hsl(var(--ifox-info-muted)/1)]"
                   >
                     <Upload className="w-4 h-4" />
                     رفع ملفات جديدة
@@ -274,18 +274,18 @@ export default function IFoxMedia() {
 
               {/* Storage Info */}
               {storageInfo && (
-                <Card className="bg-gradient-to-br from-violet-500/10 to-cyan-500/10 border-white/10">
+                <Card className="bg-gradient-to-br from-[hsl(var(--ifox-accent-primary)/.1)] to-[hsl(var(--ifox-info)/.1)] border-[hsl(var(--ifox-surface-overlay)/.1)]">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <HardDrive className="w-5 h-5 text-violet-400" />
+                        <HardDrive className="w-5 h-5 text-[hsl(var(--ifox-accent-primary))]" />
                         <span className="text-[hsl(var(--ifox-text-primary))]">استخدام المساحة</span>
                       </div>
                       <span className="text-[hsl(var(--ifox-text-secondary))] text-sm">
                         {formatFileSize(storageInfo.used)} من {formatFileSize(storageInfo.total)}
                       </span>
                     </div>
-                    <Progress value={storageInfo.percentage} className="h-2 bg-white/10" />
+                    <Progress value={storageInfo.percentage} className="h-2 bg-[hsl(var(--ifox-surface-overlay)/.1)]" />
                   </CardContent>
                 </Card>
               )}
@@ -305,12 +305,12 @@ export default function IFoxMedia() {
                     placeholder="بحث بالاسم أو الكلمات المفتاحية..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pr-10 bg-white/5 border-white/10 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                    className="pr-10 bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                   />
                 </div>
                 
                 <Select value={selectedType} onValueChange={setSelectedType}>
-                  <SelectTrigger className="w-[150px] bg-white/5 border-white/10 text-white">
+                  <SelectTrigger className="w-[150px] bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))]">
                     <SelectValue placeholder="النوع" />
                   </SelectTrigger>
                   <SelectContent>
@@ -323,7 +323,7 @@ export default function IFoxMedia() {
                 </Select>
 
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-[180px] bg-white/5 border-white/10 text-white">
+                  <SelectTrigger className="w-[180px] bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))]">
                     <SelectValue placeholder="التصنيف" />
                   </SelectTrigger>
                   <SelectContent>
@@ -339,7 +339,7 @@ export default function IFoxMedia() {
                 </Select>
 
                 <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                  <SelectTrigger className="w-[150px] bg-white/5 border-white/10 text-white">
+                  <SelectTrigger className="w-[150px] bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))]">
                     <SelectValue placeholder="ترتيب حسب" />
                   </SelectTrigger>
                   <SelectContent>
@@ -353,12 +353,12 @@ export default function IFoxMedia() {
                   variant="ghost"
                   size="icon"
                   onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-                  className="text-[hsl(var(--ifox-text-secondary))] hover:text-white"
+                  className="text-[hsl(var(--ifox-text-secondary))] hover:text-[hsl(var(--ifox-text-primary))]"
                 >
                   {sortOrder === "asc" ? <SortAsc /> : <SortDesc />}
                 </Button>
 
-                <div className="flex gap-1 bg-white/5 rounded-lg p-1">
+                <div className="flex gap-1 bg-[hsl(var(--ifox-surface-overlay)/.05)] rounded-lg p-1">
                   <Button
                     variant={viewMode === "grid" ? "default" : "ghost"}
                     size="icon"
@@ -388,7 +388,7 @@ export default function IFoxMedia() {
               {isLoading ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                   {[...Array(10)].map((_, i) => (
-                    <div key={i} className="aspect-square rounded-xl bg-white/5 animate-pulse" />
+                    <div key={i} className="aspect-square rounded-xl bg-[hsl(var(--ifox-surface-overlay)/.05)] animate-pulse" />
                   ))}
                 </div>
               ) : viewMode === "grid" ? (
@@ -405,9 +405,9 @@ export default function IFoxMedia() {
                         animate={{ scale: 1, opacity: 1 }}
                         whileHover={{ scale: 1.02 }}
                         className={cn(
-                          "group relative rounded-xl overflow-hidden bg-white/5 border border-white/10",
-                          "hover:border-white/20 transition-all duration-200 cursor-pointer",
-                          isSelected && "border-violet-500 bg-violet-500/10"
+                          "group relative rounded-xl overflow-hidden bg-[hsl(var(--ifox-surface-overlay)/.05)] border border-[hsl(var(--ifox-surface-overlay)/.1)]",
+                          "hover:border-[hsl(var(--ifox-surface-overlay)/.2)] transition-all duration-200 cursor-pointer",
+                          isSelected && "border-[hsl(var(--ifox-accent-primary))] bg-[hsl(var(--ifox-accent-primary)/.1)]"
                         )}
                         onClick={() => setSelectedFile(file)}
                       >
@@ -419,7 +419,7 @@ export default function IFoxMedia() {
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-white/10">
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[hsl(var(--ifox-surface-overlay)/.05)] to-[hsl(var(--ifox-surface-overlay)/.1)]">
                               <Icon className="w-12 h-12 text-[hsl(var(--ifox-text-secondary))]" />
                             </div>
                           )}
@@ -427,7 +427,7 @@ export default function IFoxMedia() {
                           {/* Overlay */}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                             <div className="absolute bottom-0 left-0 right-0 p-3 space-y-2">
-                              <p className="text-white text-sm font-medium truncate">{file.name}</p>
+                              <p className="text-[hsl(var(--ifox-text-primary))] text-sm font-medium truncate">{file.name}</p>
                               <div className="flex items-center justify-between">
                                 <span className="text-[hsl(var(--ifox-text-secondary))] text-xs">{formatFileSize(file.size)}</span>
                                 {CategoryIcon && (
@@ -452,7 +452,7 @@ export default function IFoxMedia() {
                                 }
                                 setSelectedFiles(newSelected);
                               }}
-                              className="w-4 h-4 rounded border-white/30 bg-white/10"
+                              className="w-4 h-4 rounded border-white/30 bg-[hsl(var(--ifox-surface-overlay)/.1)]"
                               onClick={(e) => e.stopPropagation()}
                             />
                           </div>
@@ -460,7 +460,7 @@ export default function IFoxMedia() {
                           {/* Usage Badge */}
                           {file.usageCount > 0 && (
                             <div className="absolute top-2 right-2">
-                              <Badge variant="secondary" className="bg-black/50 text-white text-xs">
+                              <Badge variant="secondary" className="bg-black/50 text-[hsl(var(--ifox-text-primary))] text-xs">
                                 {file.usageCount}x
                               </Badge>
                             </div>
@@ -483,9 +483,9 @@ export default function IFoxMedia() {
                         initial={{ x: -20, opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
                         className={cn(
-                          "flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10",
-                          "hover:border-white/20 transition-all duration-200 cursor-pointer",
-                          isSelected && "border-violet-500 bg-violet-500/10"
+                          "flex items-center gap-4 p-4 rounded-xl bg-[hsl(var(--ifox-surface-overlay)/.05)] border border-[hsl(var(--ifox-surface-overlay)/.1)]",
+                          "hover:border-[hsl(var(--ifox-surface-overlay)/.2)] transition-all duration-200 cursor-pointer",
+                          isSelected && "border-[hsl(var(--ifox-accent-primary))] bg-[hsl(var(--ifox-accent-primary)/.1)]"
                         )}
                         onClick={() => setSelectedFile(file)}
                       >
@@ -502,16 +502,16 @@ export default function IFoxMedia() {
                             }
                             setSelectedFiles(newSelected);
                           }}
-                          className="w-4 h-4 rounded border-white/30 bg-white/10"
+                          className="w-4 h-4 rounded border-white/30 bg-[hsl(var(--ifox-surface-overlay)/.1)]"
                           onClick={(e) => e.stopPropagation()}
                         />
                         
-                        <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.1)] flex items-center justify-center">
                           <Icon className="w-6 h-6 text-[hsl(var(--ifox-text-secondary))]" />
                         </div>
                         
                         <div className="flex-1">
-                          <p className="text-white font-medium">{file.name}</p>
+                          <p className="text-[hsl(var(--ifox-text-primary))] font-medium">{file.name}</p>
                           <div className="flex items-center gap-4 mt-1">
                             <span className="text-[hsl(var(--ifox-text-secondary))] text-sm">{formatFileSize(file.size)}</span>
                             <span className="text-[hsl(var(--ifox-text-secondary))] text-sm">
@@ -564,9 +564,9 @@ export default function IFoxMedia() {
 
       {/* Upload Dialog */}
       <Dialog open={isUploaderOpen} onOpenChange={setIsUploaderOpen}>
-        <DialogContent className="max-w-3xl bg-gradient-to-br from-slate-950 via-purple-950/50 to-violet-950/30 border-white/10">
+        <DialogContent className="max-w-3xl bg-[hsl(var(--ifox-surface-primary))] border-[hsl(var(--ifox-surface-overlay)/.1)]">
           <DialogHeader>
-            <DialogTitle className="text-white">رفع ملفات جديدة</DialogTitle>
+            <DialogTitle className="text-[hsl(var(--ifox-text-primary))]">رفع ملفات جديدة</DialogTitle>
             <DialogDescription className="text-[hsl(var(--ifox-text-secondary))]">
               اسحب وأفلت الملفات أو انقر للاختيار
             </DialogDescription>
@@ -585,9 +585,9 @@ export default function IFoxMedia() {
       <AnimatePresence>
         {selectedFile && !editingFile && (
           <Dialog open={!!selectedFile} onOpenChange={() => setSelectedFile(null)}>
-            <DialogContent className="max-w-4xl bg-gradient-to-br from-slate-950 via-purple-950/50 to-violet-950/30 border-white/10">
+            <DialogContent className="max-w-4xl bg-[hsl(var(--ifox-surface-primary))] border-[hsl(var(--ifox-surface-overlay)/.1)]">
               <DialogHeader>
-                <DialogTitle className="text-white">تفاصيل الملف</DialogTitle>
+                <DialogTitle className="text-[hsl(var(--ifox-text-primary))]">تفاصيل الملف</DialogTitle>
               </DialogHeader>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -600,7 +600,7 @@ export default function IFoxMedia() {
                       className="w-full rounded-lg"
                     />
                   ) : (
-                    <div className="aspect-square rounded-lg bg-white/5 flex items-center justify-center">
+                    <div className="aspect-square rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.05)] flex items-center justify-center">
                       {(() => {
                         const Icon = getFileIcon(selectedFile.type);
                         return <Icon className="w-24 h-24 text-[hsl(var(--ifox-text-secondary))]" />;
@@ -613,24 +613,24 @@ export default function IFoxMedia() {
                 <div className="space-y-4">
                   <div>
                     <Label className="text-[hsl(var(--ifox-text-secondary))]">اسم الملف</Label>
-                    <p className="text-white mt-1">{selectedFile.name}</p>
+                    <p className="text-[hsl(var(--ifox-text-primary))] mt-1">{selectedFile.name}</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label className="text-[hsl(var(--ifox-text-secondary))]">الحجم</Label>
-                      <p className="text-white mt-1">{formatFileSize(selectedFile.size)}</p>
+                      <p className="text-[hsl(var(--ifox-text-primary))] mt-1">{formatFileSize(selectedFile.size)}</p>
                     </div>
                     {selectedFile.width && selectedFile.height && (
                       <div>
                         <Label className="text-[hsl(var(--ifox-text-secondary))]">الأبعاد</Label>
-                        <p className="text-white mt-1">{selectedFile.width} × {selectedFile.height}</p>
+                        <p className="text-[hsl(var(--ifox-text-primary))] mt-1">{selectedFile.width} × {selectedFile.height}</p>
                       </div>
                     )}
                     {selectedFile.duration && (
                       <div>
                         <Label className="text-[hsl(var(--ifox-text-secondary))]">المدة</Label>
-                        <p className="text-white mt-1">{Math.floor(selectedFile.duration / 60)}:{(selectedFile.duration % 60).toString().padStart(2, '0')}</p>
+                        <p className="text-[hsl(var(--ifox-text-primary))] mt-1">{Math.floor(selectedFile.duration / 60)}:{(selectedFile.duration % 60).toString().padStart(2, '0')}</p>
                       </div>
                     )}
                   </div>
@@ -642,7 +642,7 @@ export default function IFoxMedia() {
                         const CategoryIcon = categoryIcons[selectedFile.category as keyof typeof categoryIcons];
                         return CategoryIcon ? <CategoryIcon className="w-4 h-4 text-[hsl(var(--ifox-text-secondary))]" /> : null;
                       })()}
-                      <span className="text-white">{selectedFile.category}</span>
+                      <span className="text-[hsl(var(--ifox-text-primary))]">{selectedFile.category}</span>
                     </div>
                   </div>
 
@@ -650,7 +650,7 @@ export default function IFoxMedia() {
                     <Label className="text-[hsl(var(--ifox-text-secondary))]">الكلمات المفتاحية</Label>
                     <div className="flex flex-wrap gap-2 mt-1">
                       {selectedFile.tags.map((tag) => (
-                        <Badge key={tag} variant="secondary" className="bg-white/10 text-white">
+                        <Badge key={tag} variant="secondary" className="bg-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))]">
                           {tag}
                         </Badge>
                       ))}
@@ -660,25 +660,25 @@ export default function IFoxMedia() {
                   {selectedFile.altText && (
                     <div>
                       <Label className="text-[hsl(var(--ifox-text-secondary))]">النص البديل</Label>
-                      <p className="text-white mt-1">{selectedFile.altText}</p>
+                      <p className="text-[hsl(var(--ifox-text-primary))] mt-1">{selectedFile.altText}</p>
                     </div>
                   )}
 
                   {selectedFile.caption && (
                     <div>
                       <Label className="text-[hsl(var(--ifox-text-secondary))]">الوصف</Label>
-                      <p className="text-white mt-1">{selectedFile.caption}</p>
+                      <p className="text-[hsl(var(--ifox-text-primary))] mt-1">{selectedFile.caption}</p>
                     </div>
                   )}
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label className="text-[hsl(var(--ifox-text-secondary))]">رفع بواسطة</Label>
-                      <p className="text-white mt-1">{selectedFile.uploadedBy}</p>
+                      <p className="text-[hsl(var(--ifox-text-primary))] mt-1">{selectedFile.uploadedBy}</p>
                     </div>
                     <div>
                       <Label className="text-[hsl(var(--ifox-text-secondary))]">تاريخ الرفع</Label>
-                      <p className="text-white mt-1">
+                      <p className="text-[hsl(var(--ifox-text-primary))] mt-1">
                         {format(new Date(selectedFile.uploadedAt), "d MMM yyyy, h:mm a", { locale: ar })}
                       </p>
                     </div>
@@ -690,7 +690,7 @@ export default function IFoxMedia() {
                       <Input
                         value={selectedFile.url}
                         readOnly
-                        className="bg-white/5 border-white/10 text-white"
+                        className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))]"
                       />
                       <Button
                         size="icon"
@@ -741,9 +741,9 @@ export default function IFoxMedia() {
       <AnimatePresence>
         {editingFile && (
           <Dialog open={!!editingFile} onOpenChange={() => setEditingFile(null)}>
-            <DialogContent className="max-w-2xl bg-gradient-to-br from-slate-950 via-purple-950/50 to-violet-950/30 border-white/10">
+            <DialogContent className="max-w-2xl bg-[hsl(var(--ifox-surface-primary))] border-[hsl(var(--ifox-surface-overlay)/.1)]">
               <DialogHeader>
-                <DialogTitle className="text-white">تحرير معلومات الملف</DialogTitle>
+                <DialogTitle className="text-[hsl(var(--ifox-text-primary))]">تحرير معلومات الملف</DialogTitle>
               </DialogHeader>
               
               <div className="space-y-4">
@@ -752,7 +752,7 @@ export default function IFoxMedia() {
                   <Input
                     value={editingFile.name}
                     onChange={(e) => setEditingFile({ ...editingFile, name: e.target.value })}
-                    className="bg-white/5 border-white/10 text-white"
+                    className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))]"
                   />
                 </div>
 
@@ -762,7 +762,7 @@ export default function IFoxMedia() {
                     value={editingFile.category}
                     onValueChange={(value) => setEditingFile({ ...editingFile, category: value })}
                   >
-                    <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                    <SelectTrigger className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -786,7 +786,7 @@ export default function IFoxMedia() {
                       tags: e.target.value.split(",").map(tag => tag.trim()).filter(tag => tag)
                     })}
                     placeholder="أدخل الكلمات مفصولة بفواصل"
-                    className="bg-white/5 border-white/10 text-white"
+                    className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))]"
                   />
                 </div>
 
@@ -796,7 +796,7 @@ export default function IFoxMedia() {
                     <Input
                       value={editingFile.altText || ""}
                       onChange={(e) => setEditingFile({ ...editingFile, altText: e.target.value })}
-                      className="bg-white/5 border-white/10 text-white"
+                      className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))]"
                     />
                   </div>
                 )}
@@ -807,7 +807,7 @@ export default function IFoxMedia() {
                     value={editingFile.caption || ""}
                     onChange={(e) => setEditingFile({ ...editingFile, caption: e.target.value })}
                     rows={3}
-                    className="bg-white/5 border-white/10 text-white resize-none"
+                    className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))] resize-none"
                   />
                 </div>
               </div>
@@ -815,7 +815,7 @@ export default function IFoxMedia() {
               <DialogFooter className="flex gap-2">
                 <Button
                   onClick={() => updateFileMutation.mutate(editingFile)}
-                  className="gap-2 bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-700 hover:to-cyan-700"
+                  className="gap-2 bg-gradient-to-r from-[hsl(var(--ifox-accent-primary)/1)] to-[hsl(var(--ifox-info)/1)] hover:from-[hsl(var(--ifox-accent-muted)/1)] hover:to-[hsl(var(--ifox-info-muted)/1)]"
                 >
                   حفظ التغييرات
                 </Button>

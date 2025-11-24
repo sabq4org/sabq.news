@@ -272,16 +272,16 @@ export default function IFoxVoice() {
       description="إدارة حلقات البودكاست والمحتوى الصوتي"
       icon={Mic}
       gradient="bg-gradient-to-br from-violet-500 to-blue-600"
-      iconColor="text-white"
+      iconColor="text-[hsl(var(--ifox-text-primary))]"
       stats={stats}
       actions={actions}
     >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Upload Form */}
         <div className="lg:col-span-2 space-y-6">
-          <Card className="bg-gradient-to-br from-white/10 to-white/5 border-white/10 backdrop-blur-lg">
+          <Card className="bg-gradient-to-br from-[hsl(var(--ifox-surface-overlay)/.1)] to-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] backdrop-blur-lg">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-[hsl(var(--ifox-text-primary))] flex items-center gap-2">
                 <FileAudio className="h-5 w-5 text-violet-400" />
                 إضافة حلقة جديدة
               </CardTitle>
@@ -290,7 +290,7 @@ export default function IFoxVoice() {
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   <Tabs defaultValue="basic" className="w-full">
-                    <TabsList className="w-full bg-white/10">
+                    <TabsList className="w-full bg-[hsl(var(--ifox-surface-overlay)/.1)]">
                       <TabsTrigger value="basic" className="flex-1">المعلومات الأساسية</TabsTrigger>
                       <TabsTrigger value="guest" className="flex-1">الضيف</TabsTrigger>
                       <TabsTrigger value="media" className="flex-1">الوسائط</TabsTrigger>
@@ -302,12 +302,12 @@ export default function IFoxVoice() {
                         name="title"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-white">عنوان الحلقة *</FormLabel>
+                            <FormLabel className="text-[hsl(var(--ifox-text-primary))]">عنوان الحلقة *</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
                                 placeholder="أدخل عنوان الحلقة"
-                                className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                                className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                               />
                             </FormControl>
                             <FormMessage />
@@ -320,13 +320,13 @@ export default function IFoxVoice() {
                         name="description"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-white">وصف الحلقة *</FormLabel>
+                            <FormLabel className="text-[hsl(var(--ifox-text-primary))]">وصف الحلقة *</FormLabel>
                             <FormControl>
                               <Textarea
                                 {...field}
                                 rows={4}
                                 placeholder="اكتب وصفاً تفصيلياً للحلقة"
-                                className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                                className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                               />
                             </FormControl>
                             <FormMessage />
@@ -339,14 +339,14 @@ export default function IFoxVoice() {
                         name="transcriptUrl"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-white">رابط Transcript</FormLabel>
+                            <FormLabel className="text-[hsl(var(--ifox-text-primary))]">رابط Transcript</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
                                 type="url"
                                 placeholder="https://..."
                                 dir="ltr"
-                                className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                                className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                               />
                             </FormControl>
                             <FormDescription className="text-[hsl(var(--ifox-text-secondary))]">
@@ -359,20 +359,20 @@ export default function IFoxVoice() {
 
                       {/* Tags */}
                       <div className="space-y-2">
-                        <Label className="text-white">الكلمات المفتاحية</Label>
+                        <Label className="text-[hsl(var(--ifox-text-primary))]">الكلمات المفتاحية</Label>
                         <div className="flex gap-2">
                           <Input
                             value={tagInput}
                             onChange={(e) => setTagInput(e.target.value)}
                             placeholder="أضف كلمة مفتاحية"
                             onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddTag())}
-                            className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                            className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                           />
                           <Button
                             type="button"
                             onClick={handleAddTag}
                             variant="outline"
-                            className="border-white/20 text-white hover:bg-white/10"
+                            className="border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)]"
                           >
                             <Plus className="h-4 w-4" />
                           </Button>
@@ -382,7 +382,7 @@ export default function IFoxVoice() {
                             <Badge
                               key={tag}
                               variant="secondary"
-                              className="bg-violet-500/20 text-white border-violet-500/30"
+                              className="bg-violet-500/20 text-[hsl(var(--ifox-text-primary))] border-violet-500/30"
                             >
                               {tag}
                               <button
@@ -404,12 +404,12 @@ export default function IFoxVoice() {
                         name="guestName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-white">اسم الضيف</FormLabel>
+                            <FormLabel className="text-[hsl(var(--ifox-text-primary))]">اسم الضيف</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
                                 placeholder="أدخل اسم الضيف (إن وجد)"
-                                className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                                className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                               />
                             </FormControl>
                             <FormMessage />
@@ -422,13 +422,13 @@ export default function IFoxVoice() {
                         name="guestBio"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-white">نبذة عن الضيف</FormLabel>
+                            <FormLabel className="text-[hsl(var(--ifox-text-primary))]">نبذة عن الضيف</FormLabel>
                             <FormControl>
                               <Textarea
                                 {...field}
                                 rows={4}
                                 placeholder="اكتب نبذة عن الضيف"
-                                className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                                className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                               />
                             </FormControl>
                             <FormMessage />
@@ -440,10 +440,10 @@ export default function IFoxVoice() {
                     <TabsContent value="media" className="space-y-4 mt-6">
                       {/* Audio Upload */}
                       <div className="space-y-2">
-                        <Label className="text-white">الملف الصوتي *</Label>
+                        <Label className="text-[hsl(var(--ifox-text-primary))]">الملف الصوتي *</Label>
                         <div
                           onClick={() => fileInputRef.current?.click()}
-                          className="border-2 border-dashed border-white/20 rounded-lg p-8 text-center cursor-pointer hover:border-violet-400 transition-colors bg-white/5"
+                          className="border-2 border-dashed border-[hsl(var(--ifox-surface-overlay)/.2)] rounded-lg p-8 text-center cursor-pointer hover:border-violet-400 transition-colors bg-[hsl(var(--ifox-surface-overlay)/.05)]"
                         >
                           <FileAudio className="h-12 w-12 mx-auto text-[hsl(var(--ifox-text-secondary))] mb-3" />
                           <p className="text-[hsl(var(--ifox-text-secondary))]">اضغط لرفع ملف صوتي</p>
@@ -463,10 +463,10 @@ export default function IFoxVoice() {
 
                       {/* Cover Image */}
                       <div className="space-y-2">
-                        <Label className="text-white">صورة الغلاف</Label>
+                        <Label className="text-[hsl(var(--ifox-text-primary))]">صورة الغلاف</Label>
                         <div
                           onClick={() => imageInputRef.current?.click()}
-                          className="border-2 border-dashed border-white/20 rounded-lg p-8 text-center cursor-pointer hover:border-violet-400 transition-colors bg-white/5"
+                          className="border-2 border-dashed border-[hsl(var(--ifox-surface-overlay)/.2)] rounded-lg p-8 text-center cursor-pointer hover:border-violet-400 transition-colors bg-[hsl(var(--ifox-surface-overlay)/.05)]"
                         >
                           <ImagePlus className="h-12 w-12 mx-auto text-[hsl(var(--ifox-text-secondary))] mb-3" />
                           <p className="text-[hsl(var(--ifox-text-secondary))]">اضغط لرفع صورة الغلاف</p>
@@ -493,7 +493,7 @@ export default function IFoxVoice() {
 
                       {/* Audio Player */}
                       {form.watch("audioFile") && (
-                        <div className="bg-gradient-to-br from-violet-500/20 to-blue-500/10 rounded-lg p-4 border border-white/10">
+                        <div className="bg-gradient-to-br from-violet-500/20 to-blue-500/10 rounded-lg p-4 border border-[hsl(var(--ifox-surface-overlay)/.1)]">
                           <audio
                             ref={audioRef}
                             src={form.watch("audioFile")}
@@ -507,7 +507,7 @@ export default function IFoxVoice() {
                               variant="ghost"
                               size="icon"
                               onClick={handlePlayPause}
-                              className="text-white hover:bg-white/10"
+                              className="text-[hsl(var(--ifox-text-primary))] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)]"
                             >
                               {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
                             </Button>
@@ -515,7 +515,7 @@ export default function IFoxVoice() {
                             <div className="flex-1">
                               <Progress
                                 value={(currentTime / duration) * 100 || 0}
-                                className="h-2 bg-white/20"
+                                className="h-2 bg-[hsl(var(--ifox-surface-overlay)/.2)]"
                               />
                               <div className="flex justify-between text-xs text-[hsl(var(--ifox-text-secondary))] mt-1">
                                 <span>{Math.floor(currentTime / 60)}:{Math.floor(currentTime % 60).toString().padStart(2, "0")}</span>
@@ -542,7 +542,7 @@ export default function IFoxVoice() {
                       type="button"
                       variant="outline"
                       onClick={() => form.setValue("status", "published")}
-                      className="border-white/20 text-white hover:bg-white/10"
+                      className="border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)]"
                     >
                       <Send className="h-4 w-4 mr-2" />
                       نشر مباشرة
@@ -556,14 +556,14 @@ export default function IFoxVoice() {
 
         {/* Episodes List */}
         <div className="space-y-6">
-          <Card className="bg-gradient-to-br from-white/10 to-white/5 border-white/10 backdrop-blur-lg">
+          <Card className="bg-gradient-to-br from-[hsl(var(--ifox-surface-overlay)/.1)] to-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] backdrop-blur-lg">
             <CardHeader>
-              <CardTitle className="text-white flex items-center justify-between">
+              <CardTitle className="text-[hsl(var(--ifox-text-primary))] flex items-center justify-between">
                 <span className="flex items-center gap-2">
                   <Mic className="h-5 w-5 text-violet-400" />
                   الحلقات الأخيرة
                 </span>
-                <Badge variant="secondary" className="bg-violet-500/20 text-white">
+                <Badge variant="secondary" className="bg-violet-500/20 text-[hsl(var(--ifox-text-primary))]">
                   {episodes?.length || 0} حلقة
                 </Badge>
               </CardTitle>
@@ -578,7 +578,7 @@ export default function IFoxVoice() {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.1 }}
                     >
-                      <Card className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors cursor-pointer">
+                      <Card className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)] transition-colors cursor-pointer">
                         <CardContent className="p-4">
                           <div className="flex items-start gap-3">
                             {episode.coverImage ? (
@@ -594,7 +594,7 @@ export default function IFoxVoice() {
                             )}
                             
                             <div className="flex-1">
-                              <h4 className="font-semibold text-white text-sm mb-1 line-clamp-1">
+                              <h4 className="font-semibold text-[hsl(var(--ifox-text-primary))] text-sm mb-1 line-clamp-1">
                                 {episode.title}
                               </h4>
                               <p className="text-xs text-[hsl(var(--ifox-text-secondary))] line-clamp-2 mb-2">
@@ -632,14 +632,14 @@ export default function IFoxVoice() {
                                   <Button
                                     size="icon"
                                     variant="ghost"
-                                    className="h-6 w-6 text-[hsl(var(--ifox-text-secondary))] hover:text-white"
+                                    className="h-6 w-6 text-[hsl(var(--ifox-text-secondary))] hover:text-[hsl(var(--ifox-text-primary))]"
                                   >
                                     <Edit className="h-3 w-3" />
                                   </Button>
                                   <Button
                                     size="icon"
                                     variant="ghost"
-                                    className="h-6 w-6 text-[hsl(var(--ifox-text-secondary))] hover:text-white"
+                                    className="h-6 w-6 text-[hsl(var(--ifox-text-secondary))] hover:text-[hsl(var(--ifox-text-primary))]"
                                   >
                                     <Eye className="h-3 w-3" />
                                   </Button>

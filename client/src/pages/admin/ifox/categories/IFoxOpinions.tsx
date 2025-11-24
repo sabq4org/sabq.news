@@ -386,17 +386,17 @@ export default function IFoxOpinions() {
       description="مقالات رأيية وتحليلات من خبراء الذكاء الاصطناعي"
       icon={PenLine}
       gradient="bg-gradient-to-br from-red-500 to-orange-600"
-      iconColor="text-white"
+      iconColor="text-[hsl(var(--ifox-text-primary))]"
       stats={stats}
       actions={actions}
     >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
-          <Card className="bg-gradient-to-br from-white/10 to-white/5 border-white/10 backdrop-blur-lg">
+          <Card className="bg-gradient-to-br from-[hsl(var(--ifox-surface-overlay)/.1)] to-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] backdrop-blur-lg">
             <CardContent className="p-0">
               <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-                <TabsList className="w-full bg-white/10 rounded-t-lg rounded-b-none">
+                <TabsList className="w-full bg-[hsl(var(--ifox-surface-overlay)/.1)] rounded-t-lg rounded-b-none">
                   <TabsTrigger value="published" className="flex-1">منشور</TabsTrigger>
                   <TabsTrigger value="drafts" className="flex-1">مسودات</TabsTrigger>
                   <TabsTrigger value="scheduled" className="flex-1">مجدول</TabsTrigger>
@@ -412,7 +412,7 @@ export default function IFoxOpinions() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05 }}
                       >
-                        <Card className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors">
+                        <Card className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)] transition-colors">
                           <CardContent className="p-6">
                             <div className="flex items-start gap-4">
                               <Avatar className="h-12 w-12">
@@ -425,7 +425,7 @@ export default function IFoxOpinions() {
                               <div className="flex-1">
                                 <div className="flex items-start justify-between mb-3">
                                   <div>
-                                    <h3 className="text-lg font-bold text-white mb-1 line-clamp-2">
+                                    <h3 className="text-lg font-bold text-[hsl(var(--ifox-text-primary))] mb-1 line-clamp-2">
                                       {opinion.isPinned && <Star className="inline h-4 w-4 text-amber-400 mr-2" />}
                                       {opinion.title}
                                     </h3>
@@ -442,7 +442,7 @@ export default function IFoxOpinions() {
 
                                 {/* Author Info */}
                                 <div className="flex items-center gap-2 mb-3">
-                                  <span className="text-white font-medium text-sm">
+                                  <span className="text-[hsl(var(--ifox-text-primary))] font-medium text-sm">
                                     {opinion.author.name}
                                   </span>
                                   {opinion.author.isVerified && (
@@ -475,10 +475,10 @@ export default function IFoxOpinions() {
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-1">
-                                    <Button size="icon" variant="ghost" className="h-7 w-7 text-[hsl(var(--ifox-text-secondary))] hover:text-white">
+                                    <Button size="icon" variant="ghost" className="h-7 w-7 text-[hsl(var(--ifox-text-secondary))] hover:text-[hsl(var(--ifox-text-primary))]">
                                       <Share2 className="h-3 w-3" />
                                     </Button>
-                                    <Button size="icon" variant="ghost" className="h-7 w-7 text-[hsl(var(--ifox-text-secondary))] hover:text-white">
+                                    <Button size="icon" variant="ghost" className="h-7 w-7 text-[hsl(var(--ifox-text-secondary))] hover:text-[hsl(var(--ifox-text-primary))]">
                                       <Edit className="h-3 w-3" />
                                     </Button>
                                     <Button size="icon" variant="ghost" className="h-7 w-7 text-[hsl(var(--ifox-text-secondary))] hover:text-red-400">
@@ -503,10 +503,10 @@ export default function IFoxOpinions() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
                     >
-                      <Card className="bg-white/5 border-white/10">
+                      <Card className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)]">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-2">
-                            <h4 className="text-white font-medium">{opinion.title}</h4>
+                            <h4 className="text-[hsl(var(--ifox-text-primary))] font-medium">{opinion.title}</h4>
                             <Badge className="bg-amber-500/20 text-amber-400">مسودة</Badge>
                           </div>
                           <p className="text-sm text-[hsl(var(--ifox-text-secondary))] mb-3">{opinion.excerpt}</p>
@@ -514,7 +514,7 @@ export default function IFoxOpinions() {
                             <span className="text-xs text-[hsl(var(--ifox-text-secondary))]">
                               آخر تعديل: {new Date(opinion.publishDate).toLocaleDateString("ar")}
                             </span>
-                            <Button size="sm" variant="outline" className="border-white/20 text-white hover:bg-white/10">
+                            <Button size="sm" variant="outline" className="border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)]">
                               <Edit className="h-3 w-3 mr-2" />
                               تعديل
                             </Button>
@@ -539,13 +539,13 @@ export default function IFoxOpinions() {
           {opinions?.find(o => o.isPinned) && (
             <Card className="bg-gradient-to-br from-red-500/20 to-orange-500/10 border-red-500/30">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="text-[hsl(var(--ifox-text-primary))] flex items-center gap-2">
                   <Star className="h-5 w-5 text-amber-400" />
                   مقال مميز
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <h3 className="text-xl font-bold text-white mb-2">
+                <h3 className="text-xl font-bold text-[hsl(var(--ifox-text-primary))] mb-2">
                   {opinions.find(o => o.isPinned)?.title}
                 </h3>
                 <p className="text-[hsl(var(--ifox-text-primary))] mb-4">
@@ -559,7 +559,7 @@ export default function IFoxOpinions() {
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="text-white font-medium">{opinions.find(o => o.isPinned)?.author.name}</p>
+                    <p className="text-[hsl(var(--ifox-text-primary))] font-medium">{opinions.find(o => o.isPinned)?.author.name}</p>
                     <p className="text-[hsl(var(--ifox-text-secondary))] text-sm">{opinions.find(o => o.isPinned)?.author.title}</p>
                   </div>
                 </div>
@@ -571,9 +571,9 @@ export default function IFoxOpinions() {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Top Authors */}
-          <Card className="bg-gradient-to-br from-white/10 to-white/5 border-white/10 backdrop-blur-lg">
+          <Card className="bg-gradient-to-br from-[hsl(var(--ifox-surface-overlay)/.1)] to-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] backdrop-blur-lg">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-[hsl(var(--ifox-text-primary))] flex items-center gap-2">
                 <Award className="h-5 w-5 text-red-400" />
                 كُتّاب مميزون
               </CardTitle>
@@ -590,7 +590,7 @@ export default function IFoxOpinions() {
                     </Avatar>
                     <div className="flex-1">
                       <div className="flex items-center gap-1">
-                        <h4 className="text-sm font-medium text-white">{author.name}</h4>
+                        <h4 className="text-sm font-medium text-[hsl(var(--ifox-text-primary))]">{author.name}</h4>
                         {author.isVerified && <UserCheck className="h-3 w-3 text-blue-400" />}
                       </div>
                       <p className="text-xs text-[hsl(var(--ifox-text-secondary))]">{author.specialization}</p>
@@ -606,9 +606,9 @@ export default function IFoxOpinions() {
           </Card>
 
           {/* Popular Categories */}
-          <Card className="bg-gradient-to-br from-white/10 to-white/5 border-white/10 backdrop-blur-lg">
+          <Card className="bg-gradient-to-br from-[hsl(var(--ifox-surface-overlay)/.1)] to-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] backdrop-blur-lg">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-[hsl(var(--ifox-text-primary))] flex items-center gap-2">
                 <Tag className="h-5 w-5 text-red-400" />
                 التصنيفات الشائعة
               </CardTitle>
@@ -620,7 +620,7 @@ export default function IFoxOpinions() {
                   return (
                     <div
                       key={cat.value}
-                      className="flex items-center justify-between p-2 rounded-lg hover:bg-white/5 transition-colors"
+                      className="flex items-center justify-between p-2 rounded-lg hover:bg-[hsl(var(--ifox-surface-overlay)/.05)] transition-colors"
                     >
                       <Badge className={cat.color}>{cat.label}</Badge>
                       <span className="text-xs text-[hsl(var(--ifox-text-secondary))]">{count} مقال</span>
@@ -646,7 +646,7 @@ export default function IFoxOpinions() {
 
       {/* Add Opinion Dialog */}
       <Dialog open={showOpinionDialog} onOpenChange={setShowOpinionDialog}>
-        <DialogContent className="max-w-3xl bg-slate-900 border-white/10 text-white max-h-[90vh] overflow-y-auto" dir="rtl">
+        <DialogContent className="max-w-3xl bg-slate-900 border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))] max-h-[90vh] overflow-y-auto" dir="rtl">
           <DialogHeader>
             <DialogTitle className="text-2xl">إضافة مقال رأيي جديد</DialogTitle>
             <DialogDescription className="text-[hsl(var(--ifox-text-secondary))]">
@@ -657,7 +657,7 @@ export default function IFoxOpinions() {
           <Form {...opinionForm}>
             <form onSubmit={opinionForm.handleSubmit(data => saveOpinionMutation.mutate(data))} className="space-y-6">
               <Tabs defaultValue="content" className="w-full">
-                <TabsList className="w-full bg-white/10">
+                <TabsList className="w-full bg-[hsl(var(--ifox-surface-overlay)/.1)]">
                   <TabsTrigger value="content" className="flex-1">المحتوى</TabsTrigger>
                   <TabsTrigger value="metadata" className="flex-1">البيانات</TabsTrigger>
                   <TabsTrigger value="settings" className="flex-1">الإعدادات</TabsTrigger>
@@ -674,7 +674,7 @@ export default function IFoxOpinions() {
                           <Input
                             {...field}
                             placeholder="عنوان جذاب ومعبر"
-                            className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                            className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                           />
                         </FormControl>
                         <FormMessage />
@@ -693,7 +693,7 @@ export default function IFoxOpinions() {
                             {...field}
                             rows={3}
                             placeholder="مقتطف قصير يظهر في البطاقة"
-                            className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                            className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                           />
                         </FormControl>
                         <FormDescription className="text-[hsl(var(--ifox-text-secondary))]">
@@ -715,7 +715,7 @@ export default function IFoxOpinions() {
                             {...field}
                             rows={10}
                             placeholder="اكتب محتوى المقال هنا..."
-                            className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))] font-mono"
+                            className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))] font-mono"
                           />
                         </FormControl>
                         <FormMessage />
@@ -733,7 +733,7 @@ export default function IFoxOpinions() {
                         <FormLabel>الكاتب *</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                            <SelectTrigger className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))]">
                               <SelectValue placeholder="اختر الكاتب" />
                             </SelectTrigger>
                           </FormControl>
@@ -758,7 +758,7 @@ export default function IFoxOpinions() {
                         <FormLabel>التصنيف *</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                            <SelectTrigger className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))]">
                               <SelectValue />
                             </SelectTrigger>
                           </FormControl>
@@ -784,13 +784,13 @@ export default function IFoxOpinions() {
                         onChange={(e) => setTagInput(e.target.value)}
                         placeholder="أضف وسماً"
                         onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddTag())}
-                        className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                        className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                       />
                       <Button
                         type="button"
                         onClick={handleAddTag}
                         variant="outline"
-                        className="border-white/20 text-white hover:bg-white/10"
+                        className="border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)]"
                       >
                         <Plus className="h-4 w-4" />
                       </Button>
@@ -800,7 +800,7 @@ export default function IFoxOpinions() {
                         <Badge
                           key={tag}
                           variant="secondary"
-                          className="bg-red-500/20 text-white border-red-500/30"
+                          className="bg-red-500/20 text-[hsl(var(--ifox-text-primary))] border-red-500/30"
                         >
                           {tag}
                           <button
@@ -825,7 +825,7 @@ export default function IFoxOpinions() {
                         <FormLabel>الحالة</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                            <SelectTrigger className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))]">
                               <SelectValue />
                             </SelectTrigger>
                           </FormControl>
@@ -844,7 +844,7 @@ export default function IFoxOpinions() {
                     control={opinionForm.control}
                     name="allowComments"
                     render={({ field }) => (
-                      <FormItem className="flex items-center justify-between rounded-lg border border-white/10 p-4 bg-white/5">
+                      <FormItem className="flex items-center justify-between rounded-lg border border-[hsl(var(--ifox-surface-overlay)/.1)] p-4 bg-[hsl(var(--ifox-surface-overlay)/.05)]">
                         <div className="space-y-0.5">
                           <FormLabel>السماح بالتعليقات</FormLabel>
                           <FormDescription className="text-[hsl(var(--ifox-text-secondary))]">
@@ -855,7 +855,7 @@ export default function IFoxOpinions() {
                           <Checkbox
                             checked={field.value}
                             onCheckedChange={field.onChange}
-                            className="border-white/20"
+                            className="border-[hsl(var(--ifox-surface-overlay)/.2)]"
                           />
                         </FormControl>
                       </FormItem>
@@ -866,7 +866,7 @@ export default function IFoxOpinions() {
                     control={opinionForm.control}
                     name="isPinned"
                     render={({ field }) => (
-                      <FormItem className="flex items-center justify-between rounded-lg border border-white/10 p-4 bg-white/5">
+                      <FormItem className="flex items-center justify-between rounded-lg border border-[hsl(var(--ifox-surface-overlay)/.1)] p-4 bg-[hsl(var(--ifox-surface-overlay)/.05)]">
                         <div className="space-y-0.5">
                           <FormLabel>تثبيت المقال</FormLabel>
                           <FormDescription className="text-[hsl(var(--ifox-text-secondary))]">
@@ -877,7 +877,7 @@ export default function IFoxOpinions() {
                           <Checkbox
                             checked={field.value}
                             onCheckedChange={field.onChange}
-                            className="border-white/20"
+                            className="border-[hsl(var(--ifox-surface-overlay)/.2)]"
                           />
                         </FormControl>
                       </FormItem>
@@ -887,12 +887,12 @@ export default function IFoxOpinions() {
               </Tabs>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-6 border-t border-white/10">
+              <div className="flex items-center justify-end gap-3 pt-6 border-t border-[hsl(var(--ifox-surface-overlay)/.1)]">
                 <Button
                   type="button"
                   variant="ghost"
                   onClick={() => setShowOpinionDialog(false)}
-                  className="text-white hover:bg-white/10"
+                  className="text-[hsl(var(--ifox-text-primary))] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)]"
                 >
                   إلغاء
                 </Button>
@@ -903,7 +903,7 @@ export default function IFoxOpinions() {
                     opinionForm.setValue("status", "draft");
                     opinionForm.handleSubmit(data => saveOpinionMutation.mutate(data))();
                   }}
-                  className="border-white/20 text-white hover:bg-white/10"
+                  className="border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)]"
                 >
                   <Save className="h-4 w-4 mr-2" />
                   حفظ كمسودة
@@ -924,7 +924,7 @@ export default function IFoxOpinions() {
 
       {/* Add Author Dialog */}
       <Dialog open={showAuthorDialog} onOpenChange={setShowAuthorDialog}>
-        <DialogContent className="max-w-2xl bg-slate-900 border-white/10 text-white max-h-[90vh] overflow-y-auto" dir="rtl">
+        <DialogContent className="max-w-2xl bg-slate-900 border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))] max-h-[90vh] overflow-y-auto" dir="rtl">
           <DialogHeader>
             <DialogTitle className="text-2xl">إضافة كاتب جديد</DialogTitle>
             <DialogDescription className="text-[hsl(var(--ifox-text-secondary))]">
@@ -945,7 +945,7 @@ export default function IFoxOpinions() {
                         <Input
                           {...field}
                           placeholder="د. محمد أحمد"
-                          className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                          className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                         />
                       </FormControl>
                       <FormMessage />
@@ -965,7 +965,7 @@ export default function IFoxOpinions() {
                           type="email"
                           placeholder="email@example.com"
                           dir="ltr"
-                          className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                          className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                         />
                       </FormControl>
                       <FormMessage />
@@ -984,7 +984,7 @@ export default function IFoxOpinions() {
                       <Input
                         {...field}
                         placeholder="خبير في الذكاء الاصطناعي"
-                        className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                        className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                       />
                     </FormControl>
                     <FormMessage />
@@ -1003,7 +1003,7 @@ export default function IFoxOpinions() {
                         {...field}
                         rows={4}
                         placeholder="نبذة عن الكاتب وخبراته..."
-                        className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                        className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                       />
                     </FormControl>
                     <FormMessage />
@@ -1022,7 +1022,7 @@ export default function IFoxOpinions() {
                         <Input
                           {...field}
                           placeholder="مثال: NLP, Computer Vision"
-                          className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                          className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                         />
                       </FormControl>
                       <FormMessage />
@@ -1040,7 +1040,7 @@ export default function IFoxOpinions() {
                         <Input
                           {...field}
                           placeholder="مثال: 10 سنوات"
-                          className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                          className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                         />
                       </FormControl>
                       <FormMessage />
@@ -1066,7 +1066,7 @@ export default function IFoxOpinions() {
                             type="url"
                             placeholder="https://twitter.com/username"
                             dir="ltr"
-                            className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                            className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                           />
                         </FormControl>
                       </div>
@@ -1087,7 +1087,7 @@ export default function IFoxOpinions() {
                             type="url"
                             placeholder="https://linkedin.com/in/username"
                             dir="ltr"
-                            className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                            className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                           />
                         </FormControl>
                       </div>
@@ -1101,14 +1101,14 @@ export default function IFoxOpinions() {
                   render={({ field }) => (
                     <FormItem>
                       <div className="flex items-center gap-3">
-                        <SiGithub className="h-5 w-5 text-white" />
+                        <SiGithub className="h-5 w-5 text-[hsl(var(--ifox-text-primary))]" />
                         <FormControl>
                           <Input
                             {...field}
                             type="url"
                             placeholder="https://github.com/username"
                             dir="ltr"
-                            className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                            className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                           />
                         </FormControl>
                       </div>
@@ -1129,7 +1129,7 @@ export default function IFoxOpinions() {
                             type="url"
                             placeholder="https://example.com"
                             dir="ltr"
-                            className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                            className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                           />
                         </FormControl>
                       </div>
@@ -1142,7 +1142,7 @@ export default function IFoxOpinions() {
                 control={authorForm.control}
                 name="isVerified"
                 render={({ field }) => (
-                  <FormItem className="flex items-center justify-between rounded-lg border border-white/10 p-4 bg-white/5">
+                  <FormItem className="flex items-center justify-between rounded-lg border border-[hsl(var(--ifox-surface-overlay)/.1)] p-4 bg-[hsl(var(--ifox-surface-overlay)/.05)]">
                     <div className="space-y-0.5">
                       <FormLabel>حساب موثق</FormLabel>
                       <FormDescription className="text-[hsl(var(--ifox-text-secondary))]">
@@ -1153,19 +1153,19 @@ export default function IFoxOpinions() {
                       <Checkbox
                         checked={field.value}
                         onCheckedChange={field.onChange}
-                        className="border-white/20"
+                        className="border-[hsl(var(--ifox-surface-overlay)/.2)]"
                       />
                     </FormControl>
                   </FormItem>
                 )}
               />
 
-              <div className="flex items-center justify-end gap-3 pt-6 border-t border-white/10">
+              <div className="flex items-center justify-end gap-3 pt-6 border-t border-[hsl(var(--ifox-surface-overlay)/.1)]">
                 <Button
                   type="button"
                   variant="ghost"
                   onClick={() => setShowAuthorDialog(false)}
-                  className="text-white hover:bg-white/10"
+                  className="text-[hsl(var(--ifox-text-primary))] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)]"
                 >
                   إلغاء
                 </Button>

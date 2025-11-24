@@ -82,13 +82,13 @@ import {
 
 // iFox Categories
 const categories = [
-  { id: "technology", label: "التقنية", icon: Laptop, color: "text-blue-600", bgColor: "bg-blue-50 dark:bg-blue-950" },
-  { id: "ai", label: "الذكاء الاصطناعي", icon: Brain, color: "text-purple-600", bgColor: "bg-purple-50 dark:bg-purple-950" },
-  { id: "web", label: "الويب", icon: Globe, color: "text-cyan-600", bgColor: "bg-cyan-50 dark:bg-cyan-950" },
-  { id: "education", label: "التعليم", icon: BookOpen, color: "text-amber-600", bgColor: "bg-amber-50 dark:bg-amber-950" },
-  { id: "gaming", label: "الألعاب", icon: Gamepad2, color: "text-pink-600", bgColor: "bg-pink-50 dark:bg-pink-950" },
-  { id: "health", label: "الصحة", icon: Heart, color: "text-red-600", bgColor: "bg-red-50 dark:bg-red-950" },
-  { id: "business", label: "الأعمال", icon: DollarSign, color: "text-green-600", bgColor: "bg-green-50 dark:bg-green-950" }
+  { id: "technology", label: "التقنية", icon: Laptop, color: "text-[hsl(var(--ifox-info))]", bgColor: "bg-[hsl(var(--ifox-info)/.1)]" },
+  { id: "ai", label: "الذكاء الاصطناعي", icon: Brain, color: "text-[hsl(var(--ifox-accent-primary))]", bgColor: "bg-[hsl(var(--ifox-accent-primary)/.1)]" },
+  { id: "web", label: "الويب", icon: Globe, color: "text-[hsl(var(--ifox-info))]", bgColor: "bg-[hsl(var(--ifox-info)/.1)]" },
+  { id: "education", label: "التعليم", icon: BookOpen, color: "text-[hsl(var(--ifox-warning))]", bgColor: "bg-[hsl(var(--ifox-warning)/.1)]" },
+  { id: "gaming", label: "الألعاب", icon: Gamepad2, color: "text-[hsl(var(--ifox-error))]", bgColor: "bg-[hsl(var(--ifox-error)/.1)]" },
+  { id: "health", label: "الصحة", icon: Heart, color: "text-[hsl(var(--ifox-error))]", bgColor: "bg-[hsl(var(--ifox-error)/.1)]" },
+  { id: "business", label: "الأعمال", icon: DollarSign, color: "text-[hsl(var(--ifox-success))]", bgColor: "bg-[hsl(var(--ifox-success)/.1)]" }
 ];
 
 const articleSchema = z.object({
@@ -322,10 +322,10 @@ export default function IFoxArticleEditor() {
   };
 
   const getAIScoreColor = (score: number) => {
-    if (score >= 80) return "text-green-600 dark:text-green-400";
-    if (score >= 60) return "text-yellow-600 dark:text-yellow-400";
-    if (score >= 40) return "text-orange-600 dark:text-orange-400";
-    return "text-red-600 dark:text-red-400";
+    if (score >= 80) return "text-[hsl(var(--ifox-success))]";
+    if (score >= 60) return "text-[hsl(var(--ifox-info))]";
+    if (score >= 40) return "text-[hsl(var(--ifox-warning))]";
+    return "text-[hsl(var(--ifox-error))]";
   };
 
   const getAIScoreLabel = (score: number) => {
@@ -337,17 +337,17 @@ export default function IFoxArticleEditor() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950">
+      <div className="flex h-screen bg-[hsl(var(--ifox-surface-primary))]">
         <IFoxSidebar className="hidden lg:block" />
         <div className="flex-1 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[hsl(var(--ifox-accent-primary))]"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950">
+    <div className="flex h-screen bg-[hsl(var(--ifox-surface-primary))]">
       <IFoxSidebar className="hidden lg:block" />
       <div className="flex-1 overflow-y-auto">
         <ScrollArea className="h-full">
@@ -429,7 +429,7 @@ export default function IFoxArticleEditor() {
                 <div className="grid grid-cols-3 gap-4">
                   <div className="text-center">
                     <p className="text-xs text-muted-foreground">إيجابي</p>
-                    <p className="text-lg font-bold text-green-600">{sentimentScore.positive}%</p>
+                    <p className="text-lg font-bold text-[hsl(var(--ifox-success))]">{sentimentScore.positive}%</p>
                   </div>
                   <div className="text-center">
                     <p className="text-xs text-muted-foreground">محايد</p>
@@ -437,7 +437,7 @@ export default function IFoxArticleEditor() {
                   </div>
                   <div className="text-center">
                     <p className="text-xs text-muted-foreground">سلبي</p>
-                    <p className="text-lg font-bold text-red-600">{sentimentScore.negative}%</p>
+                    <p className="text-lg font-bold text-[hsl(var(--ifox-error))]">{sentimentScore.negative}%</p>
                   </div>
                 </div>
               </div>

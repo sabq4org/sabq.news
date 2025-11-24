@@ -139,9 +139,9 @@ export default function IFoxContentGenerator() {
   };
 
   const priorityColors = {
-    low: "from-blue-500 to-cyan-500",
-    medium: "from-amber-500 to-orange-500",
-    high: "from-red-500 to-pink-500",
+    low: "from-[hsl(var(--ifox-info)/1)] to-[hsl(var(--ifox-info-muted)/1)]",
+    medium: "from-[hsl(var(--ifox-warning)/1)] to-[hsl(var(--ifox-warning-muted)/1)]",
+    high: "from-[hsl(var(--ifox-error)/1)] to-[hsl(var(--ifox-error-muted)/1)]",
   };
 
   // Filter tasks by status
@@ -184,18 +184,19 @@ export default function IFoxContentGenerator() {
                       ease: "easeInOut",
                     }}
                     style={{
-                      background: "radial-gradient(circle, rgba(236, 72, 153, 0.6), rgba(147, 51, 234, 0.6))",
+                      background: "radial-gradient(circle, hsl(var(--ifox-error-glow) / 0.6), hsl(var(--ifox-accent-glow-secondary) / 0.6))",
                     }}
                   />
                   <img 
                     src={mascotImage} 
                     alt="iFox AI" 
-                    className="w-20 h-20 relative z-10 drop-shadow-2xl"
+                    className="w-20 h-20 relative z-10"
+                    style={{ filter: 'drop-shadow(0 25px 50px hsl(var(--ifox-surface-overlay) / 0.2))' }}
                   />
                 </motion.div>
 
                 <div>
-                  <h1 className="text-3xl font-bold bg-gradient-to-r from-fuchsia-300 to-pink-300 bg-clip-text text-transparent">
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-[hsl(var(--ifox-accent-primary)/1)] to-[hsl(var(--ifox-accent-secondary)/1)] bg-clip-text text-transparent">
                     محرك المحتوى الذكي
                   </h1>
                   <p className="text-[hsl(var(--ifox-text-primary))] text-lg">
@@ -204,24 +205,24 @@ export default function IFoxContentGenerator() {
                 </div>
 
                 <motion.div
-                  className="mr-auto flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-fuchsia-500/20 to-pink-500/20 border border-fuchsia-500/30"
+                  className="mr-auto flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-[hsl(var(--ifox-accent-primary)/.2)] to-[hsl(var(--ifox-accent-secondary)/.2)] border border-[hsl(var(--ifox-accent-primary)/.3)]"
                   animate={{ scale: [1, 1.05, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
                   <motion.div
-                    className="w-2 h-2 rounded-full bg-fuchsia-400"
+                    className="w-2 h-2 rounded-full bg-[hsl(var(--ifox-accent-primary))]"
                     animate={{
                       opacity: [0.5, 1, 0.5],
                       boxShadow: [
-                        "0 0 5px rgba(236, 72, 153, 0.5)",
-                        "0 0 15px rgba(236, 72, 153, 1)",
-                        "0 0 5px rgba(236, 72, 153, 0.5)",
+                        "0 0 5px hsl(var(--ifox-error-glow) / 0.5)",
+                        "0 0 15px hsl(var(--ifox-error))",
+                        "0 0 5px hsl(var(--ifox-error-glow) / 0.5)",
                       ],
                     }}
                     transition={{ duration: 1.5, repeat: Infinity }}
                   />
-                  <span className="text-xs font-medium text-fuchsia-400">تجريبي</span>
-                  <Sparkles className="w-3 h-3 text-fuchsia-400" />
+                  <span className="text-xs font-medium text-[hsl(var(--ifox-accent-primary))]">تجريبي</span>
+                  <Sparkles className="w-3 h-3 text-[hsl(var(--ifox-accent-primary))]" />
                 </motion.div>
               </div>
             </motion.div>
@@ -234,16 +235,16 @@ export default function IFoxContentGenerator() {
                 exit={{ scale: 0, opacity: 0 }}
                 className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50"
               >
-                <Card className="bg-gradient-to-br from-green-500/90 to-emerald-600/90 border-green-400/50 backdrop-blur-lg shadow-2xl">
+                <Card className="bg-gradient-to-br from-[hsl(var(--ifox-success)/.9)] to-[hsl(var(--ifox-success-muted)/.9)] border-[hsl(var(--ifox-success)/.5)] backdrop-blur-lg shadow-[0_25px_50px_hsl(var(--ifox-surface-overlay)/.2)]">
                   <CardContent className="p-8 text-center">
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: [0, 1.2, 1] }}
                       transition={{ duration: 0.5 }}
                     >
-                      <CheckCircle className="w-16 h-16 text-white mx-auto mb-4" />
+                      <CheckCircle className="w-16 h-16 text-[hsl(var(--ifox-text-primary))] mx-auto mb-4" />
                     </motion.div>
-                    <h3 className="text-2xl font-bold text-white mb-2">تم بنجاح! ✨</h3>
+                    <h3 className="text-2xl font-bold text-[hsl(var(--ifox-text-primary))] mb-2">تم بنجاح! ✨</h3>
                     <p className="text-[hsl(var(--ifox-text-primary))]">المهمة مجدولة وجاهزة للمعالجة</p>
                   </CardContent>
                 </Card>
@@ -258,13 +259,13 @@ export default function IFoxContentGenerator() {
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 0.1 }}
               >
-                <Card className="bg-gradient-to-br from-slate-800/70 to-slate-900/50 border-white/30 backdrop-blur-lg">
+                <Card className="bg-[hsl(var(--ifox-surface-primary)/.8)] border-[hsl(var(--ifox-surface-overlay))] backdrop-blur-lg">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-white font-bold">
-                      <Wand2 className="w-5 h-5 text-fuchsia-400" />
+                    <CardTitle className="flex items-center gap-2 text-[hsl(var(--ifox-text-primary))] font-bold">
+                      <Wand2 className="w-5 h-5 text-[hsl(var(--ifox-accent-primary))]" />
                       طلب محتوى جديد
                     </CardTitle>
-                    <CardDescription className="text-[hsl(var(--ifox-text-primary))]">
+                    <CardDescription className="text-[hsl(var(--ifox-text-secondary))]">
                       اكتب ما تريد والذكاء الاصطناعي سيقوم بالباقي
                     </CardDescription>
                   </CardHeader>
@@ -277,11 +278,11 @@ export default function IFoxContentGenerator() {
                           name="topic"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-white">موضوع المحتوى *</FormLabel>
+                              <FormLabel className="text-[hsl(var(--ifox-text-primary))]">موضوع المحتوى *</FormLabel>
                               <FormControl>
                                 <Input
                                   placeholder="مثال: أحدث تطورات الذكاء الاصطناعي في 2024"
-                                  className="bg-slate-800/50 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                                  className="bg-[hsl(var(--ifox-surface-muted)/.7)] border-[hsl(var(--ifox-surface-overlay))] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                                   data-testid="input-topic"
                                   {...field}
                                 />
@@ -297,16 +298,16 @@ export default function IFoxContentGenerator() {
                           name="description"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-white">تفاصيل إضافية (اختياري)</FormLabel>
+                              <FormLabel className="text-[hsl(var(--ifox-text-primary))]">تفاصيل إضافية (اختياري)</FormLabel>
                               <FormControl>
                                 <Textarea
                                   placeholder="أضف أي تفاصيل أو توجيهات للذكاء الاصطناعي..."
-                                  className="bg-slate-800/50 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))] min-h-[100px]"
+                                  className="bg-[hsl(var(--ifox-surface-muted)/.7)] border-[hsl(var(--ifox-surface-overlay))] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))] min-h-[100px]"
                                   data-testid="input-description"
                                   {...field}
                                 />
                               </FormControl>
-                              <FormDescription className="text-[hsl(var(--ifox-text-primary))] text-xs">
+                              <FormDescription className="text-[hsl(var(--ifox-text-secondary))] text-xs">
                                 كلما كانت التفاصيل أكثر، كان المحتوى أفضل
                               </FormDescription>
                             </FormItem>
@@ -319,10 +320,10 @@ export default function IFoxContentGenerator() {
                           name="contentType"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-white">نوع المحتوى *</FormLabel>
+                              <FormLabel className="text-[hsl(var(--ifox-text-primary))]">نوع المحتوى *</FormLabel>
                               <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl>
-                                  <SelectTrigger className="bg-slate-800/50 border-white/20 text-white" data-testid="select-content-type">
+                                  <SelectTrigger className="bg-[hsl(var(--ifox-surface-muted)/.7)] border-[hsl(var(--ifox-surface-overlay))] text-[hsl(var(--ifox-text-primary))]" data-testid="select-content-type">
                                     <SelectValue />
                                   </SelectTrigger>
                                 </FormControl>
@@ -364,11 +365,11 @@ export default function IFoxContentGenerator() {
                             name="scheduledFor"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-white">موعد التنفيذ *</FormLabel>
+                                <FormLabel className="text-[hsl(var(--ifox-text-primary))]">موعد التنفيذ *</FormLabel>
                                 <FormControl>
                                   <Input
                                     type="datetime-local"
-                                    className="bg-slate-800/50 border-white/20 text-white"
+                                    className="bg-[hsl(var(--ifox-surface-muted)/.7)] border-[hsl(var(--ifox-surface-overlay))] text-[hsl(var(--ifox-text-primary))]"
                                     data-testid="input-scheduled-for"
                                     {...field}
                                   />
@@ -383,10 +384,10 @@ export default function IFoxContentGenerator() {
                             name="priority"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-white">الأولوية *</FormLabel>
+                                <FormLabel className="text-[hsl(var(--ifox-text-primary))]">الأولوية *</FormLabel>
                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                   <FormControl>
-                                    <SelectTrigger className="bg-slate-800/50 border-white/20 text-white" data-testid="select-priority">
+                                    <SelectTrigger className="bg-[hsl(var(--ifox-surface-muted)/.7)] border-[hsl(var(--ifox-surface-overlay))] text-[hsl(var(--ifox-text-primary))]" data-testid="select-priority">
                                       <SelectValue />
                                     </SelectTrigger>
                                   </FormControl>
@@ -404,7 +405,7 @@ export default function IFoxContentGenerator() {
                         {/* Submit Button */}
                         <Button
                           type="submit"
-                          className="w-full bg-gradient-to-r from-fuchsia-500 to-pink-600 hover:from-fuchsia-600 hover:to-pink-700 text-white font-bold"
+                          className="w-full bg-gradient-to-r from-[hsl(var(--ifox-accent-primary)/1)] to-[hsl(var(--ifox-accent-secondary)/1)] hover:from-[hsl(var(--ifox-accent-primary)/1)] hover:to-[hsl(var(--ifox-accent-secondary)/1)] text-[hsl(var(--ifox-text-primary))] font-bold"
                           disabled={createTaskMutation.isPending}
                           data-testid="button-submit"
                         >
@@ -433,13 +434,13 @@ export default function IFoxContentGenerator() {
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
               >
-                <Card className="bg-gradient-to-br from-slate-800/70 to-slate-900/50 border-white/30 backdrop-blur-lg">
+                <Card className="bg-[hsl(var(--ifox-surface-primary)/.8)] border-[hsl(var(--ifox-surface-overlay))] backdrop-blur-lg">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-white font-bold">
-                      <Calendar className="w-5 h-5 text-fuchsia-400" />
+                    <CardTitle className="flex items-center gap-2 text-[hsl(var(--ifox-text-primary))] font-bold">
+                      <Calendar className="w-5 h-5 text-[hsl(var(--ifox-accent-primary))]" />
                       المهام المجدولة
                     </CardTitle>
-                    <CardDescription className="text-[hsl(var(--ifox-text-primary))]">
+                    <CardDescription className="text-[hsl(var(--ifox-text-secondary))]">
                       {plannedTasks.length} مهمة في الانتظار
                     </CardDescription>
                   </CardHeader>
@@ -447,24 +448,24 @@ export default function IFoxContentGenerator() {
                     <ScrollArea className="h-[500px]">
                       <div className="space-y-3">
                         {isLoading ? (
-                          <div className="text-center py-12 text-[hsl(var(--ifox-text-primary))]">
+                          <div className="text-center py-12 text-[hsl(var(--ifox-text-secondary))]">
                             <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
                             جاري التحميل...
                           </div>
                         ) : plannedTasks.length === 0 ? (
                           <div className="text-center py-12">
                             <AlertCircle className="w-12 h-12 text-[hsl(var(--ifox-text-secondary))] mx-auto mb-3" />
-                            <p className="text-[hsl(var(--ifox-text-primary))]">لا توجد مهام مجدولة حالياً</p>
+                            <p className="text-[hsl(var(--ifox-text-secondary))]">لا توجد مهام مجدولة حالياً</p>
                             <p className="text-[hsl(var(--ifox-text-secondary))] text-sm mt-1">ابدأ بإنشاء مهمة جديدة من النموذج</p>
                           </div>
                         ) : (
                           plannedTasks.map((task, index) => {
                             const ContentIcon = contentTypeIcons[task.plannedContentType as keyof typeof contentTypeIcons] || FileText;
                             const statusColors = {
-                              planned: "from-blue-500 to-cyan-500",
-                              in_progress: "from-amber-500 to-orange-500",
-                              completed: "from-green-500 to-emerald-500",
-                              cancelled: "from-red-500 to-pink-500",
+                              planned: "from-[hsl(var(--ifox-info)/1)] to-[hsl(var(--ifox-info-muted)/1)]",
+                              in_progress: "from-[hsl(var(--ifox-warning)/1)] to-[hsl(var(--ifox-warning-muted)/1)]",
+                              completed: "from-[hsl(var(--ifox-success)/1)] to-[hsl(var(--ifox-success-muted)/1)]",
+                              cancelled: "from-[hsl(var(--ifox-error)/1)] to-[hsl(var(--ifox-error-muted)/1)]",
                             };
 
                             return (
@@ -473,19 +474,19 @@ export default function IFoxContentGenerator() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.05 }}
-                                className="p-4 rounded-lg bg-slate-800/50 border border-white/20 hover:border-white/30 transition-all"
+                                className="p-4 rounded-lg bg-[hsl(var(--ifox-surface-muted)/.7)] border border-[hsl(var(--ifox-surface-overlay))] hover:border-[hsl(var(--ifox-surface-overlay))] transition-all"
                                 data-testid={`task-${task.id}`}
                               >
                                 <div className="flex items-start justify-between mb-2">
                                   <div className="flex items-start gap-3 flex-1">
                                     <div className={`p-2 rounded-lg bg-gradient-to-r ${statusColors[task.status as keyof typeof statusColors] || statusColors.planned}`}>
-                                      <ContentIcon className="w-4 h-4 text-white" />
+                                      <ContentIcon className="w-4 h-4 text-[hsl(var(--ifox-text-primary))]" />
                                     </div>
                                     <div className="flex-1">
-                                      <h4 className="text-white font-semibold mb-1 line-clamp-2">
+                                      <h4 className="text-[hsl(var(--ifox-text-primary))] font-semibold mb-1 line-clamp-2">
                                         {task.topicIdea || 'محتوى جديد'}
                                       </h4>
-                                      <div className="flex items-center gap-3 text-xs text-[hsl(var(--ifox-text-primary))]">
+                                      <div className="flex items-center gap-3 text-xs text-[hsl(var(--ifox-text-secondary))]">
                                         <span className="flex items-center gap-1">
                                           <Clock className="w-3 h-3" />
                                           {formatRiyadhTime(task.scheduledDate)}
@@ -493,7 +494,7 @@ export default function IFoxContentGenerator() {
                                       </div>
                                     </div>
                                   </div>
-                                  <div className={`px-2 py-1 rounded-full text-xs font-medium text-white bg-gradient-to-r ${statusColors[task.status as keyof typeof statusColors] || statusColors.planned}`}>
+                                  <div className={`px-2 py-1 rounded-full text-xs font-medium text-[hsl(var(--ifox-text-primary))] bg-gradient-to-r ${statusColors[task.status as keyof typeof statusColors] || statusColors.planned}`}>
                                     {task.status === 'planned' && 'مجدولة'}
                                     {task.status === 'in_progress' && 'قيد المعالجة'}
                                     {task.status === 'completed' && 'مكتملة'}
@@ -513,26 +514,26 @@ export default function IFoxContentGenerator() {
 
             {/* Info Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border-cyan-400/30 backdrop-blur-sm">
+              <Card className="bg-gradient-to-br from-[hsl(var(--ifox-info)/.2)] to-[hsl(var(--ifox-info)/.2)] border-[hsl(var(--ifox-info)/.3)] backdrop-blur-sm">
                 <CardContent className="p-4 text-center">
-                  <Brain className="w-8 h-8 text-cyan-300 mx-auto mb-2" />
-                  <h3 className="font-bold text-white mb-1">ذكاء اصطناعي متقدم</h3>
+                  <Brain className="w-8 h-8 text-[hsl(var(--ifox-info))] mx-auto mb-2" />
+                  <h3 className="font-bold text-[hsl(var(--ifox-text-primary))] mb-1">ذكاء اصطناعي متقدم</h3>
                   <p className="text-xs text-[hsl(var(--ifox-text-primary))]">محتوى احترافي بجودة عالية</p>
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-fuchsia-500/20 to-pink-500/20 border-fuchsia-400/30 backdrop-blur-sm">
+              <Card className="bg-gradient-to-br from-[hsl(var(--ifox-accent-primary)/.2)] to-[hsl(var(--ifox-accent-secondary)/.2)] border-[hsl(var(--ifox-accent-primary)/.3)] backdrop-blur-sm">
                 <CardContent className="p-4 text-center">
-                  <Calendar className="w-8 h-8 text-fuchsia-300 mx-auto mb-2" />
-                  <h3 className="font-bold text-white mb-1">جدولة تلقائية</h3>
+                  <Calendar className="w-8 h-8 text-[hsl(var(--ifox-accent-primary))] mx-auto mb-2" />
+                  <h3 className="font-bold text-[hsl(var(--ifox-text-primary))] mb-1">جدولة تلقائية</h3>
                   <p className="text-xs text-[hsl(var(--ifox-text-primary))]">حدد الوقت ودع النظام يعمل</p>
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-amber-500/20 to-orange-500/20 border-amber-400/30 backdrop-blur-sm">
+              <Card className="bg-gradient-to-br from-[hsl(var(--ifox-warning)/.2)] to-[hsl(var(--ifox-warning)/.2)] border-[hsl(var(--ifox-warning)/.3)] backdrop-blur-sm">
                 <CardContent className="p-4 text-center">
-                  <Sparkles className="w-8 h-8 text-amber-300 mx-auto mb-2" />
-                  <h3 className="font-bold text-white mb-1">نتائج فورية</h3>
+                  <Sparkles className="w-8 h-8 text-[hsl(var(--ifox-warning))] mx-auto mb-2" />
+                  <h3 className="font-bold text-[hsl(var(--ifox-text-primary))] mb-1">نتائج فورية</h3>
                   <p className="text-xs text-[hsl(var(--ifox-text-primary))]">محتوى جاهز للنشر مباشرة</p>
                 </CardContent>
               </Card>
@@ -545,10 +546,10 @@ export default function IFoxContentGenerator() {
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3 }}
               >
-                <Card className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-400/30 backdrop-blur-lg">
+                <Card className="bg-gradient-to-br from-[hsl(var(--ifox-success)/.1)] to-[hsl(var(--ifox-success)/.1)] border-[hsl(var(--ifox-success)/.3)] backdrop-blur-lg">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-white font-bold">
-                      <CheckCircle className="w-5 h-5 text-green-400" />
+                    <CardTitle className="flex items-center gap-2 text-[hsl(var(--ifox-text-primary))] font-bold">
+                      <CheckCircle className="w-5 h-5 text-[hsl(var(--ifox-success))]" />
                       المهام المكتملة
                     </CardTitle>
                     <CardDescription className="text-[hsl(var(--ifox-text-primary))]">
@@ -567,15 +568,15 @@ export default function IFoxContentGenerator() {
                               initial={{ opacity: 0, x: -20 }}
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ delay: index * 0.05 }}
-                              className="p-4 rounded-lg bg-green-500/5 border border-green-400/20 hover:border-green-400/40 transition-all"
+                              className="p-4 rounded-lg bg-[hsl(var(--ifox-success)/.05)] border border-[hsl(var(--ifox-success)/.2)] hover:border-[hsl(var(--ifox-success)/.4)] transition-all"
                               data-testid={`completed-task-${task.id}`}
                             >
                               <div className="flex items-start gap-3">
-                                <div className="p-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500">
-                                  <ContentIcon className="w-4 h-4 text-white" />
+                                <div className="p-2 rounded-lg bg-gradient-to-r from-[hsl(var(--ifox-success)/1)] to-[hsl(var(--ifox-success-muted)/1)]">
+                                  <ContentIcon className="w-4 h-4 text-[hsl(var(--ifox-text-primary))]" />
                                 </div>
                                 <div className="flex-1">
-                                  <h4 className="text-white font-semibold mb-1 line-clamp-2">
+                                  <h4 className="text-[hsl(var(--ifox-text-primary))] font-semibold mb-1 line-clamp-2">
                                     {task.topicIdea || 'محتوى جديد'}
                                   </h4>
                                   <div className="flex items-center gap-3 text-xs text-[hsl(var(--ifox-text-primary))]">
@@ -588,7 +589,7 @@ export default function IFoxContentGenerator() {
                                     </span>
                                   </div>
                                 </div>
-                                <CheckCircle className="w-5 h-5 text-green-400" />
+                                <CheckCircle className="w-5 h-5 text-[hsl(var(--ifox-success))]" />
                               </div>
                             </motion.div>
                           );

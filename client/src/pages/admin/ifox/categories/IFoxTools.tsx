@@ -290,12 +290,12 @@ export default function IFoxTools() {
       description="دليل شامل لأدوات الذكاء الاصطناعي"
       icon={Wrench}
       gradient="bg-gradient-to-br from-green-500 to-cyan-600"
-      iconColor="text-white"
+      iconColor="text-[hsl(var(--ifox-text-primary))]"
       stats={stats}
       actions={actions}
     >
       {/* Category Filter */}
-      <Card className="bg-gradient-to-br from-white/10 to-white/5 border-white/10 backdrop-blur-lg mb-6">
+      <Card className="bg-gradient-to-br from-[hsl(var(--ifox-surface-overlay)/.1)] to-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] backdrop-blur-lg mb-6">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 overflow-x-auto pb-2">
             <Button
@@ -305,7 +305,7 @@ export default function IFoxTools() {
                 "whitespace-nowrap",
                 selectedCategory === "all" 
                   ? "bg-gradient-to-r from-green-500 to-cyan-600" 
-                  : "text-white hover:bg-white/10"
+                  : "text-[hsl(var(--ifox-text-primary))] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)]"
               )}
             >
               الكل
@@ -321,7 +321,7 @@ export default function IFoxTools() {
                     "whitespace-nowrap gap-2",
                     selectedCategory === cat.id 
                       ? "bg-gradient-to-r from-green-500 to-cyan-600" 
-                      : "text-white hover:bg-white/10"
+                      : "text-[hsl(var(--ifox-text-primary))] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)]"
                   )}
                 >
                   <Icon className="h-4 w-4" />
@@ -346,7 +346,7 @@ export default function IFoxTools() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <Card className="bg-gradient-to-br from-white/10 to-white/5 border-white/10 backdrop-blur-lg hover:from-white/15 hover:to-white/10 transition-all duration-300">
+              <Card className="bg-gradient-to-br from-[hsl(var(--ifox-surface-overlay)/.1)] to-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] backdrop-blur-lg hover:from-[hsl(var(--ifox-surface-overlay)/.15)] hover:to-[hsl(var(--ifox-surface-overlay)/.1)] transition-all duration-300">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3">
@@ -354,7 +354,7 @@ export default function IFoxTools() {
                         <CategoryIcon className="h-6 w-6 text-green-400" />
                       </div>
                       <div>
-                        <CardTitle className="text-white text-lg flex items-center gap-2">
+                        <CardTitle className="text-[hsl(var(--ifox-text-primary))] text-lg flex items-center gap-2">
                           {tool.name}
                           {tool.featured && (
                             <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">
@@ -412,7 +412,7 @@ export default function IFoxTools() {
 
                     {/* Category Badge */}
                     <div className="flex items-center justify-between">
-                      <Badge variant="outline" className="border-white/20 text-[hsl(var(--ifox-text-secondary))]">
+                      <Badge variant="outline" className="border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-secondary))]">
                         <CategoryIcon className="h-3 w-3 mr-1" />
                         {categoryData?.label}
                       </Badge>
@@ -433,7 +433,7 @@ export default function IFoxTools() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="flex-1 text-white hover:bg-white/10"
+                      className="flex-1 text-[hsl(var(--ifox-text-primary))] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)]"
                     >
                       <Eye className="h-4 w-4 mr-2" />
                       عرض
@@ -441,7 +441,7 @@ export default function IFoxTools() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="flex-1 text-white hover:bg-white/10"
+                      className="flex-1 text-[hsl(var(--ifox-text-primary))] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)]"
                     >
                       <Edit className="h-4 w-4 mr-2" />
                       تعديل
@@ -463,7 +463,7 @@ export default function IFoxTools() {
 
       {/* Add Tool Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="max-w-3xl bg-slate-900 border-white/10 text-white max-h-[90vh] overflow-y-auto" dir="rtl">
+        <DialogContent className="max-w-3xl bg-slate-900 border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))] max-h-[90vh] overflow-y-auto" dir="rtl">
           <DialogHeader>
             <DialogTitle className="text-2xl">إضافة أداة AI جديدة</DialogTitle>
             <DialogDescription className="text-[hsl(var(--ifox-text-secondary))]">
@@ -474,7 +474,7 @@ export default function IFoxTools() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <Tabs defaultValue="basic" className="w-full">
-                <TabsList className="w-full bg-white/10">
+                <TabsList className="w-full bg-[hsl(var(--ifox-surface-overlay)/.1)]">
                   <TabsTrigger value="basic" className="flex-1">المعلومات الأساسية</TabsTrigger>
                   <TabsTrigger value="details" className="flex-1">التفاصيل</TabsTrigger>
                   <TabsTrigger value="media" className="flex-1">الوسائط</TabsTrigger>
@@ -491,7 +491,7 @@ export default function IFoxTools() {
                           <Input
                             {...field}
                             placeholder="مثال: ChatGPT"
-                            className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                            className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                           />
                         </FormControl>
                         <FormMessage />
@@ -509,7 +509,7 @@ export default function IFoxTools() {
                           <Input
                             {...field}
                             placeholder="وصف قصير يظهر في البطاقة"
-                            className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                            className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                           />
                         </FormControl>
                         <FormMessage />
@@ -528,7 +528,7 @@ export default function IFoxTools() {
                             {...field}
                             rows={4}
                             placeholder="شرح تفصيلي عن الأداة وإمكانياتها"
-                            className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                            className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                           />
                         </FormControl>
                         <FormMessage />
@@ -545,7 +545,7 @@ export default function IFoxTools() {
                           <FormLabel>الفئة *</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
-                              <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                              <SelectTrigger className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))]">
                                 <SelectValue placeholder="اختر الفئة" />
                               </SelectTrigger>
                             </FormControl>
@@ -570,7 +570,7 @@ export default function IFoxTools() {
                           <FormLabel>نوع السعر *</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
-                              <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                              <SelectTrigger className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))]">
                                 <SelectValue />
                               </SelectTrigger>
                             </FormControl>
@@ -598,7 +598,7 @@ export default function IFoxTools() {
                               {...field}
                               placeholder="مثال: $20/month"
                               dir="ltr"
-                              className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                              className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                             />
                           </FormControl>
                           <FormDescription className="text-[hsl(var(--ifox-text-secondary))]">
@@ -621,7 +621,7 @@ export default function IFoxTools() {
                               type="url"
                               placeholder="https://..."
                               dir="ltr"
-                              className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                              className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                             />
                           </FormControl>
                           <FormMessage />
@@ -672,13 +672,13 @@ export default function IFoxTools() {
                         onChange={(e) => setProsInput(e.target.value)}
                         placeholder="أضف ميزة"
                         onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddPro())}
-                        className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                        className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                       />
                       <Button
                         type="button"
                         onClick={handleAddPro}
                         variant="outline"
-                        className="border-white/20 text-white hover:bg-white/10"
+                        className="border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)]"
                       >
                         <Plus className="h-4 w-4" />
                       </Button>
@@ -687,7 +687,7 @@ export default function IFoxTools() {
                       {form.watch("pros")?.map((pro, index) => (
                         <div key={index} className="flex items-center gap-2 bg-green-500/10 p-2 rounded">
                           <Check className="h-4 w-4 text-green-400" />
-                          <span className="flex-1 text-white">{pro}</span>
+                          <span className="flex-1 text-[hsl(var(--ifox-text-primary))]">{pro}</span>
                           <button
                             type="button"
                             onClick={() => handleRemovePro(pro)}
@@ -709,13 +709,13 @@ export default function IFoxTools() {
                         onChange={(e) => setConsInput(e.target.value)}
                         placeholder="أضف عيباً"
                         onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddCon())}
-                        className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                        className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                       />
                       <Button
                         type="button"
                         onClick={handleAddCon}
                         variant="outline"
-                        className="border-white/20 text-white hover:bg-white/10"
+                        className="border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)]"
                       >
                         <Plus className="h-4 w-4" />
                       </Button>
@@ -724,7 +724,7 @@ export default function IFoxTools() {
                       {form.watch("cons")?.map((con, index) => (
                         <div key={index} className="flex items-center gap-2 bg-red-500/10 p-2 rounded">
                           <X className="h-4 w-4 text-red-400" />
-                          <span className="flex-1 text-white">{con}</span>
+                          <span className="flex-1 text-[hsl(var(--ifox-text-primary))]">{con}</span>
                           <button
                             type="button"
                             onClick={() => handleRemoveCon(con)}
@@ -741,7 +741,7 @@ export default function IFoxTools() {
                     control={form.control}
                     name="featured"
                     render={({ field }) => (
-                      <FormItem className="flex items-center justify-between rounded-lg border border-white/10 p-4 bg-white/5">
+                      <FormItem className="flex items-center justify-between rounded-lg border border-[hsl(var(--ifox-surface-overlay)/.1)] p-4 bg-[hsl(var(--ifox-surface-overlay)/.05)]">
                         <div className="space-y-0.5">
                           <FormLabel>أداة مميزة</FormLabel>
                           <FormDescription className="text-[hsl(var(--ifox-text-secondary))]">
@@ -754,7 +754,7 @@ export default function IFoxTools() {
                             variant={field.value ? "default" : "outline"}
                             size="sm"
                             onClick={() => field.onChange(!field.value)}
-                            className={field.value ? "bg-amber-500 hover:bg-amber-600" : "border-white/20"}
+                            className={field.value ? "bg-amber-500 hover:bg-amber-600" : "border-[hsl(var(--ifox-surface-overlay)/.2)]"}
                           >
                             <Sparkles className="h-4 w-4" />
                           </Button>
@@ -767,7 +767,7 @@ export default function IFoxTools() {
                 <TabsContent value="media" className="space-y-4 mt-6">
                   <div className="space-y-2">
                     <Label>صور الواجهة</Label>
-                    <div className="border-2 border-dashed border-white/20 rounded-lg p-8 text-center cursor-pointer hover:border-green-400 transition-colors bg-white/5">
+                    <div className="border-2 border-dashed border-[hsl(var(--ifox-surface-overlay)/.2)] rounded-lg p-8 text-center cursor-pointer hover:border-green-400 transition-colors bg-[hsl(var(--ifox-surface-overlay)/.05)]">
                       <input
                         type="file"
                         accept="image/*"
@@ -800,7 +800,7 @@ export default function IFoxTools() {
                               }}
                               className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity"
                             >
-                              <X className="h-4 w-4 text-white bg-red-500 rounded-full p-0.5" />
+                              <X className="h-4 w-4 text-[hsl(var(--ifox-text-primary))] bg-red-500 rounded-full p-0.5" />
                             </button>
                           </div>
                         ))}
@@ -811,12 +811,12 @@ export default function IFoxTools() {
               </Tabs>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-6 border-t border-white/10">
+              <div className="flex items-center justify-end gap-3 pt-6 border-t border-[hsl(var(--ifox-surface-overlay)/.1)]">
                 <Button
                   type="button"
                   variant="ghost"
                   onClick={() => setShowAddDialog(false)}
-                  className="text-white hover:bg-white/10"
+                  className="text-[hsl(var(--ifox-text-primary))] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)]"
                 >
                   إلغاء
                 </Button>

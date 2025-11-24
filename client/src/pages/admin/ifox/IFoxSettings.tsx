@@ -177,7 +177,7 @@ export default function IFoxSettings() {
       <IFoxLayout>
         <div className="flex h-full items-center justify-center">
           <div className="text-center">
-            <RefreshCw className="w-12 h-12 text-violet-300 animate-spin mx-auto mb-4" />
+            <RefreshCw className="w-12 h-12 text-[hsl(var(--ifox-accent-primary))] animate-spin mx-auto mb-4" />
             <p className="text-[hsl(var(--ifox-text-primary))]">جاري تحميل الإعدادات...</p>
           </div>
         </div>
@@ -223,17 +223,18 @@ export default function IFoxSettings() {
                       ease: "easeInOut",
                     }}
                     style={{
-                      background: "radial-gradient(circle, rgba(59, 130, 246, 0.6), rgba(147, 51, 234, 0.6))",
+                      background: "radial-gradient(circle, hsl(var(--ifox-accent-glow) / 0.6), hsl(var(--ifox-accent-glow-secondary) / 0.6))",
                     }}
                   />
                   <img 
                     src={mascotImage} 
                     alt="iFox AI Mascot" 
-                    className="w-16 h-16 relative z-10 drop-shadow-2xl"
+                    className="w-16 h-16 relative z-10"
+                    style={{ filter: 'drop-shadow(0 25px 50px hsl(var(--ifox-surface-overlay) / 0.2))' }}
                   />
                 </motion.div>
                 <div>
-                  <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-300 to-purple-300 bg-clip-text text-transparent" data-testid="text-page-title">
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-[hsl(var(--ifox-accent-primary)/1)] to-[hsl(var(--ifox-accent-secondary)/1)] bg-clip-text text-transparent" data-testid="text-page-title">
                     إعدادات آي فوكس
                   </h1>
                   <p className="text-[hsl(var(--ifox-text-primary))] text-lg" data-testid="text-page-description">
@@ -252,7 +253,7 @@ export default function IFoxSettings() {
                   <Button
                     variant="outline"
                     onClick={handleReset}
-                    className="bg-slate-800/70 border-white/30 text-white hover:bg-slate-800/90"
+                    className="bg-[hsl(var(--ifox-surface-muted)/.7)] border-[hsl(var(--ifox-surface-overlay))] text-[hsl(var(--ifox-text-primary))] hover:bg-[hsl(var(--ifox-surface-overlay)/.6)]"
                     data-testid="button-reset"
                   >
                     <X className="w-4 h-4 ml-2" />
@@ -261,7 +262,7 @@ export default function IFoxSettings() {
                   <Button
                     onClick={handleSave}
                     disabled={saveMutation.isPending}
-                    className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white"
+                    className="bg-gradient-to-r from-[hsl(var(--ifox-accent-primary)/1)] to-[hsl(var(--ifox-accent-secondary)/1)] hover:from-[hsl(var(--ifox-accent-primary)/1)] hover:to-[hsl(var(--ifox-accent-secondary)/1)] text-[hsl(var(--ifox-text-primary))]"
                     data-testid="button-save"
                   >
                     {saveMutation.isPending ? (
@@ -282,28 +283,28 @@ export default function IFoxSettings() {
               transition={{ duration: 0.5, delay: 0.1 }}
             >
               <Tabs defaultValue="ai" className="space-y-6">
-                <TabsList className="bg-slate-800/70 border border-white/30 p-1">
-                  <TabsTrigger value="ai" className="data-[state=active]:bg-violet-500/30">
+                <TabsList className="bg-[hsl(var(--ifox-surface-muted)/.7)] border border-[hsl(var(--ifox-surface-overlay))] p-1">
+                  <TabsTrigger value="ai" className="data-[state=active]:bg-[hsl(var(--ifox-accent-primary)/.3)]">
                     <Brain className="w-4 h-4 ml-2" />
                     الذكاء الاصطناعي
                   </TabsTrigger>
-                  <TabsTrigger value="publishing" className="data-[state=active]:bg-violet-500/30">
+                  <TabsTrigger value="publishing" className="data-[state=active]:bg-[hsl(var(--ifox-accent-primary)/.3)]">
                     <FileText className="w-4 h-4 ml-2" />
                     النشر
                   </TabsTrigger>
-                  <TabsTrigger value="notifications" className="data-[state=active]:bg-violet-500/30">
+                  <TabsTrigger value="notifications" className="data-[state=active]:bg-[hsl(var(--ifox-accent-primary)/.3)]">
                     <Bell className="w-4 h-4 ml-2" />
                     الإشعارات
                   </TabsTrigger>
-                  <TabsTrigger value="appearance" className="data-[state=active]:bg-violet-500/30">
+                  <TabsTrigger value="appearance" className="data-[state=active]:bg-[hsl(var(--ifox-accent-primary)/.3)]">
                     <Palette className="w-4 h-4 ml-2" />
                     المظهر
                   </TabsTrigger>
-                  <TabsTrigger value="media" className="data-[state=active]:bg-violet-500/30">
+                  <TabsTrigger value="media" className="data-[state=active]:bg-[hsl(var(--ifox-accent-primary)/.3)]">
                     <Image className="w-4 h-4 ml-2" />
                     الوسائط
                   </TabsTrigger>
-                  <TabsTrigger value="security" className="data-[state=active]:bg-violet-500/30">
+                  <TabsTrigger value="security" className="data-[state=active]:bg-[hsl(var(--ifox-accent-primary)/.3)]">
                     <Shield className="w-4 h-4 ml-2" />
                     الأمان
                   </TabsTrigger>
@@ -312,10 +313,10 @@ export default function IFoxSettings() {
                 {/* AI Settings */}
                 <TabsContent value="ai">
                   <div className="grid gap-6">
-                    <Card className="bg-gradient-to-br from-slate-800/70 to-slate-900/50 border-white/30 backdrop-blur-lg">
+                    <Card className="bg-[hsl(var(--ifox-surface-primary)/.8)] border-[hsl(var(--ifox-surface-overlay))] backdrop-blur-lg">
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-white">
-                          <Cpu className="w-5 h-5 text-violet-300" />
+                        <CardTitle className="flex items-center gap-2 text-[hsl(var(--ifox-text-primary))]">
+                          <Cpu className="w-5 h-5 text-[hsl(var(--ifox-accent-primary))]" />
                           إعدادات الذكاء الاصطناعي
                         </CardTitle>
                         <CardDescription className="text-[hsl(var(--ifox-text-primary))]">
@@ -325,12 +326,12 @@ export default function IFoxSettings() {
                       <CardContent className="space-y-6">
                         <div className="grid md:grid-cols-2 gap-6">
                           <div className="space-y-2">
-                            <Label className="text-white">مزود الذكاء الاصطناعي</Label>
+                            <Label className="text-[hsl(var(--ifox-text-primary))]">مزود الذكاء الاصطناعي</Label>
                             <Select 
                               value={localSettings.ai.provider}
                               onValueChange={(v: any) => updateSetting(['ai', 'provider'], v)}
                             >
-                              <SelectTrigger className="bg-slate-800/50 border-white/20 text-white" data-testid="select-ai-provider">
+                              <SelectTrigger className="bg-[hsl(var(--ifox-surface-muted)/.7)] border-[hsl(var(--ifox-surface-overlay))] text-[hsl(var(--ifox-text-primary))]" data-testid="select-ai-provider">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -342,12 +343,12 @@ export default function IFoxSettings() {
                           </div>
 
                           <div className="space-y-2">
-                            <Label className="text-white">النموذج</Label>
+                            <Label className="text-[hsl(var(--ifox-text-primary))]">النموذج</Label>
                             <Input
                               value={localSettings.ai.model}
                               onChange={(e) => updateSetting(['ai', 'model'], e.target.value)}
                               placeholder="gpt-4, claude-3, gemini-pro"
-                              className="bg-slate-800/50 border-white/20 text-white"
+                              className="bg-[hsl(var(--ifox-surface-muted)/.7)] border-[hsl(var(--ifox-surface-overlay))] text-[hsl(var(--ifox-text-primary))]"
                               data-testid="input-ai-model"
                             />
                           </div>
@@ -356,8 +357,8 @@ export default function IFoxSettings() {
                         <div className="space-y-4">
                           <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                              <Label className="text-white">الإبداع (Temperature)</Label>
-                              <Badge variant="outline" className="text-violet-300 border-violet-400/40">
+                              <Label className="text-[hsl(var(--ifox-text-primary))]">الإبداع (Temperature)</Label>
+                              <Badge variant="outline" className="text-[hsl(var(--ifox-accent-primary))] border-[hsl(var(--ifox-accent-primary)/.4)]">
                                 {localSettings.ai.temperature}
                               </Badge>
                             </div>
@@ -376,8 +377,8 @@ export default function IFoxSettings() {
 
                           <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                              <Label className="text-white">الحد الأقصى للكلمات</Label>
-                              <Badge variant="outline" className="text-violet-300 border-violet-400/40">
+                              <Label className="text-[hsl(var(--ifox-text-primary))]">الحد الأقصى للكلمات</Label>
+                              <Badge variant="outline" className="text-[hsl(var(--ifox-accent-primary))] border-[hsl(var(--ifox-accent-primary)/.4)]">
                                 {localSettings.ai.maxTokens}
                               </Badge>
                             </div>
@@ -392,16 +393,16 @@ export default function IFoxSettings() {
                           </div>
                         </div>
 
-                        <div className="space-y-4 pt-4 border-t border-white/20">
-                          <h3 className="font-semibold text-white flex items-center gap-2">
-                            <Zap className="w-4 h-4 text-yellow-300" />
+                        <div className="space-y-4 pt-4 border-t border-[hsl(var(--ifox-surface-overlay)/.2)]">
+                          <h3 className="font-semibold text-[hsl(var(--ifox-text-primary))] flex items-center gap-2">
+                            <Zap className="w-4 h-4 text-[hsl(var(--ifox-warning))]" />
                             الميزات التلقائية
                           </h3>
                           
                           <div className="space-y-3">
-                            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                            <div className="flex items-center justify-between p-3 rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.5)]">
                               <div>
-                                <Label className="text-white">التصنيف التلقائي</Label>
+                                <Label className="text-[hsl(var(--ifox-text-primary))]">التصنيف التلقائي</Label>
                                 <p className="text-xs text-[hsl(var(--ifox-text-primary))]">تصنيف المقالات تلقائياً بالذكاء الاصطناعي</p>
                               </div>
                               <Switch
@@ -411,9 +412,9 @@ export default function IFoxSettings() {
                               />
                             </div>
 
-                            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                            <div className="flex items-center justify-between p-3 rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.5)]">
                               <div>
-                                <Label className="text-white">SEO التلقائي</Label>
+                                <Label className="text-[hsl(var(--ifox-text-primary))]">SEO التلقائي</Label>
                                 <p className="text-xs text-[hsl(var(--ifox-text-primary))]">توليد بيانات SEO تلقائياً</p>
                               </div>
                               <Switch
@@ -423,9 +424,9 @@ export default function IFoxSettings() {
                               />
                             </div>
 
-                            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                            <div className="flex items-center justify-between p-3 rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.5)]">
                               <div>
-                                <Label className="text-white">الملخص التلقائي</Label>
+                                <Label className="text-[hsl(var(--ifox-text-primary))]">الملخص التلقائي</Label>
                                 <p className="text-xs text-[hsl(var(--ifox-text-primary))]">إنشاء ملخص تلقائي للمقالات</p>
                               </div>
                               <Switch
@@ -435,9 +436,9 @@ export default function IFoxSettings() {
                               />
                             </div>
 
-                            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                            <div className="flex items-center justify-between p-3 rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.5)]">
                               <div>
-                                <Label className="text-white">تحليل المحتوى</Label>
+                                <Label className="text-[hsl(var(--ifox-text-primary))]">تحليل المحتوى</Label>
                                 <p className="text-xs text-[hsl(var(--ifox-text-primary))]">تحليل جودة المحتوى تلقائياً</p>
                               </div>
                               <Switch
@@ -455,10 +456,10 @@ export default function IFoxSettings() {
 
                 {/* Publishing Settings */}
                 <TabsContent value="publishing">
-                  <Card className="bg-gradient-to-br from-slate-800/70 to-slate-900/50 border-white/30 backdrop-blur-lg">
+                  <Card className="bg-[hsl(var(--ifox-surface-primary)/.8)] border-[hsl(var(--ifox-surface-overlay))] backdrop-blur-lg">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-white">
-                        <FileText className="w-5 h-5 text-blue-300" />
+                      <CardTitle className="flex items-center gap-2 text-[hsl(var(--ifox-text-primary))]">
+                        <FileText className="w-5 h-5 text-[hsl(var(--ifox-info))]" />
                         إعدادات النشر
                       </CardTitle>
                       <CardDescription className="text-[hsl(var(--ifox-text-primary))]">
@@ -466,9 +467,9 @@ export default function IFoxSettings() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.5)]">
                         <div>
-                          <Label className="text-white">النشر التلقائي</Label>
+                          <Label className="text-[hsl(var(--ifox-text-primary))]">النشر التلقائي</Label>
                           <p className="text-xs text-[hsl(var(--ifox-text-primary))]">نشر المقالات تلقائياً بعد الإنشاء</p>
                         </div>
                         <Switch
@@ -478,9 +479,9 @@ export default function IFoxSettings() {
                         />
                       </div>
 
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.5)]">
                         <div>
-                          <Label className="text-white">المراجعة المطلوبة</Label>
+                          <Label className="text-[hsl(var(--ifox-text-primary))]">المراجعة المطلوبة</Label>
                           <p className="text-xs text-[hsl(var(--ifox-text-primary))]">يتطلب مراجعة قبل النشر</p>
                         </div>
                         <Switch
@@ -491,12 +492,12 @@ export default function IFoxSettings() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-white">الحالة الافتراضية</Label>
+                        <Label className="text-[hsl(var(--ifox-text-primary))]">الحالة الافتراضية</Label>
                         <Select 
                           value={localSettings.publishing.defaultStatus}
                           onValueChange={(v: any) => updateSetting(['publishing', 'defaultStatus'], v)}
                         >
-                          <SelectTrigger className="bg-slate-800/50 border-white/20 text-white" data-testid="select-default-status">
+                          <SelectTrigger className="bg-[hsl(var(--ifox-surface-muted)/.7)] border-[hsl(var(--ifox-surface-overlay))] text-[hsl(var(--ifox-text-primary))]" data-testid="select-default-status">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -507,9 +508,9 @@ export default function IFoxSettings() {
                         </Select>
                       </div>
 
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.5)]">
                         <div>
-                          <Label className="text-white">السماح بالجدولة</Label>
+                          <Label className="text-[hsl(var(--ifox-text-primary))]">السماح بالجدولة</Label>
                           <p className="text-xs text-[hsl(var(--ifox-text-primary))]">تمكين جدولة المقالات</p>
                         </div>
                         <Switch
@@ -520,19 +521,19 @@ export default function IFoxSettings() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-white">الحد الأقصى لأيام الجدولة</Label>
+                        <Label className="text-[hsl(var(--ifox-text-primary))]">الحد الأقصى لأيام الجدولة</Label>
                         <Input
                           type="number"
                           value={localSettings.publishing.maxScheduleDays}
                           onChange={(e) => updateSetting(['publishing', 'maxScheduleDays'], parseInt(e.target.value))}
-                          className="bg-slate-800/50 border-white/20 text-white"
+                          className="bg-[hsl(var(--ifox-surface-muted)/.7)] border-[hsl(var(--ifox-surface-overlay))] text-[hsl(var(--ifox-text-primary))]"
                           data-testid="input-max-schedule-days"
                         />
                       </div>
 
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.5)]">
                         <div>
-                          <Label className="text-white">تمكين الإصدارات</Label>
+                          <Label className="text-[hsl(var(--ifox-text-primary))]">تمكين الإصدارات</Label>
                           <p className="text-xs text-[hsl(var(--ifox-text-primary))]">حفظ إصدارات متعددة من المقالات</p>
                         </div>
                         <Switch
@@ -547,10 +548,10 @@ export default function IFoxSettings() {
 
                 {/* Notifications Settings */}
                 <TabsContent value="notifications">
-                  <Card className="bg-gradient-to-br from-slate-800/70 to-slate-900/50 border-white/30 backdrop-blur-lg">
+                  <Card className="bg-[hsl(var(--ifox-surface-primary)/.8)] border-[hsl(var(--ifox-surface-overlay))] backdrop-blur-lg">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-white">
-                        <Bell className="w-5 h-5 text-amber-300" />
+                      <CardTitle className="flex items-center gap-2 text-[hsl(var(--ifox-text-primary))]">
+                        <Bell className="w-5 h-5 text-[hsl(var(--ifox-warning))]" />
                         إعدادات الإشعارات
                       </CardTitle>
                       <CardDescription className="text-[hsl(var(--ifox-text-primary))]">
@@ -558,9 +559,9 @@ export default function IFoxSettings() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.5)]">
                         <div>
-                          <Label className="text-white">إشعارات البريد الإلكتروني</Label>
+                          <Label className="text-[hsl(var(--ifox-text-primary))]">إشعارات البريد الإلكتروني</Label>
                           <p className="text-xs text-[hsl(var(--ifox-text-primary))]">استلام إشعارات عبر البريد</p>
                         </div>
                         <Switch
@@ -570,9 +571,9 @@ export default function IFoxSettings() {
                         />
                       </div>
 
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.5)]">
                         <div>
-                          <Label className="text-white">الإشعارات الفورية</Label>
+                          <Label className="text-[hsl(var(--ifox-text-primary))]">الإشعارات الفورية</Label>
                           <p className="text-xs text-[hsl(var(--ifox-text-primary))]">استلام إشعارات فورية في المتصفح</p>
                         </div>
                         <Switch
@@ -582,27 +583,27 @@ export default function IFoxSettings() {
                         />
                       </div>
 
-                      <div className="space-y-3 pt-4 border-t border-white/20">
-                        <h3 className="font-semibold text-white">أنواع الإشعارات</h3>
+                      <div className="space-y-3 pt-4 border-t border-[hsl(var(--ifox-surface-overlay)/.2)]">
+                        <h3 className="font-semibold text-[hsl(var(--ifox-text-primary))]">أنواع الإشعارات</h3>
                         
-                        <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
-                          <Label className="text-white">عند النشر</Label>
+                        <div className="flex items-center justify-between p-3 rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.5)]">
+                          <Label className="text-[hsl(var(--ifox-text-primary))]">عند النشر</Label>
                           <Switch
                             checked={localSettings.notifications.notifyOnPublish}
                             onCheckedChange={(v) => updateSetting(['notifications', 'notifyOnPublish'], v)}
                           />
                         </div>
 
-                        <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
-                          <Label className="text-white">عند التعليق</Label>
+                        <div className="flex items-center justify-between p-3 rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.5)]">
+                          <Label className="text-[hsl(var(--ifox-text-primary))]">عند التعليق</Label>
                           <Switch
                             checked={localSettings.notifications.notifyOnComment}
                             onCheckedChange={(v) => updateSetting(['notifications', 'notifyOnComment'], v)}
                           />
                         </div>
 
-                        <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
-                          <Label className="text-white">عند الإشارة</Label>
+                        <div className="flex items-center justify-between p-3 rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.5)]">
+                          <Label className="text-[hsl(var(--ifox-text-primary))]">عند الإشارة</Label>
                           <Switch
                             checked={localSettings.notifications.notifyOnMention}
                             onCheckedChange={(v) => updateSetting(['notifications', 'notifyOnMention'], v)}
@@ -610,13 +611,13 @@ export default function IFoxSettings() {
                         </div>
                       </div>
 
-                      <div className="space-y-2 pt-4 border-t border-white/20">
-                        <Label className="text-white">تكرار الملخص</Label>
+                      <div className="space-y-2 pt-4 border-t border-[hsl(var(--ifox-surface-overlay)/.2)]">
+                        <Label className="text-[hsl(var(--ifox-text-primary))]">تكرار الملخص</Label>
                         <Select 
                           value={localSettings.notifications.digestFrequency}
                           onValueChange={(v: any) => updateSetting(['notifications', 'digestFrequency'], v)}
                         >
-                          <SelectTrigger className="bg-slate-800/50 border-white/20 text-white" data-testid="select-digest-frequency">
+                          <SelectTrigger className="bg-[hsl(var(--ifox-surface-muted)/.7)] border-[hsl(var(--ifox-surface-overlay))] text-[hsl(var(--ifox-text-primary))]" data-testid="select-digest-frequency">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -632,10 +633,10 @@ export default function IFoxSettings() {
 
                 {/* Appearance Settings */}
                 <TabsContent value="appearance">
-                  <Card className="bg-gradient-to-br from-slate-800/70 to-slate-900/50 border-white/30 backdrop-blur-lg">
+                  <Card className="bg-[hsl(var(--ifox-surface-primary)/.8)] border-[hsl(var(--ifox-surface-overlay))] backdrop-blur-lg">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-white">
-                        <Palette className="w-5 h-5 text-pink-300" />
+                      <CardTitle className="flex items-center gap-2 text-[hsl(var(--ifox-text-primary))]">
+                        <Palette className="w-5 h-5 text-[hsl(var(--ifox-accent-primary))]" />
                         إعدادات المظهر
                       </CardTitle>
                       <CardDescription className="text-[hsl(var(--ifox-text-primary))]">
@@ -644,12 +645,12 @@ export default function IFoxSettings() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="space-y-2">
-                        <Label className="text-white">السمة</Label>
+                        <Label className="text-[hsl(var(--ifox-text-primary))]">السمة</Label>
                         <Select 
                           value={localSettings.appearance.theme}
                           onValueChange={(v: any) => updateSetting(['appearance', 'theme'], v)}
                         >
-                          <SelectTrigger className="bg-slate-800/50 border-white/20 text-white" data-testid="select-theme">
+                          <SelectTrigger className="bg-[hsl(var(--ifox-surface-muted)/.7)] border-[hsl(var(--ifox-surface-overlay))] text-[hsl(var(--ifox-text-primary))]" data-testid="select-theme">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -661,12 +662,12 @@ export default function IFoxSettings() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-white">حجم الخط</Label>
+                        <Label className="text-[hsl(var(--ifox-text-primary))]">حجم الخط</Label>
                         <Select 
                           value={localSettings.appearance.fontSize}
                           onValueChange={(v: any) => updateSetting(['appearance', 'fontSize'], v)}
                         >
-                          <SelectTrigger className="bg-slate-800/50 border-white/20 text-white" data-testid="select-font-size">
+                          <SelectTrigger className="bg-[hsl(var(--ifox-surface-muted)/.7)] border-[hsl(var(--ifox-surface-overlay))] text-[hsl(var(--ifox-text-primary))]" data-testid="select-font-size">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -677,9 +678,9 @@ export default function IFoxSettings() {
                         </Select>
                       </div>
 
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.5)]">
                         <div>
-                          <Label className="text-white">دعم RTL</Label>
+                          <Label className="text-[hsl(var(--ifox-text-primary))]">دعم RTL</Label>
                           <p className="text-xs text-[hsl(var(--ifox-text-primary))]">دعم الاتجاه من اليمين لليسار</p>
                         </div>
                         <Switch
@@ -689,9 +690,9 @@ export default function IFoxSettings() {
                         />
                       </div>
 
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.5)]">
                         <div>
-                          <Label className="text-white">إظهار الحركات</Label>
+                          <Label className="text-[hsl(var(--ifox-text-primary))]">إظهار الحركات</Label>
                           <p className="text-xs text-[hsl(var(--ifox-text-primary))]">تفعيل الرسوم المتحركة</p>
                         </div>
                         <Switch
@@ -701,9 +702,9 @@ export default function IFoxSettings() {
                         />
                       </div>
 
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.5)]">
                         <div>
-                          <Label className="text-white">الوضع المضغوط</Label>
+                          <Label className="text-[hsl(var(--ifox-text-primary))]">الوضع المضغوط</Label>
                           <p className="text-xs text-[hsl(var(--ifox-text-primary))]">عرض أكثر كثافة للمحتوى</p>
                         </div>
                         <Switch
@@ -718,10 +719,10 @@ export default function IFoxSettings() {
 
                 {/* Media Settings */}
                 <TabsContent value="media">
-                  <Card className="bg-gradient-to-br from-slate-800/70 to-slate-900/50 border-white/30 backdrop-blur-lg">
+                  <Card className="bg-[hsl(var(--ifox-surface-primary)/.8)] border-[hsl(var(--ifox-surface-overlay))] backdrop-blur-lg">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-white">
-                        <Image className="w-5 h-5 text-green-300" />
+                      <CardTitle className="flex items-center gap-2 text-[hsl(var(--ifox-text-primary))]">
+                        <Image className="w-5 h-5 text-[hsl(var(--ifox-success))]" />
                         إعدادات الوسائط
                       </CardTitle>
                       <CardDescription className="text-[hsl(var(--ifox-text-primary))]">
@@ -730,19 +731,19 @@ export default function IFoxSettings() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="space-y-2">
-                        <Label className="text-white">الحد الأقصى لحجم الملف (MB)</Label>
+                        <Label className="text-[hsl(var(--ifox-text-primary))]">الحد الأقصى لحجم الملف (MB)</Label>
                         <Input
                           type="number"
                           value={localSettings.media.maxFileSize}
                           onChange={(e) => updateSetting(['media', 'maxFileSize'], parseInt(e.target.value))}
-                          className="bg-slate-800/50 border-white/20 text-white"
+                          className="bg-[hsl(var(--ifox-surface-muted)/.7)] border-[hsl(var(--ifox-surface-overlay))] text-[hsl(var(--ifox-text-primary))]"
                           data-testid="input-max-file-size"
                         />
                       </div>
 
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.5)]">
                         <div>
-                          <Label className="text-white">التحسين التلقائي</Label>
+                          <Label className="text-[hsl(var(--ifox-text-primary))]">التحسين التلقائي</Label>
                           <p className="text-xs text-[hsl(var(--ifox-text-primary))]">ضغط وتحسين الصور تلقائياً</p>
                         </div>
                         <Switch
@@ -752,9 +753,9 @@ export default function IFoxSettings() {
                         />
                       </div>
 
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.5)]">
                         <div>
-                          <Label className="text-white">إنشاء الصور المصغرة</Label>
+                          <Label className="text-[hsl(var(--ifox-text-primary))]">إنشاء الصور المصغرة</Label>
                           <p className="text-xs text-[hsl(var(--ifox-text-primary))]">توليد نسخ مصغرة تلقائياً</p>
                         </div>
                         <Switch
@@ -764,9 +765,9 @@ export default function IFoxSettings() {
                         />
                       </div>
 
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.5)]">
                         <div>
-                          <Label className="text-white">العلامة المائية</Label>
+                          <Label className="text-[hsl(var(--ifox-text-primary))]">العلامة المائية</Label>
                           <p className="text-xs text-[hsl(var(--ifox-text-primary))]">إضافة علامة مائية للصور</p>
                         </div>
                         <Switch
@@ -778,12 +779,12 @@ export default function IFoxSettings() {
 
                       {localSettings.media.watermark && (
                         <div className="space-y-2">
-                          <Label className="text-white">نص العلامة المائية</Label>
+                          <Label className="text-[hsl(var(--ifox-text-primary))]">نص العلامة المائية</Label>
                           <Input
                             value={localSettings.media.watermarkText}
                             onChange={(e) => updateSetting(['media', 'watermarkText'], e.target.value)}
                             placeholder="سبق آي فوكس"
-                            className="bg-slate-800/50 border-white/20 text-white"
+                            className="bg-[hsl(var(--ifox-surface-muted)/.7)] border-[hsl(var(--ifox-surface-overlay))] text-[hsl(var(--ifox-text-primary))]"
                             data-testid="input-watermark-text"
                           />
                         </div>
@@ -794,10 +795,10 @@ export default function IFoxSettings() {
 
                 {/* Security Settings */}
                 <TabsContent value="security">
-                  <Card className="bg-gradient-to-br from-slate-800/70 to-slate-900/50 border-white/30 backdrop-blur-lg">
+                  <Card className="bg-[hsl(var(--ifox-surface-primary)/.8)] border-[hsl(var(--ifox-surface-overlay))] backdrop-blur-lg">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-white">
-                        <Shield className="w-5 h-5 text-red-300" />
+                      <CardTitle className="flex items-center gap-2 text-[hsl(var(--ifox-text-primary))]">
+                        <Shield className="w-5 h-5 text-[hsl(var(--ifox-error))]" />
                         إعدادات الأمان
                       </CardTitle>
                       <CardDescription className="text-[hsl(var(--ifox-text-primary))]">
@@ -805,9 +806,9 @@ export default function IFoxSettings() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.5)]">
                         <div>
-                          <Label className="text-white">المصادقة الثنائية</Label>
+                          <Label className="text-[hsl(var(--ifox-text-primary))]">المصادقة الثنائية</Label>
                           <p className="text-xs text-[hsl(var(--ifox-text-primary))]">طبقة أمان إضافية لتسجيل الدخول</p>
                         </div>
                         <Switch
@@ -818,45 +819,45 @@ export default function IFoxSettings() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-white">مهلة الجلسة (دقيقة)</Label>
+                        <Label className="text-[hsl(var(--ifox-text-primary))]">مهلة الجلسة (دقيقة)</Label>
                         <Input
                           type="number"
                           value={localSettings.security.sessionTimeout}
                           onChange={(e) => updateSetting(['security', 'sessionTimeout'], parseInt(e.target.value))}
-                          className="bg-slate-800/50 border-white/20 text-white"
+                          className="bg-[hsl(var(--ifox-surface-muted)/.7)] border-[hsl(var(--ifox-surface-overlay))] text-[hsl(var(--ifox-text-primary))]"
                           data-testid="input-session-timeout"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-white">محاولات تسجيل الدخول</Label>
+                        <Label className="text-[hsl(var(--ifox-text-primary))]">محاولات تسجيل الدخول</Label>
                         <Input
                           type="number"
                           value={localSettings.security.loginAttempts}
                           onChange={(e) => updateSetting(['security', 'loginAttempts'], parseInt(e.target.value))}
-                          className="bg-slate-800/50 border-white/20 text-white"
+                          className="bg-[hsl(var(--ifox-surface-muted)/.7)] border-[hsl(var(--ifox-surface-overlay))] text-[hsl(var(--ifox-text-primary))]"
                           data-testid="input-login-attempts"
                         />
                         <p className="text-xs text-[hsl(var(--ifox-text-primary))]">عدد المحاولات قبل الحظر</p>
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-white">انتهاء صلاحية كلمة المرور (يوم)</Label>
+                        <Label className="text-[hsl(var(--ifox-text-primary))]">انتهاء صلاحية كلمة المرور (يوم)</Label>
                         <Input
                           type="number"
                           value={localSettings.security.passwordExpiry}
                           onChange={(e) => updateSetting(['security', 'passwordExpiry'], parseInt(e.target.value))}
-                          className="bg-slate-800/50 border-white/20 text-white"
+                          className="bg-[hsl(var(--ifox-surface-muted)/.7)] border-[hsl(var(--ifox-surface-overlay))] text-[hsl(var(--ifox-text-primary))]"
                           data-testid="input-password-expiry"
                         />
                       </div>
 
-                      <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                      <div className="p-4 rounded-lg bg-[hsl(var(--ifox-warning)/.1)] border border-[hsl(var(--ifox-warning)/.3)]">
                         <div className="flex items-start gap-3">
-                          <AlertTriangle className="w-5 h-5 text-amber-300 flex-shrink-0 mt-0.5" />
+                          <AlertTriangle className="w-5 h-5 text-[hsl(var(--ifox-warning))] flex-shrink-0 mt-0.5" />
                           <div>
-                            <p className="text-sm font-semibold text-amber-200">تحذير أمني</p>
-                            <p className="text-xs text-amber-100 mt-1">
+                            <p className="text-sm font-semibold text-[hsl(var(--ifox-warning))]">تحذير أمني</p>
+                            <p className="text-xs text-[hsl(var(--ifox-text-primary))] mt-1">
                               تأكد من تفعيل المصادقة الثنائية وتحديث كلمة المرور بانتظام لحماية حسابك
                             </p>
                           </div>

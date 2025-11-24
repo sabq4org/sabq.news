@@ -68,14 +68,14 @@ const categoryIcons: Record<string, any> = {
 };
 
 const categoryColors: Record<string, string> = {
-  "ifox-ai": "from-violet-500 to-purple-600",
-  "ai-news": "from-blue-500 to-cyan-600",
-  "ai-voice": "from-pink-500 to-rose-600",
-  "ai-tools": "from-amber-500 to-orange-600",
-  "ai-academy": "from-green-500 to-emerald-600",
-  "ai-community": "from-indigo-500 to-purple-600",
-  "ai-insights": "from-teal-500 to-cyan-600",
-  "ai-opinions": "from-red-500 to-pink-600",
+  "ifox-ai": "from-[hsl(var(--ifox-accent-primary)/1)] to-[hsl(var(--ifox-accent-secondary)/1)]",
+  "ai-news": "from-[hsl(var(--ifox-info)/1)] to-[hsl(var(--ifox-info-muted)/1)]",
+  "ai-voice": "from-[hsl(var(--ifox-error)/1)] to-[hsl(var(--ifox-error-muted)/1)]",
+  "ai-tools": "from-[hsl(var(--ifox-warning)/1)] to-[hsl(var(--ifox-warning-muted)/1)]",
+  "ai-academy": "from-[hsl(var(--ifox-success)/1)] to-[hsl(var(--ifox-success-muted)/1)]",
+  "ai-community": "from-[hsl(var(--ifox-accent-primary)/1)] to-[hsl(var(--ifox-accent-secondary)/1)]",
+  "ai-insights": "from-[hsl(var(--ifox-info)/1)] to-[hsl(var(--ifox-info-muted)/1)]",
+  "ai-opinions": "from-[hsl(var(--ifox-error)/1)] to-[hsl(var(--ifox-error-muted)/1)]",
 };
 
 export default function IFoxCategory() {
@@ -158,7 +158,7 @@ export default function IFoxCategory() {
 
   const CategoryCard = ({ category }: { category: IFoxCategory }) => {
     const IconComponent = categoryIcons[category.icon] || Layers;
-    const colorGradient = categoryColors[category.slug] || "from-gray-500 to-gray-600";
+    const colorGradient = categoryColors[category.slug] || "from-[hsl(var(--ifox-neutral)/1)] to-[hsl(var(--ifox-neutral-muted)/1)]";
 
     return (
       <motion.div
@@ -167,16 +167,16 @@ export default function IFoxCategory() {
         whileHover={{ scale: 1.02 }}
         className="group"
       >
-        <Card className="bg-gradient-to-br from-slate-800/70 to-slate-900/50 border-white/30 backdrop-blur-lg hover:border-white/40 transition-all cursor-pointer">
+        <Card className="bg-[hsl(var(--ifox-surface-primary)/.8)] border-[hsl(var(--ifox-surface-overlay))] backdrop-blur-lg hover:border-[hsl(var(--ifox-surface-overlay))] transition-all cursor-pointer">
           <CardContent className="p-6">
             <div className="flex items-start justify-between mb-4">
-              <div className={`p-3 rounded-xl bg-gradient-to-br ${colorGradient} shadow-lg`}>
-                <IconComponent className="w-6 h-6 text-white" />
+              <div className={`p-3 rounded-xl bg-gradient-to-br ${colorGradient} shadow-[0_10px_15px_hsl(var(--ifox-surface-overlay)/.1)]`}>
+                <IconComponent className="w-6 h-6 text-[hsl(var(--ifox-text-primary))]" />
               </div>
               <div className="flex items-center gap-2">
                 <Badge 
                   variant={category.status === "active" ? "default" : "secondary"}
-                  className={category.status === "active" ? "bg-green-500/20 text-green-300 border-green-500/30" : ""}
+                  className={category.status === "active" ? "bg-[hsl(var(--ifox-success)/.2)] text-[hsl(var(--ifox-success))] border-[hsl(var(--ifox-success)/.3)]" : ""}
                 >
                   {category.status === "active" ? "نشط" : "معطل"}
                 </Badge>
@@ -184,11 +184,11 @@ export default function IFoxCategory() {
                   size="icon"
                   variant="ghost"
                   onClick={() => handleToggleStatus(category)}
-                  className="hover:bg-slate-700/50"
+                  className="hover:bg-[hsl(var(--ifox-surface-overlay)/.6)]"
                   data-testid={`button-toggle-${category.id}`}
                 >
                   {category.status === "active" ? (
-                    <Eye className="w-4 h-4 text-green-300" />
+                    <Eye className="w-4 h-4 text-[hsl(var(--ifox-success))]" />
                   ) : (
                     <EyeOff className="w-4 h-4 text-[hsl(var(--ifox-text-secondary))]" />
                   )}
@@ -197,42 +197,42 @@ export default function IFoxCategory() {
             </div>
 
             <div className="mb-4">
-              <h3 className="text-lg font-bold text-white mb-1">{category.nameAr}</h3>
-              <p className="text-sm text-[hsl(var(--ifox-text-primary))]">{category.nameEn}</p>
+              <h3 className="text-lg font-bold text-[hsl(var(--ifox-text-primary))] mb-1">{category.nameAr}</h3>
+              <p className="text-sm text-[hsl(var(--ifox-text-secondary))]">{category.nameEn}</p>
               {category.description && (
-                <p className="text-xs text-[hsl(var(--ifox-text-primary))] mt-2 line-clamp-2">{category.description}</p>
+                <p className="text-xs text-[hsl(var(--ifox-text-secondary))] mt-2 line-clamp-2">{category.description}</p>
               )}
             </div>
 
             <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="p-3 rounded-lg bg-slate-800/50">
-                <p className="text-xs text-[hsl(var(--ifox-text-primary))] mb-1">المقالات</p>
-                <p className="text-2xl font-bold text-white">{category.articlesCount.toLocaleString('ar-SA')}</p>
+              <div className="p-3 rounded-lg bg-[hsl(var(--ifox-surface-muted)/.7)]">
+                <p className="text-xs text-[hsl(var(--ifox-text-secondary))] mb-1">المقالات</p>
+                <p className="text-2xl font-bold text-[hsl(var(--ifox-text-primary))]">{category.articlesCount.toLocaleString('ar-SA')}</p>
                 <div className="flex items-center gap-1 mt-1">
-                  <span className="text-xs text-green-300">{category.publishedCount} منشور</span>
-                  <span className="text-xs text-[hsl(var(--ifox-text-primary))]">• {category.draftCount} مسودة</span>
+                  <span className="text-xs text-[hsl(var(--ifox-success))]">{category.publishedCount} منشور</span>
+                  <span className="text-xs text-[hsl(var(--ifox-text-secondary))]">• {category.draftCount} مسودة</span>
                 </div>
               </div>
 
-              <div className="p-3 rounded-lg bg-slate-800/50">
-                <p className="text-xs text-[hsl(var(--ifox-text-primary))] mb-1">المشاهدات</p>
-                <p className="text-2xl font-bold text-white">{category.totalViews.toLocaleString('ar-SA')}</p>
+              <div className="p-3 rounded-lg bg-[hsl(var(--ifox-surface-muted)/.7)]">
+                <p className="text-xs text-[hsl(var(--ifox-text-secondary))] mb-1">المشاهدات</p>
+                <p className="text-2xl font-bold text-[hsl(var(--ifox-text-primary))]">{category.totalViews.toLocaleString('ar-SA')}</p>
                 <div className="flex items-center gap-1 mt-1">
-                  <TrendingUp className="w-3 h-3 text-green-300" />
-                  <span className="text-xs text-green-300">+12.5%</span>
+                  <TrendingUp className="w-3 h-3 text-[hsl(var(--ifox-success))]" />
+                  <span className="text-xs text-[hsl(var(--ifox-success))]">+12.5%</span>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-3 border-t border-white/20">
+            <div className="flex items-center justify-between pt-3 border-t border-[hsl(var(--ifox-surface-overlay))]">
               <div className="flex items-center gap-2">
                 <Badge 
                   className={`
                     px-2 py-0.5 text-xs
-                    ${category.avgAIScore >= 90 ? 'bg-gradient-to-r from-green-500 to-emerald-600' : 
-                      category.avgAIScore >= 80 ? 'bg-gradient-to-r from-blue-500 to-cyan-600' :
-                      'bg-gradient-to-r from-amber-500 to-orange-600'}
-                    text-white border-0
+                    ${category.avgAIScore >= 90 ? 'bg-gradient-to-r from-[hsl(var(--ifox-success)/1)] to-[hsl(var(--ifox-success-muted)/1)]' : 
+                      category.avgAIScore >= 80 ? 'bg-gradient-to-r from-[hsl(var(--ifox-info)/1)] to-[hsl(var(--ifox-info-muted)/1)]' :
+                      'bg-gradient-to-r from-[hsl(var(--ifox-warning)/1)] to-[hsl(var(--ifox-warning-muted)/1)]'}
+                    text-[hsl(var(--ifox-text-primary))] border-0
                   `}
                 >
                   AI {category.avgAIScore}
@@ -242,7 +242,7 @@ export default function IFoxCategory() {
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  className="text-violet-300 hover:text-violet-200 hover:bg-slate-700/50"
+                  className="text-[hsl(var(--ifox-accent-primary))] hover:text-[hsl(var(--ifox-accent-primary))] hover:bg-[hsl(var(--ifox-surface-overlay)/.6)]"
                   data-testid={`button-view-articles-${category.id}`}
                 >
                   عرض المقالات
@@ -294,17 +294,18 @@ export default function IFoxCategory() {
                         ease: "easeInOut",
                       }}
                       style={{
-                        background: "radial-gradient(circle, rgba(59, 130, 246, 0.6), rgba(147, 51, 234, 0.6))",
+                        background: "radial-gradient(circle, hsl(var(--ifox-accent-glow) / 0.6), hsl(var(--ifox-accent-glow-secondary) / 0.6))",
                       }}
                     />
                     <img 
                       src={mascotImage} 
                       alt="iFox AI Mascot" 
-                      className="w-16 h-16 relative z-10 drop-shadow-2xl"
+                      className="w-16 h-16 relative z-10"
+                      style={{ filter: 'drop-shadow(0 25px 50px hsl(var(--ifox-surface-overlay) / 0.2))' }}
                     />
                   </motion.div>
                   <div>
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-300 to-purple-300 bg-clip-text text-transparent" data-testid="text-page-title">
+                    <h1 className="text-3xl font-bold bg-gradient-to-r from-[hsl(var(--ifox-accent-primary)/1)] to-[hsl(var(--ifox-accent-secondary)/1)] bg-clip-text text-transparent" data-testid="text-page-title">
                       فئات آي فوكس
                     </h1>
                     <p className="text-[hsl(var(--ifox-text-primary))] text-lg" data-testid="text-page-description">
@@ -315,85 +316,85 @@ export default function IFoxCategory() {
 
                 {/* AI Status */}
                 <motion.div
-                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30"
+                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-[hsl(var(--ifox-success)/.2)] to-[hsl(var(--ifox-success)/.2)] border border-[hsl(var(--ifox-success)/.3)]"
                   animate={{ scale: [1, 1.05, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
                   <motion.div
-                    className="w-2 h-2 rounded-full bg-green-400"
+                    className="w-2 h-2 rounded-full bg-[hsl(var(--ifox-success))]"
                     animate={{
                       opacity: [0.5, 1, 0.5],
                       boxShadow: [
-                        "0 0 5px rgba(34, 197, 94, 0.5)",
-                        "0 0 15px rgba(34, 197, 94, 1)",
-                        "0 0 5px rgba(34, 197, 94, 0.5)",
+                        "0 0 5px hsl(var(--ifox-success-glow) / 0.5)",
+                        "0 0 15px hsl(var(--ifox-success))",
+                        "0 0 5px hsl(var(--ifox-success-glow) / 0.5)",
                       ],
                     }}
                     transition={{ duration: 1.5, repeat: Infinity }}
                   />
-                  <span className="text-xs font-medium text-green-400">{totalStats.activeCategories} فئة نشطة</span>
-                  <Layers className="w-3 h-3 text-green-400" />
+                  <span className="text-xs font-medium text-[hsl(var(--ifox-success))]">{totalStats.activeCategories} فئة نشطة</span>
+                  <Layers className="w-3 h-3 text-[hsl(var(--ifox-success))]" />
                 </motion.div>
               </div>
 
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                <Card className="bg-gradient-to-br from-violet-500/40 to-purple-500/30 border-violet-400/30 backdrop-blur-sm">
+                <Card className="bg-gradient-to-br from-[hsl(var(--ifox-accent-primary)/.4)] to-[hsl(var(--ifox-accent-secondary)/.3)] border-[hsl(var(--ifox-accent-primary)/.3)] backdrop-blur-sm">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-semibold text-white">إجمالي الفئات</p>
-                        <p className="text-2xl font-bold text-white">{totalStats.categories}</p>
+                        <p className="text-sm font-semibold text-[hsl(var(--ifox-text-primary))]">إجمالي الفئات</p>
+                        <p className="text-2xl font-bold text-[hsl(var(--ifox-text-primary))]">{totalStats.categories}</p>
                       </div>
-                      <Layers className="w-8 h-8 text-violet-200" />
+                      <Layers className="w-8 h-8 text-[hsl(var(--ifox-accent-primary))]" />
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-blue-500/40 to-cyan-500/30 border-cyan-400/30 backdrop-blur-sm">
+                <Card className="bg-gradient-to-br from-[hsl(var(--ifox-info)/.4)] to-[hsl(var(--ifox-info)/.3)] border-[hsl(var(--ifox-info)/.3)] backdrop-blur-sm">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-semibold text-white">المقالات الكلية</p>
-                        <p className="text-2xl font-bold text-white">{totalStats.totalArticles.toLocaleString('ar-SA')}</p>
+                        <p className="text-sm font-semibold text-[hsl(var(--ifox-text-primary))]">المقالات الكلية</p>
+                        <p className="text-2xl font-bold text-[hsl(var(--ifox-text-primary))]">{totalStats.totalArticles.toLocaleString('ar-SA')}</p>
                       </div>
-                      <FileText className="w-8 h-8 text-cyan-200" />
+                      <FileText className="w-8 h-8 text-[hsl(var(--ifox-info))]" />
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-amber-500/40 to-orange-500/30 border-orange-400/30 backdrop-blur-sm">
+                <Card className="bg-gradient-to-br from-[hsl(var(--ifox-warning)/.4)] to-[hsl(var(--ifox-warning)/.3)] border-[hsl(var(--ifox-warning)/.3)] backdrop-blur-sm">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-semibold text-white">إجمالي المشاهدات</p>
-                        <p className="text-2xl font-bold text-white">{totalStats.totalViews.toLocaleString('ar-SA')}</p>
+                        <p className="text-sm font-semibold text-[hsl(var(--ifox-text-primary))]">إجمالي المشاهدات</p>
+                        <p className="text-2xl font-bold text-[hsl(var(--ifox-text-primary))]">{totalStats.totalViews.toLocaleString('ar-SA')}</p>
                       </div>
-                      <Eye className="w-8 h-8 text-amber-200" />
+                      <Eye className="w-8 h-8 text-[hsl(var(--ifox-warning))]" />
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-green-500/40 to-emerald-500/30 border-emerald-400/30 backdrop-blur-sm">
+                <Card className="bg-gradient-to-br from-[hsl(var(--ifox-success)/.4)] to-[hsl(var(--ifox-success)/.3)] border-[hsl(var(--ifox-success)/.3)] backdrop-blur-sm">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-semibold text-white">متوسط AI Score</p>
-                        <p className="text-2xl font-bold text-white">{totalStats.avgAIScore}</p>
+                        <p className="text-sm font-semibold text-[hsl(var(--ifox-text-primary))]">متوسط AI Score</p>
+                        <p className="text-2xl font-bold text-[hsl(var(--ifox-text-primary))]">{totalStats.avgAIScore}</p>
                       </div>
-                      <Brain className="w-8 h-8 text-emerald-200" />
+                      <Brain className="w-8 h-8 text-[hsl(var(--ifox-success))]" />
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-pink-500/40 to-rose-500/30 border-rose-400/30 backdrop-blur-sm">
+                <Card className="bg-gradient-to-br from-[hsl(var(--ifox-error)/.4)] to-[hsl(var(--ifox-error)/.3)] border-[hsl(var(--ifox-error)/.3)] backdrop-blur-sm">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-semibold text-white">الفئات النشطة</p>
-                        <p className="text-2xl font-bold text-white">{totalStats.activeCategories}</p>
+                        <p className="text-sm font-semibold text-[hsl(var(--ifox-text-primary))]">الفئات النشطة</p>
+                        <p className="text-2xl font-bold text-[hsl(var(--ifox-text-primary))]">{totalStats.activeCategories}</p>
                       </div>
-                      <Activity className="w-8 h-8 text-rose-200" />
+                      <Activity className="w-8 h-8 text-[hsl(var(--ifox-error))]" />
                     </div>
                   </CardContent>
                 </Card>
@@ -406,7 +407,7 @@ export default function IFoxCategory() {
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
-              <Card className="bg-gradient-to-br from-slate-800/70 to-slate-900/50 border-white/30 backdrop-blur-lg">
+              <Card className="bg-[hsl(var(--ifox-surface-primary)/.8)] border-[hsl(var(--ifox-surface-overlay))] backdrop-blur-lg">
                 <CardContent className="p-4">
                   <div className="flex flex-col md:flex-row gap-3">
                     <div className="flex-1 relative">
@@ -415,13 +416,13 @@ export default function IFoxCategory() {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="بحث في الفئات..."
-                        className="pr-10 bg-slate-800/50 border-white/20 text-white"
+                        className="pr-10 bg-[hsl(var(--ifox-surface-muted)/.7)] border-[hsl(var(--ifox-surface-overlay))] text-[hsl(var(--ifox-text-primary))]"
                         data-testid="input-search"
                       />
                     </div>
 
                     <Select value={statusFilter} onValueChange={(v: any) => setStatusFilter(v)}>
-                      <SelectTrigger className="w-full md:w-[180px] bg-slate-800/50 border-white/20 text-white" data-testid="select-status-filter">
+                      <SelectTrigger className="w-full md:w-[180px] bg-[hsl(var(--ifox-surface-muted)/.7)] border-[hsl(var(--ifox-surface-overlay))] text-[hsl(var(--ifox-text-primary))]" data-testid="select-status-filter">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -432,7 +433,7 @@ export default function IFoxCategory() {
                     </Select>
 
                     <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
-                      <SelectTrigger className="w-full md:w-[180px] bg-slate-800/50 border-white/20 text-white" data-testid="select-sort-by">
+                      <SelectTrigger className="w-full md:w-[180px] bg-[hsl(var(--ifox-surface-muted)/.7)] border-[hsl(var(--ifox-surface-overlay))] text-[hsl(var(--ifox-text-primary))]" data-testid="select-sort-by">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -458,11 +459,11 @@ export default function IFoxCategory() {
                   <p className="text-[hsl(var(--ifox-text-primary))]">جاري التحميل...</p>
                 </div>
               ) : filteredCategories.length === 0 ? (
-                <Card className="bg-gradient-to-br from-slate-800/70 to-slate-900/50 border-white/30 backdrop-blur-lg">
+                <Card className="bg-[hsl(var(--ifox-surface-primary)/.8)] border-[hsl(var(--ifox-surface-overlay))] backdrop-blur-lg">
                   <CardContent className="p-12 text-center">
                     <Layers className="w-16 h-16 text-[hsl(var(--ifox-text-secondary))] mx-auto mb-4" />
-                    <h3 className="text-xl font-bold text-white mb-2">لا توجد فئات</h3>
-                    <p className="text-[hsl(var(--ifox-text-primary))]">لم يتم العثور على فئات مطابقة للبحث</p>
+                    <h3 className="text-xl font-bold text-[hsl(var(--ifox-text-primary))] mb-2">لا توجد فئات</h3>
+                    <p className="text-[hsl(var(--ifox-text-secondary))]">لم يتم العثور على فئات مطابقة للبحث</p>
                   </CardContent>
                 </Card>
               ) : (

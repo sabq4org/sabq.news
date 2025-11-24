@@ -381,7 +381,7 @@ export default function IFoxCommunity() {
       case "discussion": return "bg-purple-500/20 text-purple-400";
       case "event": return "bg-green-500/20 text-green-400";
       case "announcement": return "bg-amber-500/20 text-amber-400";
-      default: return "bg-gray-500/20 text-[hsl(var(--ifox-text-secondary))]";
+      default: return "bg-[hsl(var(--ifox-neutral)/.2)] text-[hsl(var(--ifox-text-secondary))]";
     }
   };
 
@@ -413,17 +413,17 @@ export default function IFoxCommunity() {
       description="منصة تواصل وتبادل المعرفة لمجتمع الذكاء الاصطناعي"
       icon={Users2}
       gradient="bg-gradient-to-br from-pink-500 to-purple-600"
-      iconColor="text-white"
+      iconColor="text-[hsl(var(--ifox-text-primary))]"
       stats={stats}
       actions={actions}
     >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
-          <Card className="bg-gradient-to-br from-white/10 to-white/5 border-white/10 backdrop-blur-lg">
+          <Card className="bg-gradient-to-br from-[hsl(var(--ifox-surface-overlay)/.1)] to-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] backdrop-blur-lg">
             <CardContent className="p-0">
               <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-                <TabsList className="w-full bg-white/10 rounded-t-lg rounded-b-none">
+                <TabsList className="w-full bg-[hsl(var(--ifox-surface-overlay)/.1)] rounded-t-lg rounded-b-none">
                   <TabsTrigger value="discussions" className="flex-1">
                     <MessageSquare className="h-4 w-4 mr-2" />
                     النقاشات
@@ -448,7 +448,7 @@ export default function IFoxCommunity() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05 }}
                       >
-                        <Card className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors">
+                        <Card className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)] transition-colors">
                           <CardContent className="p-4">
                             <div className="flex items-start gap-4">
                               <Avatar>
@@ -461,7 +461,7 @@ export default function IFoxCommunity() {
                               <div className="flex-1">
                                 <div className="flex items-start justify-between mb-2">
                                   <div>
-                                    <h4 className="font-semibold text-white flex items-center gap-2">
+                                    <h4 className="font-semibold text-[hsl(var(--ifox-text-primary))] flex items-center gap-2">
                                       {topic.isPinned && <Pin className="h-4 w-4 text-amber-400" />}
                                       {topic.title}
                                       {topic.isHot && (
@@ -506,7 +506,7 @@ export default function IFoxCommunity() {
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-1">
-                                    <Button size="icon" variant="ghost" className="h-6 w-6 text-[hsl(var(--ifox-text-secondary))] hover:text-white">
+                                    <Button size="icon" variant="ghost" className="h-6 w-6 text-[hsl(var(--ifox-text-secondary))] hover:text-[hsl(var(--ifox-text-primary))]">
                                       <Edit className="h-3 w-3" />
                                     </Button>
                                     <Button size="icon" variant="ghost" className="h-6 w-6 text-[hsl(var(--ifox-text-secondary))] hover:text-red-400">
@@ -533,7 +533,7 @@ export default function IFoxCommunity() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05 }}
                       >
-                        <Card className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors">
+                        <Card className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)] transition-colors">
                           <CardContent className="p-4">
                             <div className="flex items-start gap-4">
                               <div className="p-3 rounded-lg bg-blue-500/20">
@@ -543,7 +543,7 @@ export default function IFoxCommunity() {
                               <div className="flex-1">
                                 <div className="flex items-start justify-between mb-2">
                                   <div>
-                                    <h4 className="font-semibold text-white flex items-center gap-2">
+                                    <h4 className="font-semibold text-[hsl(var(--ifox-text-primary))] flex items-center gap-2">
                                       {topic.isPinned && <Pin className="h-4 w-4 text-amber-400" />}
                                       {topic.title}
                                     </h4>
@@ -584,11 +584,11 @@ export default function IFoxCommunity() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
                     >
-                      <Card className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors">
+                      <Card className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)] transition-colors">
                         <CardContent className="p-4">
                           <div className="flex items-start gap-4">
                             <div className="text-center bg-gradient-to-br from-pink-500/20 to-purple-500/20 rounded-lg p-3">
-                              <div className="text-2xl font-bold text-white">
+                              <div className="text-2xl font-bold text-[hsl(var(--ifox-text-primary))]">
                                 {new Date(event.date).getDate()}
                               </div>
                               <div className="text-xs text-[hsl(var(--ifox-text-secondary))]">
@@ -597,7 +597,7 @@ export default function IFoxCommunity() {
                             </div>
                             
                             <div className="flex-1">
-                              <h4 className="font-semibold text-white mb-1">
+                              <h4 className="font-semibold text-[hsl(var(--ifox-text-primary))] mb-1">
                                 {event.title}
                               </h4>
                               <div className="flex items-center gap-4 text-sm text-[hsl(var(--ifox-text-secondary))]">
@@ -643,9 +643,9 @@ export default function IFoxCommunity() {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Top Contributors */}
-          <Card className="bg-gradient-to-br from-white/10 to-white/5 border-white/10 backdrop-blur-lg">
+          <Card className="bg-gradient-to-br from-[hsl(var(--ifox-surface-overlay)/.1)] to-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] backdrop-blur-lg">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-[hsl(var(--ifox-text-primary))] flex items-center gap-2">
                 <Crown className="h-5 w-5 text-amber-400" />
                 أفضل المساهمين
               </CardTitle>
@@ -663,12 +663,12 @@ export default function IFoxCommunity() {
                       </Avatar>
                       {expert.isVerified && (
                         <div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full p-0.5">
-                          <Check className="h-2 w-2 text-white" />
+                          <Check className="h-2 w-2 text-[hsl(var(--ifox-text-primary))]" />
                         </div>
                       )}
                     </div>
                     <div className="flex-1">
-                      <h4 className="text-sm font-medium text-white">{expert.name}</h4>
+                      <h4 className="text-sm font-medium text-[hsl(var(--ifox-text-primary))]">{expert.name}</h4>
                       <p className="text-xs text-[hsl(var(--ifox-text-secondary))]">{expert.contributions} مساهمة</p>
                     </div>
                     <div className="flex items-center gap-1">
@@ -683,9 +683,9 @@ export default function IFoxCommunity() {
           </Card>
 
           {/* Trending Tags */}
-          <Card className="bg-gradient-to-br from-white/10 to-white/5 border-white/10 backdrop-blur-lg">
+          <Card className="bg-gradient-to-br from-[hsl(var(--ifox-surface-overlay)/.1)] to-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] backdrop-blur-lg">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-[hsl(var(--ifox-text-primary))] flex items-center gap-2">
                 <Hash className="h-5 w-5 text-pink-400" />
                 الوسوم الشائعة
               </CardTitle>
@@ -716,15 +716,15 @@ export default function IFoxCommunity() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-[hsl(var(--ifox-text-secondary))]">أعضاء جدد اليوم</span>
-                    <span className="text-white">47</span>
+                    <span className="text-[hsl(var(--ifox-text-primary))]">47</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-[hsl(var(--ifox-text-secondary))]">منشورات اليوم</span>
-                    <span className="text-white">123</span>
+                    <span className="text-[hsl(var(--ifox-text-primary))]">123</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-[hsl(var(--ifox-text-secondary))]">تفاعلات اليوم</span>
-                    <span className="text-white">892</span>
+                    <span className="text-[hsl(var(--ifox-text-primary))]">892</span>
                   </div>
                 </div>
               </div>
@@ -735,7 +735,7 @@ export default function IFoxCommunity() {
 
       {/* Add Topic Dialog */}
       <Dialog open={showTopicDialog} onOpenChange={setShowTopicDialog}>
-        <DialogContent className="max-w-2xl bg-slate-900 border-white/10 text-white" dir="rtl">
+        <DialogContent className="max-w-2xl bg-slate-900 border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))]" dir="rtl">
           <DialogHeader>
             <DialogTitle className="text-2xl">إضافة موضوع جديد</DialogTitle>
             <DialogDescription className="text-[hsl(var(--ifox-text-secondary))]">
@@ -755,7 +755,7 @@ export default function IFoxCommunity() {
                       <Input
                         {...field}
                         placeholder="عنوان الموضوع"
-                        className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                        className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                       />
                     </FormControl>
                     <FormMessage />
@@ -774,7 +774,7 @@ export default function IFoxCommunity() {
                         {...field}
                         rows={4}
                         placeholder="اكتب وصفاً للموضوع"
-                        className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                        className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                       />
                     </FormControl>
                     <FormMessage />
@@ -790,7 +790,7 @@ export default function IFoxCommunity() {
                     <FormLabel>الفئة *</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                        <SelectTrigger className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))]">
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
@@ -815,13 +815,13 @@ export default function IFoxCommunity() {
                     onChange={(e) => setTagInput(e.target.value)}
                     placeholder="أضف وسماً"
                     onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddTag())}
-                    className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                    className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                   />
                   <Button
                     type="button"
                     onClick={handleAddTag}
                     variant="outline"
-                    className="border-white/20 text-white hover:bg-white/10"
+                    className="border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)]"
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
@@ -831,7 +831,7 @@ export default function IFoxCommunity() {
                     <Badge
                       key={tag}
                       variant="secondary"
-                      className="bg-purple-500/20 text-white border-purple-500/30"
+                      className="bg-purple-500/20 text-[hsl(var(--ifox-text-primary))] border-purple-500/30"
                     >
                       {tag}
                       <button
@@ -846,12 +846,12 @@ export default function IFoxCommunity() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-6 border-t border-white/10">
+              <div className="flex items-center justify-end gap-3 pt-6 border-t border-[hsl(var(--ifox-surface-overlay)/.1)]">
                 <Button
                   type="button"
                   variant="ghost"
                   onClick={() => setShowTopicDialog(false)}
-                  className="text-white hover:bg-white/10"
+                  className="text-[hsl(var(--ifox-text-primary))] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)]"
                 >
                   إلغاء
                 </Button>
@@ -870,7 +870,7 @@ export default function IFoxCommunity() {
 
       {/* Add Expert Dialog */}
       <Dialog open={showExpertDialog} onOpenChange={setShowExpertDialog}>
-        <DialogContent className="max-w-2xl bg-slate-900 border-white/10 text-white max-h-[90vh] overflow-y-auto" dir="rtl">
+        <DialogContent className="max-w-2xl bg-slate-900 border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))] max-h-[90vh] overflow-y-auto" dir="rtl">
           <DialogHeader>
             <DialogTitle className="text-2xl">إضافة خبير جديد</DialogTitle>
             <DialogDescription className="text-[hsl(var(--ifox-text-secondary))]">
@@ -890,7 +890,7 @@ export default function IFoxCommunity() {
                       <Input
                         {...field}
                         placeholder="الاسم الكامل"
-                        className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                        className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                       />
                     </FormControl>
                     <FormMessage />
@@ -908,7 +908,7 @@ export default function IFoxCommunity() {
                       <Input
                         {...field}
                         placeholder="مثال: خبير في معالجة اللغات الطبيعية"
-                        className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                        className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                       />
                     </FormControl>
                     <FormMessage />
@@ -927,7 +927,7 @@ export default function IFoxCommunity() {
                         {...field}
                         rows={4}
                         placeholder="نبذة عن الخبير وخبراته"
-                        className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                        className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                       />
                     </FormControl>
                     <FormMessage />
@@ -945,7 +945,7 @@ export default function IFoxCommunity() {
                       <Input
                         {...field}
                         placeholder="مثال: NLP, Computer Vision, ML"
-                        className="bg-white/10 border-white/20 text-white placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                        className="bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
                       />
                     </FormControl>
                     <FormMessage />
@@ -968,24 +968,24 @@ export default function IFoxCommunity() {
                         className={cn(
                           "p-3 rounded-lg border transition-all",
                           isSelected
-                            ? "bg-white/10 border-white/30"
-                            : "bg-white/5 border-white/10 hover:bg-white/10"
+                            ? "bg-[hsl(var(--ifox-surface-overlay)/.1)] border-[hsl(var(--ifox-surface-overlay)/.3)]"
+                            : "bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)]"
                         )}
                       >
                         <BadgeIcon className={cn("h-6 w-6 mx-auto mb-1", badge.color)} />
-                        <p className="text-xs text-white">{badge.name}</p>
+                        <p className="text-xs text-[hsl(var(--ifox-text-primary))]">{badge.name}</p>
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-6 border-t border-white/10">
+              <div className="flex items-center justify-end gap-3 pt-6 border-t border-[hsl(var(--ifox-surface-overlay)/.1)]">
                 <Button
                   type="button"
                   variant="ghost"
                   onClick={() => setShowExpertDialog(false)}
-                  className="text-white hover:bg-white/10"
+                  className="text-[hsl(var(--ifox-text-primary))] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)]"
                 >
                   إلغاء
                 </Button>

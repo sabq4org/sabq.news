@@ -263,7 +263,34 @@
   --ifox-surface-overlay: 258 60% 22%;
   --ifox-text-primary: 220 15% 94%;
   --ifox-text-secondary: 220 12% 78%;
-  --ifox-accent: 266 87% 52%;
+  --ifox-text-tertiary: 220 10% 65%;
+  
+  /* Accent Colors */
+  --ifox-accent-primary: 266 87% 65%;
+  --ifox-accent-secondary: 252 75% 70%;
+  --ifox-accent-muted: 258 40% 45%;
+  
+  /* Semantic Status Colors */
+  --ifox-success: 142 70% 50%;
+  --ifox-success-muted: 142 50% 40%;
+  --ifox-success-glow: 142 70% 45%;
+  --ifox-warning: 35 90% 55%;
+  --ifox-warning-muted: 35 70% 45%;
+  --ifox-warning-glow: 35 90% 50%;
+  --ifox-info: 195 75% 55%;
+  --ifox-info-muted: 195 60% 45%;
+  --ifox-info-glow: 195 75% 50%;
+  --ifox-error: 0 75% 50%;
+  --ifox-error-muted: 0 60% 40%;
+  --ifox-error-glow: 0 75% 45%;
+  
+  /* Accent Glows for Animations */
+  --ifox-accent-glow: 266 87% 60%;
+  --ifox-accent-glow-secondary: 252 75% 65%;
+  
+  /* Neutral/Fallback Colors */
+  --ifox-neutral: 220 10% 50%;
+  --ifox-neutral-muted: 220 8% 40%;
 
   --shadow-2xs: 0px 2px 0px 0px hsl(220 25% 0% / 0.15);
   --shadow-xs: 0px 2px 0px 0px hsl(220 25% 0% / 0.20);

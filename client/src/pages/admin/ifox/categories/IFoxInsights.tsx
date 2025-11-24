@@ -77,7 +77,8 @@ import {
   Database,
   Cloud,
   Shield,
-  Sparkles
+  Sparkles,
+  GraduationCap
 } from "lucide-react";
 
 const reportSchema = z.object({
@@ -126,11 +127,11 @@ const marketData = [
 ];
 
 const categoryData = [
-  { name: "توليد النص", value: 35, color: "#8B5CF6" },
-  { name: "توليد الصور", value: 28, color: "#EC4899" },
-  { name: "البرمجة", value: 20, color: "#3B82F6" },
-  { name: "المحادثة", value: 12, color: "#10B981" },
-  { name: "أخرى", value: 5, color: "#F59E0B" },
+  { name: "توليد النص", value: 35, color: "hsl(var(--ifox-accent-primary))" },
+  { name: "توليد الصور", value: 28, color: "hsl(var(--ifox-accent-secondary))" },
+  { name: "البرمجة", value: 20, color: "hsl(var(--ifox-info))" },
+  { name: "المحادثة", value: 12, color: "hsl(var(--ifox-success))" },
+  { name: "أخرى", value: 5, color: "hsl(var(--ifox-warning))" },
 ];
 
 const growthData = [
@@ -289,25 +290,25 @@ export default function IFoxInsights() {
       title="AI Insights - الرؤى"
       description="تحليلات وتقارير متقدمة حول الذكاء الاصطناعي"
       icon={TrendingUp}
-      gradient="bg-gradient-to-br from-blue-500 to-indigo-600"
-      iconColor="text-white"
+      gradient="bg-gradient-to-br from-[hsl(var(--ifox-accent-primary)/1)] to-[hsl(var(--ifox-accent-secondary)/1)]"
+      iconColor="text-[hsl(var(--ifox-text-primary))]"
       stats={stats}
       actions={actions}
     >
       <div className="space-y-6">
         {/* Live Dashboard */}
-        <Card className="bg-gradient-to-br from-white/10 to-white/5 border-white/10 backdrop-blur-lg">
+        <Card className="bg-gradient-to-br from-[hsl(var(--ifox-surface-overlay)/.1)] to-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] backdrop-blur-lg">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-white flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-blue-400" />
+              <CardTitle className="text-[hsl(var(--ifox-text-primary))] flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-[hsl(var(--ifox-info))]" />
                 لوحة التحليلات الحية
               </CardTitle>
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-white/20 text-white hover:bg-white/10"
+                  className="border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)]"
                   onClick={handleExportPDF}
                 >
                   <FileDown className="h-4 w-4 mr-2" />
@@ -316,7 +317,7 @@ export default function IFoxInsights() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-white/20 text-white hover:bg-white/10"
+                  className="border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-primary))] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)]"
                 >
                   <Share2 className="h-4 w-4 mr-2" />
                   مشاركة
@@ -326,7 +327,7 @@ export default function IFoxInsights() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="growth" className="w-full">
-              <TabsList className="w-full bg-white/10 mb-6">
+              <TabsList className="w-full bg-[hsl(var(--ifox-surface-overlay)/.1)] mb-6">
                 <TabsTrigger value="growth" className="flex-1">نمو السوق</TabsTrigger>
                 <TabsTrigger value="categories" className="flex-1">التصنيفات</TabsTrigger>
                 <TabsTrigger value="comparison" className="flex-1">المقارنات</TabsTrigger>
@@ -339,21 +340,21 @@ export default function IFoxInsights() {
                     <AreaChart data={marketData}>
                       <defs>
                         <linearGradient id="colorAI" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="hsl(var(--ifox-accent-glow))" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="hsl(var(--ifox-accent-glow))" stopOpacity={0}/>
                         </linearGradient>
                         <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="hsl(var(--ifox-info-glow))" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="hsl(var(--ifox-info-glow))" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
-                      <XAxis dataKey="month" stroke="rgba(255, 255, 255, 0.6)" />
-                      <YAxis stroke="rgba(255, 255, 255, 0.6)" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--ifox-neutral) / 0.1)" />
+                      <XAxis dataKey="month" stroke="hsl(var(--ifox-text-secondary))" />
+                      <YAxis stroke="hsl(var(--ifox-text-secondary))" />
                       <Tooltip 
                         contentStyle={{ 
-                          backgroundColor: 'rgba(15, 23, 42, 0.9)', 
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          backgroundColor: 'hsl(var(--ifox-surface-muted) / 0.9)', 
+                          border: '1px solid hsl(var(--ifox-surface-overlay))',
                           borderRadius: '8px'
                         }}
                       />
@@ -361,7 +362,7 @@ export default function IFoxInsights() {
                       <Area
                         type="monotone"
                         dataKey="ai_tools"
-                        stroke="#8B5CF6"
+                        stroke="hsl(var(--ifox-accent-glow))"
                         fillOpacity={1}
                         fill="url(#colorAI)"
                         name="أدوات AI"
@@ -369,7 +370,7 @@ export default function IFoxInsights() {
                       <Area
                         type="monotone"
                         dataKey="users"
-                        stroke="#3B82F6"
+                        stroke="hsl(var(--ifox-info-glow))"
                         fillOpacity={1}
                         fill="url(#colorUsers)"
                         name="المستخدمون"
@@ -380,13 +381,13 @@ export default function IFoxInsights() {
 
                 <div className="grid grid-cols-3 gap-4">
                   {[
-                    { label: "نمو شهري", value: "+23.5%", icon: TrendingUp, color: "text-green-400" },
-                    { label: "مستخدمون جدد", value: "+45.2K", icon: Users, color: "text-blue-400" },
-                    { label: "إيرادات", value: "$2.3M", icon: DollarSign, color: "text-purple-400" },
+                    { label: "نمو شهري", value: "+23.5%", icon: TrendingUp, color: "text-[hsl(var(--ifox-success))]" },
+                    { label: "مستخدمون جدد", value: "+45.2K", icon: Users, color: "text-[hsl(var(--ifox-info))]" },
+                    { label: "إيرادات", value: "$2.3M", icon: DollarSign, color: "text-[hsl(var(--ifox-accent-primary))]" },
                   ].map((metric, index) => {
                     const MetricIcon = metric.icon;
                     return (
-                      <Card key={index} className="bg-white/5 border-white/10">
+                      <Card key={index} className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)]">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between">
                             <div>
@@ -415,7 +416,7 @@ export default function IFoxInsights() {
                         labelLine={false}
                         label={({ name, value }) => `${name}: ${value}%`}
                         outerRadius={150}
-                        fill="#8884d8"
+                        fill="hsl(var(--ifox-info-glow))"
                         dataKey="value"
                       >
                         {categoryData.map((entry, index) => (
@@ -424,8 +425,8 @@ export default function IFoxInsights() {
                       </Pie>
                       <Tooltip 
                         contentStyle={{ 
-                          backgroundColor: 'rgba(15, 23, 42, 0.9)', 
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          backgroundColor: 'hsl(var(--ifox-surface-muted) / 0.9)', 
+                          border: '1px solid hsl(var(--ifox-surface-overlay))',
                           borderRadius: '8px'
                         }}
                       />
@@ -435,10 +436,10 @@ export default function IFoxInsights() {
 
                 <div className="grid grid-cols-2 gap-4">
                   {categoryData.map((cat, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                    <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.05)]">
                       <div className="flex items-center gap-3">
                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cat.color }} />
-                        <span className="text-white">{cat.name}</span>
+                        <span className="text-[hsl(var(--ifox-text-primary))]">{cat.name}</span>
                       </div>
                       <span className="text-[hsl(var(--ifox-text-secondary))]">{cat.value}%</span>
                     </div>
@@ -450,40 +451,40 @@ export default function IFoxInsights() {
                 <div className="h-[400px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={growthData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
-                      <XAxis dataKey="category" stroke="rgba(255, 255, 255, 0.6)" />
-                      <YAxis stroke="rgba(255, 255, 255, 0.6)" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--ifox-neutral) / 0.1)" />
+                      <XAxis dataKey="category" stroke="hsl(var(--ifox-text-secondary))" />
+                      <YAxis stroke="hsl(var(--ifox-text-secondary))" />
                       <Tooltip 
                         contentStyle={{ 
-                          backgroundColor: 'rgba(15, 23, 42, 0.9)', 
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          backgroundColor: 'hsl(var(--ifox-surface-muted) / 0.9)', 
+                          border: '1px solid hsl(var(--ifox-surface-overlay))',
                           borderRadius: '8px'
                         }}
                       />
                       <Legend />
-                      <Bar dataKey="growth" fill="#3B82F6" name="النمو %" />
+                      <Bar dataKey="growth" fill="hsl(var(--ifox-info-glow))" name="النمو %" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
 
                 {growthData.map((tool, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                  <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.05)] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)] transition-colors">
                     <div className="flex items-center gap-3">
-                      <span className="text-2xl font-bold text-white">#{index + 1}</span>
+                      <span className="text-2xl font-bold text-[hsl(var(--ifox-text-primary))]">#{index + 1}</span>
                       <div>
-                        <p className="text-white font-medium">{tool.category}</p>
+                        <p className="text-[hsl(var(--ifox-text-primary))] font-medium">{tool.category}</p>
                         <p className="text-xs text-[hsl(var(--ifox-text-secondary))]">{(tool.users / 1000000).toFixed(1)}M مستخدم</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       {tool.growth > 30 ? (
-                        <ArrowUp className="h-4 w-4 text-green-400" />
+                        <ArrowUp className="h-4 w-4 text-[hsl(var(--ifox-success))]" />
                       ) : (
-                        <ArrowDown className="h-4 w-4 text-red-400" />
+                        <ArrowDown className="h-4 w-4 text-[hsl(var(--ifox-error))]" />
                       )}
                       <span className={cn(
                         "text-sm font-medium",
-                        tool.growth > 30 ? "text-green-400" : "text-red-400"
+                        tool.growth > 30 ? "text-[hsl(var(--ifox-success))]" : "text-[hsl(var(--ifox-error))]"
                       )}>
                         {tool.growth}%
                       </span>
@@ -495,14 +496,14 @@ export default function IFoxInsights() {
               <TabsContent value="trends" className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   {[
-                    { title: "AI في التعليم", trend: "+156%", icon: GraduationCap, color: "bg-purple-500/20 text-purple-400" },
-                    { title: "AI في الصحة", trend: "+89%", icon: Shield, color: "bg-green-500/20 text-green-400" },
-                    { title: "AI في الأعمال", trend: "+234%", icon: Target, color: "bg-blue-500/20 text-blue-400" },
-                    { title: "AI في الإبداع", trend: "+178%", icon: Sparkles, color: "bg-pink-500/20 text-pink-400" },
+                    { title: "AI في التعليم", trend: "+156%", icon: GraduationCap, color: "bg-[hsl(var(--ifox-accent-primary)/.2)] text-[hsl(var(--ifox-accent-primary))]" },
+                    { title: "AI في الصحة", trend: "+89%", icon: Shield, color: "bg-[hsl(var(--ifox-success)/.2)] text-[hsl(var(--ifox-success))]" },
+                    { title: "AI في الأعمال", trend: "+234%", icon: Target, color: "bg-[hsl(var(--ifox-info)/.2)] text-[hsl(var(--ifox-info))]" },
+                    { title: "AI في الإبداع", trend: "+178%", icon: Sparkles, color: "bg-[hsl(var(--ifox-accent-secondary)/.2)] text-[hsl(var(--ifox-accent-secondary))]" },
                   ].map((trend, index) => {
                     const TrendIcon = trend.icon;
                     return (
-                      <Card key={index} className="bg-white/5 border-white/10">
+                      <Card key={index} className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)]">
                         <CardContent className="p-4">
                           <div className="flex items-center gap-3">
                             <div className={cn("p-3 rounded-lg", trend.color)}>
@@ -510,7 +511,7 @@ export default function IFoxInsights() {
                             </div>
                             <div className="flex-1">
                               <p className="text-sm text-[hsl(var(--ifox-text-secondary))]">{trend.title}</p>
-                              <p className="text-xl font-bold text-white">{trend.trend}</p>
+                              <p className="text-xl font-bold text-[hsl(var(--ifox-text-primary))]">{trend.trend}</p>
                             </div>
                           </div>
                         </CardContent>
@@ -519,23 +520,23 @@ export default function IFoxInsights() {
                   })}
                 </div>
 
-                <Card className="bg-gradient-to-br from-blue-500/20 to-indigo-500/10 border-blue-500/30">
+                <Card className="bg-gradient-to-br from-[hsl(var(--ifox-info)/.2)] to-[hsl(var(--ifox-accent-primary)/.1)] border-[hsl(var(--ifox-info)/.3)]">
                   <CardContent className="p-6">
-                    <h3 className="text-white font-bold mb-3 flex items-center gap-2">
-                      <Zap className="h-5 w-5 text-blue-400" />
+                    <h3 className="text-[hsl(var(--ifox-text-primary))] font-bold mb-3 flex items-center gap-2">
+                      <Zap className="h-5 w-5 text-[hsl(var(--ifox-info))]" />
                       توقعات 2024
                     </h3>
                     <ul className="space-y-2 text-[hsl(var(--ifox-text-primary))]">
                       <li className="flex items-start gap-2">
-                        <span className="text-blue-400 mt-1">•</span>
+                        <span className="text-[hsl(var(--ifox-info))] mt-1">•</span>
                         نمو متوقع بنسبة 300% في استخدام AI في المنطقة العربية
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-blue-400 mt-1">•</span>
+                        <span className="text-[hsl(var(--ifox-info))] mt-1">•</span>
                         ظهور 50+ أداة AI جديدة متخصصة باللغة العربية
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-blue-400 mt-1">•</span>
+                        <span className="text-[hsl(var(--ifox-info))] mt-1">•</span>
                         استثمارات بقيمة $500M في شركات AI عربية
                       </li>
                     </ul>
@@ -555,17 +556,17 @@ export default function IFoxInsights() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <Card className="bg-gradient-to-br from-white/10 to-white/5 border-white/10 backdrop-blur-lg hover:from-white/15 hover:to-white/10 transition-all">
+              <Card className="bg-gradient-to-br from-[hsl(var(--ifox-surface-overlay)/.1)] to-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] backdrop-blur-lg hover:from-[hsl(var(--ifox-surface-overlay)/.15)] hover:to-[hsl(var(--ifox-surface-overlay)/.1)] transition-all">
                 <CardHeader>
                   <div className="flex items-start justify-between">
-                    <CardTitle className="text-white text-lg line-clamp-2">
+                    <CardTitle className="text-[hsl(var(--ifox-text-primary))] text-lg line-clamp-2">
                       {report.title}
                     </CardTitle>
                     <Badge 
                       className={cn(
                         report.isPublished 
-                          ? "bg-green-500/20 text-green-400"
-                          : "bg-amber-500/20 text-amber-400"
+                          ? "bg-[hsl(var(--ifox-success)/.2)] text-[hsl(var(--ifox-success))]"
+                          : "bg-[hsl(var(--ifox-warning)/.2)] text-[hsl(var(--ifox-warning))]"
                       )}
                     >
                       {report.isPublished ? "منشور" : "مسودة"}
@@ -589,7 +590,7 @@ export default function IFoxInsights() {
                   
                   <Badge 
                     variant="outline" 
-                    className="border-white/20 text-[hsl(var(--ifox-text-secondary))] mb-3"
+                    className="border-[hsl(var(--ifox-surface-overlay)/.2)] text-[hsl(var(--ifox-text-secondary))] mb-3"
                   >
                     {report.type === "analysis" ? "تحليل" : 
                      report.type === "market" ? "سوق" :
@@ -600,7 +601,7 @@ export default function IFoxInsights() {
                     <Button
                       variant="default"
                       size="sm"
-                      className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+                      className="flex-1 bg-gradient-to-r from-[hsl(var(--ifox-accent-primary)/1)] to-[hsl(var(--ifox-accent-secondary)/1)] hover:from-[hsl(var(--ifox-accent-primary)/.9)] hover:to-[hsl(var(--ifox-accent-secondary)/.9)]"
                     >
                       <Eye className="h-4 w-4 mr-2" />
                       عرض
@@ -608,14 +609,14 @@ export default function IFoxInsights() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-white hover:bg-white/10"
+                      className="text-[hsl(var(--ifox-text-primary))] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)]"
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-red-400 hover:bg-red-500/10"
+                      className="text-[hsl(var(--ifox-error))] hover:bg-[hsl(var(--ifox-error)/.1)]"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -627,10 +628,10 @@ export default function IFoxInsights() {
         </div>
 
         {/* Quick Templates */}
-        <Card className="bg-gradient-to-br from-white/10 to-white/5 border-white/10 backdrop-blur-lg">
+        <Card className="bg-gradient-to-br from-[hsl(var(--ifox-surface-overlay)/.1)] to-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] backdrop-blur-lg">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Layers className="h-5 w-5 text-blue-400" />
+            <CardTitle className="text-[hsl(var(--ifox-text-primary))] flex items-center gap-2">
+              <Layers className="h-5 w-5 text-[hsl(var(--ifox-info))]" />
               قوالب سريعة
             </CardTitle>
           </CardHeader>
@@ -645,10 +646,10 @@ export default function IFoxInsights() {
                       setSelectedTemplate(template.id);
                       setShowReportDialog(true);
                     }}
-                    className="p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
+                    className="p-4 rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.05)] border border-[hsl(var(--ifox-surface-overlay)/.1)] hover:bg-[hsl(var(--ifox-surface-overlay)/.1)] transition-all group"
                   >
-                    <TemplateIcon className="h-8 w-8 text-blue-400 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-                    <p className="text-white text-sm">{template.name}</p>
+                    <TemplateIcon className="h-8 w-8 text-[hsl(var(--ifox-info))] mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                    <p className="text-[hsl(var(--ifox-text-primary))] text-sm">{template.name}</p>
                   </button>
                 );
               })}

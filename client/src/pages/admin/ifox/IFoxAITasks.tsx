@@ -235,10 +235,10 @@ export default function IFoxAITasks() {
 
   const getStatusBadge = (status: AITask['status']) => {
     const variants = {
-      pending: { variant: "outline" as const, icon: Clock, color: "text-amber-500" },
-      processing: { variant: "default" as const, icon: Loader2, color: "text-blue-500" },
-      completed: { variant: "default" as const, icon: CheckCircle, color: "text-green-500" },
-      failed: { variant: "destructive" as const, icon: AlertCircle, color: "text-red-500" },
+      pending: { variant: "outline" as const, icon: Clock, color: "text-[hsl(var(--ifox-warning))]" },
+      processing: { variant: "default" as const, icon: Loader2, color: "text-[hsl(var(--ifox-info))]" },
+      completed: { variant: "default" as const, icon: CheckCircle, color: "text-[hsl(var(--ifox-success))]" },
+      failed: { variant: "destructive" as const, icon: AlertCircle, color: "text-[hsl(var(--ifox-error))]" },
       cancelled: { variant: "outline" as const, icon: XCircle, color: "text-[hsl(var(--ifox-text-secondary))]" },
     };
     
@@ -258,9 +258,9 @@ export default function IFoxAITasks() {
 
   const getPriorityBadge = (priority: AITask['priority']) => {
     const colors = {
-      low: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
-      medium: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300',
-      high: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300',
+      low: 'bg-[hsl(var(--ifox-success)/.1)] text-[hsl(var(--ifox-success))]',
+      medium: 'bg-[hsl(var(--ifox-warning)/.1)] text-[hsl(var(--ifox-warning))]',
+      high: 'bg-[hsl(var(--ifox-error)/.1)] text-[hsl(var(--ifox-error))]',
     };
     
     return (
@@ -275,28 +275,28 @@ export default function IFoxAITasks() {
       title: "قيد الانتظار",
       value: stats?.pending || 0,
       icon: Clock,
-      color: "from-amber-500 to-orange-600",
+      color: "from-[hsl(var(--ifox-warning)/1)] to-[hsl(var(--ifox-warning-muted)/1)]",
       description: "مهام في انتظار التنفيذ"
     },
     {
       title: "جاري التنفيذ",
       value: stats?.processing || 0,
       icon: Activity,
-      color: "from-blue-500 to-cyan-600",
+      color: "from-[hsl(var(--ifox-info)/1)] to-[hsl(var(--ifox-info-muted)/1)]",
       description: "مهام قيد المعالجة"
     },
     {
       title: "مكتملة",
       value: stats?.completed || 0,
       icon: CheckCircle,
-      color: "from-green-500 to-emerald-600",
+      color: "from-[hsl(var(--ifox-success)/1)] to-[hsl(var(--ifox-success-muted)/1)]",
       description: "مهام تم إنجازها"
     },
     {
       title: "فشلت",
       value: stats?.failed || 0,
       icon: AlertCircle,
-      color: "from-red-500 to-pink-600",
+      color: "from-[hsl(var(--ifox-error)/1)] to-[hsl(var(--ifox-error-muted)/1)]",
       description: "مهام فشل تنفيذها"
     },
   ];
@@ -310,13 +310,13 @@ export default function IFoxAITasks() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8 relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600/20 via-purple-600/20 to-fuchsia-600/20 p-8 border border-violet-500/30"
+          className="mb-8 relative overflow-hidden rounded-2xl bg-gradient-to-br from-[hsl(var(--ifox-accent-primary)/.2)] via-[hsl(var(--ifox-accent-secondary)/.2)] to-[hsl(var(--ifox-accent-primary)/.2)] p-8 border border-[hsl(var(--ifox-accent-primary)/.3)]"
         >
           <div className="relative z-10 flex items-center justify-between">
             <div className="space-y-2">
               <div className="flex items-center gap-3">
-                <div className="p-3 rounded-xl bg-violet-500/20 border border-violet-500/30">
-                  <Bot className="w-8 h-8 text-violet-400" />
+                <div className="p-3 rounded-xl bg-[hsl(var(--ifox-accent-primary)/.2)] border border-[hsl(var(--ifox-accent-primary)/.3)]">
+                  <Bot className="w-8 h-8 text-[hsl(var(--ifox-accent-primary))]" />
                 </div>
                 <div>
                   <h1 className="text-3xl font-bold text-[hsl(var(--ifox-text-primary))]">
@@ -333,7 +333,7 @@ export default function IFoxAITasks() {
               <DialogTrigger asChild>
                 <Button 
                   size="lg" 
-                  className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700"
+                  className="bg-gradient-to-r from-[hsl(var(--ifox-accent-primary)/1)] to-[hsl(var(--ifox-accent-secondary)/1)] hover:from-[hsl(var(--ifox-accent-muted)/1)] hover:to-[hsl(var(--ifox-accent-muted)/1)]"
                   data-testid="button-create-task"
                 >
                   <Plus className="w-5 h-5 ml-2" />
@@ -455,7 +455,7 @@ export default function IFoxAITasks() {
                   
                   <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
                     <div className="flex items-center gap-2">
-                      <ImageIcon className="w-5 h-5 text-blue-500" />
+                      <ImageIcon className="w-5 h-5 text-[hsl(var(--ifox-info))]" />
                       <Label htmlFor="generateImage" className="cursor-pointer">إنشاء صورة AI</Label>
                     </div>
                     <Switch
@@ -468,7 +468,7 @@ export default function IFoxAITasks() {
                   
                   <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
                     <div className="flex items-center gap-2">
-                      <Zap className="w-5 h-5 text-green-500" />
+                      <Zap className="w-5 h-5 text-[hsl(var(--ifox-success))]" />
                       <Label htmlFor="autoPublish" className="cursor-pointer">نشر تلقائي</Label>
                     </div>
                     <Switch
@@ -527,7 +527,7 @@ export default function IFoxAITasks() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
             >
-              <Card className="overflow-hidden border-gray-800/50 bg-gradient-to-br from-slate-900/50 to-slate-800/50">
+              <Card className="overflow-hidden border-[hsl(var(--ifox-surface-overlay))] bg-[hsl(var(--ifox-surface-primary)/.8)]">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
@@ -536,7 +536,7 @@ export default function IFoxAITasks() {
                       <p className="text-xs text-[hsl(var(--ifox-text-secondary))]">{stat.description}</p>
                     </div>
                     <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} opacity-20`}>
-                      <stat.icon className="w-8 h-8 text-white" />
+                      <stat.icon className="w-8 h-8 text-[hsl(var(--ifox-text-primary))]" />
                     </div>
                   </div>
                 </CardContent>
@@ -546,7 +546,7 @@ export default function IFoxAITasks() {
         </div>
 
         {/* Tasks Table */}
-        <Card className="border-gray-800/50 bg-gradient-to-br from-slate-900/50 to-slate-800/50">
+        <Card className="border-[hsl(var(--ifox-surface-overlay))] bg-[hsl(var(--ifox-surface-primary)/.8)]">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -574,7 +574,7 @@ export default function IFoxAITasks() {
             <ScrollArea className="h-[600px]">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-gray-800/50">
+                  <TableRow className="border-[hsl(var(--ifox-surface-overlay))]">
                     <TableHead className="text-right text-[hsl(var(--ifox-text-primary))]">المهمة</TableHead>
                     <TableHead className="text-right text-[hsl(var(--ifox-text-primary))]">القسم</TableHead>
                     <TableHead className="text-right text-[hsl(var(--ifox-text-primary))]">الحالة</TableHead>
@@ -587,7 +587,7 @@ export default function IFoxAITasks() {
                   {tasksLoading ? (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-8">
-                        <Loader2 className="w-8 h-8 animate-spin mx-auto text-violet-500" />
+                        <Loader2 className="w-8 h-8 animate-spin mx-auto text-[hsl(var(--ifox-accent-primary))]" />
                       </TableCell>
                     </TableRow>
                   ) : tasksData?.tasks.length === 0 ? (
@@ -598,10 +598,10 @@ export default function IFoxAITasks() {
                     </TableRow>
                   ) : (
                     tasksData?.tasks.map((task) => (
-                      <TableRow key={task.id} className="border-gray-800/50 hover-elevate">
+                      <TableRow key={task.id} className="border-[hsl(var(--ifox-surface-overlay))] hover-elevate">
                         <TableCell className="text-[hsl(var(--ifox-text-primary))]" data-testid={`text-task-name-${task.id}`}>
                           <div className="flex items-center gap-2">
-                            <FileText className="w-4 h-4 text-violet-400" />
+                            <FileText className="w-4 h-4 text-[hsl(var(--ifox-accent-primary))]" />
                             {task.taskName}
                           </div>
                         </TableCell>

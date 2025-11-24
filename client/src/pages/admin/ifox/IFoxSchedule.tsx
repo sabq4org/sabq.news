@@ -89,11 +89,11 @@ interface PublishingSlot {
 }
 
 const socialPlatforms = [
-  { value: "twitter", label: "Twitter", icon: Twitter, color: "text-blue-400" },
-  { value: "facebook", label: "Facebook", icon: Facebook, color: "text-blue-600" },
-  { value: "linkedin", label: "LinkedIn", icon: Linkedin, color: "text-blue-700" },
-  { value: "instagram", label: "Instagram", icon: Instagram, color: "text-pink-500" },
-  { value: "youtube", label: "YouTube", icon: Youtube, color: "text-red-600" },
+  { value: "twitter", label: "Twitter", icon: Twitter, color: "text-[hsl(var(--ifox-info))]" },
+  { value: "facebook", label: "Facebook", icon: Facebook, color: "text-[hsl(var(--ifox-info))]" },
+  { value: "linkedin", label: "LinkedIn", icon: Linkedin, color: "text-[hsl(var(--ifox-info))]" },
+  { value: "instagram", label: "Instagram", icon: Instagram, color: "text-[hsl(var(--ifox-error))]" },
+  { value: "youtube", label: "YouTube", icon: Youtube, color: "text-[hsl(var(--ifox-error))]" },
 ];
 
 export default function IFoxSchedule() {
@@ -230,11 +230,11 @@ export default function IFoxSchedule() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "scheduled": return "bg-blue-500/20 text-blue-400 border-blue-500/30";
-      case "published": return "bg-green-500/20 text-green-400 border-green-500/30";
-      case "failed": return "bg-red-500/20 text-red-400 border-red-500/30";
-      case "cancelled": return "bg-gray-500/20 text-[hsl(var(--ifox-text-secondary))] border-gray-500/30";
-      default: return "bg-gray-500/20 text-[hsl(var(--ifox-text-secondary))] border-gray-500/30";
+      case "scheduled": return "bg-[hsl(var(--ifox-info)/.2)] text-[hsl(var(--ifox-info))] border-[hsl(var(--ifox-info)/.3)]";
+      case "published": return "bg-[hsl(var(--ifox-success)/.2)] text-[hsl(var(--ifox-success))] border-[hsl(var(--ifox-success)/.3)]";
+      case "failed": return "bg-[hsl(var(--ifox-error)/.2)] text-[hsl(var(--ifox-error))] border-[hsl(var(--ifox-error)/.3)]";
+      case "cancelled": return "bg-[hsl(var(--ifox-neutral)/.2)] text-[hsl(var(--ifox-text-secondary))] border-[hsl(var(--ifox-neutral)/.3)]";
+      default: return "bg-[hsl(var(--ifox-neutral)/.2)] text-[hsl(var(--ifox-text-secondary))] border-[hsl(var(--ifox-neutral)/.3)]";
     }
   };
 
@@ -266,18 +266,18 @@ export default function IFoxSchedule() {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 shadow-lg shadow-blue-500/30">
-                    <Calendar className="w-8 h-8 text-white" />
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-[hsl(var(--ifox-info)/1)] to-[hsl(var(--ifox-accent-primary)/1)] shadow-[0_10px_15px_hsl(var(--ifox-surface-overlay)/.1)] shadow-[hsl(var(--ifox-info)/.3)]">
+                    <Calendar className="w-8 h-8 text-[hsl(var(--ifox-text-primary))]" />
                   </div>
                   <div>
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                    <h1 className="text-3xl font-bold bg-gradient-to-r from-[hsl(var(--ifox-info)/1)] to-[hsl(var(--ifox-accent-primary)/1)] bg-clip-text text-transparent">
                       جدولة النشر
                     </h1>
                     <p className="text-[hsl(var(--ifox-text-secondary))]">إدارة وجدولة نشر المقالات</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="flex bg-white/5 rounded-lg p-1">
+                  <div className="flex bg-[hsl(var(--ifox-surface-overlay)/.05)] rounded-lg p-1">
                     <Button
                       variant={viewMode === "calendar" ? "default" : "ghost"}
                       size="sm"
@@ -299,7 +299,7 @@ export default function IFoxSchedule() {
                   </div>
                   <Button
                     onClick={() => setIsScheduleDialogOpen(true)}
-                    className="gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                    className="gap-2 bg-gradient-to-r from-[hsl(var(--ifox-info)/1)] to-[hsl(var(--ifox-accent-primary)/1)] hover:from-[hsl(var(--ifox-info-muted)/1)] hover:to-[hsl(var(--ifox-accent-muted)/1)]"
                   >
                     <Plus className="w-4 h-4" />
                     جدولة جديدة
@@ -309,28 +309,28 @@ export default function IFoxSchedule() {
 
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card className="bg-gradient-to-br from-blue-500/20 to-cyan-500/10 border-white/10">
+                <Card className="bg-gradient-to-br from-[hsl(var(--ifox-info)/.2)] to-[hsl(var(--ifox-info)/.1)] border-[hsl(var(--ifox-surface-overlay)/.1)]">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm text-[hsl(var(--ifox-text-secondary))]">مجدول اليوم</p>
-                        <p className="text-2xl font-bold text-white">
+                        <p className="text-2xl font-bold text-[hsl(var(--ifox-text-primary))]">
                           {safeScheduledArticles.filter(a => 
                             a?.scheduledAt && isToday(new Date(a.scheduledAt)) && a.status === "scheduled"
                           ).length}
                         </p>
                       </div>
-                      <CalendarDays className="w-8 h-8 text-blue-400 opacity-50" />
+                      <CalendarDays className="w-8 h-8 text-[hsl(var(--ifox-info))] opacity-50" />
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-purple-500/20 to-pink-500/10 border-white/10">
+                <Card className="bg-gradient-to-br from-[hsl(var(--ifox-accent-primary)/.2)] to-[hsl(var(--ifox-accent-secondary)/.1)] border-[hsl(var(--ifox-surface-overlay)/.1)]">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm text-[hsl(var(--ifox-text-secondary))]">هذا الأسبوع</p>
-                        <p className="text-2xl font-bold text-white">
+                        <p className="text-2xl font-bold text-[hsl(var(--ifox-text-primary))]">
                           {safeScheduledArticles.filter(a => {
                             const date = new Date(a?.scheduledAt);
                             const now = new Date();
@@ -338,33 +338,33 @@ export default function IFoxSchedule() {
                           }).length}
                         </p>
                       </div>
-                      <Timer className="w-8 h-8 text-purple-400 opacity-50" />
+                      <Timer className="w-8 h-8 text-[hsl(var(--ifox-accent-primary))] opacity-50" />
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-green-500/20 to-emerald-500/10 border-white/10">
+                <Card className="bg-gradient-to-br from-[hsl(var(--ifox-success)/.2)] to-[hsl(var(--ifox-success)/.1)] border-[hsl(var(--ifox-surface-overlay)/.1)]">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm text-[hsl(var(--ifox-text-secondary))]">تم النشر</p>
-                        <p className="text-2xl font-bold text-white">
+                        <p className="text-2xl font-bold text-[hsl(var(--ifox-text-primary))]">
                           {safeScheduledArticles.filter(a => a?.status === "published").length}
                         </p>
                       </div>
-                      <CheckCircle className="w-8 h-8 text-green-400 opacity-50" />
+                      <CheckCircle className="w-8 h-8 text-[hsl(var(--ifox-success))] opacity-50" />
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-amber-500/20 to-orange-500/10 border-white/10">
+                <Card className="bg-gradient-to-br from-[hsl(var(--ifox-warning)/.2)] to-[hsl(var(--ifox-warning)/.1)] border-[hsl(var(--ifox-surface-overlay)/.1)]">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm text-[hsl(var(--ifox-text-secondary))]">مسودات متاحة</p>
-                        <p className="text-2xl font-bold text-white">{safeDraftArticles.length}</p>
+                        <p className="text-2xl font-bold text-[hsl(var(--ifox-text-primary))]">{safeDraftArticles.length}</p>
                       </div>
-                      <FileText className="w-8 h-8 text-amber-400 opacity-50" />
+                      <FileText className="w-8 h-8 text-[hsl(var(--ifox-warning))] opacity-50" />
                     </div>
                   </CardContent>
                 </Card>
@@ -381,9 +381,9 @@ export default function IFoxSchedule() {
               {/* Calendar/Timeline View */}
               <div className="lg:col-span-2">
                 {viewMode === "calendar" ? (
-                  <Card className="bg-white/5 border-white/10">
+                  <Card className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)]">
                     <CardHeader>
-                      <CardTitle className="text-white flex items-center gap-2">
+                      <CardTitle className="text-[hsl(var(--ifox-text-primary))] flex items-center gap-2">
                         <Calendar className="w-5 h-5" />
                         التقويم
                       </CardTitle>
@@ -414,9 +414,9 @@ export default function IFoxSchedule() {
                     </CardContent>
                   </Card>
                 ) : (
-                  <Card className="bg-white/5 border-white/10">
+                  <Card className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)]">
                     <CardHeader>
-                      <CardTitle className="text-white flex items-center gap-2">
+                      <CardTitle className="text-[hsl(var(--ifox-text-primary))] flex items-center gap-2">
                         <List className="w-5 h-5" />
                         الخط الزمني
                       </CardTitle>
@@ -433,16 +433,16 @@ export default function IFoxSchedule() {
                               className="flex gap-4"
                             >
                               <div className="relative">
-                                <div className="w-3 h-3 rounded-full bg-blue-500 mt-2" />
+                                <div className="w-3 h-3 rounded-full bg-[hsl(var(--ifox-info))] mt-2" />
                                 {index < upcomingArticles.length - 1 && (
-                                  <div className="absolute top-5 right-1.5 w-px h-full bg-white/20" />
+                                  <div className="absolute top-5 right-1.5 w-px h-full bg-[hsl(var(--ifox-surface-overlay)/.2)]" />
                                 )}
                               </div>
                               <div className="flex-1 pb-8">
-                                <div className="p-4 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-colors">
+                                <div className="p-4 rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.05)] border border-[hsl(var(--ifox-surface-overlay)/.1)] hover:border-[hsl(var(--ifox-surface-overlay)/.2)] transition-colors">
                                   <div className="flex items-start justify-between mb-2">
                                     <div>
-                                      <h3 className="text-white font-medium">{article.title}</h3>
+                                      <h3 className="text-[hsl(var(--ifox-text-primary))] font-medium">{article.title}</h3>
                                       <p className="text-[hsl(var(--ifox-text-secondary))] text-sm mt-1">{article.category}</p>
                                     </div>
                                     <Badge className={getStatusColor(article.status)}>
@@ -507,7 +507,7 @@ export default function IFoxSchedule() {
                                           deleteScheduleMutation.mutate(article.id);
                                         }
                                       }}
-                                      className="text-red-400 hover:text-red-300"
+                                      className="text-[hsl(var(--ifox-error))] hover:text-[hsl(var(--ifox-error))]"
                                     >
                                       <Trash2 className="w-4 h-4 ml-2" />
                                       إلغاء
@@ -527,9 +527,9 @@ export default function IFoxSchedule() {
               {/* Sidebar */}
               <div className="space-y-6">
                 {/* Publishing Slots */}
-                <Card className="bg-white/5 border-white/10">
+                <Card className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)]">
                   <CardHeader>
-                    <CardTitle className="text-white text-lg flex items-center gap-2">
+                    <CardTitle className="text-[hsl(var(--ifox-text-primary))] text-lg flex items-center gap-2">
                       <Clock className="w-5 h-5" />
                       أوقات النشر المثلى
                     </CardTitle>
@@ -541,16 +541,16 @@ export default function IFoxSchedule() {
                         className={cn(
                           "p-3 rounded-lg border transition-colors",
                           slot.isOptimal
-                            ? "bg-green-500/10 border-green-500/30"
-                            : "bg-white/5 border-white/10"
+                            ? "bg-[hsl(var(--ifox-success)/.1)] border-[hsl(var(--ifox-success)/.3)]"
+                            : "bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)]"
                         )}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <Clock className="w-4 h-4 text-[hsl(var(--ifox-text-secondary))]" />
-                            <span className="text-white font-medium">{slot.time}</span>
+                            <span className="text-[hsl(var(--ifox-text-primary))] font-medium">{slot.time}</span>
                             {slot.isOptimal && (
-                              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
+                              <Badge className="bg-[hsl(var(--ifox-success)/.2)] text-[hsl(var(--ifox-success))] border-[hsl(var(--ifox-success)/.3)] text-xs">
                                 <Zap className="w-3 h-3 ml-1" />
                                 مثالي
                               </Badge>
@@ -560,8 +560,8 @@ export default function IFoxSchedule() {
                             <span className={cn(
                               "font-medium",
                               slot.currentArticles >= slot.maxArticles
-                                ? "text-red-400"
-                                : "text-white"
+                                ? "text-[hsl(var(--ifox-error))]"
+                                : "text-[hsl(var(--ifox-text-primary))]"
                             )}>
                               {slot.currentArticles}
                             </span>
@@ -574,9 +574,9 @@ export default function IFoxSchedule() {
                 </Card>
 
                 {/* Draft Articles */}
-                <Card className="bg-white/5 border-white/10">
+                <Card className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)]">
                   <CardHeader>
-                    <CardTitle className="text-white text-lg flex items-center gap-2">
+                    <CardTitle className="text-[hsl(var(--ifox-text-primary))] text-lg flex items-center gap-2">
                       <FileText className="w-5 h-5" />
                       مسودات جاهزة للنشر
                     </CardTitle>
@@ -587,9 +587,9 @@ export default function IFoxSchedule() {
                         {safeDraftArticles.map((article) => (
                           <div
                             key={article.id}
-                            className="p-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-colors"
+                            className="p-3 rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.05)] border border-[hsl(var(--ifox-surface-overlay)/.1)] hover:border-[hsl(var(--ifox-surface-overlay)/.2)] transition-colors"
                           >
-                            <h4 className="text-white text-sm font-medium mb-1 line-clamp-1">
+                            <h4 className="text-[hsl(var(--ifox-text-primary))] text-sm font-medium mb-1 line-clamp-1">
                               {article.title}
                             </h4>
                             <div className="flex items-center justify-between">
@@ -612,9 +612,9 @@ export default function IFoxSchedule() {
                 </Card>
 
                 {/* Publishing History */}
-                <Card className="bg-white/5 border-white/10">
+                <Card className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)]">
                   <CardHeader>
-                    <CardTitle className="text-white text-lg flex items-center gap-2">
+                    <CardTitle className="text-[hsl(var(--ifox-text-primary))] text-lg flex items-center gap-2">
                       <History className="w-5 h-5" />
                       سجل النشر
                     </CardTitle>
@@ -625,14 +625,14 @@ export default function IFoxSchedule() {
                         {publishedArticles.map((article) => (
                           <div
                             key={article.id}
-                            className="p-3 rounded-lg bg-white/5 border border-white/10"
+                            className="p-3 rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.05)] border border-[hsl(var(--ifox-surface-overlay)/.1)]"
                           >
-                            <h4 className="text-white text-sm font-medium mb-1 line-clamp-1">
+                            <h4 className="text-[hsl(var(--ifox-text-primary))] text-sm font-medium mb-1 line-clamp-1">
                               {article.title}
                             </h4>
                             <div className="flex items-center gap-2 text-xs text-[hsl(var(--ifox-text-secondary))]">
                               <span>{format(new Date(article.scheduledAt), "d MMM, h:mm a", { locale: ar })}</span>
-                              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
+                              <Badge className="bg-[hsl(var(--ifox-success)/.2)] text-[hsl(var(--ifox-success))] border-[hsl(var(--ifox-success)/.3)] text-xs">
                                 تم النشر
                               </Badge>
                             </div>
@@ -652,9 +652,9 @@ export default function IFoxSchedule() {
         if (!open) resetScheduleForm();
         setIsScheduleDialogOpen(open);
       }}>
-        <DialogContent className="max-w-2xl bg-gradient-to-br from-slate-950 via-blue-950/50 to-purple-950/30 border-white/10">
+        <DialogContent className="max-w-2xl bg-[hsl(var(--ifox-surface-primary))] border-[hsl(var(--ifox-surface-overlay)/.1)]">
           <DialogHeader>
-            <DialogTitle className="text-white">
+            <DialogTitle className="text-[hsl(var(--ifox-text-primary))]">
               {editingSchedule ? "تعديل الجدولة" : "جدولة مقال جديد"}
             </DialogTitle>
             <DialogDescription className="text-[hsl(var(--ifox-text-secondary))]">
@@ -674,7 +674,7 @@ export default function IFoxSchedule() {
                     setSelectedArticle(draftArticles.find(a => a.id === value) || null);
                   }}
                 >
-                  <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                  <SelectTrigger className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))]">
                     <SelectValue placeholder="اختر مقال من المسودات" />
                   </SelectTrigger>
                   <SelectContent>
@@ -703,10 +703,10 @@ export default function IFoxSchedule() {
                   type="datetime-local"
                   value={scheduleForm.scheduledAt}
                   onChange={(e) => setScheduleForm({ ...scheduleForm, scheduledAt: e.target.value })}
-                  className="bg-white/5 border-white/10 text-white"
+                  className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))]"
                 />
                 {scheduleForm.scheduledAt && hasConflict(new Date(scheduleForm.scheduledAt)) && (
-                  <div className="flex items-center gap-1 mt-2 text-amber-400 text-sm">
+                  <div className="flex items-center gap-1 mt-2 text-[hsl(var(--ifox-warning))] text-sm">
                     <AlertTriangle className="w-4 h-4" />
                     <span>تحذير: هذا الوقت مزدحم بالمقالات</span>
                   </div>
@@ -719,7 +719,7 @@ export default function IFoxSchedule() {
                   value={scheduleForm.recurrenceType}
                   onValueChange={(value: any) => setScheduleForm({ ...scheduleForm, recurrenceType: value })}
                 >
-                  <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                  <SelectTrigger className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -739,7 +739,7 @@ export default function IFoxSchedule() {
                   type="date"
                   value={scheduleForm.recurrenceEndDate}
                   onChange={(e) => setScheduleForm({ ...scheduleForm, recurrenceEndDate: e.target.value })}
-                  className="bg-white/5 border-white/10 text-white"
+                  className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))]"
                 />
               </div>
             )}
@@ -758,7 +758,7 @@ export default function IFoxSchedule() {
                 />
                 <label
                   htmlFor="publishToSite"
-                  className="text-white text-sm cursor-pointer flex items-center gap-2"
+                  className="text-[hsl(var(--ifox-text-primary))] text-sm cursor-pointer flex items-center gap-2"
                 >
                   <Eye className="w-4 h-4" />
                   نشر على موقع آي فوكس
@@ -775,7 +775,7 @@ export default function IFoxSchedule() {
                 />
                 <label
                   htmlFor="sendNotifications"
-                  className="text-white text-sm cursor-pointer flex items-center gap-2"
+                  className="text-[hsl(var(--ifox-text-primary))] text-sm cursor-pointer flex items-center gap-2"
                 >
                   <Bell className="w-4 h-4" />
                   إرسال إشعارات للمتابعين
@@ -806,8 +806,8 @@ export default function IFoxSchedule() {
                       className={cn(
                         "p-3 rounded-lg border transition-all",
                         isSelected
-                          ? "bg-white/10 border-white/30"
-                          : "bg-white/5 border-white/10 hover:border-white/20"
+                          ? "bg-[hsl(var(--ifox-surface-overlay)/.1)] border-white/30"
+                          : "bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] hover:border-[hsl(var(--ifox-surface-overlay)/.2)]"
                       )}
                     >
                       <Icon className={`w-5 h-5 mx-auto ${platform.color}`} />
@@ -832,7 +832,7 @@ export default function IFoxSchedule() {
             <Button
               onClick={handleScheduleSubmit}
               disabled={!scheduleForm.articleId || !scheduleForm.scheduledAt}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              className="bg-gradient-to-r from-[hsl(var(--ifox-info)/1)] to-[hsl(var(--ifox-accent-secondary)/1)] hover:from-[hsl(var(--ifox-info)/1)] hover:to-[hsl(var(--ifox-accent-secondary)/1)]"
             >
               {editingSchedule ? "تحديث الجدولة" : "جدولة المقال"}
             </Button>
