@@ -424,7 +424,7 @@ export default function IFoxArticles() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => setLocation(`/dashboard/admin/ifox/articles/${article.id}`)}
+                                onClick={() => setLocation(`/admin/ifox/articles/${article.id}/edit`)}
                                 className="flex-1 gap-2 border-[hsl(var(--ifox-border-secondary))] hover:border-[hsl(var(--ifox-accent-primary))] hover:text-[hsl(var(--ifox-accent-primary))]"
                                 data-testid={`button-edit-${article.id}`}
                               >
