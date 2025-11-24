@@ -29,7 +29,7 @@ import AIHeader from "@/components/ai/AIHeader";
 import AINewsCard from "@/components/ai/AINewsCard";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ImageWithCaption } from "@/components/ImageWithCaption";
-import type { Article } from "@shared/schema";
+import type { ArticleWithDetails } from "@shared/schema";
 
 export default function AIArticleDetail() {
   const params = useParams<{ slug: string }>();
@@ -41,13 +41,13 @@ export default function AIArticleDetail() {
   const [likesCount, setLikesCount] = useState(342);
 
   // Fetch article details
-  const { data: article, isLoading } = useQuery<Article>({
+  const { data: article, isLoading } = useQuery<ArticleWithDetails>({
     queryKey: [`/api/articles/${params.slug}`],
     enabled: !!params.slug
   });
 
   // Fetch related articles
-  const { data: relatedArticles = [] } = useQuery<Article[]>({
+  const { data: relatedArticles = [] } = useQuery<ArticleWithDetails[]>({
     queryKey: [`/api/articles/${params.slug}/related`],
     enabled: !!params.slug && !!article
   });
@@ -181,7 +181,7 @@ export default function AIArticleDetail() {
                   className="bg-blue-500/10 border-blue-500/30 text-blue-400 hover:bg-blue-500/20 text-sm px-3 py-1"
                   data-testid="badge-category"
                 >
-                  {typeof article.category === 'string' ? article.category : article.category.nameAr || article.category.name}
+                  {typeof article.category === 'string' ? article.category : (article.category.nameAr || article.category.nameEn || '')}
                 </Badge>
               )}
               
