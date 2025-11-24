@@ -23,13 +23,16 @@ import {
   BookOpen,
   Zap,
   Layers,
-  Bot
+  Bot,
+  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface IFoxSidebarProps {
   className?: string;
+  onClose?: () => void;
+  isMobile?: boolean;
 }
 
 interface NavItem {
@@ -160,7 +163,7 @@ const navigationItems: NavItem[] = [
   },
 ];
 
-export function IFoxSidebar({ className }: IFoxSidebarProps) {
+export function IFoxSidebar({ className, onClose, isMobile }: IFoxSidebarProps) {
   const [location] = useLocation();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
@@ -185,6 +188,12 @@ export function IFoxSidebar({ className }: IFoxSidebarProps) {
     return false;
   };
 
+  const handleLinkClick = () => {
+    if (isMobile && onClose) {
+      onClose();
+    }
+  };
+
   return (
     <motion.div
       className={cn(
@@ -198,18 +207,33 @@ export function IFoxSidebar({ className }: IFoxSidebarProps) {
     >
       {/* Header */}
       <div className="p-6 border-b border-white/10">
-        <div className="flex items-center gap-3">
-          <motion.div
-            className="p-3 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/30"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          >
-            <Brain className="w-6 h-6 text-white" />
-          </motion.div>
-          <div>
-            <h2 className="text-lg font-bold text-white">آي فوكس</h2>
-            <p className="text-xs text-white/60">iFox AI Portal</p>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <motion.div
+              className="p-3 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/30"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            >
+              <Brain className="w-6 h-6 text-white" />
+            </motion.div>
+            <div>
+              <h2 className="text-lg font-bold text-white">آي فوكس</h2>
+              <p className="text-xs text-white/60">iFox AI Portal</p>
+            </div>
           </div>
+          
+          {/* Close button for mobile */}
+          {isMobile && onClose && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="text-white/60 hover:text-white hover:bg-white/10"
+              data-testid="button-close-sidebar"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          )}
         </div>
       </div>
 
@@ -270,7 +294,7 @@ export function IFoxSidebar({ className }: IFoxSidebarProps) {
                             const childActive = isActive(child.href);
                             
                             return (
-                              <Link key={child.title} href={child.href!}>
+                              <Link key={child.title} href={child.href!} onClick={handleLinkClick}>
                                 <Button
                                   variant="ghost"
                                   className={cn(
@@ -293,7 +317,7 @@ export function IFoxSidebar({ className }: IFoxSidebarProps) {
                     </AnimatePresence>
                   </>
                 ) : (
-                  <Link href={item.href!}>
+                  <Link href={item.href!} onClick={handleLinkClick}>
                     <Button
                       variant="ghost"
                       className={cn(
