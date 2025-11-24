@@ -251,11 +251,12 @@ Rules:
       content: generatedContent.content,
       excerpt: generatedContent.summary.substring(0, 200), // Use summary as excerpt
       categoryId: task.categoryId,
-      authorId: authorId, // Backend will handle this
+      authorId: authorId,
       status: task.autoPublish ? 'published' : 'draft',
       publishedAt: task.autoPublish ? now : undefined,
-      // Database defaults handle: createdAt, updatedAt, views, aiGenerated
-    };
+      aiGenerated: true, // ← CRITICAL: Mark as AI-generated for iFox filtering
+      // Database defaults handle: createdAt, updatedAt, views
+    } as any; // Cast to bypass insertArticleSchema omit
   }
 }
 
