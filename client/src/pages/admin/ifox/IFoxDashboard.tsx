@@ -127,7 +127,7 @@ export default function IFoxDashboard() {
   return (
     <IFoxLayout>
       <ScrollArea className="h-full">
-        <div className="p-6 space-y-6" dir="rtl">
+        <div className="p-3 sm:p-4 md:p-6 space-y-4 md:space-y-6" dir="rtl">
             {/* Header */}
             <motion.div
               initial={{ y: -20, opacity: 0 }}
@@ -135,8 +135,8 @@ export default function IFoxDashboard() {
               transition={{ duration: 0.5 }}
               className="space-y-2"
             >
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2 sm:gap-3">
                   {/* Animated AI Mascot */}
                   <motion.div
                     className="relative"
@@ -168,12 +168,12 @@ export default function IFoxDashboard() {
                     <img 
                       src={mascotImage} 
                       alt="iFox AI Mascot" 
-                      className="w-20 h-20 relative z-10"
+                      className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 relative z-10"
                       style={{ filter: 'drop-shadow(0 25px 50px hsl(var(--ifox-surface-overlay) / 0.2))' }}
                     />
                     {/* Eyes Glow Effect */}
                     <motion.div
-                      className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full"
+                      className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full"
                       animate={{
                         boxShadow: [
                           "0 0 10px hsl(var(--ifox-success-glow) / 0.3)",
@@ -189,17 +189,17 @@ export default function IFoxDashboard() {
                     />
                   </motion.div>
                   <div>
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-[hsl(var(--ifox-accent-primary)/1)] to-[hsl(var(--ifox-accent-secondary)/1)] bg-clip-text text-transparent" data-testid="text-page-title">
+                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-[hsl(var(--ifox-accent-primary)/1)] to-[hsl(var(--ifox-accent-secondary)/1)] bg-clip-text text-transparent" data-testid="text-page-title">
                       لوحة تحكم آي فوكس
                     </h1>
-                    <p className="text-[hsl(var(--ifox-text-primary))] text-lg" data-testid="text-page-description">
+                    <p className="text-[hsl(var(--ifox-text-primary))] text-sm sm:text-base md:text-lg" data-testid="text-page-description">
                       بوابة إدارة المحتوى الذكي
                     </p>
                   </div>
                 </div>
                 {/* AI Status Indicator */}
                 <motion.div
-                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-[hsl(var(--ifox-success)/.2)] to-[hsl(var(--ifox-success)/.2)] border border-[hsl(var(--ifox-success)/.3)]"
+                  className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-[hsl(var(--ifox-success)/.2)] to-[hsl(var(--ifox-success)/.2)] border border-[hsl(var(--ifox-success)/.3)] text-xs sm:text-sm"
                   animate={{
                     scale: [1, 1.05, 1],
                   }}
@@ -210,7 +210,7 @@ export default function IFoxDashboard() {
                   }}
                 >
                   <motion.div
-                    className="w-2 h-2 rounded-full bg-[hsl(var(--ifox-success))]"
+                    className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[hsl(var(--ifox-success))]"
                     animate={{
                       opacity: [0.5, 1, 0.5],
                       boxShadow: [
@@ -231,72 +231,72 @@ export default function IFoxDashboard() {
               </div>
 
               {/* Key Metrics Row */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-4 sm:mt-6">
                 <Card className="bg-gradient-to-br from-[hsl(var(--ifox-accent-primary)/.4)] to-[hsl(var(--ifox-accent-secondary)/.3)] border-[hsl(var(--ifox-accent-primary)/.3)] backdrop-blur-sm">
-                  <CardContent className="p-4">
+                  <CardContent className="p-3 sm:p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-semibold text-[hsl(var(--ifox-text-primary))]">المشاهدات اليوم</p>
-                        <p className="text-2xl font-bold text-[hsl(var(--ifox-text-primary))]">
+                        <p className="text-xs sm:text-sm font-semibold text-[hsl(var(--ifox-text-primary))]">المشاهدات اليوم</p>
+                        <p className="text-xl sm:text-2xl font-bold text-[hsl(var(--ifox-text-primary))]">
                           {stats?.todayViews.toLocaleString('ar-SA') || '0'}
                         </p>
                       </div>
-                      <Eye className="w-8 h-8 text-[hsl(var(--ifox-accent-primary))]" />
+                      <Eye className="w-6 h-6 sm:w-8 sm:h-8 text-[hsl(var(--ifox-accent-primary))]" />
                     </div>
                     <div className="flex items-center gap-1 mt-2">
-                      <TrendingUp className="w-4 h-4 text-[hsl(var(--ifox-success))]" />
+                      <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-[hsl(var(--ifox-success))]" />
                       <span className="text-xs font-semibold text-[hsl(var(--ifox-success))]">+12.5%</span>
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="bg-gradient-to-br from-[hsl(var(--ifox-info)/.4)] to-[hsl(var(--ifox-info)/.3)] border-[hsl(var(--ifox-info)/.3)] backdrop-blur-sm">
-                  <CardContent className="p-4">
+                  <CardContent className="p-3 sm:p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-semibold text-[hsl(var(--ifox-text-primary))]">التفاعل الكلي</p>
-                        <p className="text-2xl font-bold text-[hsl(var(--ifox-text-primary))]">
+                        <p className="text-xs sm:text-sm font-semibold text-[hsl(var(--ifox-text-primary))]">التفاعل الكلي</p>
+                        <p className="text-xl sm:text-2xl font-bold text-[hsl(var(--ifox-text-primary))]">
                           {stats?.totalEngagement.toLocaleString('ar-SA') || '0'}
                         </p>
                       </div>
-                      <Activity className="w-8 h-8 text-[hsl(var(--ifox-info))]" />
+                      <Activity className="w-6 h-6 sm:w-8 sm:h-8 text-[hsl(var(--ifox-info))]" />
                     </div>
                     <div className="flex items-center gap-1 mt-2">
-                      <TrendingUp className="w-4 h-4 text-[hsl(var(--ifox-success))]" />
+                      <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-[hsl(var(--ifox-success))]" />
                       <span className="text-xs font-semibold text-[hsl(var(--ifox-success))]">+{stats?.weeklyGrowth || 0}%</span>
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="bg-gradient-to-br from-[hsl(var(--ifox-warning)/.4)] to-[hsl(var(--ifox-warning)/.3)] border-[hsl(var(--ifox-warning)/.3)] backdrop-blur-sm">
-                  <CardContent className="p-4">
+                  <CardContent className="p-3 sm:p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-semibold text-[hsl(var(--ifox-text-primary))]">متوسط وقت القراءة</p>
-                        <p className="text-2xl font-bold text-[hsl(var(--ifox-text-primary))]">
+                        <p className="text-xs sm:text-sm font-semibold text-[hsl(var(--ifox-text-primary))]">متوسط وقت القراءة</p>
+                        <p className="text-xl sm:text-2xl font-bold text-[hsl(var(--ifox-text-primary))]">
                           {stats?.averageReadTime || '0:00'}
                         </p>
                       </div>
-                      <Clock className="w-8 h-8 text-[hsl(var(--ifox-warning))]" />
+                      <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-[hsl(var(--ifox-warning))]" />
                     </div>
                     <div className="flex items-center gap-1 mt-2">
-                      <TrendingUp className="w-4 h-4 text-[hsl(var(--ifox-success))]" />
+                      <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-[hsl(var(--ifox-success))]" />
                       <span className="text-xs font-semibold text-[hsl(var(--ifox-success))]">+8.2%</span>
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="bg-gradient-to-br from-[hsl(var(--ifox-success)/.4)] to-[hsl(var(--ifox-success)/.3)] border-[hsl(var(--ifox-success)/.3)] backdrop-blur-sm">
-                  <CardContent className="p-4">
+                  <CardContent className="p-3 sm:p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-semibold text-[hsl(var(--ifox-text-primary))]">AI Score</p>
-                        <p className="text-2xl font-bold text-[hsl(var(--ifox-text-primary))]">92</p>
+                        <p className="text-xs sm:text-sm font-semibold text-[hsl(var(--ifox-text-primary))]">AI Score</p>
+                        <p className="text-xl sm:text-2xl font-bold text-[hsl(var(--ifox-text-primary))]">92</p>
                       </div>
-                      <Cpu className="w-8 h-8 text-[hsl(var(--ifox-success))]" />
+                      <Cpu className="w-6 h-6 sm:w-8 sm:h-8 text-[hsl(var(--ifox-success))]" />
                     </div>
                     <div className="flex items-center gap-1 mt-2">
-                      <Sparkles className="w-4 h-4 text-[hsl(var(--ifox-warning))]" />
+                      <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-[hsl(var(--ifox-warning))]" />
                       <span className="text-xs font-semibold text-[hsl(var(--ifox-text-primary))]">ممتاز</span>
                     </div>
                   </CardContent>
@@ -328,7 +328,7 @@ export default function IFoxDashboard() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="grid grid-cols-1 md:grid-cols-4 gap-4"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
             >
               {quickActions.map((action, index) => {
                 const Icon = action.icon;
@@ -346,14 +346,14 @@ export default function IFoxDashboard() {
                         className="cursor-pointer bg-[hsl(var(--ifox-surface-primary)/.8)] border-[hsl(var(--ifox-surface-overlay))] backdrop-blur-lg hover:bg-[hsl(var(--ifox-surface-overlay)/.6)] hover:border-[hsl(var(--ifox-surface-overlay))] transition-all duration-300"
                         data-testid={`quick-action-${action.title}`}
                       >
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between mb-3">
-                            <div className={`p-3 rounded-xl bg-gradient-to-br ${action.color} shadow-[0_10px_15px_hsl(var(--ifox-surface-overlay)/.1)]`}>
-                              <Icon className="w-5 h-5 text-[hsl(var(--ifox-text-primary))]" />
+                        <CardContent className="p-3 sm:p-4">
+                          <div className="flex items-start justify-between mb-2 sm:mb-3">
+                            <div className={`p-2 sm:p-3 rounded-xl bg-gradient-to-br ${action.color} shadow-[0_10px_15px_hsl(var(--ifox-surface-overlay)/.1)]`}>
+                              <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-[hsl(var(--ifox-text-primary))]" />
                             </div>
-                            <ArrowUpRight className="w-4 h-4 text-[hsl(var(--ifox-text-primary))]" />
+                            <ArrowUpRight className="w-3 h-3 sm:w-4 sm:h-4 text-[hsl(var(--ifox-text-primary))]" />
                           </div>
-                          <h3 className="font-bold text-[hsl(var(--ifox-text-primary))] mb-1">{action.title}</h3>
+                          <h3 className="text-sm sm:text-base font-bold text-[hsl(var(--ifox-text-primary))] mb-1">{action.title}</h3>
                           <p className="text-xs text-[hsl(var(--ifox-text-secondary))]">{action.description}</p>
                         </CardContent>
                       </Card>
@@ -364,7 +364,7 @@ export default function IFoxDashboard() {
             </motion.div>
 
             {/* Charts and Recent Articles */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {/* Publishing Activity Chart */}
               <motion.div
                 initial={{ x: -20, opacity: 0 }}
@@ -381,8 +381,8 @@ export default function IFoxDashboard() {
                       عدد المقالات المنشورة والمشاهدات
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={250}>
+                  <CardContent className="p-3 sm:p-6">
+                    <ResponsiveContainer width="100%" height={200} className="sm:h-[250px]">
                       <AreaChart data={activityData}>
                         <defs>
                           <linearGradient id="colorArticles" x1="0" y1="0" x2="0" y2="1">
@@ -398,11 +398,13 @@ export default function IFoxDashboard() {
                         <XAxis 
                           dataKey="date" 
                           stroke="hsl(var(--ifox-text-secondary))"
-                          style={{ fontSize: '12px' }}
+                          style={{ fontSize: '10px' }}
+                          className="sm:text-xs"
                         />
                         <YAxis 
                           stroke="hsl(var(--ifox-text-secondary))"
-                          style={{ fontSize: '12px' }}
+                          style={{ fontSize: '10px' }}
+                          className="sm:text-xs"
                         />
                         <Tooltip 
                           contentStyle={{ 
@@ -455,8 +457,8 @@ export default function IFoxDashboard() {
                       </Link>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
+                  <CardContent className="p-3 sm:p-6">
+                    <div className="space-y-2 sm:space-y-3">
                       {articlesLoading ? (
                         <div className="text-center py-8 text-[hsl(var(--ifox-text-primary))]">جاري التحميل...</div>
                       ) : recentArticles?.map((article) => (
@@ -464,19 +466,19 @@ export default function IFoxDashboard() {
                           key={article.id}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          className="p-3 rounded-lg bg-[hsl(var(--ifox-surface-muted)/.7)] hover:bg-[hsl(var(--ifox-surface-overlay)/.6)] transition-all duration-200 cursor-pointer border border-[hsl(var(--ifox-surface-overlay))] hover:border-[hsl(var(--ifox-surface-overlay))]"
+                          className="p-2.5 sm:p-3 rounded-lg bg-[hsl(var(--ifox-surface-muted)/.7)] hover:bg-[hsl(var(--ifox-surface-overlay)/.6)] transition-all duration-200 cursor-pointer border border-[hsl(var(--ifox-surface-overlay))] hover:border-[hsl(var(--ifox-surface-overlay))]"
                           data-testid={`recent-article-${article.id}`}
                         >
                           <div className="flex items-start justify-between mb-2">
-                            <div className="flex-1">
-                              <h4 className="text-sm font-semibold text-[hsl(var(--ifox-text-primary))] mb-1 line-clamp-1">
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-xs sm:text-sm font-semibold text-[hsl(var(--ifox-text-primary))] mb-1 line-clamp-1">
                                 {article.title}
                               </h4>
-                              <div className="flex items-center gap-3 text-xs text-[hsl(var(--ifox-text-secondary))]">
-                                <span>{article.author}</span>
-                                <span>•</span>
+                              <div className="flex flex-wrap items-center gap-1.5 sm:gap-3 text-xs text-[hsl(var(--ifox-text-secondary))]">
+                                <span className="truncate">{article.author}</span>
+                                <span className="hidden sm:inline">•</span>
                                 <span>{format(new Date(article.publishedAt), 'dd MMM', { locale: ar })}</span>
-                                <span>•</span>
+                                <span className="hidden sm:inline">•</span>
                                 <span className="flex items-center gap-1">
                                   <Eye className="w-3 h-3" />
                                   {article.views.toLocaleString('ar-SA')}
