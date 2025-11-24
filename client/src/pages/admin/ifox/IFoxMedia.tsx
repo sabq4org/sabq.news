@@ -232,60 +232,64 @@ export default function IFoxMedia() {
   return (
     <IFoxLayout>
       <ScrollArea className="h-full">
-        <div className="p-6 space-y-6" dir="rtl">
+        <div className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6" dir="rtl">
             {/* Header */}
             <motion.div
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              className="space-y-4"
+              className="space-y-3 sm:space-y-4"
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-[hsl(var(--ifox-accent-primary)/1)] to-[hsl(var(--ifox-info)/1)] shadow-[0_10px_15px_hsl(var(--ifox-surface-overlay)/.1)] shadow-[hsl(var(--ifox-accent-primary)/.3)]">
-                    <Image className="w-8 h-8 text-[hsl(var(--ifox-text-primary))]" />
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-br from-[hsl(var(--ifox-accent-primary)/1)] to-[hsl(var(--ifox-info)/1)] shadow-[0_10px_15px_hsl(var(--ifox-surface-overlay)/.1)] shadow-[hsl(var(--ifox-accent-primary)/.3)]">
+                    <Image className="w-6 h-6 sm:w-8 sm:h-8 text-[hsl(var(--ifox-text-primary))]" data-testid="icon-media-library" />
                   </div>
-                  <div>
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-[hsl(var(--ifox-accent-primary)/1)] to-[hsl(var(--ifox-info)/1)] bg-clip-text text-transparent">
+                  <div className="min-w-0">
+                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-[hsl(var(--ifox-accent-primary)/1)] to-[hsl(var(--ifox-info)/1)] bg-clip-text text-transparent truncate" data-testid="text-page-title">
                       مكتبة الوسائط
                     </h1>
-                    <p className="text-[hsl(var(--ifox-text-secondary))]">إدارة ملفات الوسائط المتعددة</p>
+                    <p className="text-xs sm:text-sm text-[hsl(var(--ifox-text-secondary))] hidden sm:block" data-testid="text-page-description">إدارة ملفات الوسائط المتعددة</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
                   {selectedFiles.size > 0 && (
                     <Button
                       variant="destructive"
                       onClick={handleBulkDelete}
-                      className="gap-2"
+                      className="gap-1 sm:gap-2 flex-1 sm:flex-none text-xs sm:text-sm"
+                      data-testid="button-bulk-delete"
                     >
-                      <Trash2 className="w-4 h-4" />
-                      حذف المحدد ({selectedFiles.size})
+                      <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="hidden sm:inline">حذف المحدد</span>
+                      <span className="sm:hidden">حذف</span> ({selectedFiles.size})
                     </Button>
                   )}
                   <Button
                     onClick={() => setIsUploaderOpen(true)}
-                    className="gap-2 bg-gradient-to-r from-[hsl(var(--ifox-accent-primary)/1)] to-[hsl(var(--ifox-info)/1)] hover:from-[hsl(var(--ifox-accent-muted)/1)] hover:to-[hsl(var(--ifox-info-muted)/1)]"
+                    className="gap-1 sm:gap-2 bg-gradient-to-r from-[hsl(var(--ifox-accent-primary)/1)] to-[hsl(var(--ifox-info)/1)] hover:from-[hsl(var(--ifox-accent-muted)/1)] hover:to-[hsl(var(--ifox-info-muted)/1)] flex-1 sm:flex-none text-xs sm:text-sm"
+                    data-testid="button-upload-new"
                   >
-                    <Upload className="w-4 h-4" />
-                    رفع ملفات جديدة
+                    <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">رفع ملفات جديدة</span>
+                    <span className="sm:hidden">رفع</span>
                   </Button>
                 </div>
               </div>
 
               {/* Storage Info */}
               {storageInfo && (
-                <Card className="bg-gradient-to-br from-[hsl(var(--ifox-accent-primary)/.1)] to-[hsl(var(--ifox-info)/.1)] border-[hsl(var(--ifox-surface-overlay)/.1)]">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-2">
+                <Card className="bg-gradient-to-br from-[hsl(var(--ifox-accent-primary)/.1)] to-[hsl(var(--ifox-info)/.1)] border-[hsl(var(--ifox-surface-overlay)/.1)]" data-testid="card-storage-info">
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-2">
                       <div className="flex items-center gap-2">
-                        <HardDrive className="w-5 h-5 text-[hsl(var(--ifox-accent-primary))]" />
-                        <span className="text-[hsl(var(--ifox-text-primary))]">استخدام المساحة</span>
+                        <HardDrive className="w-4 h-4 sm:w-5 sm:h-5 text-[hsl(var(--ifox-accent-primary))]" data-testid="icon-storage" />
+                        <span className="text-xs sm:text-sm md:text-base text-[hsl(var(--ifox-text-primary))]" data-testid="text-storage-label">استخدام المساحة</span>
                       </div>
-                      <span className="text-[hsl(var(--ifox-text-secondary))] text-sm">
+                      <span className="text-[hsl(var(--ifox-text-secondary))] text-xs sm:text-sm" data-testid="text-storage-usage">
                         {formatFileSize(storageInfo.used)} من {formatFileSize(storageInfo.total)}
                       </span>
                     </div>
-                    <Progress value={storageInfo.percentage} className="h-2 bg-[hsl(var(--ifox-surface-overlay)/.1)]" />
+                    <Progress value={storageInfo.percentage} className="h-1.5 sm:h-2 bg-[hsl(var(--ifox-surface-overlay)/.1)]" data-testid="progress-storage" />
                   </CardContent>
                 </Card>
               )}
@@ -296,85 +300,93 @@ export default function IFoxMedia() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.1 }}
-              className="space-y-4"
+              className="space-y-3 sm:space-y-4"
             >
-              <div className="flex flex-wrap gap-4">
-                <div className="flex-1 min-w-[300px] relative">
-                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[hsl(var(--ifox-text-secondary))]" />
+              <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 md:gap-4">
+                <div className="flex-1 min-w-0 sm:min-w-[200px] md:min-w-[300px] relative">
+                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-[hsl(var(--ifox-text-secondary))]" data-testid="icon-search" />
                   <Input
                     placeholder="بحث بالاسم أو الكلمات المفتاحية..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pr-10 bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                    className="pr-10 text-xs sm:text-sm bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))] placeholder:text-[hsl(var(--ifox-text-secondary))]"
+                    data-testid="input-search"
                   />
                 </div>
                 
-                <Select value={selectedType} onValueChange={setSelectedType}>
-                  <SelectTrigger className="w-[150px] bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))]">
-                    <SelectValue placeholder="النوع" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">جميع الأنواع</SelectItem>
-                    <SelectItem value="image">صور</SelectItem>
-                    <SelectItem value="video">فيديو</SelectItem>
-                    <SelectItem value="audio">صوت</SelectItem>
-                    <SelectItem value="document">مستندات</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                  <Select value={selectedType} onValueChange={setSelectedType}>
+                    <SelectTrigger className="w-full sm:w-[120px] md:w-[150px] text-xs sm:text-sm bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))]" data-testid="select-type">
+                      <SelectValue placeholder="النوع" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">جميع الأنواع</SelectItem>
+                      <SelectItem value="image">صور</SelectItem>
+                      <SelectItem value="video">فيديو</SelectItem>
+                      <SelectItem value="audio">صوت</SelectItem>
+                      <SelectItem value="document">مستندات</SelectItem>
+                    </SelectContent>
+                  </Select>
 
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-[180px] bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))]">
-                    <SelectValue placeholder="التصنيف" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">جميع التصنيفات</SelectItem>
-                    <SelectItem value="ai-news">أخبار AI</SelectItem>
-                    <SelectItem value="ai-voice">AI Voice</SelectItem>
-                    <SelectItem value="ai-tools">AI Tools</SelectItem>
-                    <SelectItem value="ai-academy">AI Academy</SelectItem>
-                    <SelectItem value="ai-community">AI Community</SelectItem>
-                    <SelectItem value="ai-insights">AI Insights</SelectItem>
-                    <SelectItem value="ai-opinions">AI Opinions</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger className="w-full sm:w-[140px] md:w-[180px] text-xs sm:text-sm bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))]" data-testid="select-category">
+                      <SelectValue placeholder="التصنيف" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">جميع التصنيفات</SelectItem>
+                      <SelectItem value="ai-news">أخبار AI</SelectItem>
+                      <SelectItem value="ai-voice">AI Voice</SelectItem>
+                      <SelectItem value="ai-tools">AI Tools</SelectItem>
+                      <SelectItem value="ai-academy">AI Academy</SelectItem>
+                      <SelectItem value="ai-community">AI Community</SelectItem>
+                      <SelectItem value="ai-insights">AI Insights</SelectItem>
+                      <SelectItem value="ai-opinions">AI Opinions</SelectItem>
+                    </SelectContent>
+                  </Select>
 
-                <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                  <SelectTrigger className="w-[150px] bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))]">
-                    <SelectValue placeholder="ترتيب حسب" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="name">الاسم</SelectItem>
-                    <SelectItem value="date">التاريخ</SelectItem>
-                    <SelectItem value="size">الحجم</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                    <SelectTrigger className="w-full sm:w-[120px] md:w-[150px] text-xs sm:text-sm bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))]" data-testid="select-sort">
+                      <SelectValue placeholder="ترتيب حسب" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="name">الاسم</SelectItem>
+                      <SelectItem value="date">التاريخ</SelectItem>
+                      <SelectItem value="size">الحجم</SelectItem>
+                    </SelectContent>
+                  </Select>
 
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-                  className="text-[hsl(var(--ifox-text-secondary))] hover:text-[hsl(var(--ifox-text-primary))]"
-                >
-                  {sortOrder === "asc" ? <SortAsc /> : <SortDesc />}
-                </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                      className="text-[hsl(var(--ifox-text-secondary))] hover:text-[hsl(var(--ifox-text-primary))] h-8 w-8 sm:h-9 sm:w-9"
+                      data-testid="button-sort-order"
+                    >
+                      {sortOrder === "asc" ? <SortAsc className="w-3 h-3 sm:w-4 sm:h-4" /> : <SortDesc className="w-3 h-3 sm:w-4 sm:h-4" />}
+                    </Button>
 
-                <div className="flex gap-1 bg-[hsl(var(--ifox-surface-overlay)/.05)] rounded-lg p-1">
-                  <Button
-                    variant={viewMode === "grid" ? "default" : "ghost"}
-                    size="icon"
-                    onClick={() => setViewMode("grid")}
-                    className="h-8 w-8"
-                  >
-                    <Grid className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant={viewMode === "list" ? "default" : "ghost"}
-                    size="icon"
-                    onClick={() => setViewMode("list")}
-                    className="h-8 w-8"
-                  >
-                    <List className="w-4 h-4" />
-                  </Button>
+                    <div className="flex gap-1 bg-[hsl(var(--ifox-surface-overlay)/.05)] rounded-lg p-1">
+                      <Button
+                        variant={viewMode === "grid" ? "default" : "ghost"}
+                        size="icon"
+                        onClick={() => setViewMode("grid")}
+                        className="h-7 w-7 sm:h-8 sm:w-8"
+                        data-testid="button-view-grid"
+                      >
+                        <Grid className="w-3 h-3 sm:w-4 sm:h-4" />
+                      </Button>
+                      <Button
+                        variant={viewMode === "list" ? "default" : "ghost"}
+                        size="icon"
+                        onClick={() => setViewMode("list")}
+                        className="h-7 w-7 sm:h-8 sm:w-8"
+                        data-testid="button-view-list"
+                      >
+                        <List className="w-3 h-3 sm:w-4 sm:h-4" />
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -386,13 +398,13 @@ export default function IFoxMedia() {
               transition={{ delay: 0.2 }}
             >
               {isLoading ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                   {[...Array(10)].map((_, i) => (
-                    <div key={i} className="aspect-square rounded-xl bg-[hsl(var(--ifox-surface-overlay)/.05)] animate-pulse" />
+                    <div key={i} className="aspect-square rounded-lg sm:rounded-xl bg-[hsl(var(--ifox-surface-overlay)/.05)] animate-pulse" />
                   ))}
                 </div>
               ) : viewMode === "grid" ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                   {sortedFiles.map((file) => {
                     const Icon = getFileIcon(file.type);
                     const CategoryIcon = categoryIcons[file.category as keyof typeof categoryIcons];
@@ -405,11 +417,12 @@ export default function IFoxMedia() {
                         animate={{ scale: 1, opacity: 1 }}
                         whileHover={{ scale: 1.02 }}
                         className={cn(
-                          "group relative rounded-xl overflow-hidden bg-[hsl(var(--ifox-surface-overlay)/.05)] border border-[hsl(var(--ifox-surface-overlay)/.1)]",
+                          "group relative rounded-lg sm:rounded-xl overflow-hidden bg-[hsl(var(--ifox-surface-overlay)/.05)] border border-[hsl(var(--ifox-surface-overlay)/.1)]",
                           "hover:border-[hsl(var(--ifox-surface-overlay)/.2)] transition-all duration-200 cursor-pointer",
                           isSelected && "border-[hsl(var(--ifox-accent-primary))] bg-[hsl(var(--ifox-accent-primary)/.1)]"
                         )}
                         onClick={() => setSelectedFile(file)}
+                        data-testid={`card-media-${file.id}`}
                       >
                         <div className="aspect-square relative">
                           {file.type === "image" && file.thumbnailUrl ? (
@@ -417,28 +430,29 @@ export default function IFoxMedia() {
                               src={file.thumbnailUrl}
                               alt={file.altText || file.name}
                               className="w-full h-full object-cover"
+                              data-testid={`img-thumbnail-${file.id}`}
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[hsl(var(--ifox-surface-overlay)/.05)] to-[hsl(var(--ifox-surface-overlay)/.1)]">
-                              <Icon className="w-12 h-12 text-[hsl(var(--ifox-text-secondary))]" />
+                              <Icon className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-[hsl(var(--ifox-text-secondary))]" data-testid={`icon-file-${file.id}`} />
                             </div>
                           )}
                           
                           {/* Overlay */}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                            <div className="absolute bottom-0 left-0 right-0 p-3 space-y-2">
-                              <p className="text-[hsl(var(--ifox-text-primary))] text-sm font-medium truncate">{file.name}</p>
-                              <div className="flex items-center justify-between">
-                                <span className="text-[hsl(var(--ifox-text-secondary))] text-xs">{formatFileSize(file.size)}</span>
+                            <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3 space-y-1 sm:space-y-2">
+                              <p className="text-[hsl(var(--ifox-text-primary))] text-xs sm:text-sm font-medium truncate min-w-0" data-testid={`text-filename-${file.id}`}>{file.name}</p>
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-[hsl(var(--ifox-text-secondary))] text-[10px] sm:text-xs truncate min-w-0" data-testid={`text-filesize-${file.id}`}>{formatFileSize(file.size)}</span>
                                 {CategoryIcon && (
-                                  <CategoryIcon className="w-4 h-4 text-[hsl(var(--ifox-text-secondary))]" />
+                                  <CategoryIcon className="w-3 h-3 sm:w-4 sm:h-4 text-[hsl(var(--ifox-text-secondary))] flex-shrink-0" data-testid={`icon-category-${file.id}`} />
                                 )}
                               </div>
                             </div>
                           </div>
 
                           {/* Selection Checkbox */}
-                          <div className="absolute top-2 left-2">
+                          <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2">
                             <input
                               type="checkbox"
                               checked={isSelected}
@@ -452,15 +466,16 @@ export default function IFoxMedia() {
                                 }
                                 setSelectedFiles(newSelected);
                               }}
-                              className="w-4 h-4 rounded border-white/30 bg-[hsl(var(--ifox-surface-overlay)/.1)]"
+                              className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded border-white/30 bg-[hsl(var(--ifox-surface-overlay)/.1)]"
                               onClick={(e) => e.stopPropagation()}
+                              data-testid={`checkbox-select-${file.id}`}
                             />
                           </div>
 
                           {/* Usage Badge */}
                           {file.usageCount > 0 && (
-                            <div className="absolute top-2 right-2">
-                              <Badge variant="secondary" className="bg-black/50 text-[hsl(var(--ifox-text-primary))] text-xs">
+                            <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2">
+                              <Badge variant="secondary" className="bg-black/50 text-[hsl(var(--ifox-text-primary))] text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5" data-testid={`badge-usage-${file.id}`}>
                                 {file.usageCount}x
                               </Badge>
                             </div>
@@ -471,7 +486,7 @@ export default function IFoxMedia() {
                   })}
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-1.5 sm:space-y-2">
                   {sortedFiles.map((file) => {
                     const Icon = getFileIcon(file.type);
                     const CategoryIcon = categoryIcons[file.category as keyof typeof categoryIcons];
@@ -483,11 +498,12 @@ export default function IFoxMedia() {
                         initial={{ x: -20, opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
                         className={cn(
-                          "flex items-center gap-4 p-4 rounded-xl bg-[hsl(var(--ifox-surface-overlay)/.05)] border border-[hsl(var(--ifox-surface-overlay)/.1)]",
+                          "flex items-center gap-2 sm:gap-3 md:gap-4 p-2 sm:p-3 md:p-4 rounded-lg sm:rounded-xl bg-[hsl(var(--ifox-surface-overlay)/.05)] border border-[hsl(var(--ifox-surface-overlay)/.1)]",
                           "hover:border-[hsl(var(--ifox-surface-overlay)/.2)] transition-all duration-200 cursor-pointer",
                           isSelected && "border-[hsl(var(--ifox-accent-primary))] bg-[hsl(var(--ifox-accent-primary)/.1)]"
                         )}
                         onClick={() => setSelectedFile(file)}
+                        data-testid={`list-item-${file.id}`}
                       >
                         <input
                           type="checkbox"
@@ -502,36 +518,37 @@ export default function IFoxMedia() {
                             }
                             setSelectedFiles(newSelected);
                           }}
-                          className="w-4 h-4 rounded border-white/30 bg-[hsl(var(--ifox-surface-overlay)/.1)]"
+                          className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded border-white/30 bg-[hsl(var(--ifox-surface-overlay)/.1)]"
                           onClick={(e) => e.stopPropagation()}
+                          data-testid={`checkbox-list-${file.id}`}
                         />
                         
-                        <div className="w-12 h-12 rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.1)] flex items-center justify-center">
-                          <Icon className="w-6 h-6 text-[hsl(var(--ifox-text-secondary))]" />
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-md sm:rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.1)] flex items-center justify-center flex-shrink-0">
+                          <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-[hsl(var(--ifox-text-secondary))]" data-testid={`icon-list-${file.id}`} />
                         </div>
                         
-                        <div className="flex-1">
-                          <p className="text-[hsl(var(--ifox-text-primary))] font-medium">{file.name}</p>
-                          <div className="flex items-center gap-4 mt-1">
-                            <span className="text-[hsl(var(--ifox-text-secondary))] text-sm">{formatFileSize(file.size)}</span>
-                            <span className="text-[hsl(var(--ifox-text-secondary))] text-sm">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[hsl(var(--ifox-text-primary))] text-xs sm:text-sm md:text-base font-medium truncate" data-testid={`text-list-filename-${file.id}`}>{file.name}</p>
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 mt-0.5 sm:mt-1">
+                            <span className="text-[hsl(var(--ifox-text-secondary))] text-[10px] sm:text-xs md:text-sm" data-testid={`text-list-size-${file.id}`}>{formatFileSize(file.size)}</span>
+                            <span className="text-[hsl(var(--ifox-text-secondary))] text-[10px] sm:text-xs md:text-sm hidden sm:inline" data-testid={`text-list-date-${file.id}`}>
                               {format(new Date(file.uploadedAt), "d MMM yyyy", { locale: ar })}
                             </span>
                             {CategoryIcon && (
-                              <div className="flex items-center gap-1">
+                              <div className="flex items-center gap-1 hidden md:flex">
                                 <CategoryIcon className="w-3 h-3 text-[hsl(var(--ifox-text-secondary))]" />
-                                <span className="text-[hsl(var(--ifox-text-secondary))] text-sm">{file.category}</span>
+                                <span className="text-[hsl(var(--ifox-text-secondary))] text-xs">{file.category}</span>
                               </div>
                             )}
                             {file.usageCount > 0 && (
-                              <Badge variant="secondary" className="text-xs">
-                                استخدم {file.usageCount} مرة
+                              <Badge variant="secondary" className="text-[10px] sm:text-xs px-1 sm:px-2 py-0.5" data-testid={`badge-list-usage-${file.id}`}>
+                                <span className="hidden sm:inline">استخدم </span>{file.usageCount}<span className="hidden sm:inline"> مرة</span>
                               </Badge>
                             )}
                           </div>
                         </div>
                         
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 sm:gap-2">
                           <Button
                             variant="ghost"
                             size="icon"
@@ -539,8 +556,10 @@ export default function IFoxMedia() {
                               e.stopPropagation();
                               copyToClipboard(file.url);
                             }}
+                            className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9"
+                            data-testid={`button-copy-${file.id}`}
                           >
-                            <Copy className="w-4 h-4" />
+                            <Copy className="w-3 h-3 sm:w-4 sm:h-4" />
                           </Button>
                           <Button
                             variant="ghost"
@@ -549,8 +568,10 @@ export default function IFoxMedia() {
                               e.stopPropagation();
                               window.open(file.url, "_blank");
                             }}
+                            className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 hidden sm:flex"
+                            data-testid={`button-download-${file.id}`}
                           >
-                            <Download className="w-4 h-4" />
+                            <Download className="w-3 h-3 sm:w-4 sm:h-4" />
                           </Button>
                         </div>
                       </motion.div>
@@ -564,10 +585,10 @@ export default function IFoxMedia() {
 
       {/* Upload Dialog */}
       <Dialog open={isUploaderOpen} onOpenChange={setIsUploaderOpen}>
-        <DialogContent className="max-w-3xl bg-[hsl(var(--ifox-surface-primary))] border-[hsl(var(--ifox-surface-overlay)/.1)]">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl md:max-w-3xl bg-[hsl(var(--ifox-surface-primary))] border-[hsl(var(--ifox-surface-overlay)/.1)]" data-testid="dialog-upload">
           <DialogHeader>
-            <DialogTitle className="text-[hsl(var(--ifox-text-primary))]">رفع ملفات جديدة</DialogTitle>
-            <DialogDescription className="text-[hsl(var(--ifox-text-secondary))]">
+            <DialogTitle className="text-base sm:text-lg md:text-xl text-[hsl(var(--ifox-text-primary))]" data-testid="text-upload-title">رفع ملفات جديدة</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm text-[hsl(var(--ifox-text-secondary))]" data-testid="text-upload-description">
               اسحب وأفلت الملفات أو انقر للاختيار
             </DialogDescription>
           </DialogHeader>
@@ -585,72 +606,73 @@ export default function IFoxMedia() {
       <AnimatePresence>
         {selectedFile && !editingFile && (
           <Dialog open={!!selectedFile} onOpenChange={() => setSelectedFile(null)}>
-            <DialogContent className="max-w-4xl bg-[hsl(var(--ifox-surface-primary))] border-[hsl(var(--ifox-surface-overlay)/.1)]">
+            <DialogContent className="max-w-[95vw] sm:max-w-2xl md:max-w-3xl lg:max-w-4xl max-h-[90vh] overflow-y-auto bg-[hsl(var(--ifox-surface-primary))] border-[hsl(var(--ifox-surface-overlay)/.1)]" data-testid="dialog-file-details">
               <DialogHeader>
-                <DialogTitle className="text-[hsl(var(--ifox-text-primary))]">تفاصيل الملف</DialogTitle>
+                <DialogTitle className="text-base sm:text-lg md:text-xl text-[hsl(var(--ifox-text-primary))]" data-testid="text-details-title">تفاصيل الملف</DialogTitle>
               </DialogHeader>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 {/* Preview */}
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {selectedFile.type === "image" && selectedFile.url ? (
                     <img
                       src={selectedFile.url}
                       alt={selectedFile.altText || selectedFile.name}
-                      className="w-full rounded-lg"
+                      className="w-full rounded-lg sm:rounded-xl aspect-square object-cover"
+                      data-testid="img-preview"
                     />
                   ) : (
-                    <div className="aspect-square rounded-lg bg-[hsl(var(--ifox-surface-overlay)/.05)] flex items-center justify-center">
+                    <div className="aspect-square rounded-lg sm:rounded-xl bg-[hsl(var(--ifox-surface-overlay)/.05)] flex items-center justify-center">
                       {(() => {
                         const Icon = getFileIcon(selectedFile.type);
-                        return <Icon className="w-24 h-24 text-[hsl(var(--ifox-text-secondary))]" />;
+                        return <Icon className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 text-[hsl(var(--ifox-text-secondary))]" data-testid="icon-preview" />;
                       })()}
                     </div>
                   )}
                 </div>
 
                 {/* Details */}
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   <div>
-                    <Label className="text-[hsl(var(--ifox-text-secondary))]">اسم الملف</Label>
-                    <p className="text-[hsl(var(--ifox-text-primary))] mt-1">{selectedFile.name}</p>
+                    <Label className="text-xs sm:text-sm text-[hsl(var(--ifox-text-secondary))]" data-testid="label-filename">اسم الملف</Label>
+                    <p className="text-xs sm:text-sm md:text-base text-[hsl(var(--ifox-text-primary))] mt-1 break-all" data-testid="text-filename">{selectedFile.name}</p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div>
-                      <Label className="text-[hsl(var(--ifox-text-secondary))]">الحجم</Label>
-                      <p className="text-[hsl(var(--ifox-text-primary))] mt-1">{formatFileSize(selectedFile.size)}</p>
+                      <Label className="text-xs sm:text-sm text-[hsl(var(--ifox-text-secondary))]" data-testid="label-size">الحجم</Label>
+                      <p className="text-xs sm:text-sm md:text-base text-[hsl(var(--ifox-text-primary))] mt-1" data-testid="text-size">{formatFileSize(selectedFile.size)}</p>
                     </div>
                     {selectedFile.width && selectedFile.height && (
                       <div>
-                        <Label className="text-[hsl(var(--ifox-text-secondary))]">الأبعاد</Label>
-                        <p className="text-[hsl(var(--ifox-text-primary))] mt-1">{selectedFile.width} × {selectedFile.height}</p>
+                        <Label className="text-xs sm:text-sm text-[hsl(var(--ifox-text-secondary))]" data-testid="label-dimensions">الأبعاد</Label>
+                        <p className="text-xs sm:text-sm md:text-base text-[hsl(var(--ifox-text-primary))] mt-1" data-testid="text-dimensions">{selectedFile.width} × {selectedFile.height}</p>
                       </div>
                     )}
                     {selectedFile.duration && (
                       <div>
-                        <Label className="text-[hsl(var(--ifox-text-secondary))]">المدة</Label>
-                        <p className="text-[hsl(var(--ifox-text-primary))] mt-1">{Math.floor(selectedFile.duration / 60)}:{(selectedFile.duration % 60).toString().padStart(2, '0')}</p>
+                        <Label className="text-xs sm:text-sm text-[hsl(var(--ifox-text-secondary))]" data-testid="label-duration">المدة</Label>
+                        <p className="text-xs sm:text-sm md:text-base text-[hsl(var(--ifox-text-primary))] mt-1" data-testid="text-duration">{Math.floor(selectedFile.duration / 60)}:{(selectedFile.duration % 60).toString().padStart(2, '0')}</p>
                       </div>
                     )}
                   </div>
 
                   <div>
-                    <Label className="text-[hsl(var(--ifox-text-secondary))]">التصنيف</Label>
+                    <Label className="text-xs sm:text-sm text-[hsl(var(--ifox-text-secondary))]" data-testid="label-category">التصنيف</Label>
                     <div className="flex items-center gap-2 mt-1">
                       {(() => {
                         const CategoryIcon = categoryIcons[selectedFile.category as keyof typeof categoryIcons];
-                        return CategoryIcon ? <CategoryIcon className="w-4 h-4 text-[hsl(var(--ifox-text-secondary))]" /> : null;
+                        return CategoryIcon ? <CategoryIcon className="w-3 h-3 sm:w-4 sm:h-4 text-[hsl(var(--ifox-text-secondary))]" data-testid="icon-category-details" /> : null;
                       })()}
-                      <span className="text-[hsl(var(--ifox-text-primary))]">{selectedFile.category}</span>
+                      <span className="text-xs sm:text-sm md:text-base text-[hsl(var(--ifox-text-primary))]" data-testid="text-category">{selectedFile.category}</span>
                     </div>
                   </div>
 
                   <div>
-                    <Label className="text-[hsl(var(--ifox-text-secondary))]">الكلمات المفتاحية</Label>
-                    <div className="flex flex-wrap gap-2 mt-1">
+                    <Label className="text-xs sm:text-sm text-[hsl(var(--ifox-text-secondary))]" data-testid="label-tags">الكلمات المفتاحية</Label>
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-1">
                       {selectedFile.tags.map((tag) => (
-                        <Badge key={tag} variant="secondary" className="bg-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))]">
+                        <Badge key={tag} variant="secondary" className="bg-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))] text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5" data-testid={`badge-tag-${tag}`}>
                           {tag}
                         </Badge>
                       ))}
@@ -659,58 +681,62 @@ export default function IFoxMedia() {
 
                   {selectedFile.altText && (
                     <div>
-                      <Label className="text-[hsl(var(--ifox-text-secondary))]">النص البديل</Label>
-                      <p className="text-[hsl(var(--ifox-text-primary))] mt-1">{selectedFile.altText}</p>
+                      <Label className="text-xs sm:text-sm text-[hsl(var(--ifox-text-secondary))]" data-testid="label-alt">النص البديل</Label>
+                      <p className="text-xs sm:text-sm md:text-base text-[hsl(var(--ifox-text-primary))] mt-1" data-testid="text-alt">{selectedFile.altText}</p>
                     </div>
                   )}
 
                   {selectedFile.caption && (
                     <div>
-                      <Label className="text-[hsl(var(--ifox-text-secondary))]">الوصف</Label>
-                      <p className="text-[hsl(var(--ifox-text-primary))] mt-1">{selectedFile.caption}</p>
+                      <Label className="text-xs sm:text-sm text-[hsl(var(--ifox-text-secondary))]" data-testid="label-caption">الوصف</Label>
+                      <p className="text-xs sm:text-sm md:text-base text-[hsl(var(--ifox-text-primary))] mt-1" data-testid="text-caption">{selectedFile.caption}</p>
                     </div>
                   )}
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div>
-                      <Label className="text-[hsl(var(--ifox-text-secondary))]">رفع بواسطة</Label>
-                      <p className="text-[hsl(var(--ifox-text-primary))] mt-1">{selectedFile.uploadedBy}</p>
+                      <Label className="text-xs sm:text-sm text-[hsl(var(--ifox-text-secondary))]" data-testid="label-uploaded-by">رفع بواسطة</Label>
+                      <p className="text-xs sm:text-sm md:text-base text-[hsl(var(--ifox-text-primary))] mt-1 truncate" data-testid="text-uploaded-by">{selectedFile.uploadedBy}</p>
                     </div>
                     <div>
-                      <Label className="text-[hsl(var(--ifox-text-secondary))]">تاريخ الرفع</Label>
-                      <p className="text-[hsl(var(--ifox-text-primary))] mt-1">
+                      <Label className="text-xs sm:text-sm text-[hsl(var(--ifox-text-secondary))]" data-testid="label-uploaded-at">تاريخ الرفع</Label>
+                      <p className="text-xs sm:text-sm md:text-base text-[hsl(var(--ifox-text-primary))] mt-1 truncate" data-testid="text-uploaded-at">
                         {format(new Date(selectedFile.uploadedAt), "d MMM yyyy, h:mm a", { locale: ar })}
                       </p>
                     </div>
                   </div>
 
                   <div>
-                    <Label className="text-[hsl(var(--ifox-text-secondary))]">رابط الملف</Label>
+                    <Label className="text-xs sm:text-sm text-[hsl(var(--ifox-text-secondary))]" data-testid="label-url">رابط الملف</Label>
                     <div className="flex items-center gap-2 mt-1">
                       <Input
                         value={selectedFile.url}
                         readOnly
-                        className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))]"
+                        className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))] text-xs sm:text-sm min-w-0"
+                        data-testid="input-url"
                       />
                       <Button
                         size="icon"
                         variant="ghost"
                         onClick={() => copyToClipboard(selectedFile.url)}
+                        className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0"
+                        data-testid="button-copy-url"
                       >
-                        <Copy className="w-4 h-4" />
+                        <Copy className="w-3 h-3 sm:w-4 sm:h-4" />
                       </Button>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <DialogFooter className="flex gap-2">
+              <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-4">
                 <Button
                   variant="outline"
                   onClick={() => setEditingFile(selectedFile)}
-                  className="gap-2"
+                  className="gap-1 sm:gap-2 text-xs sm:text-sm w-full sm:w-auto"
+                  data-testid="button-edit"
                 >
-                  <Edit className="w-4 h-4" />
+                  <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
                   تحرير
                 </Button>
                 <Button
@@ -720,14 +746,17 @@ export default function IFoxMedia() {
                       deleteFileMutation.mutate(selectedFile.id);
                     }
                   }}
-                  className="gap-2"
+                  className="gap-1 sm:gap-2 text-xs sm:text-sm w-full sm:w-auto"
+                  data-testid="button-delete"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                   حذف
                 </Button>
                 <Button
                   variant="ghost"
                   onClick={() => setSelectedFile(null)}
+                  className="text-xs sm:text-sm w-full sm:w-auto"
+                  data-testid="button-close"
                 >
                   إغلاق
                 </Button>
@@ -741,28 +770,29 @@ export default function IFoxMedia() {
       <AnimatePresence>
         {editingFile && (
           <Dialog open={!!editingFile} onOpenChange={() => setEditingFile(null)}>
-            <DialogContent className="max-w-2xl bg-[hsl(var(--ifox-surface-primary))] border-[hsl(var(--ifox-surface-overlay)/.1)]">
+            <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto bg-[hsl(var(--ifox-surface-primary))] border-[hsl(var(--ifox-surface-overlay)/.1)]" data-testid="dialog-edit">
               <DialogHeader>
-                <DialogTitle className="text-[hsl(var(--ifox-text-primary))]">تحرير معلومات الملف</DialogTitle>
+                <DialogTitle className="text-base sm:text-lg md:text-xl text-[hsl(var(--ifox-text-primary))]" data-testid="text-edit-title">تحرير معلومات الملف</DialogTitle>
               </DialogHeader>
               
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <div>
-                  <Label className="text-[hsl(var(--ifox-text-secondary))]">اسم الملف</Label>
+                  <Label className="text-xs sm:text-sm text-[hsl(var(--ifox-text-secondary))]" data-testid="label-edit-name">اسم الملف</Label>
                   <Input
                     value={editingFile.name}
                     onChange={(e) => setEditingFile({ ...editingFile, name: e.target.value })}
-                    className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))]"
+                    className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))] text-xs sm:text-sm mt-1"
+                    data-testid="input-edit-name"
                   />
                 </div>
 
                 <div>
-                  <Label className="text-[hsl(var(--ifox-text-secondary))]">التصنيف</Label>
+                  <Label className="text-xs sm:text-sm text-[hsl(var(--ifox-text-secondary))]" data-testid="label-edit-category">التصنيف</Label>
                   <Select
                     value={editingFile.category}
                     onValueChange={(value) => setEditingFile({ ...editingFile, category: value })}
                   >
-                    <SelectTrigger className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))]">
+                    <SelectTrigger className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))] text-xs sm:text-sm mt-1" data-testid="select-edit-category">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -778,7 +808,7 @@ export default function IFoxMedia() {
                 </div>
 
                 <div>
-                  <Label className="text-[hsl(var(--ifox-text-secondary))]">الكلمات المفتاحية</Label>
+                  <Label className="text-xs sm:text-sm text-[hsl(var(--ifox-text-secondary))]" data-testid="label-edit-tags">الكلمات المفتاحية</Label>
                   <Input
                     value={editingFile.tags.join(", ")}
                     onChange={(e) => setEditingFile({
@@ -786,42 +816,48 @@ export default function IFoxMedia() {
                       tags: e.target.value.split(",").map(tag => tag.trim()).filter(tag => tag)
                     })}
                     placeholder="أدخل الكلمات مفصولة بفواصل"
-                    className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))]"
+                    className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))] text-xs sm:text-sm mt-1"
+                    data-testid="input-edit-tags"
                   />
                 </div>
 
                 {editingFile.type === "image" && (
                   <div>
-                    <Label className="text-[hsl(var(--ifox-text-secondary))]">النص البديل</Label>
+                    <Label className="text-xs sm:text-sm text-[hsl(var(--ifox-text-secondary))]" data-testid="label-edit-alt">النص البديل</Label>
                     <Input
                       value={editingFile.altText || ""}
                       onChange={(e) => setEditingFile({ ...editingFile, altText: e.target.value })}
-                      className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))]"
+                      className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))] text-xs sm:text-sm mt-1"
+                      data-testid="input-edit-alt"
                     />
                   </div>
                 )}
 
                 <div>
-                  <Label className="text-[hsl(var(--ifox-text-secondary))]">الوصف</Label>
+                  <Label className="text-xs sm:text-sm text-[hsl(var(--ifox-text-secondary))]" data-testid="label-edit-caption">الوصف</Label>
                   <Textarea
                     value={editingFile.caption || ""}
                     onChange={(e) => setEditingFile({ ...editingFile, caption: e.target.value })}
                     rows={3}
-                    className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))] resize-none"
+                    className="bg-[hsl(var(--ifox-surface-overlay)/.05)] border-[hsl(var(--ifox-surface-overlay)/.1)] text-[hsl(var(--ifox-text-primary))] text-xs sm:text-sm resize-none mt-1"
+                    data-testid="textarea-edit-caption"
                   />
                 </div>
               </div>
 
-              <DialogFooter className="flex gap-2">
+              <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-4">
                 <Button
                   onClick={() => updateFileMutation.mutate(editingFile)}
-                  className="gap-2 bg-gradient-to-r from-[hsl(var(--ifox-accent-primary)/1)] to-[hsl(var(--ifox-info)/1)] hover:from-[hsl(var(--ifox-accent-muted)/1)] hover:to-[hsl(var(--ifox-info-muted)/1)]"
+                  className="gap-1 sm:gap-2 text-xs sm:text-sm w-full sm:w-auto bg-gradient-to-r from-[hsl(var(--ifox-accent-primary)/1)] to-[hsl(var(--ifox-info)/1)] hover:from-[hsl(var(--ifox-accent-muted)/1)] hover:to-[hsl(var(--ifox-info-muted)/1)]"
+                  data-testid="button-save-changes"
                 >
                   حفظ التغييرات
                 </Button>
                 <Button
                   variant="ghost"
                   onClick={() => setEditingFile(null)}
+                  className="text-xs sm:text-sm w-full sm:w-auto"
+                  data-testid="button-cancel-edit"
                 >
                   إلغاء
                 </Button>
