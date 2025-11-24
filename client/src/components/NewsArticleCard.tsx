@@ -382,9 +382,9 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
                       جديد
                     </Badge>
                   ) : article.articleType === 'infographic' ? (
-                    <InfographicBadgeIcon 
-                      dataTestId={`badge-content-type-${article.id}`}
-                    />
+                    <Badge className="text-xs h-5 bg-muted text-muted-foreground border-0" data-testid={`badge-content-type-${article.id}`}>
+                      إنفوجرافيك
+                    </Badge>
                   ) : article.category ? (
                     <Badge className="text-xs h-5 bg-muted text-muted-foreground border-0" data-testid={`badge-content-type-${article.id}`}>
                       {article.category.nameAr}
