@@ -189,30 +189,30 @@ export function IFoxArticlesTable({
     switch (status) {
       case "published":
         return (
-          <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 gap-1">
-            <Eye className="h-3 w-3" />
-            منشور
+          <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 gap-1 text-xs">
+            <Eye className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+            <span className="hidden sm:inline">منشور</span>
           </Badge>
         );
       case "scheduled":
         return (
-          <Badge className="bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 gap-1">
-            <Clock className="h-3 w-3" />
-            مجدول
+          <Badge className="bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 gap-1 text-xs">
+            <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+            <span className="hidden sm:inline">مجدول</span>
           </Badge>
         );
       case "draft":
         return (
-          <Badge variant="secondary" className="gap-1">
-            <Edit className="h-3 w-3" />
-            مسودة
+          <Badge variant="secondary" className="gap-1 text-xs">
+            <Edit className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+            <span className="hidden sm:inline">مسودة</span>
           </Badge>
         );
       case "archived":
         return (
-          <Badge variant="outline" className="gap-1">
-            <Archive className="h-3 w-3" />
-            مؤرشف
+          <Badge variant="outline" className="gap-1 text-xs">
+            <Archive className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+            <span className="hidden sm:inline">مؤرشف</span>
           </Badge>
         );
     }
@@ -229,11 +229,11 @@ export function IFoxArticlesTable({
     const config = categoryConfig[category] || categoryConfig.technology;
     const Icon = config.icon;
     return (
-      <div className={`flex items-center gap-2 ${config.color}`}>
-        <div className={`p-1.5 rounded-lg ${config.bgColor}`}>
-          <Icon className="h-4 w-4" />
+      <div className={`flex items-center gap-1.5 sm:gap-2 ${config.color} min-w-0`}>
+        <div className={`p-1 sm:p-1.5 rounded-lg ${config.bgColor} flex-shrink-0`}>
+          <Icon className="w-3 h-3 sm:w-4 sm:h-4" />
         </div>
-        <span className="text-sm font-medium">{config.label}</span>
+        <span className="text-xs sm:text-sm font-medium truncate hidden sm:inline">{config.label}</span>
       </div>
     );
   };
@@ -250,11 +250,11 @@ export function IFoxArticlesTable({
 
   return (
     <>
-      <div className="rounded-lg border">
+      <div className="rounded-lg border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-12">
+              <TableHead className="w-8 sm:w-12">
                 <Checkbox
                   checked={selectedArticles.length === articles.length && articles.length > 0}
                   onCheckedChange={onSelectAll}
@@ -262,20 +262,36 @@ export function IFoxArticlesTable({
                   data-testid="checkbox-select-all"
                 />
               </TableHead>
-              <TableHead className="text-right">العنوان</TableHead>
-              <TableHead className="text-right">التصنيف</TableHead>
-              <TableHead className="text-right">الحالة</TableHead>
-              <TableHead className="text-right">تاريخ النشر</TableHead>
-              <TableHead className="text-right">تقييم AI</TableHead>
-              <TableHead className="text-right">المشاهدات</TableHead>
-              <TableHead className="text-right">معدل التفاعل</TableHead>
-              <TableHead className="text-center">الإجراءات</TableHead>
+              <TableHead className="text-right min-w-[150px] sm:min-w-[200px]">
+                <span className="text-xs sm:text-sm">العنوان</span>
+              </TableHead>
+              <TableHead className="text-right hidden md:table-cell">
+                <span className="text-xs sm:text-sm">التصنيف</span>
+              </TableHead>
+              <TableHead className="text-right">
+                <span className="text-xs sm:text-sm">الحالة</span>
+              </TableHead>
+              <TableHead className="text-right hidden lg:table-cell">
+                <span className="text-xs sm:text-sm">تاريخ النشر</span>
+              </TableHead>
+              <TableHead className="text-right hidden xl:table-cell">
+                <span className="text-xs sm:text-sm">تقييم AI</span>
+              </TableHead>
+              <TableHead className="text-right hidden lg:table-cell">
+                <span className="text-xs sm:text-sm">المشاهدات</span>
+              </TableHead>
+              <TableHead className="text-right hidden xl:table-cell">
+                <span className="text-xs sm:text-sm">معدل التفاعل</span>
+              </TableHead>
+              <TableHead className="text-center">
+                <span className="text-xs sm:text-sm">الإجراءات</span>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {articles.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={9} className="text-center py-8 text-xs sm:text-sm text-muted-foreground">
                   لا توجد مقالات
                 </TableCell>
               </TableRow>
@@ -291,48 +307,48 @@ export function IFoxArticlesTable({
                     />
                   </TableCell>
                   <TableCell className="font-medium">
-                    <div className="space-y-1">
-                      <p className="line-clamp-1">{article.title}</p>
+                    <div className="space-y-0.5 sm:space-y-1 min-w-0">
+                      <p className="line-clamp-1 text-xs sm:text-sm truncate">{article.title}</p>
                       {article.titleEn && (
-                        <p className="text-xs text-muted-foreground line-clamp-1">{article.titleEn}</p>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-1 truncate hidden sm:block">{article.titleEn}</p>
                       )}
-                      <p className="text-xs text-muted-foreground">بواسطة: {article.author}</p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground truncate">بواسطة: {article.author}</p>
                     </div>
                   </TableCell>
-                  <TableCell>{getCategoryIcon(article.category)}</TableCell>
+                  <TableCell className="hidden md:table-cell">{getCategoryIcon(article.category)}</TableCell>
                   <TableCell>{getStatusBadge(article.status)}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <Calendar className="h-3 w-3" />
-                      {format(new Date(article.publishDate), "dd/MM/yyyy", { locale: ar })}
+                  <TableCell className="hidden lg:table-cell">
+                    <div className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground">
+                      <Calendar className="w-2.5 h-2.5 sm:w-3 sm:h-3 flex-shrink-0" />
+                      <span className="truncate">{format(new Date(article.publishDate), "dd/MM/yyyy", { locale: ar })}</span>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
+                  <TableCell className="hidden xl:table-cell">
+                    <div className="space-y-0.5 sm:space-y-1">
                       <div className="flex items-center gap-2">
                         <Progress 
                           value={article.aiScore} 
-                          className="h-2 w-20"
+                          className="h-1.5 sm:h-2 w-16 sm:w-20"
                           indicatorClassName={getAIScoreColor(article.aiScore)}
                         />
-                        <span className="text-sm font-medium">{article.aiScore}%</span>
+                        <span className="text-xs sm:text-sm font-medium">{article.aiScore}%</span>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Sparkles className="h-3 w-3 text-amber-500" />
-                        <span className="text-xs text-muted-foreground">جودة عالية</span>
+                      <div className="flex items-center gap-1 hidden sm:flex">
+                        <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-500" />
+                        <span className="text-[10px] sm:text-xs text-muted-foreground">جودة عالية</span>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden lg:table-cell">
                     <div className="flex items-center gap-1">
-                      <Eye className="h-3 w-3 text-muted-foreground" />
-                      <span className="text-sm">{article.views.toLocaleString("ar-SA")}</span>
+                      <Eye className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-muted-foreground" />
+                      <span className="text-xs sm:text-sm">{article.views.toLocaleString("ar-SA")}</span>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden xl:table-cell">
                     <div className="flex items-center gap-1">
-                      <TrendingUp className="h-3 w-3 text-green-500" />
-                      <span className="text-sm font-medium">{article.engagementRate}%</span>
+                      <TrendingUp className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-green-500" />
+                      <span className="text-xs sm:text-sm font-medium">{article.engagementRate}%</span>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -342,22 +358,23 @@ export function IFoxArticlesTable({
                           variant="ghost" 
                           size="icon"
                           data-testid={`button-actions-${article.id}`}
+                          className="w-7 h-7 sm:w-8 sm:h-8"
                         >
-                          <MoreHorizontal className="h-4 w-4" />
+                          <MoreHorizontal className="w-3 h-3 sm:w-4 sm:h-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>الإجراءات</DropdownMenuLabel>
+                        <DropdownMenuLabel className="text-xs sm:text-sm">الإجراءات</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <Link href={`/dashboard/admin/ifox/articles/${article.id}`}>
-                          <DropdownMenuItem>
-                            <Eye className="ml-2 h-4 w-4" />
+                          <DropdownMenuItem className="text-xs sm:text-sm">
+                            <Eye className="ml-2 w-3 h-3 sm:w-4 sm:h-4" />
                             عرض
                           </DropdownMenuItem>
                         </Link>
                         <Link href={`/dashboard/admin/ifox/articles/edit/${article.id}`}>
-                          <DropdownMenuItem>
-                            <Edit className="ml-2 h-4 w-4" />
+                          <DropdownMenuItem className="text-xs sm:text-sm">
+                            <Edit className="ml-2 w-3 h-3 sm:w-4 sm:h-4" />
                             تحرير
                           </DropdownMenuItem>
                         </Link>
@@ -365,17 +382,18 @@ export function IFoxArticlesTable({
                           <DropdownMenuItem
                             onClick={() => archiveMutation.mutate(article.id)}
                             disabled={archiveMutation.isPending}
+                            className="text-xs sm:text-sm"
                           >
-                            <Archive className="ml-2 h-4 w-4" />
+                            <Archive className="ml-2 w-3 h-3 sm:w-4 sm:h-4" />
                             أرشفة
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          className="text-destructive"
+                          className="text-destructive text-xs sm:text-sm"
                           onClick={() => setDeleteDialog({ open: true, article })}
                         >
-                          <Trash2 className="ml-2 h-4 w-4" />
+                          <Trash2 className="ml-2 w-3 h-3 sm:w-4 sm:h-4" />
                           حذف
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -394,18 +412,18 @@ export function IFoxArticlesTable({
       }}>
         <AlertDialogContent data-testid="dialog-delete-confirm">
           <AlertDialogHeader>
-            <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-base sm:text-lg">تأكيد الحذف</AlertDialogTitle>
+            <AlertDialogDescription className="text-xs sm:text-sm">
               هل أنت متأكد من حذف المقال "{deleteDialog.article?.title}"؟ 
               هذه العملية لا يمكن التراجع عنها.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogCancel className="text-xs sm:text-sm">إلغاء</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteDialog.article && deleteMutation.mutate(deleteDialog.article.id)}
               disabled={deleteMutation.isPending}
-              className="bg-destructive hover:bg-destructive/90"
+              className="bg-destructive hover:bg-destructive/90 text-xs sm:text-sm"
             >
               {deleteMutation.isPending ? "جاري الحذف..." : "حذف"}
             </AlertDialogAction>

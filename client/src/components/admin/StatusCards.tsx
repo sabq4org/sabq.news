@@ -47,7 +47,7 @@ const statusConfigs = {
 
 export function StatusCards({ metrics, activeStatus, onSelect }: StatusCardsProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       {(Object.keys(statusConfigs) as StatusKey[]).map((status) => {
         const config = statusConfigs[status];
         const Icon = config.icon;
@@ -58,7 +58,7 @@ export function StatusCards({ metrics, activeStatus, onSelect }: StatusCardsProp
           <Card
             key={status}
             className={`
-              p-4 cursor-pointer transition-all hover-elevate
+              p-3 sm:p-4 cursor-pointer transition-all hover-elevate
               ${config.bgColor}
               ${isActive ? "ring-2 ring-primary" : ""}
             `}
@@ -66,16 +66,16 @@ export function StatusCards({ metrics, activeStatus, onSelect }: StatusCardsProp
             data-testid={`card-status-${status}`}
           >
             <div className="flex items-center justify-between">
-              <div className="flex flex-col gap-2">
-                <span className={`text-sm font-medium ${config.textColor}`}>
+              <div className="flex flex-col gap-1 sm:gap-2 min-w-0 flex-1">
+                <span className={`text-xs sm:text-sm font-medium ${config.textColor} truncate`}>
                   {config.label}
                 </span>
-                <span className={`text-2xl font-bold ${config.textColor}`}>
+                <span className={`text-xl sm:text-2xl font-bold ${config.textColor}`}>
                   {count}
                 </span>
               </div>
-              <div className={`p-3 rounded-lg ${config.iconColor}`}>
-                <Icon className="w-6 h-6" />
+              <div className={`p-2 sm:p-3 rounded-lg ${config.iconColor} flex-shrink-0`}>
+                <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
             </div>
           </Card>

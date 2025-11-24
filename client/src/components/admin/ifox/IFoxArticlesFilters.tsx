@@ -152,61 +152,65 @@ export function IFoxArticlesFilters({
 
   return (
     <Card className="bg-gradient-to-br from-background via-background to-primary/5 border-primary/10">
-      <CardContent className="p-6">
-        <div className="space-y-4">
+      <CardContent className="p-3 sm:p-4 md:p-6">
+        <div className="space-y-3 sm:space-y-4">
           {/* Header with Search */}
-          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Filter className="h-5 w-5 text-primary" />
-              <h3 className="text-lg font-semibold">فلاتر البحث</h3>
+          <div className="flex flex-col gap-3 sm:gap-4">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
+              <h3 className="text-base sm:text-lg font-semibold truncate">فلاتر البحث</h3>
               {activeFiltersCount > 0 && (
-                <Badge variant="secondary" className="ml-2">
+                <Badge variant="secondary" className="text-xs">
                   {activeFiltersCount} فلاتر نشطة
                 </Badge>
               )}
               {articleCount > 0 && (
-                <Badge variant="outline" className="ml-2">
+                <Badge variant="outline" className="text-xs">
                   {articleCount} مقال
                 </Badge>
               )}
             </div>
             
-            <div className="flex items-center gap-2 w-full lg:w-auto">
-              <div className="relative flex-1 lg:flex-initial">
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
                 <Input
                   placeholder="ابحث في المقالات..."
                   value={filters.search}
                   onChange={(e) => handleSearchChange(e.target.value)}
-                  className="pr-10 w-full lg:w-64"
+                  className="pr-10 text-xs sm:text-sm"
                   dir="rtl"
                   data-testid="input-search-filter"
                 />
               </div>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setExpandedFilters(!expandedFilters)}
-                data-testid="button-toggle-filters"
-              >
-                {expandedFilters ? <X className="h-4 w-4" /> : <Filter className="h-4 w-4" />}
-              </Button>
-              {activeFiltersCount > 0 && (
+              <div className="flex items-center gap-2">
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="icon"
-                  onClick={onReset}
-                  data-testid="button-reset-filters"
+                  onClick={() => setExpandedFilters(!expandedFilters)}
+                  data-testid="button-toggle-filters"
+                  className="flex-shrink-0"
                 >
-                  <RefreshCw className="h-4 w-4" />
+                  {expandedFilters ? <X className="w-3 h-3 sm:w-4 sm:h-4" /> : <Filter className="w-3 h-3 sm:w-4 sm:h-4" />}
                 </Button>
-              )}
+                {activeFiltersCount > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onReset}
+                    data-testid="button-reset-filters"
+                    className="flex-shrink-0"
+                  >
+                    <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4" />
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Categories Selection */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium">التصنيفات</Label>
+            <Label className="text-xs sm:text-sm font-medium">التصنيفات</Label>
             <div className="flex flex-wrap gap-2">
               {categories.map((category) => {
                 const Icon = category.icon;
@@ -216,16 +220,16 @@ export function IFoxArticlesFilters({
                     key={category.id}
                     onClick={() => handleCategoryToggle(category.id)}
                     className={cn(
-                      "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all",
+                      "flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg transition-all",
                       isSelected
                         ? `${category.bgColor} ${category.color} ring-2 ring-primary`
                         : "bg-muted hover:bg-muted/80"
                     )}
                     data-testid={`button-category-${category.id}`}
                   >
-                    <Icon className="h-4 w-4" />
-                    <span className="text-sm font-medium">{category.label}</span>
-                    {isSelected && <X className="h-3 w-3" />}
+                    <Icon className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm font-medium truncate">{category.label}</span>
+                    {isSelected && <X className="w-3 h-3 flex-shrink-0" />}
                   </button>
                 );
               })}
@@ -234,42 +238,42 @@ export function IFoxArticlesFilters({
 
           {/* Expanded Filters */}
           {expandedFilters && (
-            <div className="space-y-4 pt-4 border-t animate-in slide-in-from-top-2">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4 border-t animate-in slide-in-from-top-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {/* Status Filter */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">حالة المقال</Label>
+                  <Label className="text-xs sm:text-sm font-medium">حالة المقال</Label>
                   <RadioGroup 
                     value={filters.status} 
                     onValueChange={(value) => handleStatusChange(value as FilterValues["status"])}
                   >
                     <div className="flex items-center space-x-2 space-x-reverse">
-                      <RadioGroupItem value="all" id="status-all" />
-                      <Label htmlFor="status-all" className="text-sm cursor-pointer">
+                      <RadioGroupItem value="all" id="status-all" data-testid="radio-status-all" />
+                      <Label htmlFor="status-all" className="text-xs sm:text-sm cursor-pointer">
                         جميع الحالات
                       </Label>
                     </div>
                     <div className="flex items-center space-x-2 space-x-reverse">
-                      <RadioGroupItem value="published" id="status-published" />
-                      <Label htmlFor="status-published" className="text-sm cursor-pointer">
+                      <RadioGroupItem value="published" id="status-published" data-testid="radio-status-published" />
+                      <Label htmlFor="status-published" className="text-xs sm:text-sm cursor-pointer">
                         منشور
                       </Label>
                     </div>
                     <div className="flex items-center space-x-2 space-x-reverse">
-                      <RadioGroupItem value="draft" id="status-draft" />
-                      <Label htmlFor="status-draft" className="text-sm cursor-pointer">
+                      <RadioGroupItem value="draft" id="status-draft" data-testid="radio-status-draft" />
+                      <Label htmlFor="status-draft" className="text-xs sm:text-sm cursor-pointer">
                         مسودة
                       </Label>
                     </div>
                     <div className="flex items-center space-x-2 space-x-reverse">
-                      <RadioGroupItem value="scheduled" id="status-scheduled" />
-                      <Label htmlFor="status-scheduled" className="text-sm cursor-pointer">
+                      <RadioGroupItem value="scheduled" id="status-scheduled" data-testid="radio-status-scheduled" />
+                      <Label htmlFor="status-scheduled" className="text-xs sm:text-sm cursor-pointer">
                         مجدول
                       </Label>
                     </div>
                     <div className="flex items-center space-x-2 space-x-reverse">
-                      <RadioGroupItem value="archived" id="status-archived" />
-                      <Label htmlFor="status-archived" className="text-sm cursor-pointer">
+                      <RadioGroupItem value="archived" id="status-archived" data-testid="radio-status-archived" />
+                      <Label htmlFor="status-archived" className="text-xs sm:text-sm cursor-pointer">
                         مؤرشف
                       </Label>
                     </div>
@@ -278,23 +282,25 @@ export function IFoxArticlesFilters({
 
                 {/* Date From */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">من تاريخ</Label>
+                  <Label className="text-xs sm:text-sm font-medium">من تاريخ</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full justify-start text-right",
+                          "w-full justify-start text-right text-xs sm:text-sm",
                           !filters.dateFrom && "text-muted-foreground"
                         )}
                         data-testid="button-date-from"
                       >
-                        <CalendarIcon className="ml-2 h-4 w-4" />
-                        {filters.dateFrom ? (
-                          format(filters.dateFrom, "PPP", { locale: ar })
-                        ) : (
-                          <span>اختر التاريخ</span>
-                        )}
+                        <CalendarIcon className="ml-2 w-3 h-3 sm:w-4 sm:h-4" />
+                        <span className="truncate">
+                          {filters.dateFrom ? (
+                            format(filters.dateFrom, "PPP", { locale: ar })
+                          ) : (
+                            "اختر التاريخ"
+                          )}
+                        </span>
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -310,23 +316,25 @@ export function IFoxArticlesFilters({
 
                 {/* Date To */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">إلى تاريخ</Label>
+                  <Label className="text-xs sm:text-sm font-medium">إلى تاريخ</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full justify-start text-right",
+                          "w-full justify-start text-right text-xs sm:text-sm",
                           !filters.dateTo && "text-muted-foreground"
                         )}
                         data-testid="button-date-to"
                       >
-                        <CalendarIcon className="ml-2 h-4 w-4" />
-                        {filters.dateTo ? (
-                          format(filters.dateTo, "PPP", { locale: ar })
-                        ) : (
-                          <span>اختر التاريخ</span>
-                        )}
+                        <CalendarIcon className="ml-2 w-3 h-3 sm:w-4 sm:h-4" />
+                        <span className="truncate">
+                          {filters.dateTo ? (
+                            format(filters.dateTo, "PPP", { locale: ar })
+                          ) : (
+                            "اختر التاريخ"
+                          )}
+                        </span>
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -342,8 +350,8 @@ export function IFoxArticlesFilters({
 
                 {/* AI Score Range */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium flex items-center gap-1">
-                    <Sparkles className="h-4 w-4 text-amber-500" />
+                  <Label className="text-xs sm:text-sm font-medium flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-amber-500" />
                     تقييم AI
                   </Label>
                   <div className="flex items-center gap-2">
@@ -357,10 +365,10 @@ export function IFoxArticlesFilters({
                       )}
                       min={0}
                       max={100}
-                      className="w-20"
+                      className="w-16 sm:w-20 text-xs sm:text-sm"
                       data-testid="input-ai-score-min"
                     />
-                    <span className="text-muted-foreground">-</span>
+                    <span className="text-xs text-muted-foreground">-</span>
                     <Input
                       type="number"
                       placeholder="إلى"
@@ -371,7 +379,7 @@ export function IFoxArticlesFilters({
                       )}
                       min={0}
                       max={100}
-                      className="w-20"
+                      className="w-16 sm:w-20 text-xs sm:text-sm"
                       data-testid="input-ai-score-max"
                     />
                   </div>
@@ -379,22 +387,22 @@ export function IFoxArticlesFilters({
               </div>
 
               {/* Action Buttons */}
-              <div className="flex justify-end gap-2 pt-4 border-t">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-3 sm:pt-4 border-t">
                 <Button
                   variant="outline"
                   onClick={onReset}
-                  className="gap-2"
+                  className="gap-1.5 sm:gap-2 text-xs sm:text-sm"
                   data-testid="button-clear-filters"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="w-3 h-3 sm:w-4 sm:h-4" />
                   مسح الفلاتر
                 </Button>
                 <Button
                   onClick={() => setExpandedFilters(false)}
-                  className="gap-2"
+                  className="gap-1.5 sm:gap-2 text-xs sm:text-sm"
                   data-testid="button-apply-filters"
                 >
-                  <Filter className="h-4 w-4" />
+                  <Filter className="w-3 h-3 sm:w-4 sm:h-4" />
                   تطبيق الفلاتر
                 </Button>
               </div>

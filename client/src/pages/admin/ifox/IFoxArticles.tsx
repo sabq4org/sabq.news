@@ -257,31 +257,31 @@ export default function IFoxArticles() {
   return (
     <IFoxLayout>
       <ScrollArea className="h-full">
-        <div className="p-6 space-y-6" dir="rtl">
+        <div className="p-3 sm:p-4 md:p-6 space-y-4 md:space-y-6" dir="rtl">
             {/* Header */}
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-              <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent truncate" data-testid="text-page-title">
                   آي فوكس - إدارة المحتوى
                 </h1>
-                <p className="text-[hsl(var(--ifox-text-secondary))] mt-2">
+                <p className="text-xs sm:text-sm md:text-base text-[hsl(var(--ifox-text-secondary))] mt-1 sm:mt-2 truncate" data-testid="text-page-description">
                   إدارة المحتوى التقني والذكاء الاصطناعي
                 </p>
               </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0 w-full sm:w-auto">
             <Button
               variant="outline"
               onClick={() => exportMutation.mutate()}
               disabled={exportMutation.isPending}
-              className="gap-2"
+              className="gap-1.5 sm:gap-2 flex-1 sm:flex-initial"
               data-testid="button-export"
             >
-              <Download className="h-4 w-4" />
-              تصدير
+              <Download className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">تصدير</span>
             </Button>
-            <Link href="/dashboard/admin/ifox/articles/new">
-              <Button className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
-                <Plus className="h-4 w-4" />
+            <Link href="/dashboard/admin/ifox/articles/new" className="flex-1 sm:flex-initial">
+              <Button className="gap-1.5 sm:gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 w-full" data-testid="button-new-article">
+                <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                 مقال جديد
               </Button>
             </Link>
@@ -298,51 +298,51 @@ export default function IFoxArticles() {
         )}
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-950 dark:to-amber-900/30 border-amber-200 dark:border-amber-800">
-            <CardContent className="p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <Card className="bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-950 dark:to-amber-900/30 border-amber-200 dark:border-amber-800" data-testid="card-ai-score">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-amber-600 dark:text-amber-400">متوسط تقييم AI</p>
-                  <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">85%</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-amber-600 dark:text-amber-400 truncate">متوسط تقييم AI</p>
+                  <p className="text-xl sm:text-2xl font-bold text-amber-700 dark:text-amber-300">85%</p>
                 </div>
-                <Sparkles className="h-8 w-8 text-amber-500" />
+                <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-amber-500 flex-shrink-0" />
               </div>
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-green-50 to-green-100/50 dark:from-green-950 dark:to-green-900/30 border-green-200 dark:border-green-800">
-            <CardContent className="p-4">
+          <Card className="bg-gradient-to-br from-green-50 to-green-100/50 dark:from-green-950 dark:to-green-900/30 border-green-200 dark:border-green-800" data-testid="card-engagement">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-green-600 dark:text-green-400">معدل التفاعل</p>
-                  <p className="text-2xl font-bold text-green-700 dark:text-green-300">67%</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-green-600 dark:text-green-400 truncate">معدل التفاعل</p>
+                  <p className="text-xl sm:text-2xl font-bold text-green-700 dark:text-green-300">67%</p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-green-500" />
+                <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-green-500 flex-shrink-0" />
               </div>
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950 dark:to-blue-900/30 border-blue-200 dark:border-blue-800">
-            <CardContent className="p-4">
+          <Card className="bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950 dark:to-blue-900/30 border-blue-200 dark:border-blue-800" data-testid="card-today-articles">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-blue-600 dark:text-blue-400">مقالات اليوم</p>
-                  <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">12</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 truncate">مقالات اليوم</p>
+                  <p className="text-xl sm:text-2xl font-bold text-blue-700 dark:text-blue-300">12</p>
                 </div>
-                <FileText className="h-8 w-8 text-blue-500" />
+                <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500 flex-shrink-0" />
               </div>
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-950 dark:to-purple-900/30 border-purple-200 dark:border-purple-800">
-            <CardContent className="p-4">
+          <Card className="bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-950 dark:to-purple-900/30 border-purple-200 dark:border-purple-800" data-testid="card-publish-rate">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-purple-600 dark:text-purple-400">معدل النشر</p>
-                  <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">95%</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-purple-600 dark:text-purple-400 truncate">معدل النشر</p>
+                  <p className="text-xl sm:text-2xl font-bold text-purple-700 dark:text-purple-300">95%</p>
                 </div>
-                <CheckCircle2 className="h-8 w-8 text-purple-500" />
+                <CheckCircle2 className="w-6 h-6 sm:w-8 sm:h-8 text-purple-500 flex-shrink-0" />
               </div>
             </CardContent>
           </Card>
@@ -359,33 +359,33 @@ export default function IFoxArticles() {
         {/* Bulk Actions */}
         {selectedArticles.length > 0 && (
           <Card className="border-primary/20 bg-primary/5">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <p className="text-xs sm:text-sm font-medium">
                   تم تحديد {selectedArticles.length} مقال
                 </p>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleBulkArchive}
                     disabled={bulkArchiveMutation.isPending}
-                    className="gap-2"
+                    className="gap-1.5 sm:gap-2 flex-1 sm:flex-initial"
                     data-testid="button-bulk-archive"
                   >
-                    <Archive className="h-4 w-4" />
-                    أرشفة المحدد
+                    <Archive className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="truncate">أرشفة المحدد</span>
                   </Button>
                   <Button
                     variant="destructive"
                     size="sm"
                     onClick={handleBulkDelete}
                     disabled={bulkDeleteMutation.isPending}
-                    className="gap-2"
+                    className="gap-1.5 sm:gap-2 flex-1 sm:flex-initial"
                     data-testid="button-bulk-delete"
                   >
-                    <Trash2 className="h-4 w-4" />
-                    حذف المحدد
+                    <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="truncate">حذف المحدد</span>
                   </Button>
                 </div>
               </div>
@@ -395,13 +395,13 @@ export default function IFoxArticles() {
 
         {/* Articles Table */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
+          <CardHeader className="p-3 sm:p-4 md:p-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
               قائمة المقالات
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-4 md:p-6">
             <IFoxArticlesTable
               articles={filteredArticles}
               selectedArticles={selectedArticles}
@@ -413,21 +413,22 @@ export default function IFoxArticles() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between mt-6">
-                <p className="text-sm text-muted-foreground">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mt-4 sm:mt-6">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   عرض {Math.min(page * 20, totalArticles)} من {totalArticles} مقال
                 </p>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setPage(p => Math.max(1, p - 1))}
                     disabled={page === 1}
                     data-testid="button-prev-page"
+                    className="text-xs sm:text-sm"
                   >
                     السابق
                   </Button>
-                  <div className="flex items-center gap-1">
+                  <div className="hidden sm:flex items-center gap-1">
                     {[...Array(Math.min(5, totalPages))].map((_, i) => {
                       const pageNum = i + 1;
                       return (
@@ -436,7 +437,7 @@ export default function IFoxArticles() {
                           variant={pageNum === page ? "default" : "outline"}
                           size="sm"
                           onClick={() => setPage(pageNum)}
-                          className="w-10"
+                          className="w-8 sm:w-10 text-xs sm:text-sm"
                           data-testid={`button-page-${pageNum}`}
                         >
                           {pageNum}
@@ -444,12 +445,16 @@ export default function IFoxArticles() {
                       );
                     })}
                   </div>
+                  <span className="sm:hidden text-xs text-muted-foreground">
+                    صفحة {page} من {totalPages}
+                  </span>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages}
                     data-testid="button-next-page"
+                    className="text-xs sm:text-sm"
                   >
                     التالي
                   </Button>
@@ -465,21 +470,24 @@ export default function IFoxArticles() {
         }}>
           <AlertDialogContent data-testid="dialog-bulk-action">
             <AlertDialogHeader>
-              <AlertDialogTitle>
+              <AlertDialogTitle className="text-base sm:text-lg">
                 {bulkActionDialog.action === "delete" ? "تأكيد الحذف" : "تأكيد الأرشفة"}
               </AlertDialogTitle>
-              <AlertDialogDescription>
+              <AlertDialogDescription className="text-xs sm:text-sm">
                 {bulkActionDialog.action === "delete"
                   ? `هل أنت متأكد من حذف ${selectedArticles.length} مقال؟ هذه العملية لا يمكن التراجع عنها.`
                   : `هل أنت متأكد من أرشفة ${selectedArticles.length} مقال؟`}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>إلغاء</AlertDialogCancel>
+              <AlertDialogCancel className="text-xs sm:text-sm">إلغاء</AlertDialogCancel>
               <AlertDialogAction
                 onClick={confirmBulkAction}
                 disabled={bulkDeleteMutation.isPending || bulkArchiveMutation.isPending}
-                className={bulkActionDialog.action === "delete" ? "bg-destructive hover:bg-destructive/90" : ""}
+                className={cn(
+                  "text-xs sm:text-sm",
+                  bulkActionDialog.action === "delete" ? "bg-destructive hover:bg-destructive/90" : ""
+                )}
               >
                 {bulkActionDialog.action === "delete" ? "حذف" : "أرشفة"}
               </AlertDialogAction>
