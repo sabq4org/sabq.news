@@ -1678,6 +1678,9 @@ export interface IStorage {
   // Update AI task
   updateAiTask(id: string, updates: Partial<InsertAiScheduledTask>): Promise<AiScheduledTask>;
   
+  // Atomically mark task as processing (prevents race conditions)
+  markAiTaskProcessing(id: string): Promise<AiScheduledTask | null>;
+  
   // Update task status with execution results
   updateAiTaskExecution(id: string, updates: {
     status: 'processing' | 'completed' | 'failed' | 'cancelled';
@@ -14738,6 +14741,26 @@ export class DatabaseStorage implements IStorage {
       .where(eq(aiScheduledTasks.id, id))
       .returning();
     return updated;
+  }
+  
+  async markAiTaskProcessing(id: string): Promise<AiScheduledTask | null> {
+    // Atomically mark task as processing ONLY if it's currently pending
+    // This prevents race conditions when multiple workers try to claim the same task
+    const [updated] = await db
+      .update(aiScheduledTasks)
+      .set({ 
+        status: 'processing' as const, 
+        executedAt: new Date(),
+        updatedAt: new Date() 
+      })
+      .where(
+        and(
+          eq(aiScheduledTasks.id, id),
+          eq(aiScheduledTasks.status, 'pending' as const)
+        )
+      )
+      .returning();
+    return updated || null;
   }
   
   async updateAiTaskExecution(id: string, updates: {

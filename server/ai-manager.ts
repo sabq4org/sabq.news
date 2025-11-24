@@ -116,11 +116,6 @@ class AIManager {
     // Use gpt-5.1 for all OpenAI models unless specifically o3-mini
     const model = config.model === 'o3-mini' ? 'o3-mini' : 'gpt-5.1';
     
-    console.log(`[AI Manager] 🔍 GENERATE OPENAI CALLED!`);
-    console.log(`[AI Manager] config:`, JSON.stringify(config, null, 2));
-    console.log(`[AI Manager] config.model="${config.model}", resolved model="${model}"`);
-    console.log(`[AI Manager] config.temperature="${config.temperature}" (should be undefined!)`);
-    
     // GPT-5.1 specific configuration: uses max_completion_tokens and doesn't support temperature
     const completionParams: any = {
       model,
@@ -129,7 +124,7 @@ class AIManager {
       response_format: { type: "json_object" }
     };
     
-    console.log('[AI Manager] 📤 FINAL completionParams TO OPENAI:', JSON.stringify(completionParams, null, 2));
+    console.log('[AI Manager] 📊 Calling OpenAI:', { model, hasTemp: ('temperature' in completionParams) });
     
     const response = await this.openai.chat.completions.create(completionParams);
 

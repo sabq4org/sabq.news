@@ -23,22 +23,12 @@ export class AITaskExecutor {
     let totalCost = 0;
 
     try {
-      // Get task details
-      const task = await storage.getAiTask(taskId);
+      // Atomically claim the task (prevents race conditions)
+      // This will only succeed if the task is still 'pending'
+      const task = await storage.markAiTaskProcessing(taskId);
       if (!task) {
-        throw new Error(`Task ${taskId} not found`);
+        throw new Error(`Task ${taskId} not found or already being processed`);
       }
-
-      // Check if task is still pending
-      if (task.status !== 'pending') {
-        throw new Error(`Task ${taskId} is not in pending status (current: ${task.status})`);
-      }
-
-      // Mark as processing
-      await storage.updateAiTask(taskId, {
-        status: 'processing',
-        executedAt: new Date()
-      });
 
       console.log(`[AI Task Executor] Executing task ${taskId}: ${task.title}`);
 
