@@ -14207,7 +14207,8 @@ export class DatabaseStorage implements IStorage {
     
     // Build base conditions for articles
     const baseConditions: any[] = [
-      inArray(articles.categoryId, ifoxCategoryIds)
+      inArray(articles.categoryId, ifoxCategoryIds),
+      eq(articles.aiGenerated, true)  // iFox = AI-generated only
     ];
     
     // Additional filters
@@ -14308,7 +14309,12 @@ export class DatabaseStorage implements IStorage {
         })
         .from(articles)
         .leftJoin(categories, eq(articles.categoryId, categories.id))
-        .where(inArray(articles.categoryId, ifoxCategoryIds))
+        .where(
+          and(
+            inArray(articles.categoryId, ifoxCategoryIds),
+            eq(articles.aiGenerated, true)
+          )
+        )
         .groupBy(articles.categoryId, categories.slug),
       
       // By status
@@ -14318,7 +14324,12 @@ export class DatabaseStorage implements IStorage {
           count: sql<number>`count(*)::int`
         })
         .from(articles)
-        .where(inArray(articles.categoryId, ifoxCategoryIds))
+        .where(
+          and(
+            inArray(articles.categoryId, ifoxCategoryIds),
+            eq(articles.aiGenerated, true)
+          )
+        )
         .groupBy(articles.status),
       
       // Scheduled count
@@ -14328,7 +14339,8 @@ export class DatabaseStorage implements IStorage {
         .where(
           and(
             inArray(articles.categoryId, ifoxCategoryIds),
-            eq(articles.status, 'scheduled')
+            eq(articles.status, 'scheduled'),
+            eq(articles.aiGenerated, true)
           )
         ),
       
@@ -14336,7 +14348,12 @@ export class DatabaseStorage implements IStorage {
       db
         .select({ count: sql<number>`count(*)::int` })
         .from(articles)
-        .where(inArray(articles.categoryId, ifoxCategoryIds))
+        .where(
+          and(
+            inArray(articles.categoryId, ifoxCategoryIds),
+            eq(articles.aiGenerated, true)
+          )
+        )
     ]);
     
     const byCategory: Record<string, number> = {};
@@ -14387,7 +14404,12 @@ export class DatabaseStorage implements IStorage {
         count: sql<number>`count(*)::int`
       })
       .from(articles)
-      .where(inArray(articles.categoryId, ifoxCategoryIds))
+      .where(
+        and(
+          inArray(articles.categoryId, ifoxCategoryIds),
+          eq(articles.aiGenerated, true)
+        )
+      )
       .groupBy(articles.status);
     
     const metrics = {
