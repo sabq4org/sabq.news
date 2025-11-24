@@ -81,6 +81,9 @@ const categoryInfo: Record<string, any> = {
   }
 };
 
+// iFox approved categories
+const IFOX_CATEGORIES = ['ai-news', 'ai-insights', 'ai-opinions', 'ai-tools', 'ai-voice'];
+
 export default function AICategoryPage() {
   const params = useParams<{ category: string }>();
   const categorySlug = params.category || "ai-news";
@@ -89,11 +92,46 @@ export default function AICategoryPage() {
   const [sortBy, setSortBy] = useState("latest");
   const [filterBy, setFilterBy] = useState("all");
 
-  // Fetch articles for this category
-  const { data: articles = [], isLoading } = useQuery({
-    queryKey: [`/api/categories/${categorySlug}/articles`, sortBy, filterBy],
+  // Check if this is an iFox category
+  const isIFoxCategory = IFOX_CATEGORIES.includes(categorySlug);
+
+  // Fetch articles - use iFox endpoint for iFox categories, legacy for others
+  const { data, isLoading } = useQuery({
+    queryKey: [
+      isIFoxCategory ? '/api/ifox/articles' : `/api/categories/${categorySlug}/articles`,
+      categorySlug,
+      sortBy,
+      filterBy
+    ],
+    queryFn: async () => {
+      if (isIFoxCategory) {
+        // iFox endpoint
+        const params = new URLSearchParams();
+        params.append('categorySlug', categorySlug);
+        const url = `/api/ifox/articles?${params.toString()}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Failed to fetch iFox articles');
+        const result = await response.json();
+        // Backend returns { articles: [...], total: number }
+        const articles = result.articles || result;
+        
+        // Normalize timestamps (publishedAt fallback to createdAt)
+        return articles.map((article: any) => ({
+          ...article,
+          publishedAt: article.publishedAt || article.createdAt
+        }));
+      } else {
+        // Legacy endpoint for non-iFox categories
+        const url = `/api/categories/${categorySlug}/articles`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Failed to fetch articles');
+        return response.json();
+      }
+    },
     enabled: true
   });
+
+  const articles = data || [];
 
   const CategoryIcon = category.icon;
 

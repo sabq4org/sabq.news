@@ -166,6 +166,13 @@ export default function IFoxArticles() {
     };
   });
 
+  // Convert categories for AIHeader (only active, non-deleted categories)
+  const headerCategories = apiCategories.map(cat => ({
+    slug: cat.slug,
+    nameAr: cat.nameAr,
+    nameEn: categoryMetadata[cat.slug]?.description || cat.nameAr
+  }));
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" dir="rtl" lang="ar">
       {/* Animated Background Elements */}
@@ -199,7 +206,7 @@ export default function IFoxArticles() {
       </div>
 
       {/* Header */}
-      <AIHeader />
+      <AIHeader categories={headerCategories} baseUrl="/ai" />
 
       {/* Hero Section */}
       <section className="relative px-4 py-12 md:py-20">

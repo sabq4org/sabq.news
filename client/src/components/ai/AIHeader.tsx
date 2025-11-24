@@ -22,7 +22,29 @@ import {
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTheme } from "next-themes";
 
-export default function AIHeader() {
+interface Category {
+  slug: string;
+  nameAr: string;
+  nameEn?: string;
+}
+
+interface AIHeaderProps {
+  categories?: Category[];
+  baseUrl?: string;
+}
+
+// Default categories (full AI section - 7 categories)
+const defaultCategories: Category[] = [
+  { slug: "ai-news", nameAr: "آي سبق - أخبار AI", nameEn: "AI News" },
+  { slug: "ai-insights", nameAr: "آي عمق - تحليلات", nameEn: "AI Insights" },
+  { slug: "ai-opinions", nameAr: "آي رأي - آراء", nameEn: "AI Opinions" },
+  { slug: "ai-tools", nameAr: "آي تطبيق - أدوات", nameEn: "AI Tools" },
+  { slug: "ai-voice", nameAr: "آي صوت - بودكاست", nameEn: "AI Voice" },
+  { slug: "ai-academy", nameAr: "آي أكاديمي - تعليم", nameEn: "AI Academy" },
+  { slug: "ai-community", nameAr: "آي تواصل - مجتمع", nameEn: "AI Community" },
+];
+
+export default function AIHeader({ categories = defaultCategories, baseUrl = "/ai" }: AIHeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -39,15 +61,10 @@ export default function AIHeader() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const navItems = [
-    { href: "/ai/category/ai-news", label: language === "ar" ? "آي سبق - أخبار AI" : "AI News" },
-    { href: "/ai/category/ai-insights", label: language === "ar" ? "آي عمق - تحليلات" : "AI Insights" },
-    { href: "/ai/category/ai-opinions", label: language === "ar" ? "آي رأي - آراء" : "AI Opinions" },
-    { href: "/ai/category/ai-tools", label: language === "ar" ? "آي تطبيق - أدوات" : "AI Tools" },
-    { href: "/ai/category/ai-voice", label: language === "ar" ? "آي صوت - بودكاست" : "AI Voice" },
-    { href: "/ai/category/ai-academy", label: language === "ar" ? "آي أكاديمي - تعليم" : "AI Academy" },
-    { href: "/ai/category/ai-community", label: language === "ar" ? "آي تواصل - مجتمع" : "AI Community" },
-  ];
+  const navItems = categories.map(cat => ({
+    href: `${baseUrl}/category/${cat.slug}`,
+    label: language === "ar" ? cat.nameAr : (cat.nameEn || cat.nameAr)
+  }));
 
   return (
     <motion.header
