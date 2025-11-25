@@ -758,8 +758,8 @@ router.post("/webhook", async (req: Request, res: Response) => {
     });
 
     const replyMessage = articleStatus === 'published'
-      ? `تم نشر الخبر بنجاح\n\nhttps://sabq.news/article/${slug}`
-      : `تم حفظ الخبر كمسودة\nسيتم مراجعته قبل النشر`;
+      ? `السلام عليكم\n✅ تم نشر الخبر بنجاح\n\nhttps://sabq.news/article/${slug}`
+      : `السلام عليكم\n📝 تم حفظ الخبر كمسودة\nسيتم مراجعته قبل النشر`;
 
     // 🔍 DEBUG REPLY MESSAGE DETAILS
     console.log(`[WhatsApp Agent] 📤 Preparing to send reply message:`);
