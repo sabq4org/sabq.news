@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Clock, Tag, Newspaper, Eye, Flame, Zap } from "lucide-react";
+import { Clock, Tag, Newspaper, Eye, Flame, Zap, Brain } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import type { SmartBlock } from "@shared/schema";
@@ -412,6 +412,17 @@ function FeaturedLayout({ articles, blockId }: { articles: ArticleResult[]; bloc
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/10">
                 <Newspaper className="h-16 w-16 text-muted-foreground/30" />
               </div>
+            )}
+            
+            {/* AI Generated Thumbnail Badge - Top Right */}
+            {featured.thumbnailUrl && (
+              <Badge 
+                className="absolute top-4 right-4 gap-1.5 bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm"
+                data-testid={`badge-featured-ai-thumbnail-${featured.id}`}
+              >
+                الصورة
+                <Brain className="h-3 w-3" aria-hidden="true" />
+              </Badge>
             )}
             
             <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent flex flex-col justify-end p-6 md:p-8">

@@ -3,7 +3,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Volume2, TrendingUp, Bell, Zap, Star, Flame } from "lucide-react";
+import { Volume2, TrendingUp, Bell, Zap, Star, Flame, Brain } from "lucide-react";
 import { ViewsCount } from "./ViewsCount";
 import type { ArticleWithDetails } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
@@ -88,6 +88,16 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                         style={{ objectPosition: getObjectPosition(article) }}
                         loading="eager"
                       />
+                      {/* AI Generated Thumbnail Badge - Top Right */}
+                      {article.thumbnailUrl && (
+                        <Badge 
+                          className="absolute top-3 right-3 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0 text-xs"
+                          data-testid={`badge-hero-ai-thumbnail-mobile-${article.id}`}
+                        >
+                          الصورة
+                          <Brain className="h-3 w-3" aria-hidden="true" />
+                        </Badge>
+                      )}
                     </div>
                   )}
                   
@@ -161,13 +171,25 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                     {/* Image - 50% of width */}
                     <div className="w-1/2 h-full relative overflow-hidden">
                       {(article.thumbnailUrl ?? article.imageUrl) ? (
-                        <img
-                          src={(article.thumbnailUrl ?? article.imageUrl) || ""}
-                          alt={article.title}
-                          className="w-full h-full object-cover"
-                          style={{ objectPosition: getObjectPosition(article) }}
-                          loading="eager"
-                        />
+                        <>
+                          <img
+                            src={(article.thumbnailUrl ?? article.imageUrl) || ""}
+                            alt={article.title}
+                            className="w-full h-full object-cover"
+                            style={{ objectPosition: getObjectPosition(article) }}
+                            loading="eager"
+                          />
+                          {/* AI Generated Thumbnail Badge - Top Right */}
+                          {article.thumbnailUrl && (
+                            <Badge 
+                              className="absolute top-4 right-4 gap-1.5 bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm"
+                              data-testid={`badge-hero-ai-thumbnail-${article.id}`}
+                            >
+                              الصورة
+                              <Brain className="h-3 w-3" aria-hidden="true" />
+                            </Badge>
+                          )}
+                        </>
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
                       )}
