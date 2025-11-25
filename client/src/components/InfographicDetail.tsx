@@ -157,11 +157,11 @@ export function InfographicDetail({
               data-testid="image-infographic-main"
             />
             
-            {/* AI Generated Thumbnail Badge - Top Right */}
-            {article.isAiGeneratedThumbnail && (
+            {/* AI Generated Image Badge (Featured or Thumbnail) - Top Right */}
+            {(article.isAiGeneratedThumbnail || article.isAiGeneratedImage) && (
               <Badge 
                 className="absolute top-4 right-4 z-10 gap-1.5 bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm shadow-lg"
-                data-testid={`badge-article-ai-thumbnail-${article.id}`}
+                data-testid={`badge-article-ai-image-${article.id}`}
               >
                 الصورة
                 <Brain className="h-3 w-3" aria-hidden="true" />

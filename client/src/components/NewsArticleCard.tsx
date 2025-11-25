@@ -121,9 +121,9 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
             <CardContent className="p-5 space-y-3">
               {/* Badges above title */}
               <div className="flex items-center gap-2 flex-wrap">
-                {/* AI Generated Thumbnail Badge */}
-                {article.isAiGeneratedThumbnail && (
-                  <Badge className="text-xs h-5 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0" data-testid={`badge-ai-thumbnail-${article.id}`}>
+                {/* AI Generated Image Badge (Featured or Thumbnail) */}
+                {(article.isAiGeneratedThumbnail || article.isAiGeneratedImage) && (
+                  <Badge className="text-xs h-5 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0" data-testid={`badge-ai-image-${article.id}`}>
                     الصورة
                     <Brain className="h-2.5 w-2.5" aria-hidden="true" />
                   </Badge>
@@ -224,9 +224,9 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
                 <div className="flex-1 space-y-3">
                   {/* Badges above title */}
                   <div className="flex items-center gap-2 flex-wrap">
-                    {/* AI Generated Thumbnail Badge */}
-                    {article.isAiGeneratedThumbnail && (
-                      <Badge className="text-xs h-5 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0" data-testid={`badge-ai-thumbnail-${article.id}`}>
+                    {/* AI Generated Image Badge (Featured or Thumbnail) */}
+                    {(article.isAiGeneratedThumbnail || article.isAiGeneratedImage) && (
+                      <Badge className="text-xs h-5 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0" data-testid={`badge-ai-image-${article.id}`}>
                         الصورة
                         <Brain className="h-2.5 w-2.5" aria-hidden="true" />
                       </Badge>
@@ -351,9 +351,9 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
               <div className="flex-1 min-w-0 space-y-2">
                 {/* Badges moved above title */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  {/* AI Generated Thumbnail Badge */}
-                  {article.isAiGeneratedThumbnail && (
-                    <Badge className="text-xs h-5 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0" data-testid={`badge-ai-thumbnail-${article.id}`}>
+                  {/* AI Generated Image Badge (Featured or Thumbnail) */}
+                  {(article.isAiGeneratedThumbnail || article.isAiGeneratedImage) && (
+                    <Badge className="text-xs h-5 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0" data-testid={`badge-ai-image-${article.id}`}>
                       الصورة
                       <Brain className="h-2.5 w-2.5" aria-hidden="true" />
                     </Badge>

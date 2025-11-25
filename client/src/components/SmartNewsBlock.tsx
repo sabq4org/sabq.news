@@ -156,11 +156,11 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                                 ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
                                 : 'center'}
                             />
-                            {/* AI Generated Thumbnail Badge */}
-                            {article.isAiGeneratedThumbnail && (
+                            {/* AI Generated Image Badge (Featured or Thumbnail) */}
+                            {(article.isAiGeneratedThumbnail || (article as any).isAiGeneratedImage) && (
                               <Badge 
                                 className="absolute -top-1 -right-1 z-20 gap-0.5 px-1 py-0 h-4 text-[9px] bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm shadow-md"
-                                data-testid={`badge-smart-mobile-ai-thumbnail-${article.id}`}
+                                data-testid={`badge-smart-mobile-ai-image-${article.id}`}
                               >
                                 <Brain className="h-2 w-2" aria-hidden="true" />
                               </Badge>
@@ -268,11 +268,11 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                         ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
                         : 'center'}
                     />
-                    {/* AI Generated Thumbnail Badge */}
-                    {article.isAiGeneratedThumbnail && (
+                    {/* AI Generated Image Badge (Featured or Thumbnail) */}
+                    {(article.isAiGeneratedThumbnail || (article as any).isAiGeneratedImage) && (
                       <Badge 
                         className="absolute top-2 right-2 z-20 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0 text-xs backdrop-blur-sm shadow-lg"
-                        data-testid={`badge-smart-ai-thumbnail-${article.id}`}
+                        data-testid={`badge-smart-ai-image-${article.id}`}
                       >
                         الصورة
                         <Brain className="h-3 w-3" aria-hidden="true" />
@@ -386,11 +386,11 @@ function ListLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                           ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
                           : 'center'}
                       />
-                      {/* AI Generated Thumbnail Badge */}
-                      {article.isAiGeneratedThumbnail && (
+                      {/* AI Generated Image Badge (Featured or Thumbnail) */}
+                      {(article.isAiGeneratedThumbnail || (article as any).isAiGeneratedImage) && (
                         <Badge 
                           className="absolute top-3 right-3 z-20 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm shadow-lg"
-                          data-testid={`badge-smart-list-ai-thumbnail-${article.id}`}
+                          data-testid={`badge-smart-list-ai-image-${article.id}`}
                         >
                           الصورة
                           <Brain className="h-3 w-3" aria-hidden="true" />
@@ -477,11 +477,11 @@ function FeaturedLayout({ articles, blockId }: { articles: ArticleResult[]; bloc
               </div>
             )}
             
-            {/* AI Generated Thumbnail Badge - Top Right */}
-            {featured.isAiGeneratedThumbnail && (
+            {/* AI Generated Image Badge (Featured or Thumbnail) - Top Right */}
+            {(featured.isAiGeneratedThumbnail || (featured as any).isAiGeneratedImage) && (
               <Badge 
                 className="absolute top-4 right-4 z-20 gap-1.5 bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm shadow-lg"
-                data-testid={`badge-featured-ai-thumbnail-${featured.id}`}
+                data-testid={`badge-featured-ai-image-${featured.id}`}
               >
                 الصورة
                 <Brain className="h-3 w-3" aria-hidden="true" />
@@ -556,11 +556,11 @@ function FeaturedLayout({ articles, blockId }: { articles: ArticleResult[]; bloc
                     </div>
                   )}
                   
-                  {/* AI Generated Thumbnail Badge */}
-                  {article.isAiGeneratedThumbnail && (
+                  {/* AI Generated Image Badge (Featured or Thumbnail) */}
+                  {(article.isAiGeneratedThumbnail || (article as any).isAiGeneratedImage) && (
                     <Badge 
                       className="absolute top-2 right-2 z-20 gap-0.5 px-1.5 py-0.5 text-[10px] bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm shadow-lg"
-                      data-testid={`badge-featured-side-ai-thumbnail-${article.id}`}
+                      data-testid={`badge-featured-side-ai-image-${article.id}`}
                     >
                       الصورة
                       <Brain className="h-2.5 w-2.5" aria-hidden="true" />

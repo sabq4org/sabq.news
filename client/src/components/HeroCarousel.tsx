@@ -99,11 +99,11 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                   }`}>
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
-                        {/* AI Generated Thumbnail Badge - Next to Category */}
-                        {article.isAiGeneratedThumbnail && (
+                        {/* AI Generated Image Badge (Featured or Thumbnail) */}
+                        {(article.isAiGeneratedThumbnail || article.isAiGeneratedImage) && (
                           <Badge 
                             className="shrink-0 bg-purple-500/90 hover:bg-purple-600 text-white border-0 text-xs gap-1"
-                            data-testid={`badge-hero-ai-thumbnail-mobile-${article.id}`}
+                            data-testid={`badge-hero-ai-image-mobile-${article.id}`}
                           >
                             الصورة
                             <Brain className="h-3 w-3" aria-hidden="true" />
@@ -203,11 +203,11 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                     }`}>
                       <div className="space-y-4">
                         <div className="flex items-center gap-2">
-                          {/* AI Generated Thumbnail Badge - Next to Category */}
-                          {article.isAiGeneratedThumbnail && (
+                          {/* AI Generated Image Badge (Featured or Thumbnail) */}
+                          {(article.isAiGeneratedThumbnail || article.isAiGeneratedImage) && (
                             <Badge 
                               className="shrink-0 gap-1.5 bg-purple-500/90 hover:bg-purple-600 text-white border-0"
-                              data-testid={`badge-hero-ai-thumbnail-${article.id}`}
+                              data-testid={`badge-hero-ai-image-${article.id}`}
                             >
                               الصورة
                               <Brain className="h-3.5 w-3.5" aria-hidden="true" />

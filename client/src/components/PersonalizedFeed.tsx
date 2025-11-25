@@ -227,9 +227,9 @@ export function PersonalizedFeed({ articles: initialArticles, title = "جميع 
                           <div className="flex-1 min-w-0 space-y-1.5">
                             {/* Badges above title */}
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              {/* AI Generated Thumbnail Badge */}
-                              {(article as any).thumbnailUrl && (
-                                <Badge className="text-[10px] h-4 gap-0.5 bg-purple-500/90 hover:bg-purple-600 text-white border-0" data-testid={`badge-ai-thumbnail-${article.id}`}>
+                              {/* AI Generated Image Badge (Featured or Thumbnail) */}
+                              {((article as any).isAiGeneratedThumbnail || (article as any).isAiGeneratedImage) && (
+                                <Badge className="text-[10px] h-4 gap-0.5 bg-purple-500/90 hover:bg-purple-600 text-white border-0" data-testid={`badge-ai-image-${article.id}`}>
                                   الصورة
                                   <Brain className="h-2 w-2" aria-hidden="true" />
                                 </Badge>
@@ -345,8 +345,9 @@ export function PersonalizedFeed({ articles: initialArticles, title = "جميع 
                 
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center gap-2 flex-wrap">
-                    {(article as any).thumbnailUrl && (
-                      <Badge className="text-xs h-5 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0" data-testid={`badge-ai-thumbnail-${article.id}`}>
+                    {/* AI Generated Image Badge (Featured or Thumbnail) */}
+                    {((article as any).isAiGeneratedThumbnail || (article as any).isAiGeneratedImage) && (
+                      <Badge className="text-xs h-5 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0" data-testid={`badge-ai-image-${article.id}`}>
                         الصورة
                         <Brain className="h-2.5 w-2.5" aria-hidden="true" />
                       </Badge>

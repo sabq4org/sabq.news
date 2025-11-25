@@ -809,12 +809,12 @@ export default function ArticlesManagement() {
                             </td>
                             <td className="py-3 px-4">
                               <div className="flex gap-1">
-                                {/* AI Generated Thumbnail Indicator */}
-                                {article.isAiGeneratedThumbnail && (
+                                {/* AI Generated Image Indicator (Featured or Thumbnail) */}
+                                {(article.isAiGeneratedThumbnail || (article as any).isAiGeneratedImage) && (
                                   <div 
                                     className="flex items-center justify-center w-8 h-8"
                                     title="صورة مولدة بالذكاء الاصطناعي"
-                                    data-testid={`badge-ai-thumbnail-${article.id}`}
+                                    data-testid={`badge-ai-image-${article.id}`}
                                   >
                                     <Brain className="w-4 h-4 text-purple-500" />
                                   </div>
@@ -906,7 +906,7 @@ export default function ArticlesManagement() {
                           مميز
                         </Badge>
                       )}
-                      {article.isAiGeneratedThumbnail && (
+                      {(article.isAiGeneratedThumbnail || (article as any).isAiGeneratedImage) && (
                         <Badge className="text-xs bg-purple-500/90 hover:bg-purple-600 text-white border-0">
                           <Brain className="h-3 w-3 ml-1" />
                           صورة AI
