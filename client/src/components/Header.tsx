@@ -365,6 +365,33 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                 الأخبار
               </span>
             </Link>
+            <Link href="/omq">
+              <span
+                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover-elevate active-elevate-2 cursor-pointer"
+                onClick={() => setMobileMenuOpen(false)}
+                data-testid="link-mobile-omq"
+              >
+                عمق
+              </span>
+            </Link>
+            <Link href="/mirqab">
+              <span
+                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover-elevate active-elevate-2 cursor-pointer"
+                onClick={() => setMobileMenuOpen(false)}
+                data-testid="link-mobile-mirqab"
+              >
+                المرقاب
+              </span>
+            </Link>
+            <Link href="/chatbot">
+              <span
+                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover-elevate active-elevate-2 cursor-pointer"
+                onClick={() => setMobileMenuOpen(false)}
+                data-testid="link-mobile-chatbot"
+              >
+                المساعد الذكي
+              </span>
+            </Link>
             {user && (
               <Link href="/discover-users">
                 <span
