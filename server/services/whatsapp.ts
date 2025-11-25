@@ -97,9 +97,11 @@ export function extractTokenFromMessage(message: string): string | null {
 
 export function removeTokenFromMessage(message: string): string {
   // Remove TOKEN patterns (with or without #, with :, -, or space)
+  // Also remove any leftover # symbol at start of line after token removal
   return message
     .replace(/\b#?TOKEN[:\-][A-Z0-9\-_]+/gi, '')
     .replace(/\b#?TOKEN\s+[A-Z0-9\-_]+/gi, '')
+    .replace(/^#\s*/gm, '')  // Remove leftover # at start of lines
     .trim();
 }
 
