@@ -86,6 +86,137 @@ function generateSlug(text: string): string {
   return `${baseSlug}-${Date.now()}`;
 }
 
+// ============================================
+// COMMAND TYPES FOR WHATSAPP OPERATIONS
+// ============================================
+type WhatsAppCommand = 
+  | { type: 'create'; content: string }
+  | { type: 'edit'; articleId: string; content: string }
+  | { type: 'delete'; articleId: string }
+  | { type: 'archive'; articleId: string }
+  | { type: 'breaking'; articleId: string }
+  | { type: 'help' };
+
+// Parse command from WhatsApp message
+function parseWhatsAppCommand(message: string): WhatsAppCommand {
+  const trimmedMessage = message.trim();
+  
+  // Help command
+  if (trimmedMessage === 'مساعدة' || trimmedMessage === 'help' || trimmedMessage === '?') {
+    return { type: 'help' };
+  }
+  
+  // Edit command: تعديل: [رابط أو معرف]
+  // Format: تعديل: https://sabq.news/article/slug-here
+  // Or: تعديل: article-id-here
+  // Followed by new content
+  const normalizedForEdit = trimmedMessage.replace(/\n/g, ' ');
+  const editMatch = normalizedForEdit.match(/^(?:تعديل|تحديث|edit|update)[\s:]+(.+)/i);
+  if (editMatch) {
+    const restOfMessage = editMatch[1].trim();
+    const articleId = extractArticleIdentifier(restOfMessage);
+    if (articleId) {
+      // Get content after the article identifier (use original message with newlines)
+      const contentStartIndex = trimmedMessage.toLowerCase().indexOf(articleId.toLowerCase());
+      const content = contentStartIndex >= 0 
+        ? trimmedMessage.substring(contentStartIndex + articleId.length).trim()
+        : restOfMessage.replace(/^(https?:\/\/[^\s]+|[a-zA-Z0-9_-]+)\s*/i, '').trim();
+      return { type: 'edit', articleId, content };
+    }
+  }
+  
+  // Delete command: حذف: [رابط أو معرف]
+  const normalizedForDelete = trimmedMessage.replace(/\n/g, ' ');
+  const deleteMatch = normalizedForDelete.match(/^(?:حذف|delete|remove)[\s:]+(.+)/i);
+  if (deleteMatch) {
+    const articleId = extractArticleIdentifier(deleteMatch[1].trim());
+    if (articleId) {
+      return { type: 'delete', articleId };
+    }
+  }
+  
+  // Archive command: أرشفة: [رابط أو معرف]
+  const normalizedForArchive = trimmedMessage.replace(/\n/g, ' ');
+  const archiveMatch = normalizedForArchive.match(/^(?:أرشفة|أرشيف|archive)[\s:]+(.+)/i);
+  if (archiveMatch) {
+    const articleId = extractArticleIdentifier(archiveMatch[1].trim());
+    if (articleId) {
+      return { type: 'archive', articleId };
+    }
+  }
+  
+  // Breaking news command: عاجل: [رابط أو معرف]
+  const normalizedForBreaking = trimmedMessage.replace(/\n/g, ' ');
+  const breakingMatch = normalizedForBreaking.match(/^(?:عاجل|breaking|urgent)[\s:]+(.+)/i);
+  if (breakingMatch) {
+    const articleId = extractArticleIdentifier(breakingMatch[1].trim());
+    if (articleId) {
+      return { type: 'breaking', articleId };
+    }
+  }
+  
+  // Default: create new article
+  return { type: 'create', content: trimmedMessage };
+}
+
+// Extract article ID from URL or direct ID
+function extractArticleIdentifier(text: string): string | null {
+  // Extract from URL: https://sabq.news/article/slug-here or /article/slug-here
+  const urlMatch = text.match(/(?:sabq\.news|sabq\.life)?\/article\/([a-zA-Z0-9_-]+)/i);
+  if (urlMatch) {
+    return urlMatch[1];
+  }
+  
+  // Extract first word/identifier (could be slug or ID)
+  const firstWord = text.split(/[\s\n]/)[0].trim();
+  if (firstWord && firstWord.length > 3) {
+    return firstWord;
+  }
+  
+  return null;
+}
+
+// Find article by slug or ID
+async function findArticleByIdentifier(identifier: string): Promise<any | null> {
+  // Try to find by slug first
+  let article = await storage.getArticleBySlug(identifier);
+  if (article) return article;
+  
+  // Try to find by ID
+  try {
+    article = await storage.getArticleById(identifier);
+    if (article) return article;
+  } catch (e) {
+    // ID might be invalid format, continue
+  }
+  
+  return null;
+}
+
+// Generate help message
+function getHelpMessage(): string {
+  return `🤖 *أوامر واتساب سبق*
+
+📰 *إنشاء خبر جديد:*
+أرسل النص والصور مباشرة مع الرمز
+
+✏️ *تعديل خبر:*
+تعديل: [رابط الخبر]
+[المحتوى الجديد]
+
+🗑️ *حذف خبر:*
+حذف: [رابط الخبر]
+
+📁 *أرشفة خبر:*
+أرشفة: [رابط الخبر]
+
+🚨 *تحويل لخبر عاجل:*
+عاجل: [رابط الخبر]
+
+❓ *المساعدة:*
+أرسل "مساعدة" أو "?"`;
+}
+
 async function downloadWhatsAppMedia(mediaUrl: string): Promise<{ buffer: Buffer; contentType: string; filename: string }> {
   try {
     console.log(`[WhatsApp Agent] 📥 Downloading media from: ${mediaUrl}`);
@@ -581,7 +712,287 @@ router.post("/webhook", async (req: Request, res: Response) => {
 
     const cleanText = removeTokenFromMessage(body);
     console.log(`[WhatsApp Agent] Cleaned text: "${cleanText}"`);
+    
+    // 🎯 PARSE COMMAND FROM MESSAGE
+    const command = parseWhatsAppCommand(cleanText);
+    console.log(`[WhatsApp Agent] 🎯 Parsed command: ${command.type}`);
+    
+    // ============================================
+    // HANDLE HELP COMMAND
+    // ============================================
+    if (command.type === 'help') {
+      console.log("[WhatsApp Agent] 📖 Help command received");
+      
+      await storage.updateWhatsappWebhookLog(webhookLog.id, {
+        status: "processed",
+        reason: "help_command",
+        userId: whatsappToken.userId,
+        token: token,
+        processingTimeMs: Date.now() - startTime,
+      });
+      
+      await sendWhatsAppMessage({
+        to: phoneNumber,
+        body: getHelpMessage(),
+      });
+      
+      return res.status(200).send('OK');
+    }
+    
+    // ============================================
+    // HANDLE EDIT COMMAND
+    // ============================================
+    if (command.type === 'edit') {
+      console.log(`[WhatsApp Agent] ✏️ Edit command - Article: ${command.articleId}`);
+      
+      const existingArticle = await findArticleByIdentifier(command.articleId);
+      
+      if (!existingArticle) {
+        console.log("[WhatsApp Agent] ❌ Article not found for editing");
+        
+        await storage.updateWhatsappWebhookLog(webhookLog.id, {
+          status: "rejected",
+          reason: "article_not_found",
+          userId: whatsappToken.userId,
+          token: token,
+          processingTimeMs: Date.now() - startTime,
+        });
+        
+        await sendWhatsAppMessage({
+          to: phoneNumber,
+          body: `❌ لم يتم العثور على الخبر\n\nتأكد من صحة الرابط أو المعرف`,
+        });
+        
+        return res.status(200).send('OK');
+      }
+      
+      // Check if user owns the article or has permission
+      if (existingArticle.authorId !== whatsappToken.userId) {
+        console.log("[WhatsApp Agent] ❌ User not authorized to edit this article");
+        
+        await storage.updateWhatsappWebhookLog(webhookLog.id, {
+          status: "rejected",
+          reason: "not_authorized",
+          userId: whatsappToken.userId,
+          token: token,
+          articleId: existingArticle.id,
+          processingTimeMs: Date.now() - startTime,
+        });
+        
+        await sendWhatsAppMessage({
+          to: phoneNumber,
+          body: `❌ غير مصرح لك بتعديل هذا الخبر`,
+        });
+        
+        return res.status(200).send('OK');
+      }
+      
+      // Process edit content with AI
+      const editContent = command.content || "";
+      const hasNewImages = uploadedMediaUrls.length > 0;
+      
+      if (!editContent && !hasNewImages) {
+        await sendWhatsAppMessage({
+          to: phoneNumber,
+          body: `❌ يرجى إرسال المحتوى الجديد للتعديل`,
+        });
+        return res.status(200).send('OK');
+      }
+      
+      // If there's new content, process with AI
+      let updatedData: any = {};
+      
+      if (editContent.trim().length > 10) {
+        const categories = await storage.getAllCategories();
+        const aiResult = await analyzeAndEditWithSabqStyle(editContent, "ar", categories);
+        
+        updatedData = {
+          title: aiResult.optimized.title,
+          content: aiResult.optimized.content,
+          excerpt: aiResult.optimized.lead,
+          seoKeywords: aiResult.optimized.seoKeywords,
+        };
+        
+        // Update category if detected
+        if (aiResult.detectedCategory) {
+          const category = categories.find(
+            c => c.nameAr === aiResult.detectedCategory || c.nameEn === aiResult.detectedCategory
+          );
+          if (category) {
+            updatedData.categoryId = category.id;
+          }
+        }
+      }
+      
+      // Add new image if uploaded
+      if (hasNewImages) {
+        updatedData.imageUrl = uploadedMediaUrls[0];
+      }
+      
+      // Update the article
+      await storage.updateArticle(existingArticle.id, updatedData);
+      
+      await storage.updateWhatsappWebhookLog(webhookLog.id, {
+        status: "processed",
+        reason: "article_edited",
+        userId: whatsappToken.userId,
+        token: token,
+        articleId: existingArticle.id,
+        articleLink: `https://sabq.news/article/${existingArticle.slug}`,
+        processingTimeMs: Date.now() - startTime,
+      });
+      
+      await sendWhatsAppMessage({
+        to: phoneNumber,
+        body: `السلام عليكم\n✅ تم تعديل الخبر بنجاح\n\nhttps://sabq.news/article/${existingArticle.slug}`,
+      });
+      
+      console.log(`[WhatsApp Agent] ✅ Article edited: ${existingArticle.id}`);
+      return res.status(200).send('OK');
+    }
+    
+    // ============================================
+    // HANDLE DELETE COMMAND
+    // ============================================
+    if (command.type === 'delete') {
+      console.log(`[WhatsApp Agent] 🗑️ Delete command - Article: ${command.articleId}`);
+      
+      const existingArticle = await findArticleByIdentifier(command.articleId);
+      
+      if (!existingArticle) {
+        await sendWhatsAppMessage({
+          to: phoneNumber,
+          body: `❌ لم يتم العثور على الخبر`,
+        });
+        return res.status(200).send('OK');
+      }
+      
+      if (existingArticle.authorId !== whatsappToken.userId) {
+        await sendWhatsAppMessage({
+          to: phoneNumber,
+          body: `❌ غير مصرح لك بحذف هذا الخبر`,
+        });
+        return res.status(200).send('OK');
+      }
+      
+      // Soft delete - change status to deleted
+      await storage.updateArticle(existingArticle.id, { status: 'deleted' });
+      
+      await storage.updateWhatsappWebhookLog(webhookLog.id, {
+        status: "processed",
+        reason: "article_deleted",
+        userId: whatsappToken.userId,
+        token: token,
+        articleId: existingArticle.id,
+        processingTimeMs: Date.now() - startTime,
+      });
+      
+      await sendWhatsAppMessage({
+        to: phoneNumber,
+        body: `السلام عليكم\n🗑️ تم حذف الخبر بنجاح\n\n${existingArticle.title}`,
+      });
+      
+      console.log(`[WhatsApp Agent] ✅ Article deleted: ${existingArticle.id}`);
+      return res.status(200).send('OK');
+    }
+    
+    // ============================================
+    // HANDLE ARCHIVE COMMAND
+    // ============================================
+    if (command.type === 'archive') {
+      console.log(`[WhatsApp Agent] 📁 Archive command - Article: ${command.articleId}`);
+      
+      const existingArticle = await findArticleByIdentifier(command.articleId);
+      
+      if (!existingArticle) {
+        await sendWhatsAppMessage({
+          to: phoneNumber,
+          body: `❌ لم يتم العثور على الخبر`,
+        });
+        return res.status(200).send('OK');
+      }
+      
+      if (existingArticle.authorId !== whatsappToken.userId) {
+        await sendWhatsAppMessage({
+          to: phoneNumber,
+          body: `❌ غير مصرح لك بأرشفة هذا الخبر`,
+        });
+        return res.status(200).send('OK');
+      }
+      
+      await storage.updateArticle(existingArticle.id, { status: 'archived' });
+      
+      await storage.updateWhatsappWebhookLog(webhookLog.id, {
+        status: "processed",
+        reason: "article_archived",
+        userId: whatsappToken.userId,
+        token: token,
+        articleId: existingArticle.id,
+        processingTimeMs: Date.now() - startTime,
+      });
+      
+      await sendWhatsAppMessage({
+        to: phoneNumber,
+        body: `السلام عليكم\n📁 تم أرشفة الخبر بنجاح\n\n${existingArticle.title}`,
+      });
+      
+      console.log(`[WhatsApp Agent] ✅ Article archived: ${existingArticle.id}`);
+      return res.status(200).send('OK');
+    }
+    
+    // ============================================
+    // HANDLE BREAKING NEWS COMMAND
+    // ============================================
+    if (command.type === 'breaking') {
+      console.log(`[WhatsApp Agent] 🚨 Breaking command - Article: ${command.articleId}`);
+      
+      const existingArticle = await findArticleByIdentifier(command.articleId);
+      
+      if (!existingArticle) {
+        await sendWhatsAppMessage({
+          to: phoneNumber,
+          body: `❌ لم يتم العثور على الخبر`,
+        });
+        return res.status(200).send('OK');
+      }
+      
+      if (existingArticle.authorId !== whatsappToken.userId) {
+        await sendWhatsAppMessage({
+          to: phoneNumber,
+          body: `❌ غير مصرح لك بتعديل هذا الخبر`,
+        });
+        return res.status(200).send('OK');
+      }
+      
+      // Toggle breaking status
+      const newNewsType = existingArticle.newsType === 'breaking' ? 'regular' : 'breaking';
+      await storage.updateArticle(existingArticle.id, { newsType: newNewsType });
+      
+      await storage.updateWhatsappWebhookLog(webhookLog.id, {
+        status: "processed",
+        reason: newNewsType === 'breaking' ? "marked_breaking" : "unmarked_breaking",
+        userId: whatsappToken.userId,
+        token: token,
+        articleId: existingArticle.id,
+        processingTimeMs: Date.now() - startTime,
+      });
+      
+      const message = newNewsType === 'breaking'
+        ? `السلام عليكم\n🚨 تم تحويل الخبر إلى عاجل\n\nhttps://sabq.news/article/${existingArticle.slug}`
+        : `السلام عليكم\n✅ تم إلغاء تصنيف العاجل\n\nhttps://sabq.news/article/${existingArticle.slug}`;
+      
+      await sendWhatsAppMessage({
+        to: phoneNumber,
+        body: message,
+      });
+      
+      console.log(`[WhatsApp Agent] ✅ Article breaking status changed: ${existingArticle.id} -> ${newNewsType}`);
+      return res.status(200).send('OK');
+    }
 
+    // ============================================
+    // HANDLE CREATE COMMAND (DEFAULT)
+    // ============================================
     // ✅ IMPROVED IMAGE HANDLING: Allow short text if there are images
     const hasImages = uploadedMediaUrls.length > 0;
     const textLength = cleanText?.trim().length || 0;
