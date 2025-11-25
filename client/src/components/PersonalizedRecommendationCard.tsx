@@ -16,6 +16,22 @@ const isNewArticle = (publishedAt: Date | string | null | undefined) => {
   return diffInHours <= 3;
 };
 
+const getArabicReason = (reason?: string): string => {
+  if (!reason) return "مقترح لك";
+  
+  const reasonMap: Record<string, string> = {
+    'category_interest': 'مقترح لك',
+    'liked_similar': 'مقترح لك',
+    'saved_similar': 'مقترح لك',
+    'reading_pattern': 'مقترح لك',
+    'trending_match': 'مقترح لك',
+    'personalized': 'مقترح لك',
+    'similar': 'مقترح لك',
+  };
+  
+  return reasonMap[reason] || reason;
+};
+
 interface PersonalizedRecommendationCardProps {
   article: ArticleWithDetails;
   reason?: string;
@@ -26,7 +42,7 @@ interface PersonalizedRecommendationCardProps {
 
 export function PersonalizedRecommendationCard({
   article,
-  reason = "مقترح لك",
+  reason,
   recommendationId,
   onDisplay,
   onArticleClick,
@@ -63,12 +79,14 @@ export function PersonalizedRecommendationCard({
       })
     : null;
 
+  const arabicReason = getArabicReason(reason);
+
   return (
     <div ref={cardRef} dir="rtl">
       <Link href={`/article/${article.slug}`}>
         <Card
           onClick={handleClick}
-          className={`cursor-pointer h-full overflow-hidden ring-2 ring-primary/40 hover:ring-primary/60 transition-all ${
+          className={`cursor-pointer h-full overflow-hidden ring-1 ring-primary/20 hover:ring-primary/30 transition-all ${
             article.newsType === "breaking" ? "bg-destructive/5" : ""
           }`}
           data-testid={`card-recommendation-${article.id}`}
@@ -92,11 +110,11 @@ export function PersonalizedRecommendationCard({
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center gap-2 flex-wrap">
               <Badge
-                className="text-xs h-5 gap-1 bg-primary hover:bg-primary/90 text-primary-foreground border-0"
+                className="text-xs h-5 gap-1 bg-primary/80 hover:bg-primary/90 text-primary-foreground border-0"
                 data-testid={`badge-recommendation-${article.id}`}
               >
                 <Sparkles className="h-2.5 w-2.5" aria-hidden="true" />
-                {reason}
+                {arabicReason}
               </Badge>
 
               {((article as any).isAiGeneratedThumbnail || (article as any).isAiGeneratedImage) && (
