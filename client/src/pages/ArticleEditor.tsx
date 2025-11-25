@@ -1939,7 +1939,6 @@ const generateSlug = (text: string) => {
                     setThumbnailManuallyDeleted(manuallyDeleted);
                   }
                 }}
-                autoGenerate={true}
               />
             )}
 

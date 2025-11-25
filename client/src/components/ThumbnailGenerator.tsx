@@ -109,14 +109,8 @@ export function ThumbnailGenerator({
     }
   }, [thumbnailUrl]);
 
-  // Auto-generate thumbnail when image changes (using AI Smart by default)
-  // BUT: Don't auto-generate if user manually deleted the thumbnail
-  // thumbnailManuallyDeleted flag is persisted in database to survive page reloads
-  useEffect(() => {
-    if (autoGenerate && imageUrl && !currentThumbnail && articleId && !thumbnailManuallyDeleted) {
-      generateThumbnail('ai-smart');
-    }
-  }, [imageUrl, articleId, thumbnailManuallyDeleted]);
+  // NOTE: Auto-generation disabled - thumbnails are only generated on user request
+  // The autoGenerate prop is kept for backwards compatibility but defaults to false
 
   if (!imageUrl) {
     return null;
