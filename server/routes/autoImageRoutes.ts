@@ -94,7 +94,7 @@ router.get("/check/:articleId", isAuthenticated, async (req: Request, res: Respo
  */
 router.get("/settings", isAuthenticated, async (req: Request, res: Response) => {
   try {
-    const settings = getAutoGenerationSettings();
+    const settings = await getAutoGenerationSettings();
     res.json(settings);
 
   } catch (error: any) {
@@ -113,7 +113,6 @@ router.put("/settings", isAuthenticated, requireRole("admin"), async (req: Reque
   try {
     const updates = req.body;
 
-    // Validate settings payload
     const validKeys = [
       "enabled",
       "articleTypes", 
@@ -126,11 +125,9 @@ router.put("/settings", isAuthenticated, requireRole("admin"), async (req: Reque
       "maxMonthlyGenerations"
     ];
 
-    // Only allow valid keys
     const sanitizedUpdates: Record<string, any> = {};
     for (const key of validKeys) {
       if (key in updates) {
-        // Additional validation for specific fields
         if (key === "enabled" || key === "autoPublish" || key === "generateOnSave") {
           sanitizedUpdates[key] = Boolean(updates[key]);
         } else if (key === "articleTypes" || key === "skipCategories") {
@@ -148,12 +145,12 @@ router.put("/settings", isAuthenticated, requireRole("admin"), async (req: Reque
       }
     }
 
-    updateAutoGenerationSettings(sanitizedUpdates);
+    const newSettings = await updateAutoGenerationSettings(sanitizedUpdates);
 
     res.json({
       success: true,
       message: "Settings updated successfully",
-      settings: getAutoGenerationSettings()
+      settings: newSettings
     });
 
   } catch (error: any) {

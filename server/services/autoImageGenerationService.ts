@@ -5,29 +5,44 @@
 
 import { generateNewsImage } from "./visualAiService";
 import { db } from "../db";
-import { articles, mediaFiles } from "@shared/schema";
+import { articles, mediaFiles, systemSettings } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 
-// Configuration
-const AUTO_GENERATION_CONFIG = {
-  enabled: true,
+const SETTINGS_KEY = "auto_image_generation_settings";
+
+interface AutoImageSettings {
+  enabled: boolean;
+  articleTypes: string[];
+  skipCategories: string[];
+  defaultStyle: string;
+  provider: string;
+  autoPublish: boolean;
+  generateOnSave: boolean;
+  imagePromptTemplate?: string;
+  maxMonthlyGenerations?: number;
+  currentMonthGenerations?: number;
+  lastResetMonth?: number;
+}
+
+const DEFAULT_SETTINGS: AutoImageSettings = {
+  enabled: false,
+  articleTypes: ["news", "analysis"],
+  skipCategories: [],
   defaultStyle: "photorealistic",
-  defaultMood: "neutral",
-  defaultModel: "nano-banana-pro",
-  
-  // Generate for these article types
-  articleTypes: ["news", "opinion", "analysis", "column"],
-  
-  // Skip generation for these categories (can be customized)
-  skipCategories: [] as string[],
-  
-  // Add AI disclaimer in alt text
-  aiDisclaimer: {
-    ar: "صورة تم إنشاؤها بواسطة الذكاء الاصطناعي",
-    en: "AI-Generated Image",
-    ur: "مصنوعی ذہانت سے تیار کردہ تصویر"
-  }
+  provider: "nano-banana",
+  autoPublish: false,
+  generateOnSave: false,
+  imagePromptTemplate: "",
+  maxMonthlyGenerations: 100,
+  currentMonthGenerations: 0,
+  lastResetMonth: new Date().getMonth()
+};
+
+const AI_DISCLAIMER = {
+  ar: "صورة تم إنشاؤها بواسطة الذكاء الاصطناعي",
+  en: "AI-Generated Image",
+  ur: "مصنوعی ذہانت سے تیار کردہ تصویر"
 };
 
 export interface AutoImageGenerationRequest {
@@ -38,7 +53,7 @@ export interface AutoImageGenerationRequest {
   category?: string;
   language: "ar" | "en" | "ur";
   articleType?: string;
-  forceGeneration?: boolean; // Force generation even if image exists
+  forceGeneration?: boolean;
 }
 
 export interface AutoImageGenerationResult {
@@ -51,6 +66,100 @@ export interface AutoImageGenerationResult {
 }
 
 /**
+ * Get auto generation settings from database
+ */
+export async function getAutoGenerationSettings(): Promise<AutoImageSettings> {
+  try {
+    const [setting] = await db
+      .select()
+      .from(systemSettings)
+      .where(eq(systemSettings.key, SETTINGS_KEY));
+    
+    if (setting?.value) {
+      const savedSettings = setting.value as AutoImageSettings;
+      
+      const currentMonth = new Date().getMonth();
+      if (savedSettings.lastResetMonth !== currentMonth) {
+        savedSettings.currentMonthGenerations = 0;
+        savedSettings.lastResetMonth = currentMonth;
+        await saveAutoGenerationSettings(savedSettings);
+      }
+      
+      return { ...DEFAULT_SETTINGS, ...savedSettings };
+    }
+    
+    return DEFAULT_SETTINGS;
+  } catch (error) {
+    console.error("[Auto Image] Error loading settings:", error);
+    return DEFAULT_SETTINGS;
+  }
+}
+
+/**
+ * Save auto generation settings to database
+ */
+async function saveAutoGenerationSettings(settings: AutoImageSettings): Promise<void> {
+  try {
+    const existing = await db
+      .select()
+      .from(systemSettings)
+      .where(eq(systemSettings.key, SETTINGS_KEY));
+
+    if (existing.length > 0) {
+      await db
+        .update(systemSettings)
+        .set({ 
+          value: settings as any, 
+          updatedAt: new Date() 
+        })
+        .where(eq(systemSettings.key, SETTINGS_KEY));
+    } else {
+      await db
+        .insert(systemSettings)
+        .values({ 
+          key: SETTINGS_KEY, 
+          value: settings as any, 
+          category: "ai",
+          isPublic: false
+        });
+    }
+    
+    console.log("[Auto Image] Settings saved to database");
+  } catch (error) {
+    console.error("[Auto Image] Error saving settings:", error);
+    throw error;
+  }
+}
+
+/**
+ * Update auto generation settings
+ */
+export async function updateAutoGenerationSettings(updates: Partial<AutoImageSettings>): Promise<AutoImageSettings> {
+  const currentSettings = await getAutoGenerationSettings();
+  const newSettings = { ...currentSettings, ...updates };
+  await saveAutoGenerationSettings(newSettings);
+  return newSettings;
+}
+
+/**
+ * Increment generation count
+ */
+async function incrementGenerationCount(): Promise<void> {
+  const settings = await getAutoGenerationSettings();
+  settings.currentMonthGenerations = (settings.currentMonthGenerations || 0) + 1;
+  await saveAutoGenerationSettings(settings);
+}
+
+/**
+ * Check if generation limit reached
+ */
+async function isGenerationLimitReached(): Promise<boolean> {
+  const settings = await getAutoGenerationSettings();
+  if (!settings.maxMonthlyGenerations) return false;
+  return (settings.currentMonthGenerations || 0) >= settings.maxMonthlyGenerations;
+}
+
+/**
  * Automatically generate image for article if needed
  */
 export async function autoGenerateImage(
@@ -58,47 +167,51 @@ export async function autoGenerateImage(
   userId: string
 ): Promise<AutoImageGenerationResult> {
   try {
-    // Check if auto generation is enabled
-    if (!AUTO_GENERATION_CONFIG.enabled && !request.forceGeneration) {
+    const settings = await getAutoGenerationSettings();
+    
+    if (!settings.enabled && !request.forceGeneration) {
       return {
         success: false,
         message: "Auto image generation is disabled"
       };
     }
     
-    // Check if article type is eligible
     if (!request.forceGeneration && 
         request.articleType && 
-        !AUTO_GENERATION_CONFIG.articleTypes.includes(request.articleType)) {
+        !settings.articleTypes.includes(request.articleType)) {
       return {
         success: false,
         message: `Auto generation not enabled for ${request.articleType} articles`
       };
     }
     
-    // Check if category should be skipped
     if (!request.forceGeneration && 
         request.category && 
-        AUTO_GENERATION_CONFIG.skipCategories.includes(request.category)) {
+        settings.skipCategories.includes(request.category)) {
       return {
         success: false,
         message: `Auto generation skipped for category ${request.category}`
       };
     }
     
+    if (!request.forceGeneration && await isGenerationLimitReached()) {
+      return {
+        success: false,
+        message: "Monthly generation limit reached"
+      };
+    }
+    
     console.log(`[Auto Image] Generating for article: ${request.articleId}`);
     
-    // Generate smart prompt based on article content
-    const smartPrompt = generateSmartPrompt(request);
+    const smartPrompt = generateSmartPrompt(request, settings);
     
-    // Generate image using Visual AI service
     const generationResult = await generateNewsImage({
       articleTitle: request.title,
       articleSummary: request.excerpt || extractSummary(request.content || ""),
       category: request.category || "عام",
       language: request.language,
-      style: AUTO_GENERATION_CONFIG.defaultStyle as any,
-      mood: AUTO_GENERATION_CONFIG.defaultMood as any
+      style: settings.defaultStyle as any,
+      mood: "neutral"
     });
     
     if (!generationResult.success || !generationResult.imageUrl) {
@@ -108,13 +221,11 @@ export async function autoGenerateImage(
       };
     }
     
-    // Create alt text with AI disclaimer
     const altText = createAltTextWithDisclaimer(
       request.title,
       request.language
     );
     
-    // Save to media library
     const [savedMedia] = await db.insert(mediaFiles).values({
       fileName: `auto-generated-${request.articleId}-${Date.now()}.png`,
       originalName: `${request.title.substring(0, 50)}.png`,
@@ -122,38 +233,32 @@ export async function autoGenerateImage(
       thumbnailUrl: generationResult.thumbnailUrl,
       type: "image",
       mimeType: "image/png",
-      size: 0, // Will be updated later if needed
-      
-      // Metadata with AI disclaimer
+      size: 0,
       title: request.title,
       description: `Auto-generated image for: ${request.title}`,
       altText: altText,
-      caption: AUTO_GENERATION_CONFIG.aiDisclaimer[request.language],
+      caption: AI_DISCLAIMER[request.language],
       keywords: extractKeywords(request.title),
-      
-      // AI Generation tracking
       isAiGenerated: true,
-      aiGenerationModel: AUTO_GENERATION_CONFIG.defaultModel,
+      aiGenerationModel: settings.provider,
       aiGenerationPrompt: smartPrompt,
-      
-      // Organization
       category: "articles",
       usedIn: [request.articleId],
       usageCount: 1,
-      
       uploadedBy: userId
     }).returning();
     
-    // Update article with generated image and AI metadata
     await db.update(articles)
       .set({ 
         imageUrl: generationResult.imageUrl,
         isAiGeneratedImage: true,
-        aiImageModel: AUTO_GENERATION_CONFIG.defaultModel,
+        aiImageModel: settings.provider,
         aiImagePrompt: smartPrompt,
         updatedAt: new Date()
       })
       .where(eq(articles.id, request.articleId));
+    
+    await incrementGenerationCount();
     
     console.log(`[Auto Image] Successfully generated for article: ${request.articleId}`);
     
@@ -177,8 +282,15 @@ export async function autoGenerateImage(
 /**
  * Generate smart prompt based on article content
  */
-function generateSmartPrompt(request: AutoImageGenerationRequest): string {
+function generateSmartPrompt(request: AutoImageGenerationRequest, settings: AutoImageSettings): string {
   const { title, content, excerpt, category, language } = request;
+  
+  if (settings.imagePromptTemplate) {
+    return settings.imagePromptTemplate
+      .replace(/{title}/g, title)
+      .replace(/{category}/g, category || "عام")
+      .replace(/{excerpt}/g, excerpt || "");
+  }
   
   let prompt = `Professional news image for article titled: "${title}"`;
   
@@ -189,14 +301,12 @@ function generateSmartPrompt(request: AutoImageGenerationRequest): string {
   if (excerpt) {
     prompt += `\nSummary: ${excerpt}`;
   } else if (content) {
-    // Extract key points from content
     const keyPoints = extractKeyPoints(content);
     if (keyPoints.length > 0) {
       prompt += `\nKey points: ${keyPoints.join(", ")}`;
     }
   }
   
-  // Add style guidance
   prompt += `
 Style requirements:
 - Professional journalism quality
@@ -214,8 +324,8 @@ Style requirements:
  */
 function extractSummary(content: string): string {
   const cleanContent = content
-    .replace(/<[^>]*>/g, "") // Remove HTML tags
-    .replace(/\s+/g, " ") // Normalize whitespace
+    .replace(/<[^>]*>/g, "")
+    .replace(/\s+/g, " ")
     .trim();
   
   return cleanContent.substring(0, 200) + (cleanContent.length > 200 ? "..." : "");
@@ -226,14 +336,12 @@ function extractSummary(content: string): string {
  */
 function extractKeyPoints(content: string): string[] {
   const cleanContent = content
-    .replace(/<[^>]*>/g, "") // Remove HTML tags
-    .replace(/\s+/g, " ") // Normalize whitespace
+    .replace(/<[^>]*>/g, "")
+    .replace(/\s+/g, " ")
     .trim();
   
-  // Extract sentences that might be key points
   const sentences = cleanContent.split(/[.!?]/).filter(s => s.trim().length > 20);
   
-  // Return first 3 sentences as key points
   return sentences.slice(0, 3).map(s => s.trim());
 }
 
@@ -241,7 +349,6 @@ function extractKeyPoints(content: string): string[] {
  * Extract keywords from title
  */
 function extractKeywords(title: string): string[] {
-  // Remove common Arabic/English stop words
   const stopWords = [
     "في", "من", "إلى", "على", "مع", "عن", "بعد", "قبل", "أن", "هذا", "هذه",
     "the", "a", "an", "in", "on", "at", "to", "from", "with", "for", "and", "or"
@@ -262,9 +369,7 @@ function createAltTextWithDisclaimer(
   title: string,
   language: "ar" | "en" | "ur"
 ): string {
-  const disclaimer = AUTO_GENERATION_CONFIG.aiDisclaimer[language];
-  
-  // Format: "Title - AI Generated Image"
+  const disclaimer = AI_DISCLAIMER[language];
   return `${title} - ${disclaimer}`;
 }
 
@@ -272,6 +377,12 @@ function createAltTextWithDisclaimer(
  * Check if article needs auto-generated image
  */
 export async function shouldAutoGenerateImage(articleId: string): Promise<boolean> {
+  const settings = await getAutoGenerationSettings();
+  
+  if (!settings.enabled) {
+    return false;
+  }
+  
   const article = await db.query.articles.findFirst({
     where: eq(articles.id, articleId)
   });
@@ -280,31 +391,15 @@ export async function shouldAutoGenerateImage(articleId: string): Promise<boolea
     return false;
   }
   
-  // Check if article already has an image
   if (article.imageUrl) {
     return false;
   }
   
-  // Check if article type is eligible
-  if (!AUTO_GENERATION_CONFIG.articleTypes.includes(article.articleType)) {
+  if (!settings.articleTypes.includes(article.articleType)) {
     return false;
   }
   
-  return AUTO_GENERATION_CONFIG.enabled;
-}
-
-/**
- * Get auto generation settings
- */
-export function getAutoGenerationSettings() {
-  return AUTO_GENERATION_CONFIG;
-}
-
-/**
- * Update auto generation settings
- */
-export function updateAutoGenerationSettings(settings: Partial<typeof AUTO_GENERATION_CONFIG>) {
-  Object.assign(AUTO_GENERATION_CONFIG, settings);
+  return true;
 }
 
 export default {
