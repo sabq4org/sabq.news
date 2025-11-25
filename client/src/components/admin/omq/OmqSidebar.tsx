@@ -5,14 +5,9 @@ import {
   Brain,
   Home,
   Plus,
-  FileText,
-  BarChart3,
-  Settings,
   Archive,
   Eye,
   Clock,
-  TrendingUp,
-  Layers,
   X,
   Globe,
   Sparkles
@@ -53,13 +48,6 @@ const navigationItems: NavItem[] = [
     badge: "إنشاء",
   },
   {
-    title: "جميع التحليلات",
-    titleEn: "All Analyses",
-    href: "/dashboard/ai/deep/list",
-    icon: FileText,
-    gradient: "from-blue-500 to-cyan-500",
-  },
-  {
     title: "المنشورة",
     titleEn: "Published",
     href: "/dashboard/ai/deep?status=published",
@@ -79,13 +67,6 @@ const navigationItems: NavItem[] = [
     href: "/dashboard/ai/deep?status=archived",
     icon: Archive,
     gradient: "from-gray-500 to-slate-500",
-  },
-  {
-    title: "التحليلات والإحصائيات",
-    titleEn: "Analytics",
-    href: "/dashboard/ai/deep/analytics",
-    icon: BarChart3,
-    gradient: "from-pink-500 to-rose-500",
   },
 ];
 
