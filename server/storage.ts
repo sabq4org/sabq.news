@@ -362,6 +362,8 @@ import {
   aiScheduledTasks,
   type AiScheduledTask,
   type InsertAiScheduledTask,
+  // AI Image Generations
+  aiImageGenerations,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -648,6 +650,35 @@ export interface IStorage {
       running: number;
     };
     reactions: {
+      total: number;
+    };
+    audioNewsletters: {
+      total: number;
+      published: number;
+      totalListens: number;
+    };
+    deepAnalyses: {
+      total: number;
+      published: number;
+    };
+    publishers: {
+      total: number;
+      active: number;
+    };
+    mediaLibrary: {
+      totalFiles: number;
+      totalSize: number;
+    };
+    aiTasks: {
+      total: number;
+      pending: number;
+      completed: number;
+    };
+    aiImages: {
+      total: number;
+      thisWeek: number;
+    };
+    smartBlocks: {
       total: number;
     };
     recentArticles: ArticleWithDetails[];
@@ -5108,6 +5139,35 @@ export class DatabaseStorage implements IStorage {
       totalReads: number;
       readsToday: number;
     };
+    audioNewsletters: {
+      total: number;
+      published: number;
+      totalListens: number;
+    };
+    deepAnalyses: {
+      total: number;
+      published: number;
+    };
+    publishers: {
+      total: number;
+      active: number;
+    };
+    mediaLibrary: {
+      totalFiles: number;
+      totalSize: number;
+    };
+    aiTasks: {
+      total: number;
+      pending: number;
+      completed: number;
+    };
+    aiImages: {
+      total: number;
+      thisWeek: number;
+    };
+    smartBlocks: {
+      total: number;
+    };
     recentArticles: ArticleWithDetails[];
     recentComments: CommentWithUser[];
     topArticles: ArticleWithDetails[];
@@ -5193,6 +5253,63 @@ export class DatabaseStorage implements IStorage {
         avgDuration: sql<number>`coalesce(avg(${readingHistory.readDuration}), 0)`,
       })
       .from(readingHistory);
+
+    // Get audio newsletters stats
+    const [audioStats] = await db
+      .select({
+        total: sql<number>`count(*)`,
+        published: sql<number>`count(*) filter (where ${audioNewsletters.status} = 'published')`,
+        totalListens: sql<number>`coalesce(sum(${audioNewsletters.totalListens}), 0)`,
+      })
+      .from(audioNewsletters);
+
+    // Get deep analyses stats
+    const [deepAnalysesStats] = await db
+      .select({
+        total: sql<number>`count(*)`,
+        published: sql<number>`count(*) filter (where ${deepAnalyses.status} = 'published')`,
+      })
+      .from(deepAnalyses);
+
+    // Get publishers stats
+    const [publishersStats] = await db
+      .select({
+        total: sql<number>`count(*)`,
+        active: sql<number>`count(*) filter (where ${publishers.isActive} = true)`,
+      })
+      .from(publishers);
+
+    // Get media library stats
+    const [mediaStats] = await db
+      .select({
+        totalFiles: sql<number>`count(*)`,
+        totalSize: sql<number>`coalesce(sum(${mediaFiles.size}), 0)`,
+      })
+      .from(mediaFiles);
+
+    // Get AI tasks stats
+    const [aiTasksStats] = await db
+      .select({
+        total: sql<number>`count(*)`,
+        pending: sql<number>`count(*) filter (where ${aiScheduledTasks.status} = 'pending')`,
+        completed: sql<number>`count(*) filter (where ${aiScheduledTasks.status} = 'completed')`,
+      })
+      .from(aiScheduledTasks);
+
+    // Get AI images stats
+    const [aiImagesStats] = await db
+      .select({
+        total: sql<number>`count(*)`,
+        thisWeek: sql<number>`count(*) filter (where ${aiImageGenerations.createdAt} >= ${weekAgo})`,
+      })
+      .from(aiImageGenerations);
+
+    // Get smart blocks stats
+    const [smartBlocksStats] = await db
+      .select({
+        total: sql<number>`count(*)`,
+      })
+      .from(smartBlocks);
 
     // Get recent articles (latest 5)
     const recentArticlesData = await db
@@ -5296,6 +5413,35 @@ export class DatabaseStorage implements IStorage {
         averageTimeOnSite: Math.round(Number(engagementStats.avgDuration)),
         totalReads: Number(engagementStats.totalReads),
         readsToday: Number(engagementStats.readsToday),
+      },
+      audioNewsletters: {
+        total: Number(audioStats.total),
+        published: Number(audioStats.published),
+        totalListens: Number(audioStats.totalListens),
+      },
+      deepAnalyses: {
+        total: Number(deepAnalysesStats.total),
+        published: Number(deepAnalysesStats.published),
+      },
+      publishers: {
+        total: Number(publishersStats.total),
+        active: Number(publishersStats.active),
+      },
+      mediaLibrary: {
+        totalFiles: Number(mediaStats.totalFiles),
+        totalSize: Number(mediaStats.totalSize),
+      },
+      aiTasks: {
+        total: Number(aiTasksStats.total),
+        pending: Number(aiTasksStats.pending),
+        completed: Number(aiTasksStats.completed),
+      },
+      aiImages: {
+        total: Number(aiImagesStats.total),
+        thisWeek: Number(aiImagesStats.thisWeek),
+      },
+      smartBlocks: {
+        total: Number(smartBlocksStats.total),
       },
       recentArticles,
       recentComments,
