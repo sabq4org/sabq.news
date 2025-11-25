@@ -26358,6 +26358,11 @@ Allow: /
         success: true,
         data: {
           ...analysis,
+          viewsCount: metrics?.views || 0,
+          sharesCount: metrics?.shares || 0,
+          downloadsCount: metrics?.downloads || 0,
+          exportsPdfCount: metrics?.exportsPdf || 0,
+          exportsDocxCount: metrics?.exportsDocx || 0,
           metrics: metrics || {
             views: 0,
             shares: 0,
