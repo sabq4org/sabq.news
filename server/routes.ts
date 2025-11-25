@@ -3298,13 +3298,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/categories", cacheControl({ maxAge: CACHE_DURATIONS.LONG, staleWhileRevalidate: CACHE_DURATIONS.LONG }), async (req, res) => {
     try {
       const withStats = req.query.withStats === 'true';
+      // By default, exclude iFox categories from public Sabq categories
+      // Use includeIfox=true to include them (for admin pages)
+      const includeIfox = req.query.includeIfox === 'true';
       
       if (withStats) {
-        const categories = await storage.getCategoriesWithStats();
-        res.json(categories);
+        let cats = await storage.getCategoriesWithStats();
+        // Filter out iFox categories if not requested
+        if (!includeIfox) {
+          cats = cats.filter(c => !c.isIfoxCategory);
+        }
+        res.json(cats);
       } else {
-        const categories = await storage.getAllCategories();
-        res.json(categories);
+        const cats = await storage.getAllCategories({ excludeIfox: !includeIfox });
+        res.json(cats);
       }
     } catch (error) {
       console.error("Error fetching categories:", error);

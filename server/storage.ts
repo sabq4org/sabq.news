@@ -462,7 +462,7 @@ export interface IStorage {
   }): Promise<void>;
   
   // Category operations
-  getAllCategories(): Promise<Category[]>;
+  getAllCategories(options?: { excludeIfox?: boolean }): Promise<Category[]>;
   getCategoryById(id: string): Promise<Category | undefined>;
   createCategory(category: InsertCategory): Promise<Category>;
   updateCategory(id: string, category: Partial<InsertCategory>): Promise<Category>;
@@ -2579,7 +2579,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Category operations
-  async getAllCategories(): Promise<Category[]> {
+  async getAllCategories(options?: { excludeIfox?: boolean }): Promise<Category[]> {
+    if (options?.excludeIfox) {
+      return await db.select().from(categories)
+        .where(eq(categories.isIfoxCategory, false))
+        .orderBy(categories.displayOrder);
+    }
     return await db.select().from(categories).orderBy(categories.displayOrder);
   }
 
