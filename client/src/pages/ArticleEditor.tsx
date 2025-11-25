@@ -37,7 +37,21 @@ import {
   Layers,
   X,
   BarChart3,
+  CheckCircle2,
+  Clock,
+  RotateCcw,
+  Trash2,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { SeoPreview } from "@/components/SeoPreview";
 import { useToast } from "@/hooks/use-toast";
@@ -137,6 +151,14 @@ export default function ArticleEditor() {
   const [showInfographicDialog, setShowInfographicDialog] = useState(false);
   const [showStoryCardsDialog, setShowStoryCardsDialog] = useState(false);
   
+  // Auto-save states
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [lastAutoSaveTime, setLastAutoSaveTime] = useState<Date | null>(null);
+  const [showDraftRecoveryDialog, setShowDraftRecoveryDialog] = useState(false);
+  const [recoveredDraft, setRecoveredDraft] = useState<any>(null);
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasLoadedArticleRef = useRef(false);
+  
   // Use ref for immediate lock with URL tracking (prevents concurrent uploads even in StrictMode)
   const savingMediaMapRef = useRef<Map<string, Promise<string | null>>>(new Map());
   
@@ -232,9 +254,171 @@ export default function ArticleEditor() {
       setMetaDescription(validMetaDescription);
       setKeywords(article.seo?.keywords || []);
       setStatus(article.status as any);
+      hasLoadedArticleRef.current = true;
     }
   }, [article, isNewArticle]);
-  
+
+  // Auto-save draft key - unique per article or "new" for new articles
+  const autoSaveKey = `article-draft-${isNewArticle ? 'new' : id}`;
+
+  // Function to save draft to localStorage
+  const saveDraftToLocalStorage = useCallback(() => {
+    // Only save if there's meaningful content
+    if (!title && !content) {
+      return;
+    }
+
+    const draftData = {
+      title,
+      subtitle,
+      slug,
+      content,
+      excerpt,
+      categoryId,
+      reporterId,
+      opinionAuthorId,
+      articleType,
+      imageUrl,
+      thumbnailUrl,
+      imageFocalPoint,
+      keywords,
+      newsType,
+      publishType,
+      scheduledAt,
+      hideFromHomepage,
+      metaTitle,
+      metaDescription,
+      savedAt: new Date().toISOString(),
+    };
+
+    try {
+      localStorage.setItem(autoSaveKey, JSON.stringify(draftData));
+      setAutoSaveStatus("saved");
+      setLastAutoSaveTime(new Date());
+      console.log('[Auto-save] Draft saved to localStorage');
+    } catch (error) {
+      console.error('[Auto-save] Failed to save draft:', error);
+    }
+  }, [
+    autoSaveKey, title, subtitle, slug, content, excerpt, categoryId, 
+    reporterId, opinionAuthorId, articleType, imageUrl, thumbnailUrl, 
+    imageFocalPoint, keywords, newsType, publishType, scheduledAt, 
+    hideFromHomepage, metaTitle, metaDescription
+  ]);
+
+  // Function to clear draft from localStorage
+  const clearDraftFromLocalStorage = useCallback(() => {
+    try {
+      localStorage.removeItem(autoSaveKey);
+      console.log('[Auto-save] Draft cleared from localStorage');
+    } catch (error) {
+      console.error('[Auto-save] Failed to clear draft:', error);
+    }
+  }, [autoSaveKey]);
+
+  // Function to restore draft from localStorage
+  const restoreDraftFromLocalStorage = useCallback((draft: any) => {
+    if (draft.title) setTitle(draft.title);
+    if (draft.subtitle) setSubtitle(draft.subtitle);
+    if (draft.slug) setSlug(draft.slug);
+    if (draft.content) setContent(draft.content);
+    if (draft.excerpt) setExcerpt(draft.excerpt);
+    if (draft.categoryId) setCategoryId(draft.categoryId);
+    if (draft.reporterId !== undefined) setReporterId(draft.reporterId);
+    if (draft.opinionAuthorId !== undefined) setOpinionAuthorId(draft.opinionAuthorId);
+    if (draft.articleType) setArticleType(draft.articleType);
+    if (draft.imageUrl) setImageUrl(draft.imageUrl);
+    if (draft.thumbnailUrl) setThumbnailUrl(draft.thumbnailUrl);
+    if (draft.imageFocalPoint) setImageFocalPoint(draft.imageFocalPoint);
+    if (draft.keywords) setKeywords(draft.keywords);
+    if (draft.newsType) setNewsType(draft.newsType);
+    if (draft.publishType) setPublishType(draft.publishType);
+    if (draft.scheduledAt) setScheduledAt(draft.scheduledAt);
+    if (draft.hideFromHomepage !== undefined) setHideFromHomepage(draft.hideFromHomepage);
+    if (draft.metaTitle) setMetaTitle(draft.metaTitle);
+    if (draft.metaDescription) setMetaDescription(draft.metaDescription);
+    
+    toast({
+      title: "تم استعادة المسودة",
+      description: "تم استعادة المحتوى المحفوظ تلقائياً",
+    });
+  }, [toast]);
+
+  // Check for saved draft on mount (only for new articles or after article is loaded)
+  useEffect(() => {
+    // For new articles, check immediately
+    // For existing articles, wait until the article is loaded
+    if (isNewArticle || hasLoadedArticleRef.current) {
+      try {
+        const savedDraft = localStorage.getItem(autoSaveKey);
+        if (savedDraft) {
+          const draft = JSON.parse(savedDraft);
+          const savedTime = new Date(draft.savedAt);
+          const now = new Date();
+          const hoursSinceSave = (now.getTime() - savedTime.getTime()) / (1000 * 60 * 60);
+          
+          // Only offer to restore if saved within last 24 hours
+          if (hoursSinceSave < 24) {
+            // For new articles, always show recovery dialog if there's content
+            // For existing articles, only show if draft has more content than current article
+            if (isNewArticle) {
+              if (draft.title || draft.content) {
+                setRecoveredDraft(draft);
+                setShowDraftRecoveryDialog(true);
+              }
+            } else if (article) {
+              // Check if draft has significant changes from saved article
+              const hasDraftChanges = 
+                (draft.content && draft.content !== article.content) ||
+                (draft.title && draft.title !== article.title);
+              
+              if (hasDraftChanges) {
+                setRecoveredDraft(draft);
+                setShowDraftRecoveryDialog(true);
+              }
+            }
+          } else {
+            // Draft is too old, clear it
+            clearDraftFromLocalStorage();
+          }
+        }
+      } catch (error) {
+        console.error('[Auto-save] Failed to check for saved draft:', error);
+      }
+    }
+  }, [autoSaveKey, isNewArticle, article, clearDraftFromLocalStorage]);
+
+  // Auto-save effect - save every 30 seconds when there are changes
+  useEffect(() => {
+    // Don't auto-save while loading or if nothing has been typed
+    if (!title && !content) {
+      return;
+    }
+
+    // Clear existing timeout
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    // Set status to indicate pending save
+    setAutoSaveStatus("saving");
+
+    // Set new timeout to save after 5 seconds of inactivity
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      saveDraftToLocalStorage();
+    }, 5000);
+
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, [
+    title, subtitle, content, excerpt, categoryId, articleType, 
+    imageUrl, thumbnailUrl, keywords, newsType, metaTitle, metaDescription,
+    saveDraftToLocalStorage
+  ]);
+
   // Helper function to save uploaded images to media library (memoized to prevent duplicate uploads)
   const saveToMediaLibrary = useCallback(async (imageUrl: string): Promise<string | null> => {
     // If already saving this specific URL, return the existing promise
@@ -553,6 +737,13 @@ export default function ArticleEditor() {
       });
     },
   });
+
+  // Clear draft after successful save to server
+  useEffect(() => {
+    if (saveArticleMutation.isSuccess) {
+      clearDraftFromLocalStorage();
+    }
+  }, [saveArticleMutation.isSuccess, clearDraftFromLocalStorage]);
 
   const generateSummaryMutation = useMutation({
     mutationFn: async () => {
@@ -1401,6 +1592,63 @@ const generateSlug = (text: string) => {
 
   return (
     <DashboardLayout>
+      {/* Draft Recovery Dialog */}
+      <AlertDialog open={showDraftRecoveryDialog} onOpenChange={setShowDraftRecoveryDialog}>
+        <AlertDialogContent className="max-w-md" data-testid="dialog-draft-recovery">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-right">
+              <RotateCcw className="h-5 w-5 text-blue-500" />
+              استعادة المسودة المحفوظة
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-right">
+              {recoveredDraft && (
+                <div className="space-y-2">
+                  <p>تم العثور على مسودة محفوظة تلقائياً:</p>
+                  <div className="bg-muted p-3 rounded-md text-sm space-y-1">
+                    {recoveredDraft.title && (
+                      <p><strong>العنوان:</strong> {recoveredDraft.title.substring(0, 50)}...</p>
+                    )}
+                    <p className="text-muted-foreground text-xs">
+                      <Clock className="h-3 w-3 inline ml-1" />
+                      {new Date(recoveredDraft.savedAt).toLocaleString('ar-SA')}
+                    </p>
+                  </div>
+                  <p className="text-amber-600 dark:text-amber-400 text-sm">
+                    هل تريد استعادة هذه المسودة أم تجاهلها؟
+                  </p>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row-reverse gap-2">
+            <AlertDialogAction
+              onClick={() => {
+                if (recoveredDraft) {
+                  restoreDraftFromLocalStorage(recoveredDraft);
+                }
+                setShowDraftRecoveryDialog(false);
+              }}
+              className="gap-2"
+              data-testid="button-restore-draft"
+            >
+              <RotateCcw className="h-4 w-4" />
+              استعادة المسودة
+            </AlertDialogAction>
+            <AlertDialogCancel
+              onClick={() => {
+                clearDraftFromLocalStorage();
+                setShowDraftRecoveryDialog(false);
+              }}
+              className="gap-2"
+              data-testid="button-discard-draft"
+            >
+              <Trash2 className="h-4 w-4" />
+              تجاهل
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="container mx-auto px-4 py-6">
         {/* Page Header with Actions */}
         <div className="mb-6 flex items-center justify-between">
@@ -1421,6 +1669,27 @@ const generateSlug = (text: string) => {
             <h1 className="text-2xl font-bold">
               {isNewArticle ? "خبر جديد" : "تحرير الخبر"}
             </h1>
+            {/* Auto-save indicator */}
+            {(autoSaveStatus === "saving" || autoSaveStatus === "saved") && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground" data-testid="autosave-indicator">
+                {autoSaveStatus === "saving" ? (
+                  <>
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <span>جاري الحفظ التلقائي...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-3 w-3 text-green-500" />
+                    <span>تم الحفظ التلقائي</span>
+                    {lastAutoSaveTime && (
+                      <span className="text-muted-foreground/60">
+                        ({lastAutoSaveTime.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })})
+                      </span>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
