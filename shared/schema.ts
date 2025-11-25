@@ -6716,6 +6716,12 @@ export const whatsappTokens = pgTable("whatsapp_tokens", {
   autoPublish: boolean("auto_publish").default(false).notNull(),
   allowedLanguages: text("allowed_languages").array().default(sql`ARRAY['ar']::text[]`).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
+  // Advanced permissions for WhatsApp users
+  isAdmin: boolean("is_admin").default(false).notNull(), // Full admin privileges (Editor-in-Chief)
+  canDeleteAny: boolean("can_delete_any").default(false).notNull(), // Can delete any article
+  canArchiveAny: boolean("can_archive_any").default(false).notNull(), // Can archive any article
+  canEditAny: boolean("can_edit_any").default(false).notNull(), // Can edit any article
+  canMarkBreaking: boolean("can_mark_breaking").default(false).notNull(), // Can mark articles as breaking news
   expiresAt: timestamp("expires_at"),
   lastUsedAt: timestamp("last_used_at"),
   usageCount: integer("usage_count").default(0).notNull(),
