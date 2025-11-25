@@ -3911,6 +3911,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const category = await storage.updateCategory(categoryId, parsed.data);
 
+      // Invalidate categories cache
+      memoryCache.invalidatePattern('^categories:');
+      memoryCache.invalidatePattern('^homepage:');
+
       // Log activity
       await logActivity({
         userId,
@@ -10572,6 +10576,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const article = await storage.createArticle(parsed.data);
 
+      // Invalidate homepage cache when articles are created
+      memoryCache.invalidatePattern('^homepage:');
+      
       console.log(`🔍 [DASHBOARD CREATE] Article created with status: ${article.status}`);
       console.log(`🔍 [DASHBOARD CREATE] Article ID: ${article.id}, Title: ${article.title}`);
       
@@ -10693,6 +10700,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const updated = await storage.updateArticle(req.params.id, articleData);
 
+      // Invalidate homepage cache when articles are updated
+      memoryCache.invalidatePattern('^homepage:');
+      
       console.log(`🔍 [DASHBOARD UPDATE] Article updated - Old status: ${article.status}, New status: ${updated.status}`);
       console.log(`🔍 [DASHBOARD UPDATE] Article ID: ${updated.id}, Title: ${updated.title}`);
       

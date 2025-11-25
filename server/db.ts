@@ -36,6 +36,28 @@ try {
   db = drizzle({ client: pool, schema });
   
   console.log("✅ Database connection initialized successfully");
+  console.log(`📊 Pool config: max=${64}, min=${10}, idleTimeout=5s`);
+  
+  // Pool monitoring - log stats every 60 seconds in development, 5 minutes in production
+  const monitorInterval = process.env.NODE_ENV === 'production' ? 300000 : 60000;
+  const monitorTimer = setInterval(() => {
+    const stats = {
+      total: pool.totalCount,
+      idle: pool.idleCount,
+      waiting: pool.waitingCount,
+    };
+    
+    // Only log if there are waiting connections (potential exhaustion)
+    if (stats.waiting > 0 || stats.idle === 0) {
+      console.warn(`⚠️ [Pool Monitor] Connections: total=${stats.total}, idle=${stats.idle}, waiting=${stats.waiting}`);
+    } else if (process.env.NODE_ENV !== 'production') {
+      console.log(`📊 [Pool Monitor] Connections: total=${stats.total}, idle=${stats.idle}, waiting=${stats.waiting}`);
+    }
+  }, monitorInterval);
+  
+  // Prevent monitoring from keeping the process alive during graceful shutdown
+  monitorTimer.unref();
+  
 } catch (error) {
   console.error("❌ Database initialization error:", error);
   
