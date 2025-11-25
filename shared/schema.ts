@@ -626,6 +626,9 @@ export const categories = pgTable("categories", {
   displayOrder: integer("display_order").default(0),
   status: text("status").default("active").notNull(),
   
+  // iFox separation flag - true for AI-generated content categories
+  isIfoxCategory: boolean("is_ifox_category").default(false).notNull(),
+  
   // Smart Categories fields
   type: text("type").default("core").notNull(), // core, dynamic, smart, seasonal
   autoActivate: boolean("auto_activate").default(false).notNull(),
