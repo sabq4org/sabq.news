@@ -66,10 +66,18 @@ const cleanTitle = (rawTitle: string | null | undefined): string => {
   let title = rawTitle;
   
   if (title.includes("📌 العنوان الرئيسي:")) {
-    const match = title.match(/📌 العنوان الرئيسي:\s*\n?(.*?)(?:\n|⸻|📰|$)/s);
-    if (match && match[1]) {
-      title = match[1].trim();
-    }
+    const startIndex = title.indexOf("📌 العنوان الرئيسي:") + "📌 العنوان الرئيسي:".length;
+    let endIndex = title.length;
+    
+    const separatorIndex = title.indexOf("⸻", startIndex);
+    const subtitlesIndex = title.indexOf("📰", startIndex);
+    const newlineIndex = title.indexOf("\n\n", startIndex);
+    
+    if (separatorIndex > -1 && separatorIndex < endIndex) endIndex = separatorIndex;
+    if (subtitlesIndex > -1 && subtitlesIndex < endIndex) endIndex = subtitlesIndex;
+    if (newlineIndex > -1 && newlineIndex < endIndex) endIndex = newlineIndex;
+    
+    title = title.substring(startIndex, endIndex).trim();
   }
   
   if (title.includes("📰 العناوين الفرعية:")) {
@@ -79,7 +87,7 @@ const cleanTitle = (rawTitle: string | null | undefined): string => {
     title = title.split("⸻")[0].trim();
   }
   
-  title = title.replace(/^📌\s*/, "").replace(/العنوان الرئيسي:\s*/i, "").trim();
+  title = title.replace(/^📌\s*/, "").replace(/العنوان الرئيسي:\s*/gi, "").trim();
   
   if (title.length > 200) {
     title = title.substring(0, 200) + "...";
@@ -196,13 +204,14 @@ export default function OmqDetail() {
     await recordEvent('download');
     if (!analysis) return;
     
-    const content = `# ${analysis.title}\n\n## الموضوع\n${analysis.topic}\n\n## الكلمات المفتاحية\n${analysis.keywords.join(', ')}\n\n## التحليل الموحد\n${analysis.mergedAnalysis || 'غير متوفر'}\n\n## تحليل GPT-5\n${analysis.gptAnalysis || 'غير متوفر'}\n\n## تحليل Gemini\n${analysis.geminiAnalysis || 'غير متوفر'}\n\n## تحليل Claude\n${analysis.claudeAnalysis || 'غير متوفر'}\n\n## الملخص التنفيذي\n${analysis.executiveSummary || 'غير متوفر'}\n\n## التوصيات\n${analysis.recommendations || 'غير متوفر'}`;
+    const titleClean = cleanTitle(analysis.title);
+    const content = `# ${titleClean}\n\n## الموضوع\n${cleanTitle(analysis.topic)}\n\n## الكلمات المفتاحية\n${analysis.keywords.join(', ')}\n\n## التحليل الموحد\n${analysis.mergedAnalysis || 'غير متوفر'}\n\n## تحليل GPT-5\n${analysis.gptAnalysis || 'غير متوفر'}\n\n## تحليل Gemini\n${analysis.geminiAnalysis || 'غير متوفر'}\n\n## تحليل Claude\n${analysis.claudeAnalysis || 'غير متوفر'}\n\n## الملخص التنفيذي\n${analysis.executiveSummary || 'غير متوفر'}\n\n## التوصيات\n${analysis.recommendations || 'غير متوفر'}`;
 
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${analysis.title.replace(/[^a-zA-Z0-9]/g, '_')}.txt`;
+    a.download = `${titleClean.replace(/[^a-zA-Z0-9\u0600-\u06FF]/g, '_')}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

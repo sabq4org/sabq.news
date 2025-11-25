@@ -33,6 +33,42 @@ interface OmqAnalysisCardProps {
   index?: number;
 }
 
+const cleanTitle = (rawTitle: string | null | undefined): string => {
+  if (!rawTitle) return "تحليل عميق";
+  
+  let title = rawTitle;
+  
+  if (title.includes("📌 العنوان الرئيسي:")) {
+    const startIndex = title.indexOf("📌 العنوان الرئيسي:") + "📌 العنوان الرئيسي:".length;
+    let endIndex = title.length;
+    
+    const separatorIndex = title.indexOf("⸻", startIndex);
+    const subtitlesIndex = title.indexOf("📰", startIndex);
+    const newlineIndex = title.indexOf("\n\n", startIndex);
+    
+    if (separatorIndex > -1 && separatorIndex < endIndex) endIndex = separatorIndex;
+    if (subtitlesIndex > -1 && subtitlesIndex < endIndex) endIndex = subtitlesIndex;
+    if (newlineIndex > -1 && newlineIndex < endIndex) endIndex = newlineIndex;
+    
+    title = title.substring(startIndex, endIndex).trim();
+  }
+  
+  if (title.includes("📰 العناوين الفرعية:")) {
+    title = title.split("📰 العناوين الفرعية:")[0].trim();
+  }
+  if (title.includes("⸻")) {
+    title = title.split("⸻")[0].trim();
+  }
+  
+  title = title.replace(/^📌\s*/, "").replace(/العنوان الرئيسي:\s*/gi, "").trim();
+  
+  if (title.length > 150) {
+    title = title.substring(0, 150) + "...";
+  }
+  
+  return title || "تحليل عميق";
+};
+
 export default function OmqAnalysisCard({ analysis, index = 0 }: OmqAnalysisCardProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -122,7 +158,7 @@ export default function OmqAnalysisCard({ analysis, index = 0 }: OmqAnalysisCard
               className="text-lg font-bold text-white mb-2 line-clamp-2 group-hover:text-indigo-300 transition-colors"
               data-testid={`text-title-${analysis.id}`}
             >
-              {analysis.title}
+              {cleanTitle(analysis.title)}
             </h3>
 
             {/* Topic/Description */}
@@ -130,7 +166,7 @@ export default function OmqAnalysisCard({ analysis, index = 0 }: OmqAnalysisCard
               className="text-sm text-gray-400 line-clamp-2 mb-4"
               data-testid={`text-topic-${analysis.id}`}
             >
-              {analysis.topic}
+              {cleanTitle(analysis.topic)}
             </p>
 
             {/* Keywords */}
