@@ -96,6 +96,72 @@ const cleanTitle = (rawTitle: string | null | undefined): string => {
   return title || "تحليل عميق";
 };
 
+const formatAnalysisContent = (content: string | null | undefined): string => {
+  if (!content) return '';
+  
+  let html = content;
+  
+  html = html.replace(/^### (.+)$/gm, '<h3 class="text-lg font-bold text-indigo-400 mt-6 mb-3">$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold text-purple-400 mt-8 mb-4 pb-2 border-b border-slate-700">$1</h2>');
+  html = html.replace(/^# (.+)$/gm, '<h1 class="text-2xl font-bold text-white mt-8 mb-4">$1</h1>');
+  
+  html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong class="text-white font-bold italic">$1</strong>');
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>');
+  html = html.replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, '<em class="text-indigo-300">$1</em>');
+  
+  html = html.replace(/^(\d+)\.\s+\*\*(.+?)\*\*:?\s*(.*)$/gm, 
+    '<div class="flex gap-3 my-3 p-3 bg-slate-800/50 rounded-lg border-r-4 border-indigo-500"><span class="text-indigo-400 font-bold text-lg">$1.</span><div><span class="text-white font-semibold">$2</span><span class="text-gray-300"> $3</span></div></div>');
+  
+  html = html.replace(/^(\d+)\.\s+(.+)$/gm, 
+    '<div class="flex gap-3 my-2"><span class="text-indigo-400 font-bold">$1.</span><span class="text-gray-300">$2</span></div>');
+  
+  html = html.replace(/^[-•]\s+\*\*(.+?)\*\*:?\s*(.*)$/gm, 
+    '<div class="flex gap-3 my-2 pr-4"><span class="text-emerald-400 mt-1">●</span><div><span class="text-white font-semibold">$1</span><span class="text-gray-300"> $2</span></div></div>');
+  
+  html = html.replace(/^[-•]\s+(.+)$/gm, 
+    '<div class="flex gap-3 my-2 pr-4"><span class="text-emerald-400 mt-1">●</span><span class="text-gray-300">$1</span></div>');
+  
+  html = html.replace(/^[⸻─━]+$/gm, '<hr class="my-6 border-slate-700" />');
+  
+  const lines = html.split('\n');
+  const processedLines: string[] = [];
+  let inParagraph = false;
+  
+  for (const line of lines) {
+    const trimmed = line.trim();
+    
+    if (!trimmed) {
+      if (inParagraph) {
+        processedLines.push('</p>');
+        inParagraph = false;
+      }
+      processedLines.push('');
+      continue;
+    }
+    
+    if (trimmed.startsWith('<h') || trimmed.startsWith('<div') || trimmed.startsWith('<hr')) {
+      if (inParagraph) {
+        processedLines.push('</p>');
+        inParagraph = false;
+      }
+      processedLines.push(trimmed);
+      continue;
+    }
+    
+    if (!inParagraph) {
+      processedLines.push('<p class="text-gray-300 leading-relaxed my-3">');
+      inParagraph = true;
+    }
+    processedLines.push(trimmed);
+  }
+  
+  if (inParagraph) {
+    processedLines.push('</p>');
+  }
+  
+  return processedLines.join('\n');
+};
+
 export default function OmqDetail() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -708,11 +774,10 @@ export default function OmqDetail() {
                 <CardContent className="p-6">
                   {analysis.mergedAnalysis ? (
                     <div 
-                      className="whitespace-pre-wrap text-base leading-relaxed text-gray-300"
+                      className="prose prose-invert max-w-none"
                       data-testid="content-unified"
-                    >
-                      {analysis.mergedAnalysis}
-                    </div>
+                      dangerouslySetInnerHTML={{ __html: formatAnalysisContent(analysis.mergedAnalysis) }}
+                    />
                   ) : (
                     <div className="text-center py-16 text-gray-500" data-testid="empty-unified">
                       <Brain className="w-16 h-16 mx-auto mb-4 opacity-50 text-indigo-400/50" />
@@ -742,11 +807,10 @@ export default function OmqDetail() {
                 <CardContent className="p-6">
                   {analysis.executiveSummary ? (
                     <div 
-                      className="whitespace-pre-wrap text-base leading-relaxed text-gray-300"
+                      className="prose prose-invert max-w-none"
                       data-testid="content-summary"
-                    >
-                      {analysis.executiveSummary}
-                    </div>
+                      dangerouslySetInnerHTML={{ __html: formatAnalysisContent(analysis.executiveSummary) }}
+                    />
                   ) : (
                     <div className="text-center py-16 text-gray-500" data-testid="empty-summary">
                       <TrendingUp className="w-16 h-16 mx-auto mb-4 opacity-50 text-emerald-400/50" />
@@ -769,11 +833,10 @@ export default function OmqDetail() {
                   </CardHeader>
                   <CardContent className="p-6">
                     <div 
-                      className="whitespace-pre-wrap text-base leading-relaxed text-gray-300"
+                      className="prose prose-invert max-w-none"
                       data-testid="content-recommendations"
-                    >
-                      {analysis.recommendations}
-                    </div>
+                      dangerouslySetInnerHTML={{ __html: formatAnalysisContent(analysis.recommendations) }}
+                    />
                   </CardContent>
                 </Card>
               )}
@@ -852,11 +915,10 @@ function ModelTabs({ analysis }: { analysis: DeepAnalysis }) {
             <CardContent className="p-6">
               {model.content ? (
                 <div 
-                  className="whitespace-pre-wrap text-base leading-relaxed text-gray-300"
+                  className="prose prose-invert max-w-none"
                   data-testid={`content-${model.id}`}
-                >
-                  {model.content}
-                </div>
+                  dangerouslySetInnerHTML={{ __html: formatAnalysisContent(model.content) }}
+                />
               ) : (
                 <div className="text-center py-16 text-gray-500" data-testid={`empty-${model.id}`}>
                   <model.icon className="w-16 h-16 mx-auto mb-4 opacity-50" style={{ color: `${model.color}50` }} />
