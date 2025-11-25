@@ -21,13 +21,16 @@ try {
 
   console.log("🔗 Initializing database connection...");
   
-  // Optimized connection pool settings for high performance
+  // Optimized connection pool settings for high concurrency (172+ VUs)
+  // Based on Gatling load test findings: pool exhaustion at 150+ concurrent users
   pool = new Pool({ 
     connectionString: process.env.DATABASE_URL,
-    max: 20, // Increased from 10 for better concurrency
-    idleTimeoutMillis: 20000, // 20s - release idle connections faster
+    max: 64, // Increased from 20 for high concurrency (supports 170+ VUs)
+    min: 10, // Keep minimum connections warm
+    idleTimeoutMillis: 5000, // 5s - release idle connections faster (was 20s)
     connectionTimeoutMillis: 10000, // 10s timeout for new connections
     allowExitOnIdle: false, // Keep pool alive
+    maxUses: 7500, // Refresh connections after 7500 uses to prevent stale connections
   });
   
   db = drizzle({ client: pool, schema });

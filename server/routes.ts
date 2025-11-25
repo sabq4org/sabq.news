@@ -34,6 +34,7 @@ import { classifyArticle } from './ai-classifier';
 import { generateSeoMetadata } from './seo-generator';
 import { cacheControl, noCache, withETag, CACHE_DURATIONS } from "./cacheMiddleware";
 import { passKitService, type PressPassData, type LoyaltyPassData } from "./lib/passkit/PassKitService";
+import { memoryCache, CACHE_TTL, withCache } from "./memoryCache";
 import pLimit from 'p-limit';
 import { db } from "./db";
 import { eq, and, or, desc, asc, ilike, sql, inArray, gte, lt, lte, aliasedTable, isNull, ne, not, isNotNull } from "drizzle-orm";
@@ -3683,9 +3684,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // GET /api/categories/smart - Get categories with filtering support
-  app.get("/api/categories/smart", async (req, res) => {
+  app.get("/api/categories/smart", cacheControl({ maxAge: CACHE_DURATIONS.MEDIUM }), async (req, res) => {
     try {
       const { type, status } = req.query;
+      
+      // Server-side cache for categories
+      const cacheKey = `categories:smart:${type || 'default'}:${status || 'active'}`;
+      const cached = memoryCache.get(cacheKey);
+      if (cached) {
+        return res.json(cached);
+      }
       
       // Build where conditions
       const conditions: any[] = [];
@@ -3755,6 +3763,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
       );
 
+      // Cache for 2 minutes
+      memoryCache.set(cacheKey, categoriesWithCounts, CACHE_TTL.MEDIUM);
       res.json(categoriesWithCounts);
     } catch (error) {
       console.error("[Smart Categories] Error fetching smart categories:", error);
@@ -6598,12 +6608,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // HOMEPAGE ROUTE
   // ============================================================
 
-  app.get("/api/homepage", async (req: any, res) => {
+  app.get("/api/homepage", cacheControl({ maxAge: CACHE_DURATIONS.MEDIUM }), async (req: any, res) => {
     try {
       const userId = req.user?.id;
       // ✅ Validate and clamp limit/offset
       const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 20, 1), 50);
       const offset = Math.max(parseInt(req.query.offset as string) || 0, 0);
+
+      // Server-side cache key
+      const cacheKey = `homepage:${limit}:${offset}`;
+      const cached = memoryCache.get(cacheKey);
+      if (cached) {
+        return res.json(cached);
+      }
 
       const [
         heroArticles,
@@ -6621,14 +6638,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         storage.getTrendingTopics(),
       ]);
 
-      res.json({
+      const response = {
         hero: heroArticles,
         forYou: personalizedArticles,
         breaking: breakingNews,
         editorPicks,
         deepDive: deepDiveArticles,
         trending: trendingTopics,
-      });
+      };
+
+      // Cache for 2 minutes (high-traffic endpoint)
+      memoryCache.set(cacheKey, response, CACHE_TTL.MEDIUM);
+      res.json(response);
     } catch (error) {
       console.error("Error fetching homepage data:", error);
       res.status(500).json({ message: "Failed to fetch homepage data" });
