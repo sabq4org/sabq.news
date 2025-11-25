@@ -344,11 +344,11 @@ export default function Home() {
       <NavigationBar />
 
       <main className="flex-1">
-        {/* Statistics Cards Section - TailAdmin Style */}
+        {/* Statistics Cards Section - Compact Single Row */}
         {stats && (
           <div className="bg-muted/30 border-b">
-            <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
+            <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+              <div className="grid grid-cols-4 gap-2">
                 <MobileOptimizedKpiCard
                   label="إجمالي المقالات"
                   value={(stats.totalArticles ?? 0).toLocaleString('en-US')}
@@ -356,6 +356,7 @@ export default function Home() {
                   iconColor="text-primary"
                   iconBgColor="bg-primary/10"
                   testId="card-stat-total-articles"
+                  className="compact"
                 />
                 
                 <MobileOptimizedKpiCard
@@ -365,6 +366,7 @@ export default function Home() {
                   iconColor="text-green-500"
                   iconBgColor="bg-green-500/10"
                   testId="card-stat-today-articles"
+                  className="compact"
                 />
                 
                 <MobileOptimizedKpiCard
@@ -374,6 +376,7 @@ export default function Home() {
                   iconColor="text-blue-500"
                   iconBgColor="bg-blue-500/10"
                   testId="card-stat-total-views"
+                  className="compact"
                 />
                 
                 <MobileOptimizedKpiCard
@@ -383,6 +386,7 @@ export default function Home() {
                   iconColor="text-orange-500"
                   iconBgColor="bg-orange-500/10"
                   testId="card-stat-active-users"
+                  className="compact"
                 />
               </div>
             </div>
