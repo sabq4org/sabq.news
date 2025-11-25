@@ -24,6 +24,13 @@ import {
   ClipboardList,
   X,
   BellRing,
+  Headphones,
+  Brain,
+  Building2,
+  Image,
+  Bot,
+  Blocks,
+  HardDrive,
 } from "lucide-react";
 import { ViewsCount } from "@/components/ViewsCount";
 import { Button } from "@/components/ui/button";
@@ -75,6 +82,35 @@ interface AdminDashboardStats {
     averageTimeOnSite: number;
     totalReads: number;
     readsToday: number;
+  };
+  audioNewsletters?: {
+    total: number;
+    published: number;
+    totalListens: number;
+  };
+  deepAnalyses?: {
+    total: number;
+    published: number;
+  };
+  publishers?: {
+    total: number;
+    active: number;
+  };
+  mediaLibrary?: {
+    totalFiles: number;
+    totalSize: number;
+  };
+  aiTasks?: {
+    total: number;
+    pending: number;
+    completed: number;
+  };
+  aiImages?: {
+    total: number;
+    thisWeek: number;
+  };
+  smartBlocks?: {
+    total: number;
   };
   recentArticles: Array<{
     id: string;
@@ -496,6 +532,180 @@ function Dashboard() {
                   </div>
                   <p className="text-xs text-muted-foreground" data-testid="text-avg-time-description">
                     دقيقة:ثانية لكل مقال
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Platform Services Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          {/* Audio Newsletters */}
+          <Card data-testid="card-audio-newsletters-stats" className="border-t-4 border-t-purple-500/50">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">النشرات الصوتية</CardTitle>
+              <div className="p-2 rounded-md bg-purple-500/20">
+                <Headphones className="h-4 w-4 text-purple-500" data-testid="icon-audio-newsletters" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <Skeleton className="h-8 w-20" />
+              ) : (
+                <>
+                  <div className="text-2xl font-bold" data-testid="text-audio-newsletters-total">
+                    {stats?.audioNewsletters?.total || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground" data-testid="text-audio-newsletters-breakdown">
+                    {stats?.audioNewsletters?.published || 0} منشورة · {stats?.audioNewsletters?.totalListens || 0} استماع
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Deep Analyses */}
+          <Card data-testid="card-deep-analyses-stats" className="border-t-4 border-t-indigo-500/50">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">التحليلات العميقة</CardTitle>
+              <div className="p-2 rounded-md bg-indigo-500/20">
+                <Brain className="h-4 w-4 text-indigo-500" data-testid="icon-deep-analyses" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <Skeleton className="h-8 w-20" />
+              ) : (
+                <>
+                  <div className="text-2xl font-bold" data-testid="text-deep-analyses-total">
+                    {stats?.deepAnalyses?.total || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground" data-testid="text-deep-analyses-breakdown">
+                    {stats?.deepAnalyses?.published || 0} تحليل منشور
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Publishers */}
+          <Card data-testid="card-publishers-stats" className="border-t-4 border-t-amber-500/50">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">الناشرون</CardTitle>
+              <div className="p-2 rounded-md bg-amber-500/20">
+                <Building2 className="h-4 w-4 text-amber-500" data-testid="icon-publishers" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <Skeleton className="h-8 w-20" />
+              ) : (
+                <>
+                  <div className="text-2xl font-bold" data-testid="text-publishers-total">
+                    {stats?.publishers?.total || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground" data-testid="text-publishers-breakdown">
+                    {stats?.publishers?.active || 0} ناشر نشط
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Media Library */}
+          <Card data-testid="card-media-library-stats" className="border-t-4 border-t-cyan-500/50">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">مكتبة الوسائط</CardTitle>
+              <div className="p-2 rounded-md bg-cyan-500/20">
+                <HardDrive className="h-4 w-4 text-cyan-500" data-testid="icon-media-library" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <Skeleton className="h-8 w-20" />
+              ) : (
+                <>
+                  <div className="text-2xl font-bold" data-testid="text-media-library-total">
+                    {stats?.mediaLibrary?.totalFiles || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground" data-testid="text-media-library-breakdown">
+                    {((stats?.mediaLibrary?.totalSize || 0) / (1024 * 1024)).toFixed(1)} MB حجم إجمالي
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* AI & Smart Features Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* AI Tasks */}
+          <Card data-testid="card-ai-tasks-stats">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">مهام الذكاء الاصطناعي</CardTitle>
+              <div className="p-2 rounded-md bg-emerald-500/20">
+                <Bot className="h-4 w-4 text-emerald-500" data-testid="icon-ai-tasks" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <Skeleton className="h-8 w-20" />
+              ) : (
+                <>
+                  <div className="text-2xl font-bold" data-testid="text-ai-tasks-total">
+                    {stats?.aiTasks?.total || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground" data-testid="text-ai-tasks-breakdown">
+                    {stats?.aiTasks?.pending || 0} معلقة · {stats?.aiTasks?.completed || 0} مكتملة
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* AI Generated Images */}
+          <Card data-testid="card-ai-images-stats">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">صور الذكاء الاصطناعي</CardTitle>
+              <div className="p-2 rounded-md bg-rose-500/20">
+                <Image className="h-4 w-4 text-rose-500" data-testid="icon-ai-images" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <Skeleton className="h-8 w-20" />
+              ) : (
+                <>
+                  <div className="text-2xl font-bold" data-testid="text-ai-images-total">
+                    {stats?.aiImages?.total || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground" data-testid="text-ai-images-breakdown">
+                    {stats?.aiImages?.thisWeek || 0} هذا الأسبوع
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Smart Blocks */}
+          <Card data-testid="card-smart-blocks-stats">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">القوالب الذكية</CardTitle>
+              <div className="p-2 rounded-md bg-sky-500/20">
+                <Blocks className="h-4 w-4 text-sky-500" data-testid="icon-smart-blocks" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <Skeleton className="h-8 w-20" />
+              ) : (
+                <>
+                  <div className="text-2xl font-bold" data-testid="text-smart-blocks-total">
+                    {stats?.smartBlocks?.total || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground" data-testid="text-smart-blocks-description">
+                    قالب ذكي نشط
                   </p>
                 </>
               )}
