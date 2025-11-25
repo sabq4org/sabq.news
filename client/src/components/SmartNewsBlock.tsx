@@ -142,9 +142,9 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                   >
                     <div className="p-4 hover-elevate active-elevate-2 transition-all">
                       <div className="flex gap-3">
-                        {/* Image */}
+                        {/* Image - Clean, no badges */}
                         {(article.thumbnailUrl ?? article.imageUrl) && (
-                          <div className="relative flex-shrink-0 w-32 aspect-[16/9] rounded-lg overflow-hidden">
+                          <div className="relative flex-shrink-0 w-20 h-16 rounded-lg overflow-hidden">
                             <OptimizedImage
                               src={(article.thumbnailUrl ?? article.imageUrl) || ""}
                               alt={article.title}
@@ -154,44 +154,39 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                                 ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
                                 : 'center'}
                             />
-                            {isNewArticle(article.publishedAt) && (
-                              <div className="absolute top-1 right-1 bg-emerald-500 text-white px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-0.5">
-                                <Flame className="h-2.5 w-2.5" />
-                                جديد
-                              </div>
-                            )}
                           </div>
                         )}
 
                         {/* Content */}
-                        <div className="flex-1 min-w-0 space-y-2">
-                          {/* Breaking/New/Category Badge */}
-                          {article.newsType === "breaking" ? (
-                            <Badge 
-                              variant="destructive" 
-                              className="text-xs h-5 gap-1"
-                              data-testid={`badge-smart-mobile-breaking-${article.id}`}
-                            >
-                              <Zap className="h-3 w-3" />
-                              عاجل
-                            </Badge>
-                          ) : isNewArticle(article.publishedAt) ? (
-                            <Badge 
-                              className="text-xs h-5 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600"
-                              data-testid={`badge-smart-mobile-new-${article.id}`}
-                            >
-                              <Flame className="h-3 w-3" />
-                              جديد
-                            </Badge>
-                          ) : article.category ? (
-                            <Badge 
-                              variant="outline" 
-                              className="text-xs h-5"
-                              data-testid={`badge-smart-mobile-category-${article.id}`}
-                            >
-                              {article.category.icon} {article.category.nameAr}
-                            </Badge>
-                          ) : null}
+                        <div className="flex-1 min-w-0 space-y-1.5">
+                          {/* Badges above title */}
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {article.newsType === "breaking" ? (
+                              <Badge 
+                                variant="destructive" 
+                                className="text-[10px] h-4 gap-0.5"
+                                data-testid={`badge-smart-mobile-breaking-${article.id}`}
+                              >
+                                <Zap className="h-2 w-2" />
+                                عاجل
+                              </Badge>
+                            ) : isNewArticle(article.publishedAt) ? (
+                              <Badge 
+                                className="text-[10px] h-4 gap-0.5 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600"
+                                data-testid={`badge-smart-mobile-new-${article.id}`}
+                              >
+                                <Flame className="h-2 w-2" />
+                                جديد
+                              </Badge>
+                            ) : article.category ? (
+                              <Badge 
+                                className="text-[10px] h-4 bg-muted text-muted-foreground border-0"
+                                data-testid={`badge-smart-mobile-category-${article.id}`}
+                              >
+                                {article.category.nameAr}
+                              </Badge>
+                            ) : null}
+                          </div>
 
                           {/* Title */}
                           <h4 className={`font-bold text-sm line-clamp-2 leading-snug transition-colors ${
@@ -252,35 +247,38 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                         ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
                         : 'center'}
                     />
+                  </div>
+                )}
+                <CardContent className="p-5 space-y-3">
+                  {/* Badges above title */}
+                  <div className="flex items-center gap-2 flex-wrap">
                     {article.newsType === "breaking" ? (
                       <Badge 
                         variant="destructive" 
-                        className="absolute top-3 right-3 gap-1" 
+                        className="text-xs h-5 gap-1" 
                         data-testid={`badge-smart-breaking-${article.id}`}
                       >
-                        <Zap className="h-3 w-3" />
+                        <Zap className="h-2.5 w-2.5" />
                         عاجل
                       </Badge>
                     ) : isNewArticle(article.publishedAt) ? (
                       <Badge 
-                        className="absolute top-3 right-3 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600" 
+                        className="text-xs h-5 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600" 
                         data-testid={`badge-smart-new-${article.id}`}
                       >
-                        <Flame className="h-3 w-3" />
+                        <Flame className="h-2.5 w-2.5" />
                         جديد
                       </Badge>
                     ) : article.category ? (
                       <Badge 
-                        variant="default" 
-                        className="absolute top-3 right-3" 
+                        className="text-xs h-5 bg-muted text-muted-foreground border-0" 
                         data-testid={`badge-smart-category-${article.id}`}
                       >
-                        {article.category.icon} {article.category.nameAr}
+                        {article.category.nameAr}
                       </Badge>
                     ) : null}
                   </div>
-                )}
-                <CardContent className="p-5 space-y-3">
+                  
                   <h3 className={`text-lg font-bold line-clamp-2 transition-colors ${
                     article.newsType === "breaking"
                       ? "text-destructive"

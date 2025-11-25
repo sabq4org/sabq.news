@@ -105,62 +105,58 @@ export function PersonalizedFeed({ articles: initialArticles, title = "جميع 
                         article.newsType === "breaking" ? "bg-destructive/5" : ""
                       }`}>
                         <div className="flex gap-3">
-                          {/* Image */}
-                          <div className="relative flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden">
+                          {/* Image - Clean, no badges */}
+                          <div className="relative flex-shrink-0 w-20 h-16 rounded-lg overflow-hidden">
                             {(article.imageUrl || article.thumbnailUrl) ? (
-                              <>
-                                <img
-                                  src={article.thumbnailUrl ?? article.imageUrl ?? ''}
-                                  alt={article.title}
-                                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                  loading="lazy"
-                                  style={{
-                                    objectPosition: (article as any).imageFocalPoint
-                                      ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
-                                      : 'center'
-                                  }}
-                                />
-                                
-                                {/* AI Generated Thumbnail Badge - Left Side (RTL: use right-*) */}
-                                {(article as any).thumbnailUrl && (
-                                  <div className="absolute top-1 right-1" data-testid={`badge-ai-thumbnail-${article.id}`}>
-                                    <Badge className="text-xs h-5 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm">
-                                      الصورة
-                                      <Brain className="h-2.5 w-2.5" aria-hidden="true" />
-                                    </Badge>
-                                  </div>
-                                )}
-
-                                {/* Content Type Badge - Right Side (RTL: use left-*) */}
-                                <div className="absolute top-1 left-1" data-testid={`badge-content-type-${article.id}`}>
-                                  {article.newsType === "breaking" ? (
-                                    <Badge variant="destructive" className="text-xs h-5 gap-1">
-                                      <Zap className="h-2.5 w-2.5" aria-hidden="true" />
-                                      عاجل
-                                    </Badge>
-                                  ) : isNewArticle(article.publishedAt) ? (
-                                    <Badge className="text-xs h-5 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600">
-                                      <Flame className="h-2.5 w-2.5" aria-hidden="true" />
-                                      جديد
-                                    </Badge>
-                                  ) : (article as any).articleType === 'infographic' ? (
-                                    <Badge className="text-xs h-5 bg-white/80 dark:bg-gray-900/80 text-gray-700 dark:text-gray-200 border-0 backdrop-blur-sm">
-                                      إنفوجرافيك
-                                    </Badge>
-                                  ) : article.category ? (
-                                    <Badge className="text-xs h-5 bg-white/80 dark:bg-gray-900/80 text-gray-700 dark:text-gray-200 border-0 backdrop-blur-sm">
-                                      {article.category.nameAr}
-                                    </Badge>
-                                  ) : null}
-                                </div>
-                              </>
+                              <img
+                                src={article.thumbnailUrl ?? article.imageUrl ?? ''}
+                                alt={article.title}
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                loading="lazy"
+                                style={{
+                                  objectPosition: (article as any).imageFocalPoint
+                                    ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
+                                    : 'center'
+                                }}
+                              />
                             ) : (
                               <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10" />
                             )}
                           </div>
 
                           {/* Content */}
-                          <div className="flex-1 min-w-0 space-y-2">
+                          <div className="flex-1 min-w-0 space-y-1.5">
+                            {/* Badges above title */}
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {/* AI Generated Thumbnail Badge */}
+                              {(article as any).thumbnailUrl && (
+                                <Badge className="text-[10px] h-4 gap-0.5 bg-purple-500/90 hover:bg-purple-600 text-white border-0" data-testid={`badge-ai-thumbnail-${article.id}`}>
+                                  الصورة
+                                  <Brain className="h-2 w-2" aria-hidden="true" />
+                                </Badge>
+                              )}
+
+                              {/* Content Type Badge */}
+                              {article.newsType === "breaking" ? (
+                                <Badge variant="destructive" className="text-[10px] h-4 gap-0.5" data-testid={`badge-content-type-${article.id}`}>
+                                  <Zap className="h-2 w-2" aria-hidden="true" />
+                                  عاجل
+                                </Badge>
+                              ) : isNewArticle(article.publishedAt) ? (
+                                <Badge className="text-[10px] h-4 gap-0.5 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600" data-testid={`badge-content-type-${article.id}`}>
+                                  <Flame className="h-2 w-2" aria-hidden="true" />
+                                  جديد
+                                </Badge>
+                              ) : (article as any).articleType === 'infographic' ? (
+                                <Badge className="text-[10px] h-4 bg-muted text-muted-foreground border-0" data-testid={`badge-content-type-${article.id}`}>
+                                  إنفوجرافيك
+                                </Badge>
+                              ) : article.category ? (
+                                <Badge className="text-[10px] h-4 bg-muted text-muted-foreground border-0" data-testid={`badge-content-type-${article.id}`}>
+                                  {article.category.nameAr}
+                                </Badge>
+                              ) : null}
+                            </div>
 
                             {/* Title */}
                             <h4 className={`font-bold text-sm line-clamp-2 leading-snug transition-colors ${
@@ -225,43 +221,41 @@ export function PersonalizedFeed({ articles: initialArticles, title = "جميع 
                         : 'center'
                     }}
                   />
-                  
-                  {/* AI Generated Thumbnail Badge - Left Side (RTL: use right-*) */}
-                  {(article as any).thumbnailUrl && (
-                    <div className="absolute top-3 right-3" data-testid={`badge-ai-thumbnail-${article.id}`}>
-                      <Badge className="gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm">
-                        الصورة
-                        <Brain className="h-3 w-3" aria-hidden="true" />
-                      </Badge>
-                    </div>
-                  )}
-
-                  {/* Content Type Badges - Right Side (RTL: use left-*) */}
-                  <div className="absolute top-3 left-3" data-testid={`badge-content-type-${article.id}`}>
-                    {article.newsType === "breaking" ? (
-                      <Badge variant="destructive" className="gap-1">
-                        <Zap className="h-3 w-3" aria-hidden="true" />
-                        عاجل
-                      </Badge>
-                    ) : isNewArticle(article.publishedAt) ? (
-                      <Badge className="gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600">
-                        <Flame className="h-3 w-3" aria-hidden="true" />
-                        جديد
-                      </Badge>
-                    ) : (article as any).articleType === 'infographic' ? (
-                      <Badge className="bg-white/80 dark:bg-gray-900/80 text-gray-700 dark:text-gray-200 border-0 backdrop-blur-sm">
-                        إنفوجرافيك
-                      </Badge>
-                    ) : article.category ? (
-                      <Badge className="bg-white/80 dark:bg-gray-900/80 text-gray-700 dark:text-gray-200 border-0 backdrop-blur-sm">
-                        {article.category.nameAr}
-                      </Badge>
-                    ) : null}
-                  </div>
                 </div>
               )}
               
               <CardContent className="p-4 space-y-3">
+                {/* Badges above title */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* AI Generated Thumbnail Badge */}
+                  {(article as any).thumbnailUrl && (
+                    <Badge className="text-xs h-5 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0" data-testid={`badge-ai-thumbnail-${article.id}`}>
+                      الصورة
+                      <Brain className="h-2.5 w-2.5" aria-hidden="true" />
+                    </Badge>
+                  )}
+
+                  {/* Content Type Badge */}
+                  {article.newsType === "breaking" ? (
+                    <Badge variant="destructive" className="text-xs h-5 gap-1" data-testid={`badge-content-type-${article.id}`}>
+                      <Zap className="h-2.5 w-2.5" aria-hidden="true" />
+                      عاجل
+                    </Badge>
+                  ) : isNewArticle(article.publishedAt) ? (
+                    <Badge className="text-xs h-5 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600" data-testid={`badge-content-type-${article.id}`}>
+                      <Flame className="h-2.5 w-2.5" aria-hidden="true" />
+                      جديد
+                    </Badge>
+                  ) : (article as any).articleType === 'infographic' ? (
+                    <Badge className="text-xs h-5 bg-muted text-muted-foreground border-0" data-testid={`badge-content-type-${article.id}`}>
+                      إنفوجرافيك
+                    </Badge>
+                  ) : article.category ? (
+                    <Badge className="text-xs h-5 bg-muted text-muted-foreground border-0" data-testid={`badge-content-type-${article.id}`}>
+                      {article.category.nameAr}
+                    </Badge>
+                  ) : null}
+                </div>
                 
                 <h3 
                   className={`font-bold text-lg line-clamp-2 ${
