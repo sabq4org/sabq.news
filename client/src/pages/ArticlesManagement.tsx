@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Edit, Trash2, Send, Star, Bell, Plus, Archive, Trash, GripVertical, Sparkles, Newspaper, Clock, FilePenLine } from "lucide-react";
+import { Edit, Trash2, Send, Star, Bell, Plus, Archive, Trash, GripVertical, Sparkles, Newspaper, Clock, FilePenLine, Brain } from "lucide-react";
 import { ViewsCount } from "@/components/ViewsCount";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { MobileOptimizedKpiCard } from "@/components/MobileOptimizedKpiCard";
@@ -70,6 +70,7 @@ type Article = {
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  isAiGeneratedThumbnail?: boolean;
   category?: {
     id: string;
     nameAr: string;
@@ -808,16 +809,16 @@ export default function ArticlesManagement() {
                             </td>
                             <td className="py-3 px-4">
                               <div className="flex gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => classifyMutation.mutate(article.id)}
-                                  disabled={classifyMutation.isPending}
-                                  title={classifyMutation.isPending ? "جاري التصنيف..." : "تصنيف ذكي"}
-                                  data-testid={`button-classify-${article.id}`}
-                                >
-                                  <Sparkles className={`w-4 h-4 ${classifyMutation.isPending ? 'text-muted-foreground animate-pulse' : 'text-primary'}`} />
-                                </Button>
+                                {/* AI Generated Thumbnail Indicator */}
+                                {article.isAiGeneratedThumbnail && (
+                                  <div 
+                                    className="flex items-center justify-center w-8 h-8"
+                                    title="صورة مولدة بالذكاء الاصطناعي"
+                                    data-testid={`badge-ai-thumbnail-${article.id}`}
+                                  >
+                                    <Brain className="w-4 h-4 text-purple-500" />
+                                  </div>
+                                )}
                                 <RowActions 
                                   articleId={article.id}
                                   status={article.status}
@@ -903,6 +904,12 @@ export default function ArticlesManagement() {
                         <Badge variant="secondary" className="text-xs">
                           <Star className="h-3 w-3 ml-1 fill-current" />
                           مميز
+                        </Badge>
+                      )}
+                      {article.isAiGeneratedThumbnail && (
+                        <Badge className="text-xs bg-purple-500/90 hover:bg-purple-600 text-white border-0">
+                          <Brain className="h-3 w-3 ml-1" />
+                          صورة AI
                         </Badge>
                       )}
                     </div>
