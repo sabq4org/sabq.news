@@ -28,6 +28,8 @@ interface ArticleResult {
   excerpt?: string | null;
   newsType?: string | null;
   views?: number;
+  aiGenerated?: boolean | null;
+  isAiGeneratedThumbnail?: boolean | null;
   category?: {
     nameAr: string;
     slug: string;
@@ -142,18 +144,27 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                   >
                     <div className="p-4 hover-elevate active-elevate-2 transition-all">
                       <div className="flex gap-3">
-                        {/* Image - Clean, no badges */}
+                        {/* Image with AI badge */}
                         {(article.thumbnailUrl ?? article.imageUrl) && (
-                          <div className="relative flex-shrink-0 w-20 h-16 rounded-lg overflow-hidden">
+                          <div className="relative flex-shrink-0 w-20 h-16 rounded-lg">
                             <OptimizedImage
                               src={(article.thumbnailUrl ?? article.imageUrl) || ""}
                               alt={article.title}
-                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                              className="w-full h-full object-cover rounded-lg transition-transform duration-500 group-hover:scale-110"
                               priority={false}
                               objectPosition={(article as any).imageFocalPoint
                                 ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
                                 : 'center'}
                             />
+                            {/* AI Generated Thumbnail Badge */}
+                            {article.thumbnailUrl && article.isAiGeneratedThumbnail && (
+                              <Badge 
+                                className="absolute -top-1 -right-1 z-20 gap-0.5 px-1 py-0 h-4 text-[9px] bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm shadow-md"
+                                data-testid={`badge-smart-mobile-ai-thumbnail-${article.id}`}
+                              >
+                                <Brain className="h-2 w-2" aria-hidden="true" />
+                              </Badge>
+                            )}
                           </div>
                         )}
 
@@ -186,6 +197,16 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                                 {article.category.nameAr}
                               </Badge>
                             ) : null}
+                            {/* AI Generated Content Badge */}
+                            {article.aiGenerated && (
+                              <Badge 
+                                className="text-[10px] h-4 gap-0.5 bg-violet-500/90 hover:bg-violet-600 text-white border-0"
+                                data-testid={`badge-smart-mobile-ai-content-${article.id}`}
+                              >
+                                <Brain className="h-2 w-2" aria-hidden="true" />
+                                AI
+                              </Badge>
+                            )}
                           </div>
 
                           {/* Title */}
@@ -233,11 +254,11 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
 
           return (
             <Link key={article.id} href={`/article/${article.slug}`}>
-              <Card className={`hover-elevate active-elevate-2 h-full cursor-pointer overflow-hidden group border-0 dark:border dark:border-card-border ${
+              <Card className={`hover-elevate active-elevate-2 h-full cursor-pointer group border-0 dark:border dark:border-card-border ${
                 article.newsType === "breaking" ? "bg-destructive/5" : ""
               }`} data-testid={`card-smart-article-${article.id}`}>
                 {(article.thumbnailUrl ?? article.imageUrl) && (
-                  <div className="relative aspect-[16/9] overflow-hidden">
+                  <div className="relative aspect-[16/9]">
                     <OptimizedImage
                       src={(article.thumbnailUrl ?? article.imageUrl) || ""}
                       alt={article.title}
@@ -247,6 +268,16 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                         ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
                         : 'center'}
                     />
+                    {/* AI Generated Thumbnail Badge */}
+                    {article.thumbnailUrl && article.isAiGeneratedThumbnail && (
+                      <Badge 
+                        className="absolute top-2 right-2 z-20 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0 text-xs backdrop-blur-sm shadow-lg"
+                        data-testid={`badge-smart-ai-thumbnail-${article.id}`}
+                      >
+                        الصورة
+                        <Brain className="h-3 w-3" aria-hidden="true" />
+                      </Badge>
+                    )}
                   </div>
                 )}
                 <CardContent className="p-5 space-y-3">
@@ -277,6 +308,16 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                         {article.category.nameAr}
                       </Badge>
                     ) : null}
+                    {/* AI Generated Content Badge */}
+                    {article.aiGenerated && (
+                      <Badge 
+                        className="text-xs h-5 gap-1 bg-violet-500/90 hover:bg-violet-600 text-white border-0"
+                        data-testid={`badge-smart-ai-content-${article.id}`}
+                      >
+                        <Brain className="h-2.5 w-2.5" aria-hidden="true" />
+                        محتوى AI
+                      </Badge>
+                    )}
                   </div>
                   
                   <h3 className={`text-lg font-bold line-clamp-2 transition-colors ${
@@ -329,13 +370,13 @@ function ListLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
         return (
           <Link key={article.id} href={`/article/${article.slug}`}>
             <Card 
-              className="cursor-pointer overflow-hidden hover-elevate active-elevate-2"
+              className="cursor-pointer hover-elevate active-elevate-2"
               data-testid={`card-smart-article-list-${article.id}`}
             >
               <CardContent className="p-0">
                 <div className="flex flex-col md:flex-row gap-0">
                   {(article.thumbnailUrl ?? article.imageUrl) && (
-                    <div className="relative flex-shrink-0 w-full md:w-80 lg:w-96 aspect-[16/9] overflow-hidden">
+                    <div className="relative flex-shrink-0 w-full md:w-80 lg:w-96 aspect-[16/9]">
                       <OptimizedImage
                         src={(article.thumbnailUrl ?? article.imageUrl) || ""}
                         alt={article.title}
@@ -345,23 +386,45 @@ function ListLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                           ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
                           : 'center'}
                       />
+                      {/* AI Generated Thumbnail Badge */}
+                      {article.thumbnailUrl && article.isAiGeneratedThumbnail && (
+                        <Badge 
+                          className="absolute top-3 right-3 z-20 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm shadow-lg"
+                          data-testid={`badge-smart-list-ai-thumbnail-${article.id}`}
+                        >
+                          الصورة
+                          <Brain className="h-3 w-3" aria-hidden="true" />
+                        </Badge>
+                      )}
                     </div>
                   )}
 
                   <div className="flex-1 min-w-0 p-6 md:p-8 flex flex-col justify-center space-y-4">
-                    {article.category && (
-                      <Badge 
-                        variant="outline"
-                        className="w-fit"
-                        style={{ 
-                          borderColor: article.category.color || undefined,
-                          color: article.category.color || undefined,
-                        }}
-                        data-testid={`badge-smart-article-list-category-${article.id}`}
-                      >
-                        {article.category.nameAr}
-                      </Badge>
-                    )}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {article.category && (
+                        <Badge 
+                          variant="outline"
+                          className="w-fit"
+                          style={{ 
+                            borderColor: article.category.color || undefined,
+                            color: article.category.color || undefined,
+                          }}
+                          data-testid={`badge-smart-article-list-category-${article.id}`}
+                        >
+                          {article.category.nameAr}
+                        </Badge>
+                      )}
+                      {/* AI Generated Content Badge */}
+                      {article.aiGenerated && (
+                        <Badge 
+                          className="w-fit bg-violet-500/90 hover:bg-violet-600 text-white border-0 gap-1"
+                          data-testid={`badge-smart-list-ai-content-${article.id}`}
+                        >
+                          <Brain className="h-3 w-3" aria-hidden="true" />
+                          محتوى AI
+                        </Badge>
+                      )}
+                    </div>
 
                     <h3 className="font-bold text-2xl md:text-3xl lg:text-4xl line-clamp-3 leading-tight hover:text-primary transition-colors" data-testid={`text-smart-article-list-title-${article.id}`}>
                       {article.title}
@@ -415,9 +478,9 @@ function FeaturedLayout({ articles, blockId }: { articles: ArticleResult[]; bloc
             )}
             
             {/* AI Generated Thumbnail Badge - Top Right */}
-            {featured.thumbnailUrl && (
+            {featured.thumbnailUrl && featured.isAiGeneratedThumbnail && (
               <Badge 
-                className="absolute top-4 right-4 gap-1.5 bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm"
+                className="absolute top-4 right-4 z-20 gap-1.5 bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm shadow-lg"
                 data-testid={`badge-featured-ai-thumbnail-${featured.id}`}
               >
                 الصورة
@@ -438,6 +501,16 @@ function FeaturedLayout({ articles, blockId }: { articles: ArticleResult[]; bloc
                     data-testid={`badge-smart-article-featured-category-${featured.id}`}
                   >
                     {featured.category.nameAr}
+                  </Badge>
+                )}
+                {/* AI Generated Content Badge */}
+                {featured.aiGenerated && (
+                  <Badge 
+                    className="bg-violet-500/90 hover:bg-violet-600 text-white border-0 gap-1 backdrop-blur-sm"
+                    data-testid={`badge-featured-ai-content-${featured.id}`}
+                  >
+                    <Brain className="h-3 w-3" aria-hidden="true" />
+                    محتوى AI
                   </Badge>
                 )}
                 

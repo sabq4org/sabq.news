@@ -9140,6 +9140,12 @@ export class DatabaseStorage implements IStorage {
         slug: articles.slug,
         publishedAt: articles.publishedAt,
         imageUrl: articles.imageUrl,
+        thumbnailUrl: articles.thumbnailUrl,
+        excerpt: articles.excerpt,
+        newsType: articles.newsType,
+        views: articles.views,
+        aiGenerated: articles.aiGenerated,
+        isAiGeneratedThumbnail: articles.isAiGeneratedThumbnail,
         categoryId: categories.id,
         category: {
           nameAr: categories.nameAr,
