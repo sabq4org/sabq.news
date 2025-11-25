@@ -78,6 +78,12 @@ interface TokenFormValues {
   phoneNumber: string;
   autoPublish: boolean;
   allowedLanguages: string[];
+  // Advanced permissions
+  isAdmin: boolean;
+  canDeleteAny: boolean;
+  canArchiveAny: boolean;
+  canEditAny: boolean;
+  canMarkBreaking: boolean;
 }
 
 export default function WhatsAppManagement() {
@@ -100,6 +106,11 @@ export default function WhatsAppManagement() {
     phoneNumber: "",
     autoPublish: false,
     allowedLanguages: ["ar"],
+    isAdmin: false,
+    canDeleteAny: false,
+    canArchiveAny: false,
+    canEditAny: false,
+    canMarkBreaking: false,
   });
 
   // Fetch statistics
@@ -173,7 +184,17 @@ export default function WhatsAppManagement() {
         title: "تم بنجاح",
         description: "تم إنشاء رمز واتساب بنجاح",
       });
-      setFormData({ label: "", phoneNumber: "", autoPublish: false, allowedLanguages: ["ar"] });
+      setFormData({ 
+        label: "", 
+        phoneNumber: "", 
+        autoPublish: false, 
+        allowedLanguages: ["ar"],
+        isAdmin: false,
+        canDeleteAny: false,
+        canArchiveAny: false,
+        canEditAny: false,
+        canMarkBreaking: false,
+      });
     },
     onError: (error: Error) => {
       toast({
@@ -264,7 +285,17 @@ export default function WhatsAppManagement() {
 
   // Handlers
   const handleCreateToken = () => {
-    setFormData({ label: "", phoneNumber: "", autoPublish: false, allowedLanguages: ["ar"] });
+    setFormData({ 
+      label: "", 
+      phoneNumber: "", 
+      autoPublish: false, 
+      allowedLanguages: ["ar"],
+      isAdmin: false,
+      canDeleteAny: false,
+      canArchiveAny: false,
+      canEditAny: false,
+      canMarkBreaking: false,
+    });
     setGeneratedToken("");
     setCreateDialogOpen(true);
   };
@@ -272,10 +303,15 @@ export default function WhatsAppManagement() {
   const handleEditToken = (token: WhatsappToken) => {
     setSelectedToken(token);
     setFormData({
-      label: token.label,
+      label: token.label || "",
       phoneNumber: token.phoneNumber,
       autoPublish: token.autoPublish,
       allowedLanguages: token.allowedLanguages,
+      isAdmin: token.isAdmin || false,
+      canDeleteAny: token.canDeleteAny || false,
+      canArchiveAny: token.canArchiveAny || false,
+      canEditAny: token.canEditAny || false,
+      canMarkBreaking: token.canMarkBreaking || false,
     });
     setEditDialogOpen(true);
   };
@@ -314,6 +350,11 @@ export default function WhatsAppManagement() {
       data: {
         autoPublish: formData.autoPublish,
         allowedLanguages: formData.allowedLanguages,
+        isAdmin: formData.isAdmin,
+        canDeleteAny: formData.canDeleteAny,
+        canArchiveAny: formData.canArchiveAny,
+        canEditAny: formData.canEditAny,
+        canMarkBreaking: formData.canMarkBreaking,
       },
     });
   };
@@ -794,6 +835,75 @@ export default function WhatsAppManagement() {
                       ))}
                     </div>
                   </div>
+
+                  {/* Advanced Permissions Section */}
+                  <Separator className="my-4" />
+                  <div className="space-y-3">
+                    <Label className="text-base font-semibold">صلاحيات متقدمة</Label>
+                    <p className="text-sm text-muted-foreground">تمنح هذه الصلاحيات التحكم في مقالات المستخدمين الآخرين</p>
+                    
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <Switch
+                        id="isAdmin"
+                        checked={formData.isAdmin}
+                        onCheckedChange={(checked) => {
+                          setFormData({ 
+                            ...formData, 
+                            isAdmin: checked,
+                            canDeleteAny: checked,
+                            canArchiveAny: checked,
+                            canEditAny: checked,
+                            canMarkBreaking: checked,
+                          });
+                        }}
+                        data-testid="switch-is-admin"
+                      />
+                      <Label htmlFor="isAdmin" className="font-medium">مشرف (صلاحيات كاملة)</Label>
+                    </div>
+                    
+                    <div className="mr-6 space-y-2">
+                      <div className="flex items-center space-x-2 space-x-reverse">
+                        <Checkbox
+                          id="canEditAny"
+                          checked={formData.canEditAny}
+                          onCheckedChange={(checked) => setFormData({ ...formData, canEditAny: !!checked })}
+                          disabled={formData.isAdmin}
+                          data-testid="checkbox-can-edit-any"
+                        />
+                        <Label htmlFor="canEditAny" className="text-sm">تعديل أي مقالة</Label>
+                      </div>
+                      <div className="flex items-center space-x-2 space-x-reverse">
+                        <Checkbox
+                          id="canDeleteAny"
+                          checked={formData.canDeleteAny}
+                          onCheckedChange={(checked) => setFormData({ ...formData, canDeleteAny: !!checked })}
+                          disabled={formData.isAdmin}
+                          data-testid="checkbox-can-delete-any"
+                        />
+                        <Label htmlFor="canDeleteAny" className="text-sm">حذف أي مقالة</Label>
+                      </div>
+                      <div className="flex items-center space-x-2 space-x-reverse">
+                        <Checkbox
+                          id="canArchiveAny"
+                          checked={formData.canArchiveAny}
+                          onCheckedChange={(checked) => setFormData({ ...formData, canArchiveAny: !!checked })}
+                          disabled={formData.isAdmin}
+                          data-testid="checkbox-can-archive-any"
+                        />
+                        <Label htmlFor="canArchiveAny" className="text-sm">أرشفة أي مقالة</Label>
+                      </div>
+                      <div className="flex items-center space-x-2 space-x-reverse">
+                        <Checkbox
+                          id="canMarkBreaking"
+                          checked={formData.canMarkBreaking}
+                          onCheckedChange={(checked) => setFormData({ ...formData, canMarkBreaking: !!checked })}
+                          disabled={formData.isAdmin}
+                          data-testid="checkbox-can-mark-breaking"
+                        />
+                        <Label htmlFor="canMarkBreaking" className="text-sm">تحويل لخبر عاجل</Label>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -865,6 +975,75 @@ export default function WhatsAppManagement() {
                         <Label htmlFor={`edit-lang-${lang.value}`}>{lang.label}</Label>
                       </div>
                     ))}
+                  </div>
+                </div>
+
+                {/* Advanced Permissions Section */}
+                <Separator className="my-4" />
+                <div className="space-y-3">
+                  <Label className="text-base font-semibold">صلاحيات متقدمة</Label>
+                  <p className="text-sm text-muted-foreground">تمنح هذه الصلاحيات التحكم في مقالات المستخدمين الآخرين</p>
+                  
+                  <div className="flex items-center space-x-2 space-x-reverse">
+                    <Switch
+                      id="edit-isAdmin"
+                      checked={formData.isAdmin}
+                      onCheckedChange={(checked) => {
+                        setFormData({ 
+                          ...formData, 
+                          isAdmin: checked,
+                          canDeleteAny: checked,
+                          canArchiveAny: checked,
+                          canEditAny: checked,
+                          canMarkBreaking: checked,
+                        });
+                      }}
+                      data-testid="switch-edit-is-admin"
+                    />
+                    <Label htmlFor="edit-isAdmin" className="font-medium">مشرف (صلاحيات كاملة)</Label>
+                  </div>
+                  
+                  <div className="mr-6 space-y-2">
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <Checkbox
+                        id="edit-canEditAny"
+                        checked={formData.canEditAny}
+                        onCheckedChange={(checked) => setFormData({ ...formData, canEditAny: !!checked })}
+                        disabled={formData.isAdmin}
+                        data-testid="checkbox-edit-can-edit-any"
+                      />
+                      <Label htmlFor="edit-canEditAny" className="text-sm">تعديل أي مقالة</Label>
+                    </div>
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <Checkbox
+                        id="edit-canDeleteAny"
+                        checked={formData.canDeleteAny}
+                        onCheckedChange={(checked) => setFormData({ ...formData, canDeleteAny: !!checked })}
+                        disabled={formData.isAdmin}
+                        data-testid="checkbox-edit-can-delete-any"
+                      />
+                      <Label htmlFor="edit-canDeleteAny" className="text-sm">حذف أي مقالة</Label>
+                    </div>
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <Checkbox
+                        id="edit-canArchiveAny"
+                        checked={formData.canArchiveAny}
+                        onCheckedChange={(checked) => setFormData({ ...formData, canArchiveAny: !!checked })}
+                        disabled={formData.isAdmin}
+                        data-testid="checkbox-edit-can-archive-any"
+                      />
+                      <Label htmlFor="edit-canArchiveAny" className="text-sm">أرشفة أي مقالة</Label>
+                    </div>
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <Checkbox
+                        id="edit-canMarkBreaking"
+                        checked={formData.canMarkBreaking}
+                        onCheckedChange={(checked) => setFormData({ ...formData, canMarkBreaking: !!checked })}
+                        disabled={formData.isAdmin}
+                        data-testid="checkbox-edit-can-mark-breaking"
+                      />
+                      <Label htmlFor="edit-canMarkBreaking" className="text-sm">تحويل لخبر عاجل</Label>
+                    </div>
                   </div>
                 </div>
               </div>

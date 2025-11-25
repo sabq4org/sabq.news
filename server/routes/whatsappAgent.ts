@@ -781,8 +781,12 @@ router.post("/webhook", async (req: Request, res: Response) => {
         return res.status(200).send('OK');
       }
       
-      // Check if user owns the article or has permission
-      if (existingArticle.authorId !== whatsappToken.userId) {
+      // Check if user owns the article or has permission (isAdmin or canEditAny)
+      const canEdit = existingArticle.authorId === whatsappToken.userId || 
+                      whatsappToken.isAdmin || 
+                      whatsappToken.canEditAny;
+      
+      if (!canEdit) {
         console.log("[WhatsApp Agent] ❌ User not authorized to edit this article");
         
         await storage.updateWhatsappWebhookLog(webhookLog.id, {
@@ -882,7 +886,12 @@ router.post("/webhook", async (req: Request, res: Response) => {
         return res.status(200).send('OK');
       }
       
-      if (existingArticle.authorId !== whatsappToken.userId) {
+      // Check if user owns the article or has permission (isAdmin or canDeleteAny)
+      const canDelete = existingArticle.authorId === whatsappToken.userId || 
+                        whatsappToken.isAdmin || 
+                        whatsappToken.canDeleteAny;
+      
+      if (!canDelete) {
         await sendWhatsAppMessage({
           to: phoneNumber,
           body: `❌ غير مصرح لك بحذف هذا الخبر`,
@@ -927,7 +936,12 @@ router.post("/webhook", async (req: Request, res: Response) => {
         return res.status(200).send('OK');
       }
       
-      if (existingArticle.authorId !== whatsappToken.userId) {
+      // Check if user owns the article or has permission (isAdmin or canArchiveAny)
+      const canArchive = existingArticle.authorId === whatsappToken.userId || 
+                         whatsappToken.isAdmin || 
+                         whatsappToken.canArchiveAny;
+      
+      if (!canArchive) {
         await sendWhatsAppMessage({
           to: phoneNumber,
           body: `❌ غير مصرح لك بأرشفة هذا الخبر`,
@@ -971,10 +985,15 @@ router.post("/webhook", async (req: Request, res: Response) => {
         return res.status(200).send('OK');
       }
       
-      if (existingArticle.authorId !== whatsappToken.userId) {
+      // Check if user owns the article or has permission (isAdmin or canMarkBreaking)
+      const canMarkBreaking = existingArticle.authorId === whatsappToken.userId || 
+                              whatsappToken.isAdmin || 
+                              whatsappToken.canMarkBreaking;
+      
+      if (!canMarkBreaking) {
         await sendWhatsAppMessage({
           to: phoneNumber,
-          body: `❌ غير مصرح لك بتعديل هذا الخبر`,
+          body: `❌ غير مصرح لك بتغيير حالة العاجل`,
         });
         return res.status(200).send('OK');
       }
