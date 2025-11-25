@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Newspaper, Clock, MessageSquare, Sparkles, Zap, Star, Flame, Loader2, ChevronDown, Brain } from "lucide-react";
 import { ViewsCount } from "./ViewsCount";
+import { PersonalizedRecommendationCard } from "./PersonalizedRecommendationCard";
+import { useAuth } from "@/hooks/useAuth";
 import type { ArticleWithDetails } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
@@ -24,12 +27,108 @@ interface PersonalizedFeedProps {
   showReason?: boolean;
 }
 
+interface Recommendation {
+  id: string;
+  article: ArticleWithDetails;
+  reason: string;
+  score: number;
+}
+
 export function PersonalizedFeed({ articles: initialArticles, title = "جميع الأخبار", showReason = false }: PersonalizedFeedProps) {
+  const { user } = useAuth();
   const [articles, setArticles] = useState(initialArticles);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [offset, setOffset] = useState(initialArticles.length);
   const [error, setError] = useState<string | null>(null);
+  const [displayedRecommendations, setDisplayedRecommendations] = useState<Set<string>>(new Set());
+  const impressionQueue = useRef<string[]>([]);
+  const impressionTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  const { data: recommendationsData } = useQuery<{ recommendations: Recommendation[] }>({
+    queryKey: ['/api/recommendations/personalized'],
+    enabled: !!user,
+  });
+
+  const recommendations = recommendationsData?.recommendations || [];
+
+  const sendImpressions = useCallback(async () => {
+    if (impressionQueue.current.length === 0) return;
+
+    const articleIds = [...impressionQueue.current];
+    impressionQueue.current = [];
+
+    try {
+      await fetch('/api/recommendations/impressions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          articleIds,
+          impressionType: 'feed',
+        }),
+      });
+    } catch (error) {
+      console.error('[Impressions] Error sending impressions:', error);
+    }
+  }, []);
+
+  const queueImpression = useCallback((articleId: string) => {
+    if (!user) return;
+    impressionQueue.current.push(articleId);
+
+    if (impressionTimeout.current) {
+      clearTimeout(impressionTimeout.current);
+    }
+
+    impressionTimeout.current = setTimeout(sendImpressions, 2000);
+  }, [user, sendImpressions]);
+
+  useEffect(() => {
+    return () => {
+      if (impressionTimeout.current) {
+        clearTimeout(impressionTimeout.current);
+      }
+      if (impressionQueue.current.length > 0) {
+        sendImpressions();
+      }
+    };
+  }, [sendImpressions]);
+
+  const handleRecommendationDisplay = useCallback(async (articleId: string, recommendationId?: string) => {
+    if (!recommendationId || displayedRecommendations.has(recommendationId)) return;
+
+    setDisplayedRecommendations(prev => new Set(prev).add(recommendationId));
+    queueImpression(articleId);
+
+    try {
+      await fetch(`/api/recommendations/${recommendationId}/displayed`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (error) {
+      console.error('[Recommendations] Error marking displayed:', error);
+    }
+  }, [displayedRecommendations, queueImpression]);
+
+  const handleRecommendationClick = useCallback(async (articleId: string, recommendationId?: string) => {
+    if (!recommendationId) return;
+
+    try {
+      await fetch(`/api/recommendations/${recommendationId}/clicked`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      await fetch('/api/recommendations/click', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ articleId }),
+      });
+    } catch (error) {
+      console.error('[Recommendations] Error recording click:', error);
+    }
+  }, []);
 
   const loadMore = async () => {
     setIsLoading(true);
@@ -198,104 +297,124 @@ export function PersonalizedFeed({ articles: initialArticles, title = "جميع 
         </CardContent>
       </Card>
 
-      {/* Desktop View: Grid with 4 columns (original design) */}
+      {/* Desktop View: Grid with 4 columns + Personalized Recommendations */}
       <div className="hidden lg:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {articles.map((article) => (
-          <Link key={article.id} href={`/article/${article.slug}`}>
-            <Card 
-              className={`cursor-pointer h-full overflow-hidden border-0 dark:border dark:border-card-border ${
-                article.newsType === "breaking" ? "bg-destructive/5" : ""
-              }`}
-              data-testid={`card-article-${article.id}`}
-            >
-              {(article.imageUrl || article.thumbnailUrl) && (
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={article.thumbnailUrl ?? article.imageUrl ?? ''}
-                    alt={article.title}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                    style={{
-                      objectPosition: (article as any).imageFocalPoint
-                        ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
-                        : 'center'
-                    }}
-                  />
-                </div>
-              )}
-              
-              <CardContent className="p-4 space-y-3">
-                {/* Badges above title */}
-                <div className="flex items-center gap-2 flex-wrap">
-                  {/* AI Generated Thumbnail Badge */}
-                  {(article as any).thumbnailUrl && (
-                    <Badge className="text-xs h-5 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0" data-testid={`badge-ai-thumbnail-${article.id}`}>
-                      الصورة
-                      <Brain className="h-2.5 w-2.5" aria-hidden="true" />
-                    </Badge>
-                  )}
+        {articles.flatMap((article, index) => {
+          const recIndex = Math.floor(index / 4);
+          const shouldShowRec = index > 0 && index % 4 === 0 && recommendations[recIndex - 1];
+          const recommendation = shouldShowRec ? recommendations[recIndex - 1] : null;
 
-                  {/* Content Type Badge */}
-                  {article.newsType === "breaking" ? (
-                    <Badge variant="destructive" className="text-xs h-5 gap-1" data-testid={`badge-content-type-${article.id}`}>
-                      <Zap className="h-2.5 w-2.5" aria-hidden="true" />
-                      عاجل
-                    </Badge>
-                  ) : isNewArticle(article.publishedAt) ? (
-                    <Badge className="text-xs h-5 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600" data-testid={`badge-content-type-${article.id}`}>
-                      <Flame className="h-2.5 w-2.5" aria-hidden="true" />
-                      جديد
-                    </Badge>
-                  ) : (article as any).articleType === 'infographic' ? (
-                    <Badge className="text-xs h-5 bg-muted text-muted-foreground border-0" data-testid={`badge-content-type-${article.id}`}>
-                      إنفوجرافيك
-                    </Badge>
-                  ) : article.category ? (
-                    <Badge className="text-xs h-5 bg-muted text-muted-foreground border-0" data-testid={`badge-content-type-${article.id}`}>
-                      {article.category.nameAr}
-                    </Badge>
-                  ) : null}
-                </div>
-                
-                <h3 
-                  className={`font-bold text-lg line-clamp-2 ${
-                    article.newsType === "breaking"
-                      ? "text-destructive"
-                      : "text-foreground"
-                  }`}
-                  data-testid={`text-article-title-${article.id}`}
-                >
-                  {article.title}
-                </h3>
-                
-                {article.excerpt && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {article.excerpt}
-                  </p>
+          const result: JSX.Element[] = [];
+
+          if (recommendation) {
+            result.push(
+              <PersonalizedRecommendationCard
+                key={`rec-${recommendation.id}`}
+                article={recommendation.article}
+                reason={recommendation.reason}
+                recommendationId={recommendation.id}
+                onDisplay={handleRecommendationDisplay}
+                onArticleClick={handleRecommendationClick}
+              />
+            );
+          }
+
+          result.push(
+            <Link key={article.id} href={`/article/${article.slug}`}>
+              <Card 
+                className={`cursor-pointer h-full overflow-hidden border-0 dark:border dark:border-card-border ${
+                  article.newsType === "breaking" ? "bg-destructive/5" : ""
+                }`}
+                data-testid={`card-article-${article.id}`}
+              >
+                {(article.imageUrl || article.thumbnailUrl) && (
+                  <div className="relative h-48 overflow-hidden">
+                    <img
+                      src={article.thumbnailUrl ?? article.imageUrl ?? ''}
+                      alt={article.title}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      style={{
+                        objectPosition: (article as any).imageFocalPoint
+                          ? `${(article as any).imageFocalPoint.x}% ${(article as any).imageFocalPoint.y}%`
+                          : 'center'
+                      }}
+                    />
+                  </div>
                 )}
+                
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {(article as any).thumbnailUrl && (
+                      <Badge className="text-xs h-5 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0" data-testid={`badge-ai-thumbnail-${article.id}`}>
+                        الصورة
+                        <Brain className="h-2.5 w-2.5" aria-hidden="true" />
+                      </Badge>
+                    )}
 
-                <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
-                  {article.publishedAt && (
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      <span>
-                        {formatDistanceToNow(new Date(article.publishedAt), {
-                          addSuffix: true,
-                          locale: arSA,
-                        })}
-                      </span>
-                    </div>
-                  )}
+                    {article.newsType === "breaking" ? (
+                      <Badge variant="destructive" className="text-xs h-5 gap-1" data-testid={`badge-content-type-${article.id}`}>
+                        <Zap className="h-2.5 w-2.5" aria-hidden="true" />
+                        عاجل
+                      </Badge>
+                    ) : isNewArticle(article.publishedAt) ? (
+                      <Badge className="text-xs h-5 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600" data-testid={`badge-content-type-${article.id}`}>
+                        <Flame className="h-2.5 w-2.5" aria-hidden="true" />
+                        جديد
+                      </Badge>
+                    ) : (article as any).articleType === 'infographic' ? (
+                      <Badge className="text-xs h-5 bg-muted text-muted-foreground border-0" data-testid={`badge-content-type-${article.id}`}>
+                        إنفوجرافيك
+                      </Badge>
+                    ) : article.category ? (
+                      <Badge className="text-xs h-5 bg-muted text-muted-foreground border-0" data-testid={`badge-content-type-${article.id}`}>
+                        {article.category.nameAr}
+                      </Badge>
+                    ) : null}
+                  </div>
                   
-                  <ViewsCount 
-                    views={article.views || 0}
-                    iconClassName="h-3 w-3"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
+                  <h3 
+                    className={`font-bold text-lg line-clamp-2 ${
+                      article.newsType === "breaking"
+                        ? "text-destructive"
+                        : "text-foreground"
+                    }`}
+                    data-testid={`text-article-title-${article.id}`}
+                  >
+                    {article.title}
+                  </h3>
+                  
+                  {article.excerpt && (
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {article.excerpt}
+                    </p>
+                  )}
+
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
+                    {article.publishedAt && (
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        <span>
+                          {formatDistanceToNow(new Date(article.publishedAt), {
+                            addSuffix: true,
+                            locale: arSA,
+                          })}
+                        </span>
+                      </div>
+                    )}
+                    
+                    <ViewsCount 
+                      views={article.views || 0}
+                      iconClassName="h-3 w-3"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          );
+
+          return result;
+        })}
       </div>
 
       {/* زر "المزيد من الأخبار" */}
