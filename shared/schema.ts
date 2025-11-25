@@ -1522,6 +1522,51 @@ export const contentVectors = pgTable("content_vectors", {
   index("idx_content_vectors_published").on(table.publishedAt),
 ]);
 
+// Article Impressions - تتبع ظهور المقالات للمستخدم (لتحسين التوصيات)
+export const articleImpressions = pgTable("article_impressions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }).notNull(),
+  impressionType: text("impression_type").notNull().default("feed"), // 'feed', 'recommendation', 'search', 'related'
+  position: integer("position"), // موضع المقال في الفيد عند الظهور
+  viewDuration: integer("view_duration"), // مدة ظهور المقال بالميلي ثانية
+  isClicked: boolean("is_clicked").default(false).notNull(), // هل تم النقر على المقال
+  deviceType: text("device_type"), // mobile, tablet, desktop
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_impressions_user").on(table.userId),
+  index("idx_impressions_article").on(table.articleId),
+  index("idx_impressions_user_article").on(table.userId, table.articleId),
+  index("idx_impressions_created").on(table.createdAt.desc()),
+  index("idx_impressions_type").on(table.impressionType),
+]);
+
+// Feed Recommendations - التوصيات المخصصة للعرض في الفيد
+export const feedRecommendations = pgTable("feed_recommendations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }).notNull(),
+  score: real("score").notNull(), // درجة التوصية (0-1)
+  reason: text("reason").notNull(), // 'liked_similar', 'saved_similar', 'category_interest', 'author_follow', 'trending_match'
+  reasonDetails: jsonb("reason_details").$type<{
+    basedOnArticleId?: string; // المقال الذي أدى للتوصية
+    basedOnCategory?: string;
+    basedOnTag?: string;
+    matchScore?: number;
+  }>(),
+  isDisplayed: boolean("is_displayed").default(false).notNull(),
+  isClicked: boolean("is_clicked").default(false).notNull(),
+  displayPosition: integer("display_position"), // موضع العرض في الفيد
+  expiresAt: timestamp("expires_at").notNull(), // صلاحية التوصية
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_feed_rec_user").on(table.userId),
+  index("idx_feed_rec_article").on(table.articleId),
+  index("idx_feed_rec_user_score").on(table.userId, table.score.desc()),
+  index("idx_feed_rec_expires").on(table.expiresAt),
+  index("idx_feed_rec_displayed").on(table.userId, table.isDisplayed),
+]);
+
 // Recommendation log (track sent recommendations to prevent spam/duplicates)
 export const recommendationLog = pgTable("recommendation_log", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -2125,6 +2170,18 @@ export const insertContentVectorSchema = createInsertSchema(contentVectors).omit
   updatedAt: true 
 });
 
+// Article Impressions schemas
+export const insertArticleImpressionSchema = createInsertSchema(articleImpressions).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+// Feed Recommendations schemas
+export const insertFeedRecommendationSchema = createInsertSchema(feedRecommendations).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
 export const insertRecommendationLogSchema = createInsertSchema(recommendationLog).omit({ 
   id: true, 
   sentAt: true 
@@ -2395,6 +2452,12 @@ export type InsertUserAffinity = z.infer<typeof insertUserAffinitySchema>;
 
 export type ContentVector = typeof contentVectors.$inferSelect;
 export type InsertContentVector = z.infer<typeof insertContentVectorSchema>;
+
+export type ArticleImpression = typeof articleImpressions.$inferSelect;
+export type InsertArticleImpression = z.infer<typeof insertArticleImpressionSchema>;
+
+export type FeedRecommendation = typeof feedRecommendations.$inferSelect;
+export type InsertFeedRecommendation = z.infer<typeof insertFeedRecommendationSchema>;
 
 export type RecommendationLog = typeof recommendationLog.$inferSelect;
 export type InsertRecommendationLog = z.infer<typeof insertRecommendationLogSchema>;
