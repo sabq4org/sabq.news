@@ -1,0 +1,144 @@
+2025-11-25 18:43:21.30
+77394cec
+User
+3:43:21 PM [express] GET /api/articles/%D9%81%D8%B1%D9%8A%D9%82-%D8%B7%D8%A8%D9%8A-%D9%81%D9%8A-%D9%…
+2025-11-25 18:43:21.38
+77394cec
+User
+3:43:21 PM [express] GET /api/articles/%D9%81%D8%B1%D9%8A%D9%82-%D8%B7%D8%A8%D9%8A-%D9%81%D9%8A-%D9%…
+2025-11-25 18:43:21.65
+77394cec
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-25 18:43:21.65
+77394cec
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-25 18:43:21.65
+77394cec
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-25 18:43:21.66
+77394cec
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-25 18:43:21.67
+77394cec
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-25 18:43:21.68
+77394cec
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-25 18:43:21.68
+77394cec
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-25 18:43:21.68
+77394cec
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-25 18:43:21.73
+77394cec
+User
+3:43:21 PM [express] GET /api/shortlinks/article/59ffacc4-83e3-43f4-8171-fd714fe7ea67 304 in 94ms ::…
+2025-11-25 18:43:21.74
+77394cec
+User
+3:43:21 PM [express] GET /api/opinion/related/category/3a1e94e6-91e2-4203-88e7-42bc7baae55e 304 in 1…
+2025-11-25 18:43:21.74
+77394cec
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-25 18:43:21.74
+77394cec
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-25 18:43:21.76
+77394cec
+User
+3:43:21 PM [express] GET /api/ads/slot/sidebar 204 in 129ms
+2025-11-25 18:43:21.76
+77394cec
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-25 18:43:21.77
+77394cec
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-25 18:43:21.79
+77394cec
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-25 18:43:21.81
+77394cec
+User
+3:43:21 PM [express] GET /api/articles/59ffacc4-83e3-43f4-8171-fd714fe7ea67/media-assets 304 in 90ms…
+2025-11-25 18:43:21.81
+77394cec
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-25 18:43:21.82
+77394cec
+User
+[Storage] Checking if user is following: { followerId: 'admin-sabq', followingId: 'RnP7eDOAl5T5rGpib9_8d' }
+2025-11-25 18:43:21.82
+77394cec
+User
+3:43:21 PM [express] GET /api/articles/%D9%81%D8%B1%D9%8A%D9%82-%D8%B7%D8%A8%D9%8A-%D9%81%D9%8A-%D9%…
+2025-11-25 18:43:21.84
+77394cec
+User
+isFollowing: true
+2025-11-25 18:43:21.84
+77394cec
+User
+[Social Follow] Checked following status: {
+2025-11-25 18:43:21.84
+77394cec
+User
+followerId: 'admin-sabq',
+2025-11-25 18:43:21.84
+77394cec
+User
+[Storage] Is following: true
+2025-11-25 18:43:21.86
+77394cec
+User
+3:43:21 PM [express] GET /api/social/is-following/RnP7eDOAl5T5rGpib9_8d 304 in 225ms :: {"isFollowin…
+2025-11-25 18:43:21.90
+77394cec
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-25 18:43:21.97
+77394cec
+User
+🔄 [EVENT TRACKING] Updated event: view for article 59ffacc4-83e3-43f4-8171-fd714fe7ea67
+2025-11-25 18:43:22.10
+77394cec
+User
+3:43:22 PM [express] GET /api/articles/%D9%81%D8%B1%D9%8A%D9%82-%D8%B7%D8%A8%D9%8A-%D9%81%D9%8A-%D9%…
+2025-11-25 18:43:22.12
+77394cec
+User
+userId: 'admin-sabq',
+2025-11-25 18:43:22.12
+77394cec
+User
+📱 [Pass Update] Logged: {
+2025-11-25 18:43:22.12
+77394cec
+User
+timestamp: 2025-11-25T15:43:22.127Z
+2025-11-25 18:43:22.12
+77394cec
+User
+🔄 [Loyalty Pass] Triggering update for user: admin-sabq Reason: READ
+2025-11-25 18:43:22.12
+77394cec
+User
+passType: 'loyalty',
+2025-11-25 18:43:22.14
+77394cec
+User
+3:43:22 PM [express] POST /api/behavior/log 200 in 419ms :: {"success":true}
