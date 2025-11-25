@@ -89,9 +89,9 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                         loading="eager"
                       />
                       {/* AI Generated Thumbnail Badge - Top Right */}
-                      {article.thumbnailUrl && (
+                      {article.thumbnailUrl && article.isAiGeneratedThumbnail && (
                         <Badge 
-                          className="absolute top-3 right-3 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0 text-xs"
+                          className="absolute top-3 right-3 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0 text-xs backdrop-blur-sm"
                           data-testid={`badge-hero-ai-thumbnail-mobile-${article.id}`}
                         >
                           الصورة
@@ -180,7 +180,7 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                             loading="eager"
                           />
                           {/* AI Generated Thumbnail Badge - Top Right */}
-                          {article.thumbnailUrl && (
+                          {article.thumbnailUrl && article.isAiGeneratedThumbnail && (
                             <Badge 
                               className="absolute top-4 right-4 gap-1.5 bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm"
                               data-testid={`badge-hero-ai-thumbnail-${article.id}`}
