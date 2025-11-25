@@ -60,6 +60,34 @@ const aiModels = [
   { id: "claude", name: "Claude", color: "#F59E0B", icon: Brain },
 ];
 
+const cleanTitle = (rawTitle: string | null | undefined): string => {
+  if (!rawTitle) return "تحليل عميق";
+  
+  let title = rawTitle;
+  
+  if (title.includes("📌 العنوان الرئيسي:")) {
+    const match = title.match(/📌 العنوان الرئيسي:\s*\n?(.*?)(?:\n|⸻|📰|$)/s);
+    if (match && match[1]) {
+      title = match[1].trim();
+    }
+  }
+  
+  if (title.includes("📰 العناوين الفرعية:")) {
+    title = title.split("📰 العناوين الفرعية:")[0].trim();
+  }
+  if (title.includes("⸻")) {
+    title = title.split("⸻")[0].trim();
+  }
+  
+  title = title.replace(/^📌\s*/, "").replace(/العنوان الرئيسي:\s*/i, "").trim();
+  
+  if (title.length > 200) {
+    title = title.substring(0, 200) + "...";
+  }
+  
+  return title || "تحليل عميق";
+};
+
 export default function OmqDetail() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -439,10 +467,10 @@ export default function OmqDetail() {
           </div>
           
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-3" data-testid="text-analysis-title">
-            {analysis.title}
+            {cleanTitle(analysis.title)}
           </h1>
           <p className="text-lg text-gray-400" data-testid="text-analysis-topic">
-            {analysis.topic}
+            {cleanTitle(analysis.topic)}
           </p>
         </motion.div>
 
