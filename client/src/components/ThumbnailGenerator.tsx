@@ -31,7 +31,7 @@ export function ThumbnailGenerator({
   articleTitle,
   articleExcerpt,
   onThumbnailGenerated,
-  autoGenerate = true
+  autoGenerate = false // Default to false - generate only on user request
 }: ThumbnailGeneratorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentThumbnail, setCurrentThumbnail] = useState(
