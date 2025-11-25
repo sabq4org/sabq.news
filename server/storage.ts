@@ -2697,24 +2697,19 @@ export class DatabaseStorage implements IStorage {
 
     // IMPORTANT: Exclude AI/iFox articles from regular news feed unless explicitly requested
     if (!filters?.includeAI) {
-      // Exclude articles from AI categories
-      const aiCategorySlugs = ['ifox-ai', 'ai-news', 'ai-insights', 'ai-opinions', 'ai-tools', 'ai-voice', 'ai-academy', 'ai-community'];
-      
-      // Get category IDs for AI categories
-      const aiCategories = await db
+      // Exclude articles from iFox/AI categories using the isIfoxCategory flag
+      const ifoxCategories = await db
         .select({ id: categories.id })
         .from(categories)
-        .where(
-          inArray(categories.slug, ['ai-news', 'ai-insights', 'ai-opinions', 'ai-tools', 'ai-voice'])
-        );
+        .where(eq(categories.isIfoxCategory, true));
       
-      const aiCategoryIds = aiCategories.map(c => c.id);
+      const ifoxCategoryIds = ifoxCategories.map(c => c.id);
       
-      if (aiCategoryIds.length > 0) {
+      if (ifoxCategoryIds.length > 0) {
         conditions.push(
           or(
             isNull(articles.categoryId),
-            not(inArray(articles.categoryId, aiCategoryIds))
+            not(inArray(articles.categoryId, ifoxCategoryIds))
           )
         );
       }
