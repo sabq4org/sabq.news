@@ -11,6 +11,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -41,6 +46,10 @@ import {
   Clock,
   RotateCcw,
   Trash2,
+  ChevronDown,
+  Focus,
+  Link2,
+  ImageDown,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -158,6 +167,11 @@ export default function ArticleEditor() {
   const [recoveredDraft, setRecoveredDraft] = useState<any>(null);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasLoadedArticleRef = useRef(false);
+  
+  // Collapsible sections states
+  const [focalPointOpen, setFocalPointOpen] = useState(false);
+  const [thumbnailOpen, setThumbnailOpen] = useState(false);
+  const [smartLinksOpen, setSmartLinksOpen] = useState(false);
   
   // Use ref for immediate lock with URL tracking (prevents concurrent uploads even in StrictMode)
   const savingMediaMapRef = useRef<Map<string, Promise<string | null>>>(new Map());
@@ -1895,13 +1909,35 @@ const generateSlug = (text: string) => {
               </CardContent>
             </Card>
 
-            {/* Focal Point Picker - Show only when image is uploaded */}
+            {/* Focal Point Picker - Collapsible */}
             {imageUrl && (
-              <ImageFocalPointPicker
-                imageUrl={imageUrl}
-                currentFocalPoint={imageFocalPoint || undefined}
-                onFocalPointChange={(point) => setImageFocalPoint(point)}
-              />
+              <Collapsible open={focalPointOpen} onOpenChange={setFocalPointOpen}>
+                <Card>
+                  <CollapsibleTrigger asChild>
+                    <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors" data-testid="collapsible-focal-point">
+                      <CardTitle className="flex items-center justify-between text-base">
+                        <span className="flex items-center gap-2">
+                          <Focus className="h-4 w-4" />
+                          نقطة التركيز في الصورة
+                          {imageFocalPoint && (
+                            <Badge variant="secondary" className="text-xs">محدد</Badge>
+                          )}
+                        </span>
+                        <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${focalPointOpen ? 'rotate-180' : ''}`} />
+                      </CardTitle>
+                    </CardHeader>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <CardContent className="pt-0">
+                      <ImageFocalPointPicker
+                        imageUrl={imageUrl}
+                        currentFocalPoint={imageFocalPoint || undefined}
+                        onFocalPointChange={(point) => setImageFocalPoint(point)}
+                      />
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
             )}
             
             {/* Auto Image Generation */}
@@ -1924,22 +1960,44 @@ const generateSlug = (text: string) => {
               }}
             />
             
-            {/* Thumbnail Generation */}
+            {/* Thumbnail Generation - Collapsible */}
             {imageUrl && (
-              <ThumbnailGenerator
-                articleId={id}
-                imageUrl={imageUrl}
-                thumbnailUrl={thumbnailUrl}
-                thumbnailManuallyDeleted={thumbnailManuallyDeleted}
-                articleTitle={title}
-                articleExcerpt={excerpt}
-                onThumbnailGenerated={(url, manuallyDeleted) => {
-                  setThumbnailUrl(url);
-                  if (manuallyDeleted !== undefined) {
-                    setThumbnailManuallyDeleted(manuallyDeleted);
-                  }
-                }}
-              />
+              <Collapsible open={thumbnailOpen} onOpenChange={setThumbnailOpen}>
+                <Card>
+                  <CollapsibleTrigger asChild>
+                    <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors" data-testid="collapsible-thumbnail">
+                      <CardTitle className="flex items-center justify-between text-base">
+                        <span className="flex items-center gap-2">
+                          <ImageDown className="h-4 w-4" />
+                          صورة الغلاف المصغرة
+                          {thumbnailUrl && (
+                            <Badge variant="secondary" className="text-xs">متوفرة</Badge>
+                          )}
+                        </span>
+                        <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${thumbnailOpen ? 'rotate-180' : ''}`} />
+                      </CardTitle>
+                    </CardHeader>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <CardContent className="pt-0">
+                      <ThumbnailGenerator
+                        articleId={id}
+                        imageUrl={imageUrl}
+                        thumbnailUrl={thumbnailUrl}
+                        thumbnailManuallyDeleted={thumbnailManuallyDeleted}
+                        articleTitle={title}
+                        articleExcerpt={excerpt}
+                        onThumbnailGenerated={(url, manuallyDeleted) => {
+                          setThumbnailUrl(url);
+                          if (manuallyDeleted !== undefined) {
+                            setThumbnailManuallyDeleted(manuallyDeleted);
+                          }
+                        }}
+                      />
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
             )}
 
             {/* Content Editor */}
@@ -2026,14 +2084,33 @@ const generateSlug = (text: string) => {
               </CardContent>
             </Card>
 
-            {/* Smart Links Panel */}
-            <div className="h-[600px]" data-testid="smart-links-container">
-              <SmartLinksPanel
-                articleContent={content}
-                articleId={isNewArticle ? undefined : id}
-                onAddLink={handleAddLink}
-              />
-            </div>
+            {/* Smart Links Panel - Collapsible */}
+            <Collapsible open={smartLinksOpen} onOpenChange={setSmartLinksOpen}>
+              <Card>
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors" data-testid="collapsible-smart-links">
+                    <CardTitle className="flex items-center justify-between text-base">
+                      <span className="flex items-center gap-2">
+                        <Link2 className="h-4 w-4" />
+                        الروابط الذكية
+                      </span>
+                      <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${smartLinksOpen ? 'rotate-180' : ''}`} />
+                    </CardTitle>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="pt-0">
+                    <div className="h-[500px]" data-testid="smart-links-container">
+                      <SmartLinksPanel
+                        articleContent={content}
+                        articleId={isNewArticle ? undefined : id}
+                        onAddLink={handleAddLink}
+                      />
+                    </div>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
           </div>
 
           {/* Settings Sidebar - 30% */}
