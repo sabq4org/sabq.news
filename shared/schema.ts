@@ -6868,6 +6868,36 @@ export type WhatsappWebhookLog = typeof whatsappWebhookLogs.$inferSelect;
 export type InsertWhatsappWebhookLog = z.infer<typeof insertWhatsappWebhookLogSchema>;
 
 // ============================================
+// PENDING WHATSAPP MESSAGE PARTS (for multi-part message aggregation)
+// ============================================
+
+export const pendingWhatsappMessages = pgTable("pending_whatsapp_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  phoneNumber: text("phone_number").notNull(),
+  token: text("token").notNull(),
+  tokenId: varchar("token_id").references(() => whatsappTokens.id),
+  userId: varchar("user_id").references(() => users.id),
+  messageParts: text("message_parts").array().notNull().default(sql`'{}'::text[]`),
+  mediaUrls: text("media_urls").array().default(sql`'{}'::text[]`),
+  firstMessageAt: timestamp("first_message_at").defaultNow().notNull(),
+  lastMessageAt: timestamp("last_message_at").defaultNow().notNull(),
+  isProcessing: boolean("is_processing").default(false).notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+}, (table) => [
+  index("pending_whatsapp_messages_phone_token_idx").on(table.phoneNumber, table.token),
+  index("pending_whatsapp_messages_expires_at_idx").on(table.expiresAt),
+]);
+
+export const insertPendingWhatsappMessageSchema = createInsertSchema(pendingWhatsappMessages).omit({
+  id: true,
+  firstMessageAt: true,
+  lastMessageAt: true,
+});
+
+export type PendingWhatsappMessage = typeof pendingWhatsappMessages.$inferSelect;
+export type InsertPendingWhatsappMessage = z.infer<typeof insertPendingWhatsappMessageSchema>;
+
+// ============================================
 // ACCESSIBILITY TELEMETRY
 // ============================================
 
