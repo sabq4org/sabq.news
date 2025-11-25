@@ -34,6 +34,30 @@ interface AIImageGeneratorDialogProps {
   initialPrompt?: string;
 }
 
+// Color style options for news graphics
+const colorStyles = {
+  red: {
+    name: "أحمر - عاجل",
+    color: "bg-red-500",
+    prompt: "ألوان حمراء وداكنة دراماتيكية، تأثيرات ديناميكية، شريط أحمر، خلفية سوداء مع لمسات حمراء",
+  },
+  blue: {
+    name: "أزرق - خاص",
+    color: "bg-blue-500",
+    prompt: "ألوان زرقاء احترافية وأنيقة، تدرجات زرقاء داكنة، خلفية فاخرة، تصميم عصري راقي",
+  },
+  gold: {
+    name: "ذهبي - حصري",
+    color: "bg-yellow-500",
+    prompt: "ألوان ذهبية فاخرة، تدرجات ذهبية ولامعة، خلفية سوداء أنيقة، تصميم فخم واحترافي",
+  },
+  green: {
+    name: "أخضر - اقتصاد",
+    color: "bg-green-500",
+    prompt: "ألوان خضراء احترافية، تدرجات خضراء داكنة، خلفية اقتصادية، تصميم مالي راقي",
+  },
+};
+
 // Pre-built templates for common news graphics
 const templates = {
   infographic: {
@@ -41,24 +65,28 @@ const templates = {
     icon: ChartBar,
     prompt: "انفوجرافيك احترافي بتصميم عصري يعرض {data} بألوان متناسقة وأيقونات واضحة، خلفية بيضاء نظيفة، نمط flat design، عربي",
     fields: ["data"],
+    hasColorOption: false,
   },
   featured: {
     name: "صورة بارزة",
     icon: Image,
     prompt: "صورة صحفية احترافية عالية الجودة تُظهر {subject}، إضاءة طبيعية، تكوين متوازن، واقعية، بدقة عالية",
     fields: ["subject"],
+    hasColorOption: false,
   },
   breaking: {
-    name: "عاجل",
+    name: "خبر مميز",
     icon: AlertCircle,
-    prompt: "خلفية خبر عاجل احترافية، ألوان حمراء وداكنة، تأثيرات ديناميكية، نص {headline} بخط عربي واضح وجريء",
+    prompt: "خلفية خبر احترافية، {colorStyle}، نص {headline} بخط عربي واضح وجريء، تصميم إخباري متميز",
     fields: ["headline"],
+    hasColorOption: true,
   },
   comparison: {
     name: "مقارنة",
     icon: FileText,
     prompt: "انفوجرافيك مقارنة بين {item1} و {item2}، تصميم جدول مقارنة احترافي، أيقونات توضيحية، ألوان متباينة",
     fields: ["item1", "item2"],
+    hasColorOption: false,
   },
 };
 
@@ -71,6 +99,7 @@ export function AIImageGeneratorDialog({
   const [activeTab, setActiveTab] = useState("custom");
   const [prompt, setPrompt] = useState(initialPrompt);
   const [templateFields, setTemplateFields] = useState<Record<string, string>>({});
+  const [selectedColorStyle, setSelectedColorStyle] = useState<keyof typeof colorStyles>("red");
   const [imageSize, setImageSize] = useState("2K");
   const [aspectRatio, setAspectRatio] = useState("16:9");
   const [enableThinking, setEnableThinking] = useState(true);
@@ -119,6 +148,11 @@ export function AIImageGeneratorDialog({
         template.fields.forEach((field) => {
           finalPrompt = finalPrompt.replace(`{${field}}`, templateFields[field] || "");
         });
+        // Replace color style placeholder if template has color option
+        if (template.hasColorOption) {
+          const colorStyle = colorStyles[selectedColorStyle];
+          finalPrompt = finalPrompt.replace("{colorStyle}", colorStyle.prompt);
+        }
       }
     }
 
@@ -203,12 +237,38 @@ export function AIImageGeneratorDialog({
                         قالب {template.name} - املأ الحقول المطلوبة
                       </AlertDescription>
                     </Alert>
+                    
+                    {/* Color Style Selector for templates that support it */}
+                    {template.hasColorOption && (
+                      <div className="space-y-3">
+                        <Label>نمط اللون</Label>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          {Object.entries(colorStyles).map(([colorKey, colorStyle]) => (
+                            <button
+                              key={colorKey}
+                              type="button"
+                              onClick={() => setSelectedColorStyle(colorKey as keyof typeof colorStyles)}
+                              className={`flex items-center gap-2 p-3 rounded-lg border-2 transition-all ${
+                                selectedColorStyle === colorKey
+                                  ? "border-primary ring-2 ring-primary/20"
+                                  : "border-muted hover:border-muted-foreground/30"
+                              }`}
+                              data-testid={`color-style-${colorKey}`}
+                            >
+                              <div className={`w-4 h-4 rounded-full ${colorStyle.color}`} />
+                              <span className="text-sm font-medium">{colorStyle.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
                     {template.fields.map((field) => (
                       <div key={field}>
                         <Label htmlFor={field}>
                           {field === "data" && "البيانات الإحصائية"}
                           {field === "subject" && "موضوع الصورة"}
-                          {field === "headline" && "العنوان العاجل"}
+                          {field === "headline" && "العنوان"}
                           {field === "item1" && "العنصر الأول"}
                           {field === "item2" && "العنصر الثاني"}
                         </Label>
@@ -220,6 +280,7 @@ export function AIImageGeneratorDialog({
                           }
                           className="mt-2"
                           dir="rtl"
+                          placeholder={field === "headline" ? "أدخل العنوان الذي سيظهر في الصورة..." : undefined}
                         />
                       </div>
                     ))}
