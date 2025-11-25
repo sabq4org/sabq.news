@@ -80,7 +80,7 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                 <div className="md:hidden relative cursor-pointer group">
                   {/* Image */}
                   {(article.thumbnailUrl ?? article.imageUrl) && (
-                    <div className="relative aspect-[16/9] rounded-t-lg">
+                    <div className="relative aspect-[16/9] rounded-t-lg overflow-hidden">
                       <img
                         src={(article.thumbnailUrl ?? article.imageUrl) || ""}
                         alt={article.title}
@@ -88,16 +88,6 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                         style={{ objectPosition: getObjectPosition(article) }}
                         loading="eager"
                       />
-                      {/* AI Generated Thumbnail Badge - Top Right */}
-                      {article.isAiGeneratedThumbnail && (
-                        <Badge 
-                          className="absolute top-3 right-3 z-20 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0 text-xs backdrop-blur-sm shadow-lg"
-                          data-testid={`badge-hero-ai-thumbnail-mobile-${article.id}`}
-                        >
-                          الصورة
-                          <Brain className="h-3 w-3" aria-hidden="true" />
-                        </Badge>
-                      )}
                     </div>
                   )}
                   
@@ -108,11 +98,21 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                       : "bg-card"
                   }`}>
                     <div className="space-y-3">
-                      <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        {/* AI Generated Thumbnail Badge - Next to Category */}
+                        {article.isAiGeneratedThumbnail && (
+                          <Badge 
+                            className="shrink-0 bg-purple-500/90 hover:bg-purple-600 text-white border-0 text-xs gap-1"
+                            data-testid={`badge-hero-ai-thumbnail-mobile-${article.id}`}
+                          >
+                            الصورة
+                            <Brain className="h-3 w-3" aria-hidden="true" />
+                          </Badge>
+                        )}
                         {article.newsType === "breaking" ? (
                           <Badge 
                             variant="destructive" 
-                            className="w-fit text-xs gap-1"
+                            className="shrink-0 text-xs gap-1"
                             data-testid={`badge-breaking-${article.id}`}
                           >
                             <Zap className="h-3 w-3" />
@@ -120,7 +120,7 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                           </Badge>
                         ) : isNewArticle(article.publishedAt) ? (
                           <Badge 
-                            className="w-fit bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600 text-xs gap-1"
+                            className="shrink-0 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600 text-xs gap-1"
                             data-testid={`badge-new-${article.id}`}
                           >
                             <Flame className="h-3 w-3" />
@@ -129,7 +129,7 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                         ) : article.category && (
                           <Badge 
                             variant="default" 
-                            className="w-fit text-xs"
+                            className="shrink-0 text-xs"
                             data-testid={`badge-category-${article.id}`}
                           >
                             {article.category.nameAr}
@@ -138,7 +138,7 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                         {/* AI Generated Content Badge */}
                         {article.aiGenerated && (
                           <Badge 
-                            className="w-fit bg-violet-500/90 hover:bg-violet-600 text-white border-0 text-xs gap-1"
+                            className="shrink-0 bg-violet-500/90 hover:bg-violet-600 text-white border-0 text-xs gap-1"
                             data-testid={`badge-hero-ai-content-mobile-${article.id}`}
                           >
                             <Brain className="h-3 w-3" aria-hidden="true" />
@@ -181,27 +181,15 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                 <div className="hidden md:block relative h-[400px] cursor-pointer group">
                   <div className="flex flex-row h-full">
                     {/* Image - 50% of width */}
-                    <div className="w-1/2 h-full relative">
+                    <div className="w-1/2 h-full relative overflow-hidden">
                       {(article.thumbnailUrl ?? article.imageUrl) ? (
-                        <>
-                          <img
-                            src={(article.thumbnailUrl ?? article.imageUrl) || ""}
-                            alt={article.title}
-                            className="w-full h-full object-cover"
-                            style={{ objectPosition: getObjectPosition(article) }}
-                            loading="eager"
-                          />
-                          {/* AI Generated Thumbnail Badge - Top Right */}
-                          {article.isAiGeneratedThumbnail && (
-                            <Badge 
-                              className="absolute top-4 right-4 z-20 gap-1.5 bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm shadow-lg"
-                              data-testid={`badge-hero-ai-thumbnail-${article.id}`}
-                            >
-                              الصورة
-                              <Brain className="h-3.5 w-3.5" aria-hidden="true" />
-                            </Badge>
-                          )}
-                        </>
+                        <img
+                          src={(article.thumbnailUrl ?? article.imageUrl) || ""}
+                          alt={article.title}
+                          className="w-full h-full object-cover"
+                          style={{ objectPosition: getObjectPosition(article) }}
+                          loading="eager"
+                        />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
                       )}
@@ -214,11 +202,21 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                         : "bg-card"
                     }`}>
                       <div className="space-y-4">
-                        <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center gap-2">
+                          {/* AI Generated Thumbnail Badge - Next to Category */}
+                          {article.isAiGeneratedThumbnail && (
+                            <Badge 
+                              className="shrink-0 gap-1.5 bg-purple-500/90 hover:bg-purple-600 text-white border-0"
+                              data-testid={`badge-hero-ai-thumbnail-${article.id}`}
+                            >
+                              الصورة
+                              <Brain className="h-3.5 w-3.5" aria-hidden="true" />
+                            </Badge>
+                          )}
                           {article.newsType === "breaking" ? (
                             <Badge 
                               variant="destructive" 
-                              className="w-fit gap-1"
+                              className="shrink-0 gap-1"
                               data-testid={`badge-breaking-${article.id}`}
                             >
                               <Zap className="h-3 w-3" />
@@ -226,7 +224,7 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                             </Badge>
                           ) : isNewArticle(article.publishedAt) ? (
                             <Badge 
-                              className="w-fit bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600 gap-1"
+                              className="shrink-0 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600 gap-1"
                               data-testid={`badge-new-${article.id}`}
                             >
                               <Flame className="h-3 w-3" />
@@ -235,6 +233,7 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                           ) : article.category && (
                             <Badge 
                               variant="default" 
+                              className="shrink-0"
                               data-testid={`badge-category-${article.id}`}
                             >
                               {article.category.nameAr}
@@ -243,7 +242,7 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                           {/* AI Generated Content Badge */}
                           {article.aiGenerated && (
                             <Badge 
-                              className="w-fit bg-violet-500/90 hover:bg-violet-600 text-white border-0 gap-1"
+                              className="shrink-0 bg-violet-500/90 hover:bg-violet-600 text-white border-0 gap-1"
                               data-testid={`badge-hero-ai-content-${article.id}`}
                             >
                               <Brain className="h-3 w-3" aria-hidden="true" />
