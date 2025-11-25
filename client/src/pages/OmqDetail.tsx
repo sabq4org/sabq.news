@@ -55,8 +55,8 @@ interface DeepAnalysis {
 }
 
 const aiModels = [
-  { id: "gpt", name: "GPT-5", color: "#22C55E", icon: Bot },
-  { id: "gemini", name: "Gemini", color: "#8B5CF6", icon: Sparkles },
+  { id: "gpt", name: "GPT-5.1", color: "#22C55E", icon: Bot },
+  { id: "gemini", name: "Gemini 3", color: "#8B5CF6", icon: Sparkles },
   { id: "claude", name: "Claude", color: "#F59E0B", icon: Brain },
 ];
 
@@ -854,7 +854,7 @@ function ModelTabs({ analysis }: { analysis: DeepAnalysis }) {
   const models = [
     { 
       id: "gpt", 
-      name: "GPT-5", 
+      name: "GPT-5.1", 
       color: "#22C55E", 
       icon: Bot, 
       content: analysis.gptAnalysis,
@@ -862,7 +862,7 @@ function ModelTabs({ analysis }: { analysis: DeepAnalysis }) {
     },
     { 
       id: "gemini", 
-      name: "Gemini", 
+      name: "Gemini 3", 
       color: "#8B5CF6", 
       icon: Sparkles, 
       content: analysis.geminiAnalysis,

@@ -214,7 +214,10 @@ export const AI_MODELS = {
   CLAUDE_SONNET: { provider: 'anthropic' as const, model: 'claude-sonnet-4-5' },
   CLAUDE_HAIKU: { provider: 'anthropic' as const, model: 'claude-haiku-4-5' },
   
-  // Gemini
-  GEMINI_PRO: { provider: 'gemini' as const, model: 'gemini-2.5-pro' },
+  // Gemini 3 - Latest November 2025
+  GEMINI_3_PRO: { provider: 'gemini' as const, model: 'gemini-3-pro-preview' },
+  GEMINI_3: { provider: 'gemini' as const, model: 'gemini-3-pro-preview' }, // Alias
+  // Legacy Gemini models
+  GEMINI_PRO: { provider: 'gemini' as const, model: 'gemini-3-pro-preview' }, // Updated to Gemini 3
   GEMINI_FLASH: { provider: 'gemini' as const, model: 'gemini-2.5-flash' },
 };

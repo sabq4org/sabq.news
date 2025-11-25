@@ -100,9 +100,9 @@ export class DeepAnalysisEngine {
     const fullPrompt = `${DEEP_ANALYSIS_GOLDEN_TEMPLATE}\n\n${userPrompt}`;
     
     const configs = [
-      { ...AI_MODELS.GPT5, maxTokens: 16000 },
+      { ...AI_MODELS.GPT_5_1, maxTokens: 16000 },
       { ...AI_MODELS.CLAUDE_SONNET, temperature: 0.7, maxTokens: 16000 },
-      { ...AI_MODELS.GEMINI_FLASH, temperature: 0.7, maxTokens: 16000 },
+      { ...AI_MODELS.GEMINI_3_PRO, temperature: 0.7, maxTokens: 16000 },
     ];
 
     const results = await aiManager.generateMultiple(fullPrompt, configs);
