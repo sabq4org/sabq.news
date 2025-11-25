@@ -162,15 +162,30 @@ function parseWhatsAppCommand(message: string): WhatsAppCommand {
 // Extract article ID from URL or direct ID
 function extractArticleIdentifier(text: string): string | null {
   // Extract from URL: https://sabq.news/article/slug-here or /article/slug-here
-  const urlMatch = text.match(/(?:sabq\.news|sabq\.life)?\/article\/([a-zA-Z0-9_-]+)/i);
+  // Support Arabic characters in slugs: \u0600-\u06FF covers Arabic Unicode range
+  const urlMatch = text.match(/(?:https?:\/\/)?(?:sabq\.news|sabq\.life)?\/article\/([a-zA-Z0-9_\u0600-\u06FF-]+)/i);
   if (urlMatch) {
-    return urlMatch[1];
+    return decodeURIComponent(urlMatch[1]);
+  }
+  
+  // Try URL-encoded format (common in copy-paste)
+  const encodedMatch = text.match(/(?:https?:\/\/)?(?:sabq\.news|sabq\.life)?\/article\/([^\s]+)/i);
+  if (encodedMatch) {
+    try {
+      return decodeURIComponent(encodedMatch[1]);
+    } catch {
+      return encodedMatch[1];
+    }
   }
   
   // Extract first word/identifier (could be slug or ID)
   const firstWord = text.split(/[\s\n]/)[0].trim();
   if (firstWord && firstWord.length > 3) {
-    return firstWord;
+    try {
+      return decodeURIComponent(firstWord);
+    } catch {
+      return firstWord;
+    }
   }
   
   return null;

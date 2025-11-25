@@ -87,8 +87,8 @@ export function extractTokenFromMessage(message: string): string | null {
   let match = message.match(explicitPattern);
   
   if (!match) {
-    // Try pattern with space, but ensure the token part is uppercase/numbers
-    const spacePattern = /\bTOKEN\s+([A-Z0-9\-_]+)/i;
+    // Try pattern with space (with or without #), ensure token part is uppercase/numbers
+    const spacePattern = /\b#?TOKEN\s+([A-Z0-9\-_]+)/i;
     match = message.match(spacePattern);
   }
   
@@ -96,10 +96,10 @@ export function extractTokenFromMessage(message: string): string | null {
 }
 
 export function removeTokenFromMessage(message: string): string {
-  // Remove TOKEN patterns
+  // Remove TOKEN patterns (with or without #, with :, -, or space)
   return message
-    .replace(/\b#?TOKEN[:\-][A-Z0-9\-_]+/i, '')
-    .replace(/\bTOKEN\s+[A-Z0-9\-_]+/i, '')
+    .replace(/\b#?TOKEN[:\-][A-Z0-9\-_]+/gi, '')
+    .replace(/\b#?TOKEN\s+[A-Z0-9\-_]+/gi, '')
     .trim();
 }
 
