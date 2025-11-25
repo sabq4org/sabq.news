@@ -3849,6 +3849,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const category = await storage.createCategory(parsed.data);
 
+      // Invalidate caches when categories are created
+      memoryCache.invalidatePattern('^categories:');
+      memoryCache.invalidatePattern('^homepage:');
+      memoryCache.invalidatePattern('^blocks:');
+
       // Log activity
       await logActivity({
         userId,
@@ -3911,9 +3916,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const category = await storage.updateCategory(categoryId, parsed.data);
 
-      // Invalidate categories cache
+      // Invalidate caches when categories are updated
       memoryCache.invalidatePattern('^categories:');
       memoryCache.invalidatePattern('^homepage:');
+      memoryCache.invalidatePattern('^blocks:');
 
       // Log activity
       await logActivity({
@@ -3952,6 +3958,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       await storage.deleteCategory(categoryId);
+
+      // Invalidate caches when categories are deleted
+      memoryCache.invalidatePattern('^categories:');
+      memoryCache.invalidatePattern('^homepage:');
+      memoryCache.invalidatePattern('^blocks:');
 
       // Log activity
       await logActivity({
@@ -4158,6 +4169,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      // Invalidate caches when categories are synced
+      memoryCache.invalidatePattern('^categories:');
+      memoryCache.invalidatePattern('^homepage:');
+      memoryCache.invalidatePattern('^blocks:');
+
       // Log activity
       await logActivity({
         userId,
@@ -4207,6 +4223,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       await Promise.all(updates);
+
+      // Invalidate caches when categories are reordered
+      memoryCache.invalidatePattern('^categories:');
+      memoryCache.invalidatePattern('^homepage:');
+      memoryCache.invalidatePattern('^blocks:');
 
       // Log activity
       await logActivity({
@@ -5793,6 +5814,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .values(articleData)
         .returning();
 
+      // Invalidate caches when articles are created
+      memoryCache.invalidatePattern('^homepage:');
+      memoryCache.invalidatePattern('^blocks:');
+      memoryCache.invalidatePattern('^insights:');
+      memoryCache.invalidatePattern('^opinion:');
+      memoryCache.invalidatePattern('^trending:');
+
       // Log activity
       await logActivity({
         userId: authorId,
@@ -5967,6 +5995,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
         .where(eq(articles.id, articleId))
         .returning();
+
+      // Invalidate caches when articles are updated
+      memoryCache.invalidatePattern('^homepage:');
+      memoryCache.invalidatePattern('^blocks:');
+      memoryCache.invalidatePattern('^insights:');
+      memoryCache.invalidatePattern('^opinion:');
+      memoryCache.invalidatePattern('^trending:');
 
       console.log('[UPDATE ARTICLE] Article updated:', {
         articleId: updatedArticle.id,
@@ -6322,6 +6357,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(eq(articles.id, articleId))
         .returning();
 
+      // Invalidate caches when articles are archived
+      memoryCache.invalidatePattern('^homepage:');
+      memoryCache.invalidatePattern('^blocks:');
+      memoryCache.invalidatePattern('^insights:');
+      memoryCache.invalidatePattern('^opinion:');
+      memoryCache.invalidatePattern('^trending:');
+
       // Log activity
       await logActivity({
         userId,
@@ -6371,6 +6413,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Delete article permanently
       await db.delete(articles).where(eq(articles.id, articleId));
 
+      // Invalidate caches when articles are deleted
+      memoryCache.invalidatePattern('^homepage:');
+      memoryCache.invalidatePattern('^blocks:');
+      memoryCache.invalidatePattern('^insights:');
+      memoryCache.invalidatePattern('^opinion:');
+      memoryCache.invalidatePattern('^trending:');
+
       // Log activity
       await logActivity({
         userId,
@@ -6414,6 +6463,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           updatedAt: new Date(),
         })
         .where(inArray(articles.id, articleIds));
+
+      // Invalidate caches when articles are bulk archived
+      memoryCache.invalidatePattern('^homepage:');
+      memoryCache.invalidatePattern('^blocks:');
+      memoryCache.invalidatePattern('^insights:');
+      memoryCache.invalidatePattern('^opinion:');
+      memoryCache.invalidatePattern('^trending:');
 
       // Log activity
       await logActivity({
@@ -6466,6 +6522,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Delete articles permanently
       await db.delete(articles).where(inArray(articles.id, articleIds));
+
+      // Invalidate caches when articles are deleted
+      memoryCache.invalidatePattern('^homepage:');
+      memoryCache.invalidatePattern('^blocks:');
+      memoryCache.invalidatePattern('^insights:');
+      memoryCache.invalidatePattern('^opinion:');
+      memoryCache.invalidatePattern('^trending:');
 
       // Log activity
       await logActivity({
@@ -6666,6 +6729,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/trending-keywords", cacheControl({ maxAge: CACHE_DURATIONS.MEDIUM, staleWhileRevalidate: CACHE_DURATIONS.MEDIUM }), async (req, res) => {
     try {
+      // Check cache first - TTL 60 seconds (trends update slowly)
+      const cacheKey = 'trending:keywords';
+      const cached = memoryCache.get<any>(cacheKey);
+      if (cached !== null) {
+        return res.json(cached);
+      }
+
       // Fetch published articles from the last 24 hours (1 day)
       const oneDayAgo = new Date();
       oneDayAgo.setDate(oneDayAgo.getDate() - 1);
@@ -6772,6 +6842,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         category: item.categoryId ? categoryMap.get(item.categoryId) : undefined,
       }));
 
+      // Cache the result before sending - TTL 60 seconds
+      memoryCache.set(cacheKey, trendingKeywords, 60000);
       res.json(trendingKeywords);
     } catch (error) {
       console.error("Error fetching trending keywords:", error);
@@ -8050,6 +8122,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/ai-insights", async (req, res) => {
     try {
+      // Check cache first - TTL 30 seconds (aggregates change slowly)
+      const cacheKey = 'insights:ai';
+      const cached = memoryCache.get(cacheKey);
+      if (cached !== null) {
+        return res.json(cached);
+      }
+
       // Changed from 24 hours to 7 days for better data availability
       const last7Days = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
@@ -8186,7 +8265,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const aiEngagementScore = aiPick[0]?.engagementScore || 0;
 
-      res.json({
+      const result = {
         mostViewed: {
           article: mostViewed || null,
           count: viewsCount,
@@ -8216,7 +8295,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ? "يُتوقع استمرار التفاعل خلال الساعات القادمة" 
             : "تفاعل متوسط متوقع",
         },
-      });
+      };
+      // Cache the result before sending - TTL 30 seconds
+      memoryCache.set(cacheKey, result, 30000);
+      res.json(result);
     } catch (error) {
       console.error("Error fetching AI insights:", error);
       res.status(500).json({ message: "Failed to fetch AI insights" });
@@ -9982,6 +10064,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .set({ status: "archived", updatedAt: new Date() })
         .where(inArray(enArticles.id, articleIds));
 
+      // Invalidate caches when articles are bulk archived
+      memoryCache.invalidatePattern('^homepage:');
+      memoryCache.invalidatePattern('^blocks:');
+      memoryCache.invalidatePattern('^insights:');
+      memoryCache.invalidatePattern('^opinion:');
+      memoryCache.invalidatePattern('^trending:');
+
       // Log activity
       await logActivity({
         userId,
@@ -10576,8 +10665,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const article = await storage.createArticle(parsed.data);
 
-      // Invalidate homepage cache when articles are created
+      // Invalidate caches when articles are created
       memoryCache.invalidatePattern('^homepage:');
+      memoryCache.invalidatePattern('^blocks:');
+      memoryCache.invalidatePattern('^insights:');
+      memoryCache.invalidatePattern('^opinion:');
+      memoryCache.invalidatePattern('^trending:');
       
       console.log(`🔍 [DASHBOARD CREATE] Article created with status: ${article.status}`);
       console.log(`🔍 [DASHBOARD CREATE] Article ID: ${article.id}, Title: ${article.title}`);
@@ -10700,8 +10793,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const updated = await storage.updateArticle(req.params.id, articleData);
 
-      // Invalidate homepage cache when articles are updated
+      // Invalidate caches when articles are updated
       memoryCache.invalidatePattern('^homepage:');
+      memoryCache.invalidatePattern('^blocks:');
+      memoryCache.invalidatePattern('^insights:');
+      memoryCache.invalidatePattern('^opinion:');
+      memoryCache.invalidatePattern('^trending:');
       
       console.log(`🔍 [DASHBOARD UPDATE] Article updated - Old status: ${article.status}, New status: ${updated.status}`);
       console.log(`🔍 [DASHBOARD UPDATE] Article ID: ${updated.id}, Title: ${updated.title}`);
@@ -10786,6 +10883,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       await storage.deleteArticle(req.params.id);
+      
+      // Invalidate caches when articles are deleted
+      memoryCache.invalidatePattern('^homepage:');
+      memoryCache.invalidatePattern('^blocks:');
+      memoryCache.invalidatePattern('^insights:');
+      memoryCache.invalidatePattern('^opinion:');
+      memoryCache.invalidatePattern('^trending:');
+      
       res.json({ message: "Article deleted" });
     } catch (error) {
       console.error("Error deleting article:", error);
@@ -18957,6 +19062,13 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   // GET /api/blocks/quad-categories - Get quad categories block data for frontend
   app.get("/api/blocks/quad-categories", async (req, res) => {
     try {
+      // Check cache first - TTL 15 seconds (content updates frequently)
+      const cacheKey = 'blocks:quad-categories';
+      const cached = memoryCache.get(cacheKey);
+      if (cached !== null) {
+        return res.json(cached);
+      }
+
       // Get active settings
       const [settings] = await db
         .select()
@@ -19152,11 +19264,14 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         });
       }
 
-      res.json({
+      const result = {
         items,
         mobileCarousel: config.mobileCarousel,
         backgroundColor: config.backgroundColor,
-      });
+      };
+      // Cache the result before sending - TTL 15 seconds
+      memoryCache.set(cacheKey, result, 15000);
+      res.json(result);
     } catch (error) {
       console.error("Error fetching quad categories block:", error);
       res.status(500).json({ message: "فشل تحميل بلوك التصنيفات" });
@@ -20342,6 +20457,14 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   app.get("/api/opinion", async (req, res) => {
     try {
       const { page = 1, limit = 12, authorId, search } = req.query;
+      
+      // Check cache first - TTL 20 seconds
+      const cacheKey = `opinion:list:${page}:${limit}:${authorId || ''}:${search || ''}`;
+      const cached = memoryCache.get(cacheKey);
+      if (cached !== null) {
+        return res.json(cached);
+      }
+
       const offset = (Number(page) - 1) * Number(limit);
 
       const reporterAlias = aliasedTable(users, 'reporter');
@@ -20406,7 +20529,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
           )
         );
 
-      res.json({
+      const result = {
         articles: formattedArticles,
         pagination: {
           page: Number(page),
@@ -20414,7 +20537,10 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
           total: count,
           totalPages: Math.ceil(count / Number(limit)),
         },
-      });
+      };
+      // Cache the result before sending - TTL 20 seconds
+      memoryCache.set(cacheKey, result, 20000);
+      res.json(result);
     } catch (error) {
       console.error("Error fetching opinion articles:", error);
       res.status(500).json({ message: "Failed to fetch opinion articles" });
@@ -21625,6 +21751,13 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         status: 'draft',
         tags: event.tags || [],
       } as any);
+
+      // Invalidate caches when articles are created
+      memoryCache.invalidatePattern('^homepage:');
+      memoryCache.invalidatePattern('^blocks:');
+      memoryCache.invalidatePattern('^insights:');
+      memoryCache.invalidatePattern('^opinion:');
+      memoryCache.invalidatePattern('^trending:');
 
       await logActivity({
         userId,
@@ -28361,6 +28494,13 @@ Allow: /
         
         const article = await storage.createArticle(articleData);
         
+        // Invalidate caches when articles are created
+        memoryCache.invalidatePattern('^homepage:');
+        memoryCache.invalidatePattern('^blocks:');
+        memoryCache.invalidatePattern('^insights:');
+        memoryCache.invalidatePattern('^opinion:');
+        memoryCache.invalidatePattern('^trending:');
+        
         // Log activity
         await logActivity({
           userId: req.user.id,
@@ -28614,6 +28754,13 @@ Allow: /
           status: 'archived',
         });
         
+        // Invalidate caches when articles are updated
+        memoryCache.invalidatePattern('^homepage:');
+        memoryCache.invalidatePattern('^blocks:');
+        memoryCache.invalidatePattern('^insights:');
+        memoryCache.invalidatePattern('^opinion:');
+        memoryCache.invalidatePattern('^trending:');
+        
         // Log activity
         await logActivity({
           userId: req.user.id,
@@ -28761,6 +28908,13 @@ Allow: /
         const rejectedArticle = await storage.updateArticle(req.params.id, {
           status: 'archived',
         });
+        
+        // Invalidate caches when articles are updated
+        memoryCache.invalidatePattern('^homepage:');
+        memoryCache.invalidatePattern('^blocks:');
+        memoryCache.invalidatePattern('^insights:');
+        memoryCache.invalidatePattern('^opinion:');
+        memoryCache.invalidatePattern('^trending:');
 
         await logActivity({
           userId: req.user.id,
@@ -28936,6 +29090,13 @@ Allow: /
         const { articleIds } = bodySchema.parse(req.body);
         const result = await storage.bulkDeleteIFoxArticles(articleIds);
 
+        // Invalidate caches when articles are deleted
+        memoryCache.invalidatePattern('^homepage:');
+        memoryCache.invalidatePattern('^blocks:');
+        memoryCache.invalidatePattern('^insights:');
+        memoryCache.invalidatePattern('^opinion:');
+        memoryCache.invalidatePattern('^trending:');
+
         await logActivity({
           userId: req.user.id,
           action: 'bulk_delete',
@@ -29019,6 +29180,13 @@ Allow: /
         
         const article = await storage.createArticle(articleData);
         
+        // Invalidate caches when articles are created
+        memoryCache.invalidatePattern('^homepage:');
+        memoryCache.invalidatePattern('^blocks:');
+        memoryCache.invalidatePattern('^insights:');
+        memoryCache.invalidatePattern('^opinion:');
+        memoryCache.invalidatePattern('^trending:');
+        
         await logActivity({
           userId: req.user.id,
           action: 'create',
@@ -29079,6 +29247,13 @@ Allow: /
         
         const article = await storage.updateArticle(id, updateData);
         
+        // Invalidate caches when articles are updated
+        memoryCache.invalidatePattern('^homepage:');
+        memoryCache.invalidatePattern('^blocks:');
+        memoryCache.invalidatePattern('^insights:');
+        memoryCache.invalidatePattern('^opinion:');
+        memoryCache.invalidatePattern('^trending:');
+        
         await logActivity({
           userId: req.user.id,
           action: 'update',
@@ -29112,6 +29287,13 @@ Allow: /
 
         const { articleIds } = bodySchema.parse(req.body);
         const result = await storage.bulkArchiveIFoxArticles(articleIds);
+
+        // Invalidate caches when articles are archived
+        memoryCache.invalidatePattern('^homepage:');
+        memoryCache.invalidatePattern('^blocks:');
+        memoryCache.invalidatePattern('^insights:');
+        memoryCache.invalidatePattern('^opinion:');
+        memoryCache.invalidatePattern('^trending:');
 
         await logActivity({
           userId: req.user.id,
