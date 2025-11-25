@@ -25,6 +25,7 @@ import { sendArticleNotification } from "./notificationService";
 import { vectorizeArticle } from "./embeddingsService";
 import { trackUserEvent } from "./eventTrackingService";
 import { findSimilarArticles, getPersonalizedRecommendations } from "./similarityEngine";
+import { recommendationService } from "./services/recommendationService";
 import { sendSMSOTP, verifySMSOTP } from "./twilio";
 import { sendVerificationEmail, verifyEmailToken, resendVerificationEmail } from "./services/email";
 import { analyzeSentiment, detectLanguage } from './sentiment-analyzer';
@@ -12562,6 +12563,103 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     } catch (error) {
       console.error("Error updating notification preferences:", error);
       res.status(500).json({ message: "فشل تحديث إعدادات الإشعارات" });
+    }
+  });
+
+
+  // ============================================================
+  // PERSONALIZED RECOMMENDATIONS ROUTES
+  // ============================================================
+
+  // POST /api/recommendations/impressions - Record article impressions
+  app.post("/api/recommendations/impressions", async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(200).json({ recorded: 0, message: 'Guest user - impressions not recorded' });
+      }
+
+      const { articleIds, impressionType = 'feed', deviceType } = req.body;
+      
+      if (!articleIds || !Array.isArray(articleIds) || articleIds.length === 0) {
+        return res.status(400).json({ message: 'articleIds is required and must be a non-empty array' });
+      }
+
+      const result = await recommendationService.batchRecordImpressions(
+        userId,
+        articleIds,
+        impressionType,
+        deviceType
+      );
+
+      res.json(result);
+    } catch (error: any) {
+      console.error('[Recommendations] Error recording impressions:', error);
+      res.status(500).json({ message: 'Failed to record impressions' });
+    }
+  });
+
+  // POST /api/recommendations/click - Record article click
+  app.post("/api/recommendations/click", async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(200).json({ success: true, message: 'Guest user' });
+      }
+
+      const { articleId } = req.body;
+      if (!articleId) {
+        return res.status(400).json({ message: 'articleId is required' });
+      }
+
+      await recommendationService.recordClick(userId, articleId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('[Recommendations] Error recording click:', error);
+      res.status(500).json({ message: 'Failed to record click' });
+    }
+  });
+
+  // GET /api/recommendations/personalized - Get personalized recommendations for feed
+  app.get("/api/recommendations/personalized", async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.json({ recommendations: [], hasInteractions: false });
+      }
+
+      const limit = Math.min(parseInt(req.query.limit as string) || 5, 10);
+      const recommendations = await recommendationService.getFeedRecommendations(userId, limit);
+
+      res.json({
+        recommendations,
+        hasInteractions: recommendations.length > 0,
+      });
+    } catch (error: any) {
+      console.error('[Recommendations] Error getting personalized recommendations:', error);
+      res.status(500).json({ message: 'Failed to get recommendations' });
+    }
+  });
+
+  // POST /api/recommendations/:id/displayed - Mark recommendation as displayed
+  app.post("/api/recommendations/:id/displayed", isAuthenticated, async (req: any, res) => {
+    try {
+      await recommendationService.markRecommendationDisplayed(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('[Recommendations] Error marking displayed:', error);
+      res.status(500).json({ message: 'Failed to mark displayed' });
+    }
+  });
+
+  // POST /api/recommendations/:id/clicked - Mark recommendation as clicked
+  app.post("/api/recommendations/:id/clicked", isAuthenticated, async (req: any, res) => {
+    try {
+      await recommendationService.markRecommendationClicked(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('[Recommendations] Error marking clicked:', error);
+      res.status(500).json({ message: 'Failed to mark clicked' });
     }
   });
 
