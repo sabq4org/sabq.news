@@ -43,8 +43,15 @@ export default function OmqHeader({ onSearch }: OmqHeaderProps) {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (onSearch && searchQuery.trim()) {
+    if (onSearch) {
       onSearch(searchQuery.trim());
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    if (onSearch) {
+      onSearch("");
     }
   };
 
@@ -182,16 +189,30 @@ export default function OmqHeader({ onSearch }: OmqHeaderProps) {
             className="py-4 border-t border-indigo-500/20"
             onSubmit={handleSearch}
           >
-            <div className="relative">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-indigo-400/50" />
-              <Input
-                type="search"
-                placeholder="ابحث في التحليلات العميقة..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pr-10 bg-slate-900/50 border-indigo-500/30 text-white placeholder:text-gray-500 focus:border-indigo-500"
-                data-testid="input-search"
-              />
+            <div className="relative flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-indigo-400/50" />
+                <Input
+                  type="search"
+                  placeholder="ابحث في التحليلات العميقة..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pr-10 bg-slate-900/50 border-indigo-500/30 text-white placeholder:text-gray-500 focus:border-indigo-500"
+                  data-testid="input-search"
+                />
+              </div>
+              {searchQuery && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleClearSearch}
+                  className="text-gray-400 hover:text-white hover:bg-indigo-500/20"
+                  data-testid="button-clear-search"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              )}
             </div>
           </motion.form>
         )}

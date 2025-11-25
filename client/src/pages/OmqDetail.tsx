@@ -69,7 +69,14 @@ export default function OmqDetail() {
   const [viewRecorded, setViewRecorded] = useState(false);
 
   const { data: analysis, isLoading, error } = useQuery<DeepAnalysis>({
-    queryKey: ['/api/omq', analysisId],
+    queryKey: ['/api/omq/detail', analysisId],
+    queryFn: async () => {
+      const response = await fetch(`/api/omq/${analysisId}`);
+      if (!response.ok) {
+        throw new Error('فشل في تحميل التحليل');
+      }
+      return response.json();
+    },
     enabled: !!analysisId,
   });
 

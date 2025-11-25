@@ -96,13 +96,15 @@ export default function Omq() {
     queryKey: ['/api/categories'],
   });
 
-  // Fetch analyses
-  const { data: analysesData, isLoading: isLoadingAnalyses, error } = useQuery<AnalysesResponse>({
-    queryKey: ['/api/omq', filters],
+  // Fetch analyses with separate query key for list
+  const { data: analysesData, isLoading: isLoadingAnalyses, error, isFetching } = useQuery<AnalysesResponse>({
+    queryKey: ['/api/omq/list', filters.keyword, filters.status, filters.category, filters.dateFrom, filters.dateTo, filters.page, filters.limit],
     queryFn: async () => {
       const params = new URLSearchParams();
       Object.entries(filters).forEach(([key, value]) => {
-        if (value) params.append(key, String(value));
+        if (value !== "" && value !== null && value !== undefined) {
+          params.append(key, String(value));
+        }
       });
       const response = await fetch(`/api/omq?${params}`);
       if (!response.ok) {
@@ -135,6 +137,9 @@ export default function Omq() {
   };
 
   const handlePageChange = (newPage: number) => {
+    if (isFetching) return;
+    const maxPage = analysesData?.totalPages || 1;
+    if (newPage < 1 || newPage > maxPage) return;
     setFilters(prev => ({ ...prev, page: newPage }));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
