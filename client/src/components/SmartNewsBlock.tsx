@@ -376,7 +376,7 @@ function ListLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
               <CardContent className="p-0">
                 <div className="flex flex-col md:flex-row gap-0">
                   {(article.thumbnailUrl ?? article.imageUrl) && (
-                    <div className="relative flex-shrink-0 w-full md:w-80 lg:w-96 aspect-[16/9]">
+                    <div className="relative flex-shrink-0 w-full md:w-80 lg:w-96 aspect-[16/9] overflow-hidden">
                       <OptimizedImage
                         src={(article.thumbnailUrl ?? article.imageUrl) || ""}
                         alt={article.title}
@@ -387,7 +387,7 @@ function ListLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                           : 'center'}
                       />
                       {/* AI Generated Thumbnail Badge */}
-                      {article.thumbnailUrl && article.isAiGeneratedThumbnail && (
+                      {article.isAiGeneratedThumbnail && (
                         <Badge 
                           className="absolute top-3 right-3 z-20 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm shadow-lg"
                           data-testid={`badge-smart-list-ai-thumbnail-${article.id}`}
@@ -400,7 +400,7 @@ function ListLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                   )}
 
                   <div className="flex-1 min-w-0 p-6 md:p-8 flex flex-col justify-center space-y-4">
-                    <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center gap-2">
                       {article.category && (
                         <Badge 
                           variant="outline"
@@ -478,7 +478,7 @@ function FeaturedLayout({ articles, blockId }: { articles: ArticleResult[]; bloc
             )}
             
             {/* AI Generated Thumbnail Badge - Top Right */}
-            {featured.thumbnailUrl && featured.isAiGeneratedThumbnail && (
+            {featured.isAiGeneratedThumbnail && (
               <Badge 
                 className="absolute top-4 right-4 z-20 gap-1.5 bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm shadow-lg"
                 data-testid={`badge-featured-ai-thumbnail-${featured.id}`}
@@ -556,10 +556,33 @@ function FeaturedLayout({ articles, blockId }: { articles: ArticleResult[]; bloc
                     </div>
                   )}
                   
+                  {/* AI Generated Thumbnail Badge */}
+                  {article.isAiGeneratedThumbnail && (
+                    <Badge 
+                      className="absolute top-2 right-2 z-20 gap-0.5 px-1.5 py-0.5 text-[10px] bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm shadow-lg"
+                      data-testid={`badge-featured-side-ai-thumbnail-${article.id}`}
+                    >
+                      الصورة
+                      <Brain className="h-2.5 w-2.5" aria-hidden="true" />
+                    </Badge>
+                  )}
+                  
                   <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent flex flex-col justify-end p-2 sm:p-3 lg:p-4">
-                    <h4 className="font-bold text-sm md:text-base lg:text-lg leading-tight text-white line-clamp-2 lg:line-clamp-3" data-testid={`text-smart-article-featured-sub-title-${article.id}`}>
-                      {article.title}
-                    </h4>
+                    {/* AI Content Badge + Title */}
+                    <div className="space-y-1">
+                      {article.aiGenerated && (
+                        <Badge 
+                          className="text-[9px] h-4 gap-0.5 bg-violet-500/90 hover:bg-violet-600 text-white border-0 backdrop-blur-sm"
+                          data-testid={`badge-featured-side-ai-content-${article.id}`}
+                        >
+                          <Brain className="h-2 w-2" aria-hidden="true" />
+                          AI
+                        </Badge>
+                      )}
+                      <h4 className="font-bold text-sm md:text-base lg:text-lg leading-tight text-white line-clamp-2 lg:line-clamp-3" data-testid={`text-smart-article-featured-sub-title-${article.id}`}>
+                        {article.title}
+                      </h4>
+                    </div>
                   </div>
                 </div>
               </Card>
