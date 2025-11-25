@@ -75,7 +75,8 @@ export default function OmqDetail() {
       if (!response.ok) {
         throw new Error('فشل في تحميل التحليل');
       }
-      return response.json();
+      const result = await response.json();
+      return result.data || result;
     },
     enabled: !!analysisId,
   });
