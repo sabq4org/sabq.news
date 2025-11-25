@@ -1,5 +1,7 @@
 # Sabq Smart News Platform
 
+> **📚 للوثائق التفصيلية الشاملة، راجع ملف [SYSTEM_DOCUMENTATION.md](./SYSTEM_DOCUMENTATION.md)**
+
 ## Overview
 Sabq Smart is an AI-powered, trilingual (Arabic, English, and Urdu) news platform designed to revolutionize news consumption. It offers AI-driven summarization, personalized recommendations, comprehensive content management, and viral social media distribution. Key features include trilingual dashboards, independent content management per language, smart links, AI-powered SEO, one-click AI content generation, and detailed social sharing analytics. The platform aims to deliver an advanced news experience through AI, content enrichment, and social media virality.
 
