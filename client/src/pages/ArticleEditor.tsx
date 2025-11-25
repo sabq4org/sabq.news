@@ -2673,6 +2673,17 @@ function ImageCaptionForm({
   
   const { toast } = useToast();
   
+  // Update form fields when existingCaption changes (e.g., when data loads from API)
+  useEffect(() => {
+    if (existingCaption) {
+      setAltText(existingCaption.altText || "");
+      setCaptionPlain(existingCaption.captionPlain || "");
+      setSourceName(existingCaption.sourceName || "");
+      setSourceUrl(existingCaption.sourceUrl || "");
+      setKeywordTags(existingCaption.keywordTags || []);
+    }
+  }, [existingCaption]);
+  
   const handleSave = () => {
     if (!altText) {
       toast({ title: "نص بديل مطلوب", variant: "destructive" });
