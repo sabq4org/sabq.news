@@ -69,11 +69,11 @@ type UploadFormValues = z.infer<typeof uploadFormSchema>;
 
 const CATEGORIES = [
   { value: "all", label: "الكل" },
-  { value: "articles", label: "مقالات" },
-  { value: "logos", label: "شعارات" },
-  { value: "reporters", label: "صور المراسلين" },
-  { value: "banners", label: "بانرات" },
-  { value: "general", label: "عام" },
+  { value: "مقالات", label: "مقالات" },
+  { value: "شعارات", label: "شعارات" },
+  { value: "صور المراسلين", label: "صور المراسلين" },
+  { value: "بانرات", label: "بانرات" },
+  { value: "عام", label: "عام" },
 ];
 
 export function MediaLibraryPicker({
@@ -93,6 +93,7 @@ export function MediaLibraryPicker({
   const [showRecent, setShowRecent] = useState(false);
   const [selectedMediaId, setSelectedMediaId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [allFiles, setAllFiles] = useState<MediaFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -144,7 +145,7 @@ export function MediaLibraryPicker({
   }, [page, debouncedSearch, selectedCategory, showFavorites, showRecent]);
 
   // Fetch media library
-  const { data: mediaData, isLoading: isLoadingMedia } = useQuery<{
+  const { data: mediaData, isLoading: isLoadingMedia, isFetching } = useQuery<{
     files: MediaFile[];
     total: number;
     hasMore: boolean;
@@ -152,6 +153,27 @@ export function MediaLibraryPicker({
     queryKey: [mediaQueryUrl],
     enabled: isOpen && activeTab === "library",
   });
+
+  // Accumulate files across pages
+  useEffect(() => {
+    if (mediaData?.files) {
+      if (page === 1) {
+        setAllFiles(mediaData.files);
+      } else {
+        setAllFiles(prev => {
+          const existingIds = new Set(prev.map(f => f.id));
+          const newFiles = mediaData.files.filter(f => !existingIds.has(f.id));
+          return [...prev, ...newFiles];
+        });
+      }
+    }
+  }, [mediaData?.files, page]);
+
+  // Reset files when filters change
+  useEffect(() => {
+    setAllFiles([]);
+    setPage(1);
+  }, [debouncedSearch, selectedCategory, showFavorites, showRecent]);
 
   // Fetch AI suggestions (conditional)
   const suggestionsQueryUrl = useMemo(() => {
@@ -214,6 +236,7 @@ export function MediaLibraryPicker({
     setShowRecent(false);
     setSelectedMediaId(null);
     setPage(1);
+    setAllFiles([]);
     setSelectedFile(null);
     setPreviewUrl(null);
     setUploadProgress(0);
@@ -351,17 +374,18 @@ export function MediaLibraryPicker({
         onDoubleClick={() => handleMediaDoubleClick(media)}
         data-testid={`card-media-${media.id}`}
       >
-        <div className="aspect-video bg-muted relative">
+        <div className="aspect-square bg-muted relative">
           {media.type === "image" ? (
             <img
               src={media.thumbnailUrl || media.url}
               alt={media.altText || media.title || media.fileName}
               className="w-full h-full object-cover"
+              loading="lazy"
               data-testid={`img-media-${media.id}`}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <ImageIcon className="h-8 w-8 text-muted-foreground" />
+              <ImageIcon className="h-6 w-6 text-muted-foreground" />
             </div>
           )}
           {(isSelected || isCurrent) && (
@@ -403,7 +427,7 @@ export function MediaLibraryPicker({
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent
-        className="max-w-6xl max-h-[90vh] p-0 gap-0"
+        className="max-w-4xl max-h-[80vh] p-0 gap-0"
         dir="rtl"
         data-testid="dialog-media-picker"
       >
@@ -506,21 +530,20 @@ export function MediaLibraryPicker({
             </div>
 
             {/* Media Grid - with fixed height and scroll */}
-            <div className="overflow-y-auto" style={{ maxHeight: 'calc(90vh - 300px)' }}>
+            <div className="overflow-y-auto" style={{ maxHeight: 'calc(80vh - 280px)' }}>
               {isLoadingMedia ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                  {Array.from({ length: 10 }).map((_, i) => (
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+                  {Array.from({ length: 12 }).map((_, i) => (
                     <Card key={i} className="overflow-hidden">
-                      <Skeleton className="aspect-video" />
+                      <Skeleton className="aspect-square" />
                       <div className="p-2 space-y-1">
                         <Skeleton className="h-3 w-3/4" />
-                        <Skeleton className="h-2 w-1/2" />
-                        <Skeleton className="h-7 w-full" />
+                        <Skeleton className="h-6 w-full" />
                       </div>
                     </Card>
                   ))}
                 </div>
-              ) : mediaData?.files.length === 0 ? (
+              ) : allFiles.length === 0 && !isFetching ? (
                 <div className="flex flex-col items-center justify-center h-64 text-center">
                   <ImageIcon className="h-16 w-16 text-muted-foreground mb-4" />
                   <p className="text-lg font-medium" data-testid="text-empty">
@@ -532,17 +555,18 @@ export function MediaLibraryPicker({
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                    {mediaData?.files.map((media) => renderMediaCard(media))}
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+                    {allFiles.map((media) => renderMediaCard(media))}
                   </div>
                   {mediaData?.hasMore && (
                     <div className="mt-4 text-center">
                       <Button
                         onClick={() => setPage((p) => p + 1)}
                         variant="outline"
+                        disabled={isFetching}
                         data-testid="button-load-more"
                       >
-                        تحميل المزيد
+                        {isFetching ? "جاري التحميل..." : "تحميل المزيد"}
                       </Button>
                     </div>
                   )}

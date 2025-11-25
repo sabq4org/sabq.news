@@ -445,7 +445,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return res.status(500).json({ message: "خطأ في حفظ الجلسة" });
           }
           console.log("✅ Login successful:", user.email);
-          res.json({ message: "تم تسجيل الدخول بنجاح", user: { id: user.id, email: user.email } });
+      res.json({ message: "تم تسجيل الدخول بنجاح", user: { id: user.id, email: user.email } });
         });
       });
     })(req, res, next);
@@ -1015,13 +1015,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           url: displayUrl, // Display URL for preview (https:// or /api/media/proxy/)
           proxyUrl: `/api/media/proxy/${item.id}`,
         };
+
       });
 
+      const hasMore = pageNum * limitNum < total;
       res.json({
         files: filesWithUrls,
         total,
         page: pageNum,
         limit: limitNum,
+        hasMore,
       });
     } catch (error) {
       console.error("Error fetching media files:", error);
@@ -2476,7 +2479,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Clear the pending 2FA userId from session
         delete (req.session as any).pending2FAUserId;
 
-        res.json({ 
+      res.json({ 
           message: "تم التحقق بنجاح",
           user: {
             id: user.id,
@@ -2594,7 +2597,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Clear the pending 2FA userId from session
         delete (req.session as any).pending2FAUserId;
 
-        res.json({ 
+      res.json({ 
           message: "تم التحقق بنجاح",
           user: {
             id: user.id,
@@ -13860,7 +13863,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
 
         console.log(`[API] Successfully fetched ${recommendations.length} personalized recommendations for user ${userId}`);
 
-        res.json({ recommendations });
+      res.json({ recommendations });
       } catch (error) {
         console.error("[API] Error getting personalized recommendations:", error);
         res.status(500).json({ message: "فشل في جلب التوصيات الشخصية" });
@@ -14481,7 +14484,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         });
 
         console.log('[SEO] Generated and saved for article:', articleId);
-        res.json({
+      res.json({
           success: true,
           seo: seoContent,
           metadata: seoMetadata,
@@ -14516,7 +14519,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         console.log('[SEO] Draft generation successful');
         
         // Return results without saving to database
-        res.json({
+      res.json({
           success: true,
           seo: seoContent,
           provider: seoResult.provider,
@@ -16862,7 +16865,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
           userId: req.user.id 
         });
 
-        res.json({ 
+      res.json({ 
           status: 'queued', 
           jobId, 
           message: 'جاري التوليد في الخلفية' 
@@ -17146,7 +17149,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
           userId: req.user.id 
         });
 
-        res.json({ 
+      res.json({ 
           status: 'queued', 
           jobId, 
           message: 'جاري التوليد في الخلفية' 
@@ -17797,6 +17800,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         status: "published",
         page: pageNum,
         limit: limitNum,
+        hasMore,
       };
 
       if (categoryId) {
@@ -18104,11 +18108,12 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
           reporter: r.reporter || undefined,
         }));
 
-        res.json({
+      res.json({
           shorts: shortsWithDetails,
           total: count,
           page: pageNum,
           limit: limitNum,
+        hasMore,
           totalPages: Math.ceil(count / limitNum),
         });
       } catch (error: any) {
@@ -18306,7 +18311,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       try {
         const objectStorageService = new ObjectStorageService();
         const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-        res.json({ uploadURL });
+      res.json({ uploadURL });
       } catch (error: any) {
         console.error("Error getting upload URL for shorts:", error);
         res.status(500).json({ message: "فشل في الحصول على رابط الرفع" });
@@ -18463,6 +18468,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       res.json({
         total: formattedArticles.length,
         limit: limitNum,
+        hasMore,
         offset: offsetNum,
         articles: formattedArticles,
       });
@@ -19996,7 +20002,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         const totalBookmarks = lifetimeBookmarks?.count || 0;
         const bookmarksChange = calculateChange(thisMonthBookmarks?.count || 0, lastMonthBookmarks?.count || 0);
 
-        res.json({
+      res.json({
           totalViews,
           viewsChange,
           totalUsers,
@@ -20090,7 +20096,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
           articlesArray.push(articlesMap.get(yearMonth) || 0);
         }
 
-        res.json({
+      res.json({
           months,
           views: viewsArray,
           users: usersArray,
@@ -26014,7 +26020,7 @@ Allow: /
           return res.status(204).end();
         }
 
-        res.json({
+      res.json({
           serialNumbers,
           lastUpdated: new Date().toISOString(),
         });
@@ -26601,6 +26607,7 @@ Allow: /
         parentTaskId: normalizedParentTaskId,
         search: search as string,
         limit: limitNum,
+        hasMore,
         offset,
       };
       
@@ -26627,6 +26634,7 @@ Allow: /
         total: result.total,
         page: pageNum,
         limit: limitNum,
+        hasMore,
         totalPages: Math.ceil(result.total / limitNum),
       });
     } catch (error: any) {
@@ -27404,6 +27412,7 @@ Allow: /
         status: status as string,
         trustedSenderId: trustedSenderId as string,
         limit: limitNum,
+        hasMore,
         offset,
       });
 
@@ -27412,6 +27421,7 @@ Allow: /
         total: result.total,
         page: pageNum,
         limit: limitNum,
+        hasMore,
         totalPages: Math.ceil(result.total / limitNum),
       });
     } catch (error: any) {
@@ -27749,7 +27759,7 @@ Allow: /
     async (req: any, res) => {
       try {
         await storage.deleteNewsletterSubscription(req.params.id);
-        res.json({ message: "تم حذف الاشتراك بنجاح" });
+      res.json({ message: "تم حذف الاشتراك بنجاح" });
       } catch (error: any) {
         console.error("Error deleting newsletter subscription:", error);
         res.status(500).json({ message: "فشل في حذف الاشتراك" });
@@ -27866,7 +27876,7 @@ Allow: /
           "public"            // visibility
         );
 
-        res.json({ url: result.url });
+      res.json({ url: result.url });
       } catch (error: any) {
         console.error("Error uploading publisher logo:", error);
         res.status(500).json({ message: "فشل في رفع الشعار" });
@@ -28260,7 +28270,7 @@ Allow: /
         const stats = await storage.getPublisherStats(publisher.id);
         const activeCredit = await storage.getActivePublisherCredit(publisher.id);
         
-        res.json({
+      res.json({
           publisher,
           stats,
           activeCredit,
@@ -28523,7 +28533,7 @@ Allow: /
           },
         });
         
-        res.json({
+      res.json({
           message: "تم الموافقة على المقال ونشره بنجاح",
           article: publishedArticle,
           creditDeducted: true,
@@ -28589,7 +28599,7 @@ Allow: /
           },
         });
         
-        res.json({
+      res.json({
           message: "تم رفض المقال",
           article: rejectedArticle,
         });
@@ -28621,7 +28631,7 @@ Allow: /
         const credits = await storage.getPublisherCredits(publisher.id);
         const activeCredit = await storage.getActivePublisherCredit(publisher.id);
         
-        res.json({
+      res.json({
           publisher,
           stats,
           credits,
@@ -28673,7 +28683,7 @@ Allow: /
           },
         });
 
-        res.json({
+      res.json({
           message: "تم الموافقة على المقال ونشره بنجاح",
           article: publishedArticle,
           creditDeducted: true,
@@ -28736,7 +28746,7 @@ Allow: /
           },
         });
 
-        res.json({
+      res.json({
           message: "تم رفض المقال",
           article: rejectedArticle,
         });
@@ -28903,7 +28913,7 @@ Allow: /
           metadata: { count: articleIds.length, articleIds },
         });
 
-        res.json({
+      res.json({
           message: `تم حذف ${result.deleted} مقال بنجاح`,
           deleted: result.deleted,
         });
@@ -29080,7 +29090,7 @@ Allow: /
           metadata: { count: articleIds.length, articleIds },
         });
 
-        res.json({
+      res.json({
           message: `تم أرشفة ${result.archived} مقال بنجاح`,
           archived: result.archived,
         });
@@ -29191,7 +29201,7 @@ Allow: /
           entityId: key,
         });
 
-        res.json({ message: "تم حذف الإعداد بنجاح" });
+      res.json({ message: "تم حذف الإعداد بنجاح" });
       } catch (error: any) {
         console.error("Error deleting iFox setting:", error);
         res.status(500).json({ message: "فشل في حذف إعداد آي فوكس" });
@@ -29220,7 +29230,7 @@ Allow: /
           entityId: categorySlug || 'all',
         });
 
-        res.json({ settings });
+      res.json({ settings });
       } catch (error: any) {
         if (error instanceof z.ZodError) {
           return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
@@ -29262,7 +29272,7 @@ Allow: /
           newValue: data as any,
         });
 
-        res.json({
+      res.json({
           message: "تم حفظ إعدادات الفئة بنجاح",
           setting,
         });
@@ -29370,7 +29380,7 @@ Allow: /
           },
         });
 
-        res.json({
+      res.json({
           message: "تم رفع الملف بنجاح",
           media,
         });
@@ -29405,7 +29415,7 @@ Allow: /
           entityId: id.toString(),
         });
 
-        res.json({ message: "تم حذف الملف بنجاح" });
+      res.json({ message: "تم حذف الملف بنجاح" });
       } catch (error: any) {
         console.error("Error deleting iFox media:", error);
         res.status(500).json({ message: "فشل في حذف الملف" });
@@ -29441,7 +29451,7 @@ Allow: /
           metadata: params as any,
         });
 
-        res.json({ schedules });
+      res.json({ schedules });
       } catch (error: any) {
         if (error instanceof z.ZodError) {
           return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
@@ -29486,7 +29496,7 @@ Allow: /
           metadata: data as any,
         });
 
-        res.json({
+      res.json({
           message: "تم جدولة المقال بنجاح",
           schedule,
         });
@@ -29533,7 +29543,7 @@ Allow: /
           newValue: data as any,
         });
 
-        res.json({
+      res.json({
           message: "تم تحديث الجدولة بنجاح",
           schedule,
         });
@@ -29568,7 +29578,7 @@ Allow: /
           entityId: id.toString(),
         });
 
-        res.json({ message: "تم إلغاء الجدولة بنجاح" });
+      res.json({ message: "تم إلغاء الجدولة بنجاح" });
       } catch (error: any) {
         console.error("Error cancelling iFox schedule:", error);
         res.status(500).json({ message: "فشل في إلغاء الجدولة" });
@@ -29593,7 +29603,7 @@ Allow: /
           metadata: { result },
         });
 
-        res.json({
+      res.json({
           message: `تم معالجة ${result.published} مقال بنجاح${result.failed > 0 ? ` وفشل ${result.failed} مقال` : ''}`,
           published: result.published,
           failed: result.failed,
@@ -29634,7 +29644,7 @@ Allow: /
           metadata: params as any,
         });
 
-        res.json({ analytics });
+      res.json({ analytics });
       } catch (error: any) {
         if (error instanceof z.ZodError) {
           return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
@@ -29707,7 +29717,7 @@ Allow: /
           metadata: { count: events.length },
         });
 
-        res.json({
+      res.json({
           message: `تم تسجيل ${events.length} حدث تحليلي`,
           recorded: events.length,
         });
@@ -29787,7 +29797,7 @@ Allow: /
           metadata: { category },
         });
 
-        res.json({ suggestions });
+      res.json({ suggestions });
       } catch (error: any) {
         if (error instanceof z.ZodError) {
           return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
@@ -30044,7 +30054,7 @@ Allow: /
           newValue: { status },
         });
 
-        res.json({ message: "تم تحديث حالة الفئة بنجاح", status });
+      res.json({ message: "تم تحديث حالة الفئة بنجاح", status });
       } catch (error: any) {
         if (error instanceof z.ZodError) {
           return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
@@ -30125,7 +30135,7 @@ Allow: /
           newValue: settings,
         });
 
-        res.json({
+      res.json({
           message: "تم حفظ الإعدادات بنجاح",
           settings,
         });

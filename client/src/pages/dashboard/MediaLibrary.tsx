@@ -473,21 +473,55 @@ export default function MediaLibrary() {
                   السابق
                 </Button>
                 <div className="flex items-center gap-1">
-                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                    const pageNum = i + 1;
-                    return (
-                      <Button
-                        key={pageNum}
-                        variant={page === pageNum ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setPage(pageNum)}
-                        className="min-w-[32px]"
-                        data-testid={`button-page-${pageNum}`}
-                      >
-                        {pageNum}
-                      </Button>
-                    );
-                  })}
+                  {(() => {
+                    const pages: (number | string)[] = [];
+                    const showPages = 5;
+                    const halfShow = Math.floor(showPages / 2);
+                    
+                    let startPage = Math.max(1, page - halfShow);
+                    let endPage = Math.min(totalPages, page + halfShow);
+                    
+                    if (endPage - startPage + 1 < showPages) {
+                      if (startPage === 1) {
+                        endPage = Math.min(totalPages, startPage + showPages - 1);
+                      } else {
+                        startPage = Math.max(1, endPage - showPages + 1);
+                      }
+                    }
+                    
+                    if (startPage > 1) {
+                      pages.push(1);
+                      if (startPage > 2) pages.push('...');
+                    }
+                    
+                    for (let i = startPage; i <= endPage; i++) {
+                      pages.push(i);
+                    }
+                    
+                    if (endPage < totalPages) {
+                      if (endPage < totalPages - 1) pages.push('...');
+                      pages.push(totalPages);
+                    }
+                    
+                    return pages.map((p, idx) => (
+                      typeof p === 'number' ? (
+                        <Button
+                          key={`page-${p}`}
+                          variant={page === p ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setPage(p)}
+                          className="min-w-[32px]"
+                          data-testid={`button-page-${p}`}
+                        >
+                          {p}
+                        </Button>
+                      ) : (
+                        <span key={`ellipsis-${idx}`} className="px-2 text-muted-foreground">
+                          ...
+                        </span>
+                      )
+                    ));
+                  })()}
                 </div>
                 <Button
                   variant="outline"
