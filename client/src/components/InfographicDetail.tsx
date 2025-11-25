@@ -13,7 +13,8 @@ import {
   Check,
   X,
   Download,
-  ZoomIn
+  ZoomIn,
+  Brain
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -155,6 +156,17 @@ export function InfographicDetail({
               onClick={() => setImageZoom(true)}
               data-testid="image-infographic-main"
             />
+            
+            {/* AI Generated Thumbnail Badge - Top Right */}
+            {article.thumbnailUrl && article.isAiGeneratedThumbnail && (
+              <Badge 
+                className="absolute top-4 right-4 z-10 gap-1.5 bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm shadow-lg"
+                data-testid={`badge-article-ai-thumbnail-${article.id}`}
+              >
+                الصورة
+                <Brain className="h-3 w-3" aria-hidden="true" />
+              </Badge>
+            )}
             
             {/* Overlay with actions on hover */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">

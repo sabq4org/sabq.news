@@ -122,7 +122,7 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
               {/* Badges above title */}
               <div className="flex items-center gap-2 flex-wrap">
                 {/* AI Generated Thumbnail Badge */}
-                {article.thumbnailUrl && (
+                {article.thumbnailUrl && article.isAiGeneratedThumbnail && (
                   <Badge className="text-xs h-5 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0" data-testid={`badge-ai-thumbnail-${article.id}`}>
                     الصورة
                     <Brain className="h-2.5 w-2.5" aria-hidden="true" />
@@ -225,7 +225,7 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
                   {/* Badges above title */}
                   <div className="flex items-center gap-2 flex-wrap">
                     {/* AI Generated Thumbnail Badge */}
-                    {article.thumbnailUrl && (
+                    {article.thumbnailUrl && article.isAiGeneratedThumbnail && (
                       <Badge className="text-xs h-5 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0" data-testid={`badge-ai-thumbnail-${article.id}`}>
                         الصورة
                         <Brain className="h-2.5 w-2.5" aria-hidden="true" />
@@ -352,7 +352,7 @@ export function NewsArticleCard({ article, viewMode }: NewsArticleCardProps) {
                 {/* Badges moved above title */}
                 <div className="flex items-center gap-2 flex-wrap">
                   {/* AI Generated Thumbnail Badge */}
-                  {article.thumbnailUrl && (
+                  {article.thumbnailUrl && article.isAiGeneratedThumbnail && (
                     <Badge className="text-xs h-5 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0" data-testid={`badge-ai-thumbnail-${article.id}`}>
                       الصورة
                       <Brain className="h-2.5 w-2.5" aria-hidden="true" />
