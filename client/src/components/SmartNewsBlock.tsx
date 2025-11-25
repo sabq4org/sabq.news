@@ -146,7 +146,7 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                       <div className="flex gap-3">
                         {/* Image with AI badge */}
                         {(article.thumbnailUrl ?? article.imageUrl) && (
-                          <div className="relative flex-shrink-0 w-20 h-16 rounded-lg">
+                          <div className="relative flex-shrink-0 w-20 h-16 rounded-lg overflow-hidden">
                             <OptimizedImage
                               src={(article.thumbnailUrl ?? article.imageUrl) || ""}
                               alt={article.title}
@@ -157,7 +157,7 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                                 : 'center'}
                             />
                             {/* AI Generated Thumbnail Badge */}
-                            {article.thumbnailUrl && article.isAiGeneratedThumbnail && (
+                            {article.isAiGeneratedThumbnail && (
                               <Badge 
                                 className="absolute -top-1 -right-1 z-20 gap-0.5 px-1 py-0 h-4 text-[9px] bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm shadow-md"
                                 data-testid={`badge-smart-mobile-ai-thumbnail-${article.id}`}
@@ -170,12 +170,12 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
 
                         {/* Content */}
                         <div className="flex-1 min-w-0 space-y-1.5">
-                          {/* Badges above title */}
-                          <div className="flex items-center gap-1.5 flex-wrap">
+                          {/* Badges above title - side by side */}
+                          <div className="flex items-center gap-1.5">
                             {article.newsType === "breaking" ? (
                               <Badge 
                                 variant="destructive" 
-                                className="text-[10px] h-4 gap-0.5"
+                                className="text-[10px] h-4 gap-0.5 shrink-0"
                                 data-testid={`badge-smart-mobile-breaking-${article.id}`}
                               >
                                 <Zap className="h-2 w-2" />
@@ -183,7 +183,7 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                               </Badge>
                             ) : isNewArticle(article.publishedAt) ? (
                               <Badge 
-                                className="text-[10px] h-4 gap-0.5 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600"
+                                className="text-[10px] h-4 gap-0.5 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600 shrink-0"
                                 data-testid={`badge-smart-mobile-new-${article.id}`}
                               >
                                 <Flame className="h-2 w-2" />
@@ -191,7 +191,7 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                               </Badge>
                             ) : article.category ? (
                               <Badge 
-                                className="text-[10px] h-4 bg-muted text-muted-foreground border-0"
+                                className="text-[10px] h-4 bg-muted text-muted-foreground border-0 shrink-0"
                                 data-testid={`badge-smart-mobile-category-${article.id}`}
                               >
                                 {article.category.nameAr}
@@ -200,7 +200,7 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                             {/* AI Generated Content Badge */}
                             {article.aiGenerated && (
                               <Badge 
-                                className="text-[10px] h-4 gap-0.5 bg-violet-500/90 hover:bg-violet-600 text-white border-0"
+                                className="text-[10px] h-4 gap-0.5 bg-violet-500/90 hover:bg-violet-600 text-white border-0 shrink-0"
                                 data-testid={`badge-smart-mobile-ai-content-${article.id}`}
                               >
                                 <Brain className="h-2 w-2" aria-hidden="true" />
@@ -258,7 +258,7 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                 article.newsType === "breaking" ? "bg-destructive/5" : ""
               }`} data-testid={`card-smart-article-${article.id}`}>
                 {(article.thumbnailUrl ?? article.imageUrl) && (
-                  <div className="relative aspect-[16/9]">
+                  <div className="relative aspect-[16/9] overflow-hidden">
                     <OptimizedImage
                       src={(article.thumbnailUrl ?? article.imageUrl) || ""}
                       alt={article.title}
@@ -269,7 +269,7 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                         : 'center'}
                     />
                     {/* AI Generated Thumbnail Badge */}
-                    {article.thumbnailUrl && article.isAiGeneratedThumbnail && (
+                    {article.isAiGeneratedThumbnail && (
                       <Badge 
                         className="absolute top-2 right-2 z-20 gap-1 bg-purple-500/90 hover:bg-purple-600 text-white border-0 text-xs backdrop-blur-sm shadow-lg"
                         data-testid={`badge-smart-ai-thumbnail-${article.id}`}
@@ -281,12 +281,12 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                   </div>
                 )}
                 <CardContent className="p-5 space-y-3">
-                  {/* Badges above title */}
-                  <div className="flex items-center gap-2 flex-wrap">
+                  {/* Badges above title - side by side */}
+                  <div className="flex items-center gap-2">
                     {article.newsType === "breaking" ? (
                       <Badge 
                         variant="destructive" 
-                        className="text-xs h-5 gap-1" 
+                        className="text-xs h-5 gap-1 shrink-0" 
                         data-testid={`badge-smart-breaking-${article.id}`}
                       >
                         <Zap className="h-2.5 w-2.5" />
@@ -294,7 +294,7 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                       </Badge>
                     ) : isNewArticle(article.publishedAt) ? (
                       <Badge 
-                        className="text-xs h-5 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600" 
+                        className="text-xs h-5 gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600 shrink-0" 
                         data-testid={`badge-smart-new-${article.id}`}
                       >
                         <Flame className="h-2.5 w-2.5" />
@@ -302,7 +302,7 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                       </Badge>
                     ) : article.category ? (
                       <Badge 
-                        className="text-xs h-5 bg-muted text-muted-foreground border-0" 
+                        className="text-xs h-5 bg-muted text-muted-foreground border-0 shrink-0" 
                         data-testid={`badge-smart-category-${article.id}`}
                       >
                         {article.category.nameAr}
@@ -311,7 +311,7 @@ function GridLayout({ articles, blockId }: { articles: ArticleResult[]; blockId:
                     {/* AI Generated Content Badge */}
                     {article.aiGenerated && (
                       <Badge 
-                        className="text-xs h-5 gap-1 bg-violet-500/90 hover:bg-violet-600 text-white border-0"
+                        className="text-xs h-5 gap-1 bg-violet-500/90 hover:bg-violet-600 text-white border-0 shrink-0"
                         data-testid={`badge-smart-ai-content-${article.id}`}
                       >
                         <Brain className="h-2.5 w-2.5" aria-hidden="true" />
