@@ -26266,6 +26266,25 @@ Allow: /
   // OMQ (DEEP ANALYSIS PUBLIC) ROUTES - PHASE 2
   // ============================================================
 
+
+  // GET /api/omq/public-stats - إحصائيات عامة (public - no auth required)
+  app.get("/api/omq/public-stats", async (req, res) => {
+    try {
+      const stats = await storage.getDeepAnalysisStats();
+      
+      res.json({
+        totalAnalyses: stats.totalAnalyses,
+        totalViews: stats.totalViews,
+        totalShares: stats.totalShares,
+        totalDownloads: stats.totalDownloads,
+      });
+    } catch (error: any) {
+      console.error("Error fetching public stats:", error);
+      res.status(500).json({ 
+        error: "فشل في جلب الإحصائيات",
+      });
+    }
+  });
   // GET /api/omq - قائمة التحليلات المنشورة (public)
   app.get("/api/omq", async (req, res) => {
     try {

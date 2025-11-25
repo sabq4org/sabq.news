@@ -86,9 +86,9 @@ export default function Omq() {
   });
   const [showFilters, setShowFilters] = useState(false);
 
-  // Fetch stats
+  // Fetch stats (public endpoint - no auth required)
   const { data: stats, isLoading: isLoadingStats } = useQuery<StatsResponse>({
-    queryKey: ['/api/omq/stats/summary'],
+    queryKey: ['/api/omq/public-stats'],
   });
 
   // Fetch categories
