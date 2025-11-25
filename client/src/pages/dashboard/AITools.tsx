@@ -46,7 +46,7 @@ export default function AITools() {
               <CardTitle>300+ نموذج AI متاح</CardTitle>
             </div>
             <CardDescription>
-              GPT-5، Claude Opus 4.1، Gemini 2.5 Pro، وأكثر من 300 نموذج ذكاء اصطناعي جاهز للاستخدام
+              GPT-5.1، Claude Opus 4.1، Gemini 3 Pro، وأكثر من 300 نموذج ذكاء اصطناعي جاهز للاستخدام
             </CardDescription>
           </CardHeader>
         </Card>

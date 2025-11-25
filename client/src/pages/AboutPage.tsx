@@ -103,7 +103,7 @@ export default function AboutPage() {
     },
     {
       title: "الملخصات الآلية",
-      description: "تقنيات GPT-5 لتوليد ملخصات دقيقة وعناوين جذابة",
+      description: "تقنيات GPT-5.1 لتوليد ملخصات دقيقة وعناوين جذابة",
       icon: MessageSquare
     },
     {

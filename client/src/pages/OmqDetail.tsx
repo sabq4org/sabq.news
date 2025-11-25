@@ -271,7 +271,7 @@ export default function OmqDetail() {
     if (!analysis) return;
     
     const titleClean = cleanTitle(analysis.title);
-    const content = `# ${titleClean}\n\n## الموضوع\n${cleanTitle(analysis.topic)}\n\n## الكلمات المفتاحية\n${analysis.keywords.join(', ')}\n\n## التحليل الموحد\n${analysis.mergedAnalysis || 'غير متوفر'}\n\n## تحليل GPT-5\n${analysis.gptAnalysis || 'غير متوفر'}\n\n## تحليل Gemini\n${analysis.geminiAnalysis || 'غير متوفر'}\n\n## تحليل Claude\n${analysis.claudeAnalysis || 'غير متوفر'}\n\n## الملخص التنفيذي\n${analysis.executiveSummary || 'غير متوفر'}\n\n## التوصيات\n${analysis.recommendations || 'غير متوفر'}`;
+    const content = `# ${titleClean}\n\n## الموضوع\n${cleanTitle(analysis.topic)}\n\n## الكلمات المفتاحية\n${analysis.keywords.join(', ')}\n\n## التحليل الموحد\n${analysis.mergedAnalysis || 'غير متوفر'}\n\n## تحليل GPT-5.1\n${analysis.gptAnalysis || 'غير متوفر'}\n\n## تحليل Gemini 3\n${analysis.geminiAnalysis || 'غير متوفر'}\n\n## تحليل Claude\n${analysis.claudeAnalysis || 'غير متوفر'}\n\n## الملخص التنفيذي\n${analysis.executiveSummary || 'غير متوفر'}\n\n## التوصيات\n${analysis.recommendations || 'غير متوفر'}`;
 
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);

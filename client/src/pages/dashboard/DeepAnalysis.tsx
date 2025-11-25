@@ -256,7 +256,7 @@ export default function DeepAnalysis() {
           <h1 className="text-4xl font-bold">التحليل العميق الذكي</h1>
         </div>
         <p className="text-muted-foreground text-lg">
-          محرك تحليل متعدد النماذج AI (GPT-5 + Gemini + Claude) لتوليد تحليلات استراتيجية شاملة
+          محرك تحليل متعدد النماذج AI (GPT-5.1 + Gemini 3 + Claude) لتوليد تحليلات استراتيجية شاملة
         </p>
       </div>
 

@@ -67,8 +67,8 @@ interface Category {
 }
 
 const aiModels = [
-  { name: "GPT-5", color: "#22C55E", icon: Bot },
-  { name: "Gemini", color: "#8B5CF6", icon: Sparkles },
+  { name: "GPT-5.1", color: "#22C55E", icon: Bot },
+  { name: "Gemini 3", color: "#8B5CF6", icon: Sparkles },
   { name: "Claude", color: "#F59E0B", icon: Brain },
 ];
 
