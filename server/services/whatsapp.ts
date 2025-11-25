@@ -2,7 +2,10 @@ import twilio from 'twilio';
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
-const whatsappNumber = process.env.TWILIO_WHATSAPP_NUMBER || process.env.TWILIO_PHONE_NUMBER;
+
+// 🔧 FIX: Remove 'whatsapp:' prefix if it exists to prevent duplication
+const rawWhatsappNumber = process.env.TWILIO_WHATSAPP_NUMBER || process.env.TWILIO_PHONE_NUMBER || '';
+const whatsappNumber = rawWhatsappNumber.replace(/^whatsapp:/i, '');
 
 if (!accountSid || !authToken) {
   console.warn('⚠️ Twilio credentials not configured - WhatsApp features disabled');
@@ -102,5 +105,6 @@ export function removeTokenFromMessage(message: string): string {
 
 console.log('✅ WhatsApp service initialized', {
   configured: !!twilioClient,
-  whatsappNumber: whatsappNumber ? `${whatsappNumber.substring(0, 8)}...` : 'not set'
+  rawNumber: rawWhatsappNumber ? `${rawWhatsappNumber.substring(0, 12)}...` : 'not set',
+  cleanNumber: whatsappNumber ? `${whatsappNumber.substring(0, 8)}...` : 'not set'
 });
