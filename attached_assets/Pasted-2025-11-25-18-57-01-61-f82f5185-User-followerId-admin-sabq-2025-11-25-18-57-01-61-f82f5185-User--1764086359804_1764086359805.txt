@@ -1,0 +1,140 @@
+2025-11-25 18:57:01.61
+f82f5185
+User
+followerId: 'admin-sabq',
+2025-11-25 18:57:01.61
+f82f5185
+User
+followingId: 'RnP7eDOAl5T5rGpib9_8d',
+2025-11-25 18:57:01.61
+f82f5185
+User
+[Social Follow] Checked following status: {
+2025-11-25 18:57:01.61
+f82f5185
+User
+isFollowing: true
+2025-11-25 18:57:01.61
+f82f5185
+User
+[Storage] Is following: true
+2025-11-25 18:57:01.63
+f82f5185
+User
+3:57:01 PM [express] GET /api/social/is-following/RnP7eDOAl5T5rGpib9_8d 304 in 94ms :: {"isFollowing…
+2025-11-25 18:57:01.63
+f82f5185
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-25 18:57:01.64
+f82f5185
+User
+3:57:01 PM [express] GET /api/shortlinks/article/59ffacc4-83e3-43f4-8171-fd714fe7ea67 304 in 98ms ::…
+2025-11-25 18:57:01.64
+f82f5185
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-25 18:57:01.66
+f82f5185
+User
+3:57:01 PM [express] GET /api/articles/%D9%81%D8%B1%D9%8A%D9%82-%D8%B7%D8%A8%D9%8A-%D9%81%D9%8A-%D9%…
+2025-11-25 18:57:01.66
+f82f5185
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-25 18:57:01.66
+f82f5185
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-25 18:57:01.71
+f82f5185
+User
+3:57:01 PM [express] GET /api/opinion/related/category/3a1e94e6-91e2-4203-88e7-42bc7baae55e 304 in 2…
+2025-11-25 18:57:01.71
+f82f5185
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-25 18:57:01.72
+f82f5185
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-25 18:57:01.74
+f82f5185
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-25 18:57:01.74
+f82f5185
+User
+✅ [EVENT TRACKING] Tracked event: view for article 59ffacc4-83e3-43f4-8171-fd714fe7ea67 (value: 1)
+2025-11-25 18:57:01.79
+f82f5185
+User
+3:57:01 PM [express] GET /api/articles/59ffacc4-83e3-43f4-8171-fd714fe7ea67/media-assets 304 in 252m…
+2025-11-25 18:57:01.91
+f82f5185
+User
+🔄 [Loyalty Pass] Triggering update for user: admin-sabq Reason: READ
+2025-11-25 18:57:01.91
+f82f5185
+User
+📱 [Pass Update] Logged: {
+2025-11-25 18:57:01.91
+f82f5185
+User
+timestamp: 2025-11-25T15:57:01.915Z
+2025-11-25 18:57:01.91
+f82f5185
+User
+reason: 'READ',
+2025-11-25 18:57:01.93
+f82f5185
+User
+3:57:01 PM [express] POST /api/behavior/log 200 in 478ms :: {"success":true}
+2025-11-25 18:57:05.80
+f82f5185
+User
+📡 SSE connection closed for user: admin-sabq
+2025-11-25 18:57:05.81
+f82f5185
+User
+📡 User admin-sabq unsubscribed from notification stream
+2025-11-25 18:57:06.36
+f82f5185
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-25 18:57:06.38
+f82f5185
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-25 18:57:07.46
+f82f5185
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-25 18:57:07.49
+f82f5185
+User
+sessionID: 'hxOP1iJsmPbEUAL8xUaVjOoxQzNP1RBV'
+2025-11-25 18:57:07.49
+f82f5185
+User
+isAuthenticated: true,
+2025-11-25 18:57:07.49
+f82f5185
+User
+🔍 /api/auth/user check: {
+2025-11-25 18:57:07.49
+f82f5185
+User
+userId: 'admin-sabq',
+2025-11-25 18:57:07.49
+f82f5185
+User
+}
+2025-11-25 18:57:07.49
+f82f5185
+User
+hasUser: true,
+2025-11-25 18:57:07.49
+f82f5185
+User
+3:57:07 PM [express] GET /api/themes/active 304 in 121ms
