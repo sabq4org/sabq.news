@@ -8,6 +8,7 @@ import { requireAuth, requireRole } from "../rbac";
 import { insertWhatsappTokenSchema, mediaFiles, articleMediaAssets } from "@shared/schema";
 import crypto from "crypto";
 import { db } from "../db";
+import { addMessagePart, shouldForceProcess, AGGREGATION_WINDOW_SECONDS } from "../services/whatsappMessageAggregator";
 
 const router = Router();
 
@@ -1025,16 +1026,50 @@ router.post("/webhook", async (req: Request, res: Response) => {
     }
 
     // ============================================
-    // HANDLE CREATE COMMAND (DEFAULT)
+    // HANDLE CREATE COMMAND (DEFAULT) - WITH MESSAGE AGGREGATION
     // ============================================
-    // ✅ IMPROVED IMAGE HANDLING: Allow short text if there are images
     const hasImages = uploadedMediaUrls.length > 0;
     const textLength = cleanText?.trim().length || 0;
     
+    // Check if user wants to force processing (send command)
+    const forceProcess = shouldForceProcess(cleanText);
+    
+    // If message is just a send command with no content, check for pending messages
+    if (forceProcess && textLength < 20 && !hasImages) {
+      console.log("[WhatsApp Agent] 🚀 Force process command received");
+      
+      const pendingMessage = await storage.getPendingWhatsappMessage(phoneNumber, token);
+      
+      if (pendingMessage) {
+        console.log(`[WhatsApp Agent] Found pending message with ${pendingMessage.messageParts.length} parts`);
+        
+        // Mark webhook log as aggregation trigger
+        await storage.updateWhatsappWebhookLog(webhookLog.id, {
+          status: "processed",
+          reason: "aggregation_trigger",
+          userId: whatsappToken.userId,
+          token: token,
+          processingTimeMs: Date.now() - startTime,
+        });
+        
+        // Force process the pending message
+        await addMessagePart({
+          phoneNumber,
+          token,
+          tokenId: whatsappToken.id,
+          userId: whatsappToken.userId,
+          messagePart: "",
+          forceProcess: true,
+        });
+        
+        return res.status(200).send('OK');
+      }
+    }
+    
+    // If text is too short and no images, reject
     if (!hasImages && textLength < 10) {
       console.log("[WhatsApp Agent] Text too short (no images attached)");
       
-      // ✅ UPDATE THE LOG INSTEAD OF CREATING NEW ONE
       await storage.updateWhatsappWebhookLog(webhookLog.id, {
         status: "rejected",
         reason: "text_too_short",
@@ -1048,6 +1083,57 @@ router.post("/webhook", async (req: Request, res: Response) => {
     }
     
     console.log(`[WhatsApp Agent] Text validation passed (hasImages: ${hasImages}, textLength: ${textLength})`);
+    
+    // ============================================
+    // MESSAGE AGGREGATION SYSTEM
+    // ============================================
+    // Add message to pending queue for aggregation (30 second window)
+    const { pending, isFirst } = await addMessagePart({
+      phoneNumber,
+      token,
+      tokenId: whatsappToken.id,
+      userId: whatsappToken.userId,
+      messagePart: cleanText,
+      mediaUrls: uploadedMediaUrls,
+      forceProcess: false,
+    });
+    
+    // Update webhook log as pending for aggregation
+    await storage.updateWhatsappWebhookLog(webhookLog.id, {
+      status: "processed",
+      reason: isFirst ? "aggregation_started" : "aggregation_part_added",
+      userId: whatsappToken.userId,
+      token: token,
+      mediaUrls: uploadedMediaUrls,
+      processingTimeMs: Date.now() - startTime,
+    });
+    
+    // Send confirmation message
+    if (isFirst) {
+      // First message - inform user about aggregation window
+      await sendWhatsAppMessage({
+        to: phoneNumber,
+        body: `✅ تم استلام رسالتك\n\n📝 يمكنك إرسال المزيد من الرسائل أو الصور خلال ${AGGREGATION_WINDOW_SECONDS} ثانية\n\n💡 أرسل "إرسال" للنشر فوراً`,
+      });
+    } else {
+      // Additional parts - confirm receipt
+      const partsCount = pending.messageParts.length;
+      const mediaCount = pending.mediaUrls?.length || 0;
+      
+      await sendWhatsAppMessage({
+        to: phoneNumber,
+        body: `✅ تم إضافة الجزء ${partsCount}\n📎 الصور: ${mediaCount}\n\n💡 أرسل "إرسال" للنشر فوراً`,
+      });
+    }
+    
+    console.log("[WhatsApp Agent] ============ WEBHOOK END (AGGREGATION) ============");
+    return res.status(200).send('OK');
+    
+    /* 
+    // ============================================
+    // LEGACY: DIRECT PROCESSING (BYPASSED BY AGGREGATION)
+    // ============================================
+    */
   
     // 🌐 FORCE ARABIC OUTPUT: WhatsApp Agent always publishes in Arabic
     // Regardless of source language, translate/rewrite to Arabic for consistency

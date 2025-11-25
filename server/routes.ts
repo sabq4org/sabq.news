@@ -8,6 +8,7 @@ import { registerDataStoryRoutes } from './data-story-routes';
 import journalistAgentRoutes from './journalist-agent-routes';
 import emailAgentRoutes from './routes/emailAgent';
 import whatsappAgentRoutes from './routes/whatsappAgent';
+import { startMessageAggregatorJob } from './services/whatsappMessageAggregator';
 import ifoxAiManagementRoutes from './routes/ifox/ai-management';
 import autoImageRoutes from './routes/autoImageRoutes';
 import { ObjectStorageService, ObjectNotFoundError, objectStorageClient } from "./objectStorage";
@@ -287,6 +288,9 @@ import { pool } from "./db";
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
   await setupAuth(app);
+  
+  // Start WhatsApp message aggregator job (processes multi-part messages)
+  startMessageAggregatorJob();
 
   // ============================================================
   // SETUP ROUTES (Protected, one-time use)

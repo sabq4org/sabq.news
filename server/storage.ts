@@ -300,10 +300,12 @@ import {
   type EmailAgentStats,
   whatsappTokens,
   whatsappWebhookLogs,
+  pendingWhatsappMessages,
   type WhatsappToken,
   type InsertWhatsappToken,
   type WhatsappWebhookLog,
   type InsertWhatsappWebhookLog,
+  type PendingWhatsappMessage,
   newsletterSubscriptions,
   type NewsletterSubscription,
   type InsertNewsletterSubscription,
@@ -1513,6 +1515,21 @@ export interface IStorage {
   getWhatsappWebhookLog(id: string): Promise<WhatsappWebhookLog | null>;
   deleteWhatsappWebhookLog(id: string): Promise<void>;
   bulkDeleteWhatsappWebhookLogs(ids: string[]): Promise<void>;
+  
+  // Pending WhatsApp Messages (multi-part message aggregation)
+  getPendingWhatsappMessage(phoneNumber: string, token: string): Promise<PendingWhatsappMessage | null>;
+  createOrUpdatePendingWhatsappMessage(data: {
+    phoneNumber: string;
+    token: string;
+    tokenId?: string;
+    userId?: string;
+    messagePart: string;
+    mediaUrls?: string[];
+    aggregationWindowSeconds?: number;
+  }): Promise<PendingWhatsappMessage>;
+  deletePendingWhatsappMessage(id: string): Promise<void>;
+  getExpiredPendingMessages(): Promise<PendingWhatsappMessage[]>;
+  markPendingMessageProcessing(id: string): Promise<PendingWhatsappMessage | null>;
   
   // Notifications Operations
   createNotification(data: {
@@ -13401,6 +13418,126 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(whatsappWebhookLogs)
       .where(inArray(whatsappWebhookLogs.id, ids));
+  }
+
+  // Pending WhatsApp Messages (multi-part message aggregation)
+  async getPendingWhatsappMessage(phoneNumber: string, token: string): Promise<PendingWhatsappMessage | null> {
+    const [pending] = await db
+      .select()
+      .from(pendingWhatsappMessages)
+      .where(
+        and(
+          eq(pendingWhatsappMessages.phoneNumber, phoneNumber),
+          eq(pendingWhatsappMessages.token, token),
+          eq(pendingWhatsappMessages.isProcessing, false),
+          gte(pendingWhatsappMessages.expiresAt, new Date())
+        )
+      )
+      .limit(1);
+    
+    return pending || null;
+  }
+
+  async createOrUpdatePendingWhatsappMessage(data: {
+    phoneNumber: string;
+    token: string;
+    tokenId?: string;
+    userId?: string;
+    messagePart: string;
+    mediaUrls?: string[];
+    aggregationWindowSeconds?: number;
+  }): Promise<PendingWhatsappMessage> {
+    const windowSeconds = data.aggregationWindowSeconds || 30;
+    const expiresAt = new Date(Date.now() + windowSeconds * 1000);
+    
+    // Use atomic upsert with array_cat to prevent race conditions
+    // When two webhook deliveries arrive simultaneously, both will atomically append their parts
+    const newMediaUrls = data.mediaUrls || [];
+    
+    const result = await db.execute(sql`
+      INSERT INTO pending_whatsapp_messages (
+        id, phone_number, token, token_id, user_id, 
+        message_parts, media_urls, first_message_at, last_message_at, 
+        is_processing, expires_at
+      ) VALUES (
+        gen_random_uuid(), ${data.phoneNumber}, ${data.token}, 
+        ${data.tokenId || null}, ${data.userId || null},
+        ARRAY[${data.messagePart}]::text[], 
+        ${newMediaUrls.length > 0 ? sql`ARRAY[${sql.join(newMediaUrls.map(u => sql`${u}`), sql`,`)}]::text[]` : sql`'{}'::text[]`},
+        NOW(), NOW(), false, ${expiresAt}
+      )
+      ON CONFLICT (phone_number, token) 
+      WHERE is_processing = false AND expires_at > NOW()
+      DO UPDATE SET
+        message_parts = array_cat(pending_whatsapp_messages.message_parts, ARRAY[${data.messagePart}]::text[]),
+        media_urls = array_cat(
+          COALESCE(pending_whatsapp_messages.media_urls, '{}'::text[]),
+          ${newMediaUrls.length > 0 ? sql`ARRAY[${sql.join(newMediaUrls.map(u => sql`${u}`), sql`,`)}]::text[]` : sql`'{}'::text[]`}
+        ),
+        last_message_at = NOW(),
+        expires_at = ${expiresAt}
+      RETURNING *
+    `);
+    
+    if (result.rows && result.rows.length > 0) {
+      const row = result.rows[0] as any;
+      return {
+        id: row.id,
+        phoneNumber: row.phone_number,
+        token: row.token,
+        tokenId: row.token_id,
+        userId: row.user_id,
+        messageParts: row.message_parts,
+        mediaUrls: row.media_urls,
+        firstMessageAt: row.first_message_at,
+        lastMessageAt: row.last_message_at,
+        isProcessing: row.is_processing,
+        expiresAt: row.expires_at,
+      } as PendingWhatsappMessage;
+    }
+    
+    // Fallback: if upsert didn't return, fetch the existing record
+    const existing = await this.getPendingWhatsappMessage(data.phoneNumber, data.token);
+    if (existing) {
+      return existing;
+    }
+    
+    throw new Error('Failed to create or update pending WhatsApp message');
+  }
+
+  async deletePendingWhatsappMessage(id: string): Promise<void> {
+    await db
+      .delete(pendingWhatsappMessages)
+      .where(eq(pendingWhatsappMessages.id, id));
+  }
+
+  async getExpiredPendingMessages(): Promise<PendingWhatsappMessage[]> {
+    const expired = await db
+      .select()
+      .from(pendingWhatsappMessages)
+      .where(
+        and(
+          eq(pendingWhatsappMessages.isProcessing, false),
+          lt(pendingWhatsappMessages.expiresAt, new Date())
+        )
+      );
+    
+    return expired;
+  }
+
+  async markPendingMessageProcessing(id: string): Promise<PendingWhatsappMessage | null> {
+    const [updated] = await db
+      .update(pendingWhatsappMessages)
+      .set({ isProcessing: true })
+      .where(
+        and(
+          eq(pendingWhatsappMessages.id, id),
+          eq(pendingWhatsappMessages.isProcessing, false)
+        )
+      )
+      .returning();
+    
+    return updated || null;
   }
 
   // Notification Operations
