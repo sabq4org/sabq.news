@@ -158,7 +158,7 @@ export function InfographicDetail({
             />
             
             {/* AI Generated Thumbnail Badge - Top Right */}
-            {article.thumbnailUrl && article.isAiGeneratedThumbnail && (
+            {article.isAiGeneratedThumbnail && (
               <Badge 
                 className="absolute top-4 right-4 z-10 gap-1.5 bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm shadow-lg"
                 data-testid={`badge-article-ai-thumbnail-${article.id}`}
