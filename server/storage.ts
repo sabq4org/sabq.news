@@ -12205,9 +12205,12 @@ export class DatabaseStorage implements IStorage {
       .from(deepAnalyses)
       .where(whereClause);
 
-    // Format results
+    // Format results with flattened metrics for frontend compatibility
     const analyses = analysesWithMetrics.map(row => ({
       ...row.analysis,
+      viewsCount: row.metrics?.views || 0,
+      sharesCount: row.metrics?.shares || 0,
+      downloadsCount: (row.metrics?.downloads || 0) + (row.metrics?.exportsPdf || 0) + (row.metrics?.exportsDocx || 0),
       metrics: row.metrics || {
         views: 0,
         shares: 0,
