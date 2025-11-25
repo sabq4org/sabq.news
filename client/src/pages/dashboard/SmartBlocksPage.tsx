@@ -167,6 +167,31 @@ export default function SmartBlocksPage() {
     },
   });
 
+  const toggleActiveMutation = useMutation({
+    mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
+      return await apiRequest(`/api/smart-blocks/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ isActive }),
+      });
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/smart-blocks'] });
+      toast({
+        title: variables.isActive ? "تم التفعيل" : "تم التعطيل",
+        description: variables.isActive 
+          ? "تم تفعيل البلوك الذكي بنجاح" 
+          : "تم تعطيل البلوك الذكي بنجاح",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "فشل تحديث حالة البلوك الذكي",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSubmit = (data: InsertSmartBlock) => {
     if (editingBlock) {
       updateMutation.mutate({ id: editingBlock.id, data });
@@ -348,12 +373,22 @@ export default function SmartBlocksPage() {
                           {block.limitCount}
                         </TableCell>
                         <TableCell>
-                          <Badge 
-                            variant={block.isActive ? "default" : "secondary"}
-                            data-testid={`badge-status-${block.id}`}
-                          >
-                            {block.isActive ? 'نشط' : 'غير نشط'}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              checked={block.isActive}
+                              onCheckedChange={(checked) => {
+                                toggleActiveMutation.mutate({ 
+                                  id: block.id, 
+                                  isActive: checked 
+                                });
+                              }}
+                              disabled={toggleActiveMutation.isPending}
+                              data-testid={`switch-status-${block.id}`}
+                            />
+                            <span className={`text-sm ${block.isActive ? 'text-green-600' : 'text-muted-foreground'}`}>
+                              {block.isActive ? 'نشط' : 'معطل'}
+                            </span>
+                          </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
