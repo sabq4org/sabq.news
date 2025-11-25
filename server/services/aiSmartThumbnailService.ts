@@ -1,6 +1,7 @@
 /**
  * AI Smart Thumbnail Service
  * يستخدم Gemini AI لإنشاء صور مصغرة احترافية بنسبة 16:9
+ * الصور تُحفظ بشكل دائم في Object Storage
  */
 
 import { GoogleGenAI, Modality } from '@google/genai';
@@ -9,6 +10,7 @@ import { db } from '../db';
 import { articles } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import fetch from 'node-fetch';
+import { ObjectStorageService } from '../objectStorage';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
@@ -46,48 +48,45 @@ function isRateLimitError(error: any): boolean {
 }
 
 /**
- * Upload thumbnail to Google Cloud Storage
+ * Upload thumbnail to Replit Object Storage (persistent)
+ * استخدام Object Storage الدائم بدلاً من المجلد المؤقت
  */
 async function uploadToStorage(
   buffer: Buffer,
   filename: string
 ): Promise<string> {
-  const bucketName = process.env.GCS_BUCKET_NAME;
-  
-  if (!bucketName) {
-    // Fallback to local storage
+  try {
+    const objectStorage = new ObjectStorageService();
+    
+    // Upload to public directory for accessibility
+    const path = `ai-thumbnails/${filename}`;
+    const result = await objectStorage.uploadFile(
+      path,
+      buffer,
+      'image/jpeg',
+      'public'
+    );
+    
+    console.log(`[AI Smart Thumbnail] ✅ Uploaded to Object Storage: ${result.path}`);
+    
+    // Return path that serves through /public-objects/ route
+    return `/public-objects/${path}`;
+  } catch (error: any) {
+    console.error(`[AI Smart Thumbnail] Object Storage upload failed:`, error.message);
+    
+    // Fallback to local storage (temporary - will warn)
+    console.warn(`[AI Smart Thumbnail] ⚠️ Falling back to temporary local storage - files may be lost!`);
     const fs = await import('fs/promises');
-    const path = await import('path');
-    const uploadDir = path.join(process.cwd(), 'uploads', 'ai-thumbnails');
+    const pathModule = await import('path');
+    const uploadDir = pathModule.join(process.cwd(), 'uploads', 'ai-thumbnails');
     
     await fs.mkdir(uploadDir, { recursive: true });
     
-    const filepath = path.join(uploadDir, filename);
+    const filepath = pathModule.join(uploadDir, filename);
     await fs.writeFile(filepath, buffer);
     
     return `/uploads/ai-thumbnails/${filename}`;
   }
-  
-  // Upload to GCS
-  const { Storage } = await import('@google-cloud/storage');
-  const storage = new Storage({
-    projectId: process.env.GCP_PROJECT_ID,
-    keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS
-  });
-  
-  const bucket = storage.bucket(bucketName);
-  const file = bucket.file(`ai-thumbnails/${filename}`);
-  
-  await file.save(buffer, {
-    metadata: {
-      contentType: 'image/jpeg',
-      cacheControl: 'public, max-age=31536000'
-    }
-  });
-  
-  await file.makePublic();
-  
-  return `https://storage.googleapis.com/${bucketName}/ai-thumbnails/${filename}`;
 }
 
 /**
