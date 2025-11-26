@@ -92,20 +92,17 @@ export function Header({ user, onMenuClick }: HeaderProps) {
           <div className="hidden md:flex items-center gap-3">
             <Link href="/">
               <span className="flex items-center gap-2 hover-elevate active-elevate-2 rounded-md px-2 py-2 cursor-pointer group" data-testid="link-home" aria-label="الصفحة الرئيسية - سبق الذكية">
-                <div className="relative">
-                  <img 
-                    src={currentLogo} 
-                    alt="سبق - SABQ" 
-                    className="h-12 w-auto object-contain"
-                  />
-                  {/* Smart AI Badge */}
-                  <div className="absolute -top-1 -left-1 bg-gradient-to-br from-primary via-purple-500 to-blue-500 rounded-full p-1 shadow-lg animate-pulse">
-                    <Brain className="h-3 w-3 text-white" />
+                <img 
+                  src={currentLogo} 
+                  alt="سبق - SABQ" 
+                  className="h-12 w-auto object-contain"
+                />
+                {/* Smart AI Badge - Brain above "ذكية" */}
+                <div className="flex flex-col items-center gap-0.5">
+                  <div className="bg-gradient-to-br from-primary via-purple-500 to-blue-500 rounded-full p-1.5 shadow-lg animate-pulse">
+                    <Brain className="h-3.5 w-3.5 text-white" />
                   </div>
-                </div>
-                <div className="flex flex-col items-start -gap-0.5">
-                  <span className="text-[10px] font-bold text-primary flex items-center gap-1">
-                    <Sparkles className="h-2.5 w-2.5" />
+                  <span className="text-[10px] font-bold text-primary">
                     ذكية
                   </span>
                 </div>
@@ -117,16 +114,19 @@ export function Header({ user, onMenuClick }: HeaderProps) {
           <div className="md:hidden flex items-center">
             <Link href="/">
               <span className="flex items-center gap-2 hover-elevate active-elevate-2 rounded-md px-2 py-2 cursor-pointer group" data-testid="link-home-mobile" aria-label="الصفحة الرئيسية - سبق الذكية">
-                <div className="relative">
-                  <img 
-                    src={currentLogo} 
-                    alt="سبق - SABQ" 
-                    className="h-11 w-auto object-contain"
-                  />
-                  {/* Smart AI Badge */}
-                  <div className="absolute -top-1 -left-1 bg-gradient-to-br from-primary via-purple-500 to-blue-500 rounded-full p-0.5 shadow-lg animate-pulse">
-                    <Brain className="h-2.5 w-2.5 text-white" />
+                <img 
+                  src={currentLogo} 
+                  alt="سبق - SABQ" 
+                  className="h-11 w-auto object-contain"
+                />
+                {/* Smart AI Badge - Brain above "ذكية" */}
+                <div className="flex flex-col items-center gap-0.5">
+                  <div className="bg-gradient-to-br from-primary via-purple-500 to-blue-500 rounded-full p-1 shadow-lg animate-pulse">
+                    <Brain className="h-3 w-3 text-white" />
                   </div>
+                  <span className="text-[8px] font-bold text-primary">
+                    ذكية
+                  </span>
                 </div>
               </span>
             </Link>
