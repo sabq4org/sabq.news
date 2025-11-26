@@ -220,12 +220,28 @@ export default function MuqtarabDetail() {
         className="relative overflow-hidden"
         style={{ 
           backgroundColor: angle.colorHex,
-          backgroundImage: `linear-gradient(135deg, ${angle.colorHex} 0%, ${angle.colorHex}dd 100%)`
         }}
         data-testid="section-hero"
       >
+        {/* Cover Image Background */}
+        {angle.coverImageUrl && (
+          <img 
+            src={angle.coverImageUrl} 
+            alt={angle.nameAr}
+            className="absolute inset-0 w-full h-full object-cover"
+            data-testid="img-cover"
+          />
+        )}
+        
         {/* Gradient overlay for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-black/50" />
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: angle.coverImageUrl 
+              ? `linear-gradient(135deg, ${angle.colorHex}cc 0%, ${angle.colorHex}99 50%, rgba(0,0,0,0.7) 100%)`
+              : `linear-gradient(135deg, ${angle.colorHex} 0%, ${angle.colorHex}dd 100%)`
+          }}
+        />
         
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 relative z-10">
           <div className="max-w-4xl mx-auto text-center text-white">
@@ -261,6 +277,14 @@ export default function MuqtarabDetail() {
                 data-testid="badge-article-count"
               >
                 {articlesCount} مقال{articlesCount !== 1 ? 'ة' : ''}
+              </Badge>
+
+              <Badge 
+                variant="secondary" 
+                className="bg-white/20 text-white border-white/30 backdrop-blur-sm"
+                data-testid="badge-topic-count"
+              >
+                {topics.length} موضوع
               </Badge>
 
               <Button
