@@ -2,7 +2,7 @@ import type { NeonDatabase } from "drizzle-orm/neon-serverless";
 import * as schema from "../../shared/schema.js";
 import { seedRBAC } from "../seedRBAC.js";
 import { bootstrapAdmin } from "./bootstrapAdmin.js";
-import { seedMuqtarib } from "./seedMuqtarib.js";
+import { seedMuqtarab } from "./seedMuqtarab.js";
 
 export async function seedProductionData(db: NeonDatabase<typeof schema>) {
   console.log("🌱 Seeding production data...");
@@ -13,9 +13,9 @@ export async function seedProductionData(db: NeonDatabase<typeof schema>) {
     const { allRoles, allPermissions } = await seedRBAC();
     console.log(`✅ Created ${allRoles.length} roles and ${allPermissions.length} permissions`);
 
-    // Step 2: Seed Muqtarib (Sections & Angles)
-    console.log("\n📐 Step 2: Seeding Muqtarib...");
-    await seedMuqtarib();
+    // Step 2: Seed Muqtarab (Sections & Angles)
+    console.log("\n📐 Step 2: Seeding Muqtarab...");
+    await seedMuqtarab();
 
     // Step 3: Seed Categories
     console.log("\n📁 Step 3: Seeding categories...");

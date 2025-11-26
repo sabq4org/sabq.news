@@ -46,9 +46,9 @@ import NotificationSettings from "@/pages/NotificationSettings";
 import Welcome from "@/pages/onboarding/Welcome";
 import OnboardingInterests from "@/pages/onboarding/SelectInterests";
 import Personalize from "@/pages/onboarding/Personalize";
-import Muqtarib from "@/pages/Muqtarib";
-import MuqtaribDetail from "@/pages/MuqtaribDetail";
-import DashboardMuqtarib from "@/pages/dashboard/DashboardMuqtarib";
+import Muqtarab from "@/pages/Muqtarab";
+import MuqtarabDetail from "@/pages/MuqtarabDetail";
+import DashboardMuqtarab from "@/pages/dashboard/DashboardMuqtarab";
 import TagsManagement from "@/pages/TagsManagement";
 import SmartLinksManagement from "@/pages/dashboard/SmartLinksManagement";
 import SmartJournalist from "@/pages/dashboard/SmartJournalist";
@@ -292,8 +292,8 @@ function Router() {
       <Route path="/2fa-verify" component={TwoFactorVerify} />
       <Route path="/category/:slug" component={CategoryPage} />
       <Route path="/keyword/:keyword" component={KeywordPage} />
-      <Route path="/muqtarib/:slug" component={MuqtaribDetail} />
-      <Route path="/muqtarib" component={Muqtarib} />
+      <Route path="/muqtarab/:slug" component={MuqtarabDetail} />
+      <Route path="/muqtarab" component={Muqtarab} />
       
       {/* Omq (Deep Analysis) public pages */}
       <Route path="/omq/stats" component={OmqStats} />
@@ -357,7 +357,7 @@ function Router() {
       <Route path="/dashboard/mirqab/algorithm-writes/new" component={CreateAlgorithmWrite} />
       <Route path="/dashboard/mirqab/algorithm-writes/:id/edit" component={CreateAlgorithmWrite} />
       
-      <Route path="/dashboard/muqtarib" component={DashboardMuqtarib} />
+      <Route path="/dashboard/muqtarab" component={DashboardMuqtarab} />
       <Route path="/dashboard/smart-blocks" component={SmartBlocksPage} />
       
       {/* Audio Newsletters dashboard */}

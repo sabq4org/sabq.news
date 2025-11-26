@@ -594,7 +594,7 @@ export interface IStorage {
   getPersonalizedFeed(userId: string, limit?: number): Promise<ArticleWithDetails[]>;
   getPersonalizedRecommendations(userId: string, limit?: number): Promise<ArticleWithDetails[]>;
   
-  // Muqtarib Angles operations
+  // Muqtarab Angles operations
   getSectionBySlug(slug: string): Promise<Section | undefined>;
   getAllAngles(activeOnly?: boolean): Promise<Angle[]>;
   getAngleBySlug(slug: string): Promise<Angle | undefined>;
@@ -6884,7 +6884,7 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  // Muqtarib Angles operations
+  // Muqtarab Angles operations
   async getSectionBySlug(slug: string): Promise<Section | undefined> {
     const [section] = await db
       .select()

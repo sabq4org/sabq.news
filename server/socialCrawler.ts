@@ -137,7 +137,7 @@ function generateReporterHTML(user: any, baseUrl: string): string {
 }
 
 /**
- * Generates static HTML with Open Graph meta tags for a writer/muqtarib profile
+ * Generates static HTML with Open Graph meta tags for a writer/muqtarab profile
  */
 function generateWriterHTML(user: any, baseUrl: string): string {
   const fullName = user.firstName && user.lastName 
@@ -147,7 +147,7 @@ function generateWriterHTML(user: any, baseUrl: string): string {
   const seoDescription = user.bio || `تابع مقالات ${fullName} على صحيفة سبق الإلكترونية`;
   // Support both camelCase and snake_case for profileImageUrl
   const seoImage = user.profileImageUrl || user.profile_image_url || `${baseUrl}/icon.png`;
-  const writerUrl = `${baseUrl}/muqtarib/${user.id}`;
+  const writerUrl = `${baseUrl}/muqtarab/${user.id}`;
   
   const safeSeoTitle = escapeHtml(seoTitle);
   const safeSeoDescription = escapeHtml(seoDescription);
@@ -402,8 +402,8 @@ export async function socialCrawlerMiddleware(
       return res.send(html);
     }
 
-    // 4️⃣ Handle writer/muqtarib pages: /muqtarib/:id
-    const writerMatch = normalizedPath.match(/^\/muqtarib\/([^\/]+)$/);
+    // 4️⃣ Handle writer/muqtarab pages: /muqtarab/:id
+    const writerMatch = normalizedPath.match(/^\/muqtarab\/([^\/]+)$/);
     if (writerMatch) {
       const id = writerMatch[1];
       console.log(`[SocialCrawler] Handling writer: ${id}`);

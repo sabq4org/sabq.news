@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
-import type { Angle } from "@/lib/muqtarib";
+import type { Angle } from "@/lib/muqtarab";
 import * as LucideIcons from "lucide-react";
 import { Circle } from "lucide-react";
 
@@ -28,7 +28,7 @@ export function AngleCard({ angle, articleCount, onClick }: AngleCardProps) {
 
   return (
     <Link 
-      href={`/muqtarib/${angle.slug}`}
+      href={`/muqtarab/${angle.slug}`}
       onClick={onClick}
       data-testid={`link-angle-${angle.id}`}
     >

@@ -52,9 +52,9 @@ export async function seedRBAC() {
     { code: "system.view_logs", label: "View Activity Logs", labelAr: "عرض سجلات النشاط", module: "system" },
     { code: "system.manage_themes", label: "Manage Themes", labelAr: "إدارة الثيمات", module: "system" },
 
-    // Muqtarib permissions
-    { code: "muqtarib.manage", label: "Manage Muqtarib Angles", labelAr: "إدارة زوايا مُقترب", module: "muqtarib" },
-    { code: "muqtarib.publish", label: "Publish Muqtarib Angles", labelAr: "نشر زوايا مُقترب", module: "muqtarib" },
+    // Muqtarab permissions
+    { code: "muqtarab.manage", label: "Manage Muqtarab Angles", labelAr: "إدارة زوايا مُقترب", module: "muqtarab" },
+    { code: "muqtarab.publish", label: "Publish Muqtarab Angles", labelAr: "نشر زوايا مُقترب", module: "muqtarab" },
 
     // Mirqab permissions (المرقاب - Future Forecasting)
     { code: "mirqab.view", label: "View Mirqab", labelAr: "عرض المرقاب", module: "mirqab" },
@@ -171,7 +171,7 @@ export async function seedRBAC() {
       "comments.view", "comments.approve", "comments.reject", "comments.delete",
       "staff.view", "staff.create", "staff.update", "staff.delete",
       "system.view_logs", "system.manage_themes",
-      "muqtarib.manage", "muqtarib.publish",
+      "muqtarab.manage", "muqtarab.publish",
       "mirqab.view", "mirqab.create", "mirqab.edit", "mirqab.delete", "mirqab.publish", "mirqab.manage_settings",
       "shorts:view", "shorts:create", "shorts:edit", "shorts:delete", "shorts:manage",
       "calendar:view", "calendar:create", "calendar:edit", "calendar:delete", "calendar:assign_tasks", "calendar:generate_ai",
@@ -185,7 +185,7 @@ export async function seedRBAC() {
       "users.view",
       "comments.view", "comments.approve", "comments.reject",
       "staff.view",
-      "muqtarib.manage", "muqtarib.publish",
+      "muqtarab.manage", "muqtarab.publish",
       "mirqab.view", "mirqab.create", "mirqab.edit", "mirqab.publish",
       "shorts:view", "shorts:create", "shorts:edit", "shorts:manage",
       "calendar:view", "calendar:create", "calendar:edit", "calendar:assign_tasks", "calendar:generate_ai",

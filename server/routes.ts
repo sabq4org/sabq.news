@@ -13213,25 +13213,25 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   });
 
   // ============================================================
-  // MUQTARIB PUBLIC ROUTES
+  // MUQTARAB PUBLIC ROUTES
   // ============================================================
 
-  // Get muqtarib section
-  app.get("/api/muqtarib/section", async (req, res) => {
+  // Get muqtarab section
+  app.get("/api/muqtarab/section", async (req, res) => {
     try {
-      const section = await storage.getSectionBySlug("muqtarib");
+      const section = await storage.getSectionBySlug("muqtarab");
       if (!section) {
-        return res.status(404).json({ message: "Muqtarib section not found" });
+        return res.status(404).json({ message: "Muqtarab section not found" });
       }
       res.json(section);
     } catch (error) {
-      console.error("Error fetching muqtarib section:", error);
+      console.error("Error fetching muqtarab section:", error);
       res.status(500).json({ message: "Failed to fetch section" });
     }
   });
 
   // Get all angles (with optional active filter)
-  app.get("/api/muqtarib/angles", async (req, res) => {
+  app.get("/api/muqtarab/angles", async (req, res) => {
     try {
       const activeOnly = req.query.active === "1" || req.query.active === "true";
       const angles = await storage.getAllAngles(activeOnly);
@@ -13243,7 +13243,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   });
 
   // Get angle by slug with latest articles
-  app.get("/api/muqtarib/angles/:slug", async (req, res) => {
+  app.get("/api/muqtarab/angles/:slug", async (req, res) => {
     try {
       const { slug } = req.params;
       const limit = parseInt(req.query.limit as string) || 12;
@@ -13262,11 +13262,11 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   });
 
   // ============================================================
-  // MUQTARIB ADMIN ROUTES (RBAC Protected)
+  // MUQTARAB ADMIN ROUTES (RBAC Protected)
   // ============================================================
 
   // Create angle
-  app.post("/api/admin/muqtarib/angles", requirePermission("muqtarib.manage"), async (req: any, res) => {
+  app.post("/api/admin/muqtarab/angles", requirePermission("muqtarab.manage"), async (req: any, res) => {
     try {
       const parsed = insertAngleSchema.safeParse(req.body);
       if (!parsed.success) {
@@ -13292,7 +13292,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   });
 
   // Update angle
-  app.put("/api/admin/muqtarib/angles/:id", requirePermission("muqtarib.manage"), async (req: any, res) => {
+  app.put("/api/admin/muqtarab/angles/:id", requirePermission("muqtarab.manage"), async (req: any, res) => {
     try {
       const { id } = req.params;
       const parsed = insertAngleSchema.partial().safeParse(req.body);
@@ -13319,7 +13319,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   });
 
   // Delete angle
-  app.delete("/api/admin/muqtarib/angles/:id", requirePermission("muqtarib.manage"), async (req: any, res) => {
+  app.delete("/api/admin/muqtarab/angles/:id", requirePermission("muqtarab.manage"), async (req: any, res) => {
     try {
       const { id } = req.params;
       await storage.deleteAngle(id);
@@ -13337,7 +13337,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   });
 
   // Link article to angle
-  app.post("/api/admin/articles/:articleId/angles", requirePermission("muqtarib.manage"), async (req: any, res) => {
+  app.post("/api/admin/articles/:articleId/angles", requirePermission("muqtarab.manage"), async (req: any, res) => {
     try {
       const { articleId } = req.params;
       const { angleId } = req.body;
@@ -13362,7 +13362,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   });
 
   // Unlink article from angle
-  app.delete("/api/admin/articles/:articleId/angles/:angleId", requirePermission("muqtarib.manage"), async (req: any, res) => {
+  app.delete("/api/admin/articles/:articleId/angles/:angleId", requirePermission("muqtarab.manage"), async (req: any, res) => {
     try {
       const { articleId, angleId } = req.params;
       await storage.unlinkArticleFromAngle(articleId, angleId);

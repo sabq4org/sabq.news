@@ -2,11 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { Header } from "@/components/Header";
 import { AngleCard, AngleCardSkeleton } from "@/components/AngleCard";
-import { useMuqtaribAngles } from "@/lib/muqtarib";
+import { useMuqtarabAngles } from "@/lib/muqtarab";
 import { useToast } from "@/hooks/use-toast";
 import { Sparkles } from "lucide-react";
 
-export default function Muqtarib() {
+export default function Muqtarab() {
   const { toast } = useToast();
   
   // Fetch current user
@@ -15,8 +15,8 @@ export default function Muqtarib() {
     retry: false,
   });
 
-  // Fetch angles for muqtarib section
-  const { data: angles, isLoading, error } = useMuqtaribAngles("muqtarib");
+  // Fetch angles for muqtarab section
+  const { data: angles, isLoading, error } = useMuqtarabAngles("muqtarab");
 
   // Show error toast
   useEffect(() => {

@@ -57,7 +57,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { insertAngleSchema } from "@shared/schema";
-import type { Angle } from "@/lib/muqtarib";
+import type { Angle } from "@/lib/muqtarab";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import * as LucideIcons from "lucide-react";
 
@@ -109,7 +109,7 @@ function generateSlug(nameAr: string): string {
     .replace(/^-|-$/g, '');
 }
 
-export default function DashboardMuqtarib() {
+export default function DashboardMuqtarab() {
   const [location, setLocation] = useLocation();
   const { user, isLoading: isUserLoading } = useAuth({ redirectToLogin: true });
   const { toast } = useToast();
@@ -132,15 +132,15 @@ export default function DashboardMuqtarib() {
       shortDesc: "",
       sortOrder: 0,
       isActive: true,
-      sectionId: "", // Will be set when muqtarib section is fetched
+      sectionId: "", // Will be set when muqtarab section is fetched
     },
   });
 
-  // Fetch muqtarib section
-  const { data: muqtaribSection } = useQuery<Section>({
-    queryKey: ["/api/muqtarib/section"],
+  // Fetch muqtarab section
+  const { data: muqtarabSection } = useQuery<Section>({
+    queryKey: ["/api/muqtarab/section"],
     queryFn: async () => {
-      const res = await fetch("/api/muqtarib/section");
+      const res = await fetch("/api/muqtarab/section");
       if (!res.ok) throw new Error("Failed to fetch section");
       return res.json();
     },
@@ -148,9 +148,9 @@ export default function DashboardMuqtarib() {
 
   // Fetch all angles (including inactive for admin)
   const { data: angles = [], isLoading } = useQuery<Angle[]>({
-    queryKey: ["/api/muqtarib/angles"],
+    queryKey: ["/api/muqtarab/angles"],
     queryFn: async () => {
-      const res = await fetch("/api/muqtarib/angles");
+      const res = await fetch("/api/muqtarab/angles");
       if (!res.ok) throw new Error("Failed to fetch angles");
       return res.json();
     },
@@ -159,13 +159,13 @@ export default function DashboardMuqtarib() {
   // Create mutation
   const createMutation = useMutation({
     mutationFn: async (data: AngleFormValues) => {
-      return await apiRequest("/api/admin/muqtarib/angles", {
+      return await apiRequest("/api/admin/muqtarab/angles", {
         method: "POST",
         body: JSON.stringify(data),
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/muqtarib/angles"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/muqtarab/angles"] });
       setIsCreateDialogOpen(false);
       form.reset();
       toast({
@@ -185,13 +185,13 @@ export default function DashboardMuqtarib() {
   // Update mutation
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<AngleFormValues> }) => {
-      return await apiRequest(`/api/admin/muqtarib/angles/${id}`, {
+      return await apiRequest(`/api/admin/muqtarab/angles/${id}`, {
         method: "PUT",
         body: JSON.stringify(data),
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/muqtarib/angles"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/muqtarab/angles"] });
       setEditingAngle(null);
       form.reset();
       toast({
@@ -211,12 +211,12 @@ export default function DashboardMuqtarib() {
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      return await apiRequest(`/api/admin/muqtarib/angles/${id}`, {
+      return await apiRequest(`/api/admin/muqtarab/angles/${id}`, {
         method: "DELETE",
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/muqtarib/angles"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/muqtarab/angles"] });
       setDeletingAngle(null);
       toast({
         title: "تم حذف الزاوية",
@@ -235,13 +235,13 @@ export default function DashboardMuqtarib() {
   // Toggle active mutation
   const toggleActiveMutation = useMutation({
     mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
-      return await apiRequest(`/api/admin/muqtarib/angles/${id}`, {
+      return await apiRequest(`/api/admin/muqtarab/angles/${id}`, {
         method: "PUT",
         body: JSON.stringify({ isActive }),
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/muqtarib/angles"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/muqtarab/angles"] });
       toast({
         title: "تم تحديث الحالة",
         description: "تم تحديث حالة الزاوية بنجاح",
@@ -258,7 +258,7 @@ export default function DashboardMuqtarib() {
 
   // Handlers
   const handleCreate = () => {
-    if (muqtaribSection) {
+    if (muqtarabSection) {
       form.reset({
         nameAr: "",
         nameEn: "",
@@ -269,7 +269,7 @@ export default function DashboardMuqtarib() {
         shortDesc: "",
         sortOrder: 0,
         isActive: true,
-        sectionId: muqtaribSection.id,
+        sectionId: muqtarabSection.id,
       });
       setIsCreateDialogOpen(true);
     }
@@ -328,7 +328,7 @@ export default function DashboardMuqtarib() {
           </div>
           <Button
             onClick={handleCreate}
-            disabled={!muqtaribSection}
+            disabled={!muqtarabSection}
             data-testid="button-create-angle"
           >
             <Plus className="h-4 w-4 ml-2" />

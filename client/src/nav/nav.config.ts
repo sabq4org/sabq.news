@@ -134,10 +134,10 @@ export const navConfig: NavItem[] = [
         roles: ["admin", "editor", "reviewer"],
       },
       {
-        id: "muqtarib",
-        labelKey: "nav.muqtarib",
+        id: "muqtarab",
+        labelKey: "nav.muqtarab",
         labelAr: "مُقترب",
-        path: "/dashboard/muqtarib",
+        path: "/dashboard/muqtarab",
         icon: Boxes,
         roles: ["admin", "editor"],
       },

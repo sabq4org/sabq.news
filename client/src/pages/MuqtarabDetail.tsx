@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { useAngleDetail, useAngleArticles } from "@/lib/muqtarib";
+import { useAngleDetail, useAngleArticles } from "@/lib/muqtarab";
 import { ArrowRight, ChevronRight, Share2 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { Circle } from "lucide-react";
@@ -24,7 +24,7 @@ function getIconComponent(iconKey: string) {
   return Circle;
 }
 
-export default function MuqtaribDetail() {
+export default function MuqtarabDetail() {
   const { slug } = useParams<{ slug: string }>();
   
   // Fetch current user
@@ -141,8 +141,8 @@ export default function MuqtaribDetail() {
         <div className="border-b bg-muted/30">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Link href="/muqtarib">
-                <a className="hover:text-foreground transition-colors" data-testid="link-breadcrumb-muqtarib">
+              <Link href="/muqtarab">
+                <a className="hover:text-foreground transition-colors" data-testid="link-breadcrumb-muqtarab">
                   مُقترب
                 </a>
               </Link>
@@ -160,8 +160,8 @@ export default function MuqtaribDetail() {
             <p className="text-muted-foreground mb-8" data-testid="text-error-description">
               عذراً، لم نتمكن من العثور على الزاوية المطلوبة
             </p>
-            <Button asChild data-testid="button-back-to-muqtarib">
-              <Link href="/muqtarib">
+            <Button asChild data-testid="button-back-to-muqtarab">
+              <Link href="/muqtarab">
                 <a className="gap-2">
                   <ArrowRight className="h-4 w-4" />
                   العودة إلى مُقترب
@@ -185,8 +185,8 @@ export default function MuqtaribDetail() {
       <div className="border-b bg-muted/30">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Link href="/muqtarib">
-              <a className="hover:text-foreground transition-colors" data-testid="link-breadcrumb-muqtarib">
+            <Link href="/muqtarab">
+              <a className="hover:text-foreground transition-colors" data-testid="link-breadcrumb-muqtarab">
                 مُقترب
               </a>
             </Link>
@@ -269,7 +269,7 @@ export default function MuqtaribDetail() {
             className="gap-2"
             data-testid="button-back"
           >
-            <Link href="/muqtarib">
+            <Link href="/muqtarab">
               <a className="flex items-center gap-2">
                 <ArrowRight className="h-4 w-4" />
                 العودة إلى الزوايا

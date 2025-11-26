@@ -2,37 +2,37 @@ import { db } from "../db";
 import { sections, angles } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
-export async function seedMuqtarib() {
-  console.log("📐 Seeding Muqtarib section and angles...");
+export async function seedMuqtarab() {
+  console.log("📐 Seeding Muqtarab section and angles...");
 
-  // 1. Create or get Muqtarib section
+  // 1. Create or get Muqtarab section
   const [existingSection] = await db
     .select()
     .from(sections)
-    .where(eq(sections.slug, "muqtarib"))
+    .where(eq(sections.slug, "muqtarab"))
     .limit(1);
 
-  let muqtaribSection;
+  let muqtarabSection;
   if (!existingSection) {
     const [section] = await db
       .insert(sections)
       .values({
         name: "مُقترب",
-        slug: "muqtarib",
+        slug: "muqtarab",
         description: "قسم زوايا تحليلية وانتقائية - رؤى متعمقة للقضايا المعاصرة",
       })
       .returning();
-    muqtaribSection = section;
-    console.log("✅ Created Muqtarib section");
+    muqtarabSection = section;
+    console.log("✅ Created Muqtarab section");
   } else {
-    muqtaribSection = existingSection;
-    console.log("ℹ️ Muqtarib section already exists");
+    muqtarabSection = existingSection;
+    console.log("ℹ️ Muqtarab section already exists");
   }
 
   // 2. Create angles (if not exist)
   const anglesData = [
     {
-      sectionId: muqtaribSection.id,
+      sectionId: muqtarabSection.id,
       nameAr: "النشر الرقمي",
       nameEn: "Digital Publishing",
       slug: "digital-publishing",
@@ -43,7 +43,7 @@ export async function seedMuqtarib() {
       isActive: true,
     },
     {
-      sectionId: muqtaribSection.id,
+      sectionId: muqtarabSection.id,
       nameAr: "الاقتصاد",
       nameEn: "Economy",
       slug: "economy",
@@ -54,7 +54,7 @@ export async function seedMuqtarib() {
       isActive: true,
     },
     {
-      sectionId: muqtaribSection.id,
+      sectionId: muqtarabSection.id,
       nameAr: "الفكر",
       nameEn: "Thought",
       slug: "thought",
@@ -81,5 +81,5 @@ export async function seedMuqtarib() {
     }
   }
 
-  console.log("✅ Muqtarib seed completed");
+  console.log("✅ Muqtarab seed completed");
 }
