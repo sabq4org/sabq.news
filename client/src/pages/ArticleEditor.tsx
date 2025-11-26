@@ -51,6 +51,8 @@ import {
   Focus,
   Link2,
   ImageDown,
+  Download,
+  ExternalLink,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -157,6 +159,13 @@ export default function ArticleEditor() {
   const [isAnalyzingSEO, setIsAnalyzingSEO] = useState(false);
   const [isClassifying, setIsClassifying] = useState(false);
   const [isGeneratingSocialCards, setIsGeneratingSocialCards] = useState(false);
+  const [generatedSocialCards, setGeneratedSocialCards] = useState<{
+    twitter?: string;
+    instagram?: string;
+    facebook?: string;
+    whatsapp?: string;
+    linkedin?: string;
+  } | null>(null);
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
   const [showMediaPicker, setShowMediaPicker] = useState(false);
   const [showAIImageDialog, setShowAIImageDialog] = useState(false);
@@ -213,6 +222,33 @@ export default function ArticleEditor() {
     queryKey: ["/api/articles", article?.id, "media-assets"],
     enabled: !isNewArticle && !!article?.id,
   });
+
+  // Fetch existing social cards for this article
+  const { data: existingSocialCards = [] } = useQuery<Array<{ platform: string; imageUrl: string }>>({
+    queryKey: ["/api/visual-ai/social-cards/article", id],
+    enabled: !isNewArticle && !!id,
+  });
+
+  // Load existing social cards into state when fetched
+  useEffect(() => {
+    if (existingSocialCards.length > 0 && !generatedSocialCards) {
+      const cardsMap: {
+        twitter?: string;
+        instagram?: string;
+        facebook?: string;
+        whatsapp?: string;
+        linkedin?: string;
+      } = {};
+      existingSocialCards.forEach(card => {
+        if (card.platform === 'twitter' || card.platform === 'instagram' || 
+            card.platform === 'facebook' || card.platform === 'whatsapp' || 
+            card.platform === 'linkedin') {
+          cardsMap[card.platform] = card.imageUrl;
+        }
+      });
+      setGeneratedSocialCards(cardsMap);
+    }
+  }, [existingSocialCards]);
 
   // Fetch available Muqtarab angles (use public endpoint)
   const { data: availableAngles = [] } = useQuery<{ id: string; nameAr: string; colorHex: string; iconKey: string }[]>({
@@ -1428,23 +1464,28 @@ export default function ArticleEditor() {
       }
     },
     onSuccess: (data: {
-      cards?: {
-        twitter?: string;
-        instagram?: string;
-        facebook?: string;
-        whatsapp?: string;
-      };
+      cards?: Array<{
+        platform: string;
+        imageUrl: string;
+        thumbnailUrl?: string;
+      }>;
       message?: string;
     }) => {
       console.log('[Social Cards] Success:', data);
       setIsGeneratingSocialCards(false);
       
-      if (data.cards) {
-        const generatedPlatforms = Object.keys(data.cards).filter(key => data.cards![key as keyof typeof data.cards]);
+      if (data.cards && data.cards.length > 0) {
+        const cardsMap: typeof generatedSocialCards = {};
+        data.cards.forEach(card => {
+          cardsMap[card.platform as keyof typeof cardsMap] = card.imageUrl;
+        });
+        setGeneratedSocialCards(cardsMap);
+        
+        const generatedPlatforms = data.cards.map(c => c.platform);
         
         toast({
           title: "تم توليد بطاقات السوشال ميديا",
-          description: `تم توليد ${generatedPlatforms.length} بطاقات بنجاح للمنصات: ${generatedPlatforms.join(', ')}`,
+          description: `تم توليد ${generatedPlatforms.length} بطاقات بنجاح`,
         });
       } else {
         toast({
@@ -2731,32 +2772,96 @@ const generateSlug = (text: string) => {
                     
                     {/* Social Media Cards Generation Button */}
                     {!isNewArticle && (
-                      <div className="flex items-center justify-between p-3 bg-primary/5 border border-primary/20 rounded-lg">
-                        <div>
-                          <p className="text-sm font-medium">توليد بطاقات السوشال ميديا</p>
-                          <p className="text-xs text-muted-foreground">
-                            إنشاء بطاقات مُحسّنة لـ Twitter, Instagram, Facebook و WhatsApp
-                          </p>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                          <div>
+                            <p className="text-sm font-medium">توليد بطاقات السوشال ميديا</p>
+                            <p className="text-xs text-muted-foreground">
+                              إنشاء بطاقات مُحسّنة لـ Twitter, Instagram, Facebook و WhatsApp
+                            </p>
+                          </div>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => generateSocialCardsMutation.mutate()}
+                            disabled={isGeneratingSocialCards || !id}
+                            data-testid="button-generate-social-cards"
+                          >
+                            {isGeneratingSocialCards ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin ml-2" />
+                                جاري التوليد...
+                              </>
+                            ) : (
+                              <>
+                                <Share2 className="h-4 w-4 ml-2" />
+                                توليد البطاقات
+                              </>
+                            )}
+                          </Button>
                         </div>
-                        <Button
-                          variant="default"
-                          size="sm"
-                          onClick={() => generateSocialCardsMutation.mutate()}
-                          disabled={isGeneratingSocialCards || !id}
-                          data-testid="button-generate-social-cards"
-                        >
-                          {isGeneratingSocialCards ? (
-                            <>
-                              <Loader2 className="h-4 w-4 animate-spin ml-2" />
-                              جاري التوليد...
-                            </>
-                          ) : (
-                            <>
-                              <Share2 className="h-4 w-4 ml-2" />
-                              توليد البطاقات
-                            </>
-                          )}
-                        </Button>
+
+                        {/* Generated Social Cards Display */}
+                        {generatedSocialCards && Object.keys(generatedSocialCards).length > 0 && (
+                          <div className="p-4 bg-muted/50 border rounded-lg space-y-4">
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm font-medium">البطاقات المولدة</p>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setGeneratedSocialCards(null)}
+                                className="h-auto py-1 px-2 text-xs"
+                              >
+                                إخفاء
+                              </Button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              {Object.entries(generatedSocialCards).map(([platform, url]) => url && (
+                                <div key={platform} className="space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-medium capitalize">{platform}</span>
+                                    <Badge variant="secondary" className="text-xs">
+                                      {platform === 'instagram' ? '1:1' : '16:9'}
+                                    </Badge>
+                                  </div>
+                                  <div className="relative group">
+                                    <img 
+                                      src={url} 
+                                      alt={`${platform} card`}
+                                      className="w-full rounded-md border"
+                                      data-testid={`img-social-card-${platform}`}
+                                    />
+                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 rounded-md">
+                                      <Button
+                                        size="sm"
+                                        variant="secondary"
+                                        onClick={() => window.open(url, '_blank')}
+                                        data-testid={`button-view-${platform}`}
+                                      >
+                                        <ExternalLink className="h-3 w-3 ml-1" />
+                                        عرض
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="secondary"
+                                        onClick={() => {
+                                          const link = document.createElement('a');
+                                          link.href = url;
+                                          link.download = `${platform}-card.png`;
+                                          link.click();
+                                        }}
+                                        data-testid={`button-download-${platform}`}
+                                      >
+                                        <Download className="h-3 w-3 ml-1" />
+                                        تحميل
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
 
