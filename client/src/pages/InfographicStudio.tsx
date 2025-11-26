@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { 
   Select,
   SelectContent,
@@ -11,25 +10,19 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { 
-  LayoutGrid, 
   Sparkles, 
   Download, 
   Copy, 
   Loader2,
-  Palette,
-  Image,
-  Type,
-  ArrowRight,
-  Wand2
+  Trash2,
+  ImagePlus,
+  Grid3X3
 } from "lucide-react";
 import { infographicShapes, infographicStyles } from "@/config/infographicTemplates";
-import { AdvancedInfographicEditor } from "@/components/AdvancedInfographicEditor";
 
 export default function InfographicStudio() {
   const { toast } = useToast();
@@ -42,8 +35,6 @@ export default function InfographicStudio() {
     prompt: string;
     timestamp: Date;
   }>>([]);
-  const [activeTab, setActiveTab] = useState("create");
-  const [showAdvancedEditor, setShowAdvancedEditor] = useState(false);
 
   const handleGenerate = async () => {
     if (!content) {
@@ -86,16 +77,15 @@ export default function InfographicStudio() {
 
       const newImage = {
         url: response.imageUrl,
-        prompt: combinedPrompt,
+        prompt: content,
         timestamp: new Date(),
       };
 
       setGeneratedImages([newImage, ...generatedImages]);
-      setActiveTab("gallery");
       
       toast({
-        title: "تم توليد الإنفوجرافيك!",
-        description: "تم إنشاء الإنفوجرافيك بنجاح",
+        title: "تم التوليد بنجاح",
+        description: "تم إنشاء الإنفوجرافيك",
       });
     } catch (error) {
       console.error("Infographic generation error:", error);
@@ -151,310 +141,174 @@ export default function InfographicStudio() {
     }
   };
 
+  const handleDelete = (index: number) => {
+    setGeneratedImages(prev => prev.filter((_, i) => i !== index));
+    toast({
+      title: "تم الحذف",
+      description: "تم حذف الإنفوجرافيك",
+    });
+  };
+
   return (
     <DashboardLayout>
-      <div className="container mx-auto p-6 max-w-7xl" dir="rtl">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-primary/10 rounded-lg">
-              <LayoutGrid className="h-8 w-8 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold">استوديو الإنفوجرافيك</h1>
-              <p className="text-muted-foreground mt-1">
-                صمم إنفوجرافيك احترافي بالذكاء الاصطناعي
-              </p>
-            </div>
+      <div className="h-full flex flex-col" dir="rtl">
+        <div className="flex items-center justify-between p-4 border-b bg-background">
+          <div className="flex items-center gap-3">
+            <Grid3X3 className="h-6 w-6 text-primary" />
+            <h1 className="text-xl font-bold">استوديو الإنفوجرافيك</h1>
           </div>
-          <Badge variant="secondary" className="text-lg px-4 py-2">
-            <Sparkles className="h-4 w-4 ml-2" />
-            Gemini 3 Pro
+          <Badge variant="outline" className="gap-1">
+            <Sparkles className="h-3 w-3" />
+            Gemini AI
           </Badge>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 max-w-md mr-auto">
-            <TabsTrigger value="create" className="gap-2">
-              <Palette className="h-4 w-4" />
-              إنشاء جديد
-            </TabsTrigger>
-            <TabsTrigger value="gallery" className="gap-2">
-              <Image className="h-4 w-4" />
-              المعرض ({generatedImages.length})
-            </TabsTrigger>
-          </TabsList>
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+          <div className="lg:w-[400px] border-l flex flex-col bg-muted/30">
+            <div className="p-4 space-y-4 flex-1 overflow-y-auto">
+              <div>
+                <label className="text-sm font-medium mb-2 block">المحتوى</label>
+                <Textarea
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="أدخل النقاط أو النص..."
+                  className="min-h-[150px] bg-background resize-none"
+                  data-testid="textarea-infographic-content"
+                />
+              </div>
 
-          <TabsContent value="create" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Type className="h-5 w-5" />
-                      المحتوى
-                    </CardTitle>
-                    <CardDescription>
-                      أدخل النص أو النقاط الرئيسية للإنفوجرافيك
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Textarea
-                      value={content}
-                      onChange={(e) => setContent(e.target.value)}
-                      placeholder="مثال: 5 خطوات للنجاح:
-1. التخطيط الجيد
-2. العمل الجاد
-3. التعلم المستمر
-4. بناء العلاقات
-5. الصبر والمثابرة"
-                      className="min-h-[200px]"
-                      data-testid="textarea-infographic-content"
-                    />
-                  </CardContent>
-                </Card>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">الشكل</label>
+                  <Select value={shape} onValueChange={setShape}>
+                    <SelectTrigger data-testid="select-shape" className="bg-background">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(infographicShapes).map(([key, value]) => (
+                        <SelectItem key={key} value={key}>
+                          <span className="flex items-center gap-2">
+                            <span>{value.icon}</span>
+                            <span>{value.name}</span>
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>شكل التصميم</CardTitle>
-                      <CardDescription>
-                        اختر الشكل المناسب لمحتواك
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Select value={shape} onValueChange={setShape}>
-                        <SelectTrigger data-testid="select-shape">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Object.entries(infographicShapes).map(([key, value]) => (
-                            <SelectItem key={key} value={key}>
-                              <div className="flex items-center gap-2">
-                                <span className="text-lg">{value.icon}</span>
-                                <span>{value.name}</span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>نوع التصميم</CardTitle>
-                      <CardDescription>
-                        اختر الستايل المرئي
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Select value={type} onValueChange={setType}>
-                        <SelectTrigger data-testid="select-type">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Object.entries(infographicStyles).map(([key, value]) => (
-                            <SelectItem key={key} value={key}>
-                              <div className="flex items-center gap-2">
-                                <div 
-                                  className="w-4 h-4 rounded-full"
-                                  style={{ background: value.color }}
-                                />
-                                <span>{value.name}</span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </CardContent>
-                  </Card>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">النمط</label>
+                  <Select value={type} onValueChange={setType}>
+                    <SelectTrigger data-testid="select-type" className="bg-background">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(infographicStyles).map(([key, value]) => (
+                        <SelectItem key={key} value={key}>
+                          <span className="flex items-center gap-2">
+                            <span 
+                              className="w-3 h-3 rounded-full flex-shrink-0"
+                              style={{ background: value.color }}
+                            />
+                            <span>{value.name}</span>
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
-
-              <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>المعاينة</CardTitle>
-                    <CardDescription>
-                      معاينة الإعدادات المختارة
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                      <span className="text-sm font-medium">الشكل:</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">{infographicShapes[shape].icon}</span>
-                        <span>{infographicShapes[shape].name}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                      <span className="text-sm font-medium">النوع:</span>
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-4 h-4 rounded-full"
-                          style={{ background: infographicStyles[type].color }}
-                        />
-                        <span>{infographicStyles[type].name}</span>
-                      </div>
-                    </div>
-                    <div className="p-3 bg-muted rounded-lg">
-                      <span className="text-sm font-medium block mb-2">المحتوى:</span>
-                      <p className="text-sm text-muted-foreground line-clamp-3">
-                        {content || "لم يتم إدخال محتوى بعد"}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Button 
-                  onClick={handleGenerate}
-                  disabled={isGenerating || !content}
-                  className="w-full h-12 text-lg"
-                  size="lg"
-                  data-testid="button-generate-studio"
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="h-5 w-5 ml-2 animate-spin" />
-                      جاري التوليد...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-5 w-5 ml-2" />
-                      توليد الإنفوجرافيك
-                      <ArrowRight className="h-5 w-5 mr-2 rotate-180" />
-                    </>
-                  )}
-                </Button>
-
-                <Button 
-                  onClick={() => setShowAdvancedEditor(true)}
-                  variant="outline"
-                  className="w-full h-12 text-lg"
-                  size="lg"
-                  data-testid="button-advanced-editor"
-                >
-                  <Wand2 className="h-5 w-5 ml-2" />
-                  المحرر المتقدم
-                  <Badge className="mr-2" variant="secondary">جديد</Badge>
-                </Button>
-
-                <Card className="bg-primary/5 border-primary/20">
-                  <CardContent className="pt-6">
-                    <div className="flex items-start gap-3">
-                      <Sparkles className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium">نصائح للحصول على أفضل النتائج:</p>
-                        <ul className="text-sm text-muted-foreground space-y-1 list-none">
-                          <li>• استخدم نقاط واضحة ومختصرة</li>
-                          <li>• اختر الشكل المناسب للمحتوى</li>
-                          <li>• جرب أنواع تصميم مختلفة</li>
-                          <li>• يمكنك التعديل والتوليد مرة أخرى</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
             </div>
-          </TabsContent>
 
-          <TabsContent value="gallery" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>الإنفوجرافيك المولد</CardTitle>
-                <CardDescription>
-                  جميع التصاميم التي قمت بإنشائها
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {generatedImages.length === 0 ? (
-                  <div className="text-center py-12">
-                    <LayoutGrid className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">
-                      لم يتم توليد أي إنفوجرافيك بعد
-                    </p>
-                    <Button 
-                      variant="outline" 
-                      className="mt-4"
-                      onClick={() => setActiveTab("create")}
-                    >
-                      ابدأ الإنشاء
-                    </Button>
-                  </div>
+            <div className="p-4 border-t bg-background">
+              <Button 
+                onClick={handleGenerate}
+                disabled={isGenerating || !content}
+                className="w-full"
+                size="lg"
+                data-testid="button-generate-studio"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                    جاري التوليد...
+                  </>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {generatedImages.map((image, index) => (
-                      <Card key={index} className="overflow-hidden">
-                        <div className="aspect-square relative group">
-                          <img 
-                            src={image.url} 
-                            alt={`Infographic ${index + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                            <Button
-                              size="icon"
-                              variant="secondary"
-                              onClick={() => handleDownload(image.url)}
-                              data-testid={`button-download-${index}`}
-                            >
-                              <Download className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="secondary"
-                              onClick={() => handleCopyUrl(image.url)}
-                              data-testid={`button-copy-${index}`}
-                            >
-                              <Copy className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        <CardContent className="p-4">
-                          <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
-                            {image.prompt}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(image.timestamp).toLocaleString('ar-SA')}
-                          </p>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                  <>
+                    <ImagePlus className="h-4 w-4 ml-2" />
+                    توليد الإنفوجرافيك
+                  </>
                 )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-        
-        {/* Advanced Infographic Editor */}
-        <AdvancedInfographicEditor
-          open={showAdvancedEditor}
-          onClose={() => setShowAdvancedEditor(false)}
-          onSave={(data) => {
-            // Add generated image to gallery
-            setGeneratedImages((prev) => [{
-              url: data.imageUrl,
-              prompt: data.content,
-              timestamp: new Date()
-            }, ...prev]);
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-hidden flex flex-col">
+            <div className="p-4 border-b bg-background flex items-center justify-between">
+              <h2 className="font-medium">المعرض</h2>
+              <span className="text-sm text-muted-foreground">{generatedImages.length} صورة</span>
+            </div>
             
-            toast({
-              title: "تم حفظ الإنفوجرافيك",
-              description: "تم إضافة التصميم إلى المعرض بنجاح"
-            });
-            
-            setShowAdvancedEditor(false);
-            setActiveTab("gallery");
-          }}
-          initialData={{
-            content,
-            template: shape,
-            style: type
-          }}
-          language="ar"
-        />
+            <div className="flex-1 overflow-y-auto p-4">
+              {generatedImages.length === 0 ? (
+                <div className="h-full flex items-center justify-center">
+                  <div className="text-center text-muted-foreground">
+                    <Grid3X3 className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                    <p>لا توجد صور بعد</p>
+                    <p className="text-sm mt-1">أدخل المحتوى واضغط توليد</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {generatedImages.map((image, index) => (
+                    <Card key={index} className="overflow-hidden group">
+                      <div className="aspect-video relative">
+                        <img 
+                          src={image.url} 
+                          alt={`Infographic ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                          <Button
+                            size="icon"
+                            variant="secondary"
+                            onClick={() => handleDownload(image.url)}
+                            data-testid={`button-download-${index}`}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="secondary"
+                            onClick={() => handleCopyUrl(image.url)}
+                            data-testid={`button-copy-${index}`}
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="destructive"
+                            onClick={() => handleDelete(index)}
+                            data-testid={`button-delete-${index}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      <CardContent className="p-3">
+                        <p className="text-sm line-clamp-2">{image.prompt}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {new Date(image.timestamp).toLocaleString('ar-SA')}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </DashboardLayout>
   );
