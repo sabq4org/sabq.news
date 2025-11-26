@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams, Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,7 +15,9 @@ import {
   ChevronRight,
   Upload,
   Archive,
+  X,
 } from "lucide-react";
+import { RichTextEditor } from "@/components/RichTextEditor";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -70,7 +72,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 const topicFormSchema = insertTopicSchema.extend({
   title: z.string().min(2, "العنوان يجب أن يكون حرفين على الأقل"),
   slug: z.string().min(2, "المعرف يجب أن يكون حرفين على الأقل")
-    .regex(/^[a-z0-9-]+$/, "المعرف يجب أن يحتوي على أحرف صغيرة وأرقام وشرطات فقط"),
+    .regex(/^[\u0600-\u06FFa-z0-9-]+$/, "المعرف يجب أن يحتوي على أحرف عربية أو إنجليزية صغيرة وأرقام وشرطات فقط"),
   excerpt: z.string().optional(),
   content: z.object({
     blocks: z.array(z.object({
@@ -85,32 +87,18 @@ const topicFormSchema = insertTopicSchema.extend({
     rawHtml: z.string().optional(),
     plainText: z.string().optional(),
   }).optional(),
-  heroImageUrl: z.string().url("رابط الصورة غير صحيح").optional().or(z.literal("")),
+  heroImageUrl: z.string().optional().or(z.literal("")),
   seoMeta: topicSeoMetaSchema.optional(),
 });
 
 type TopicFormValues = z.infer<typeof topicFormSchema>;
 
 function generateSlug(title: string): string {
-  const transliterationMap: Record<string, string> = {
-    'ا': 'a', 'أ': 'a', 'إ': 'i', 'آ': 'a',
-    'ب': 'b', 'ت': 't', 'ث': 'th', 'ج': 'j',
-    'ح': 'h', 'خ': 'kh', 'د': 'd', 'ذ': 'dh',
-    'ر': 'r', 'ز': 'z', 'س': 's', 'ش': 'sh',
-    'ص': 's', 'ض': 'd', 'ط': 't', 'ظ': 'z',
-    'ع': 'a', 'غ': 'gh', 'ف': 'f', 'ق': 'q',
-    'ك': 'k', 'ل': 'l', 'م': 'm', 'ن': 'n',
-    'ه': 'h', 'و': 'w', 'ي': 'y', 'ى': 'a',
-    'ة': 'h', 'ئ': 'e', 'ء': 'a',
-    ' ': '-', '_': '-',
-  };
-
   return title
-    .split('')
-    .map(char => transliterationMap[char] || char)
-    .join('')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\u0600-\u06FFa-z0-9-]/gi, '')
     .toLowerCase()
-    .replace(/[^a-z0-9-]/g, '')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
 }
@@ -146,6 +134,10 @@ export default function TopicsManagement() {
   const [editingTopic, setEditingTopic] = useState<Topic | null>(null);
   const [deletingTopic, setDeletingTopic] = useState<Topic | null>(null);
   const [seoExpanded, setSeoExpanded] = useState(false);
+  const [heroImagePreview, setHeroImagePreview] = useState<string>("");
+  const [isUploadingHero, setIsUploadingHero] = useState(false);
+  const [editorContent, setEditorContent] = useState<string>("");
+  const heroFileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<TopicFormValues>({
     resolver: zodResolver(topicFormSchema),
@@ -319,7 +311,7 @@ export default function TopicsManagement() {
       title: "",
       slug: "",
       excerpt: "",
-      content: { blocks: [], plainText: "" },
+      content: { blocks: [], rawHtml: "", plainText: "" },
       heroImageUrl: "",
       seoMeta: {
         metaTitle: "",
@@ -331,18 +323,24 @@ export default function TopicsManagement() {
       createdBy: user?.id || "",
     });
     setSeoExpanded(false);
+    setEditorContent("");
+    setHeroImagePreview("");
     setIsCreateDialogOpen(true);
   };
 
   const handleEdit = (topic: Topic) => {
     setEditingTopic(topic);
     setSeoExpanded(false);
+    const contentData = topic.content as { blocks?: any[]; rawHtml?: string; plainText?: string } | null;
+    const rawHtml = contentData?.rawHtml || "";
+    setEditorContent(rawHtml);
+    setHeroImagePreview(topic.heroImageUrl || "");
     form.reset({
       angleId: topic.angleId,
       title: topic.title,
       slug: topic.slug,
       excerpt: topic.excerpt || "",
-      content: topic.content || { blocks: [], plainText: "" },
+      content: topic.content || { blocks: [], rawHtml: "", plainText: "" },
       heroImageUrl: topic.heroImageUrl || "",
       seoMeta: topic.seoMeta || {
         metaTitle: "",
@@ -352,6 +350,76 @@ export default function TopicsManagement() {
         canonicalUrl: "",
       },
       createdBy: topic.createdBy,
+    });
+  };
+
+  const handleHeroImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "خطأ",
+        description: "نوع الملف غير مدعوم. يرجى اختيار صورة بصيغة JPEG, PNG, GIF أو WebP",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "خطأ",
+        description: "حجم الملف كبير جداً. الحد الأقصى 10 ميجابايت",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploadingHero(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await fetch("/api/media/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("فشل في رفع الصورة");
+      }
+
+      const result = await response.json();
+      const imageUrl = result.proxyUrl || result.url;
+      form.setValue("heroImageUrl", imageUrl);
+      setHeroImagePreview(imageUrl);
+      toast({
+        title: "تم رفع الصورة",
+        description: "تم رفع صورة الغلاف بنجاح",
+      });
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast({
+        title: "خطأ",
+        description: "فشل في رفع الصورة",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingHero(false);
+      if (heroFileInputRef.current) {
+        heroFileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleEditorChange = (html: string) => {
+    setEditorContent(html);
+    const plainText = html.replace(/<[^>]*>/g, "").trim();
+    form.setValue("content", {
+      blocks: [],
+      rawHtml: html,
+      plainText: plainText,
     });
   };
 
@@ -529,7 +597,7 @@ export default function TopicsManagement() {
             }
           }}
         >
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" dir="rtl">
             <DialogHeader>
               <DialogTitle data-testid="text-dialog-title">
                 {editingTopic ? "تعديل الموضوع" : "موضوع جديد"}
@@ -570,13 +638,13 @@ export default function TopicsManagement() {
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="future-of-digital-media"
-                          dir="ltr"
+                          placeholder="مستقبل-الإعلام-الرقمي"
+                          dir="rtl"
                           data-testid="input-slug"
                         />
                       </FormControl>
                       <FormDescription>
-                        يتم توليده تلقائياً من العنوان ويمكن تعديله
+                        يتم توليده تلقائياً من العنوان - يدعم العربية والإنجليزية
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -602,27 +670,20 @@ export default function TopicsManagement() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="content.plainText"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>المحتوى</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          {...field}
-                          placeholder="محتوى الموضوع..."
-                          rows={6}
-                          data-testid="input-content"
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        أدخل محتوى الموضوع (سيتم تحويله إلى JSON blocks لاحقاً)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <FormItem>
+                  <FormLabel>المحتوى</FormLabel>
+                  <div className="border rounded-md" data-testid="editor-content">
+                    <RichTextEditor
+                      content={editorContent}
+                      onChange={handleEditorChange}
+                      placeholder="اكتب محتوى الموضوع هنا..."
+                      dir="rtl"
+                    />
+                  </div>
+                  <FormDescription>
+                    استخدم أدوات التنسيق لإضافة نصوص، صور، روابط وغيرها
+                  </FormDescription>
+                </FormItem>
 
                 <FormField
                   control={form.control}
@@ -631,12 +692,63 @@ export default function TopicsManagement() {
                     <FormItem>
                       <FormLabel>صورة الغلاف</FormLabel>
                       <FormControl>
-                        <Input
-                          {...field}
-                          type="url"
-                          placeholder="https://example.com/image.jpg"
-                          data-testid="input-hero-image"
-                        />
+                        <div className="space-y-3">
+                          <input
+                            type="file"
+                            ref={heroFileInputRef}
+                            onChange={handleHeroImageUpload}
+                            accept="image/jpeg,image/png,image/gif,image/webp"
+                            className="hidden"
+                            data-testid="input-hero-file"
+                          />
+                          
+                          {heroImagePreview ? (
+                            <div className="relative inline-block">
+                              <img
+                                src={heroImagePreview}
+                                alt="صورة الغلاف"
+                                className="max-h-40 rounded-md border object-cover"
+                                data-testid="preview-hero-image"
+                              />
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="destructive"
+                                className="absolute -top-2 -left-2 h-6 w-6"
+                                onClick={() => {
+                                  setHeroImagePreview("");
+                                  form.setValue("heroImageUrl", "");
+                                }}
+                                data-testid="button-remove-hero"
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div
+                              onClick={() => heroFileInputRef.current?.click()}
+                              className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary hover:bg-muted/50 transition-colors"
+                              data-testid="dropzone-hero"
+                            >
+                              {isUploadingHero ? (
+                                <div className="flex flex-col items-center gap-2">
+                                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                                  <span className="text-sm text-muted-foreground">جاري الرفع...</span>
+                                </div>
+                              ) : (
+                                <div className="flex flex-col items-center gap-2">
+                                  <Upload className="h-8 w-8 text-muted-foreground" />
+                                  <span className="text-sm text-muted-foreground">
+                                    اضغط لرفع صورة الغلاف
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    JPEG, PNG, GIF, WebP - حتى 10MB
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
