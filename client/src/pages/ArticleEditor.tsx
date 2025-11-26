@@ -1226,93 +1226,6 @@ export default function ArticleEditor() {
     },
   });
 
-  // Edit + Generate All-in-One Mutation (rewrites content in Sabq style then generates all fields)
-  const editAndGenerateMutation = useMutation({
-    mutationFn: async () => {
-      if (!content) {
-        throw new Error("يجب إدخال المحتوى أولاً");
-      }
-      
-      if (content.length < 50) {
-        throw new Error("المحتوى يجب أن يكون 50 حرف على الأقل");
-      }
-      
-      console.log('[Edit+Generate] Starting content rewriting and generation...');
-      
-      const result = await apiRequest("/api/articles/edit-and-generate", {
-        method: "POST",
-        body: JSON.stringify({ content, language: "ar" }),
-      });
-      
-      console.log('[Edit+Generate] Result:', result);
-      return result;
-    },
-    onSuccess: (data: {
-      editedContent: string;
-      editedLead: string;
-      qualityScore: number;
-      detectedCategory: string;
-      hasNewsValue: boolean;
-      issues: string[];
-      suggestions: string[];
-      mainTitle: string;
-      subTitle: string;
-      smartSummary: string;
-      keywords: string[];
-      seo: { metaTitle: string; metaDescription: string };
-    }) => {
-      console.log('[Edit+Generate] Applying results...');
-      
-      const details: string[] = [];
-      
-      if (data.editedContent) {
-        setContent(data.editedContent);
-        details.push("✓ تم إعادة صياغة المحتوى");
-      }
-      
-      if (data.mainTitle) {
-        setTitle(data.mainTitle);
-        setSlug(generateSlug(data.mainTitle));
-        details.push("✓ عنوان: " + data.mainTitle.substring(0, 30) + "...");
-      }
-      
-      if (data.subTitle) {
-        setSubtitle(data.subTitle);
-        details.push("✓ عنوان فرعي");
-      }
-      
-      if (data.smartSummary) {
-        setExcerpt(data.smartSummary);
-        details.push("✓ موجز ذكي");
-      }
-      
-      if (data.seo) {
-        setMetaTitle(data.seo.metaTitle);
-        setMetaDescription(data.seo.metaDescription || "");
-        details.push("✓ تحسين SEO");
-      }
-      
-      if (data.keywords?.length > 0) {
-        setKeywords(data.keywords);
-        details.push("✓ " + data.keywords.length + " كلمات مفتاحية");
-      }
-      
-      toast({
-        title: "✨ تحرير + توليد ذكي شامل",
-        description: details.join("\n") + "\n📊 جودة المحتوى: " + data.qualityScore + "%",
-        duration: 6000,
-      });
-    },
-    onError: (error: Error) => {
-      console.error('[Edit+Generate] Error:', error);
-      toast({
-        title: "خطأ في التحرير والتوليد",
-        description: error.message || "فشل في تحرير وتوليد المحتوى",
-        variant: "destructive",
-      });
-    },
-  });
-
   const analyzeSEOMutation = useMutation({
     mutationFn: async () => {
       if (!id || isNewArticle) {
@@ -1836,27 +1749,6 @@ const generateSlug = (text: string) => {
         {/* Page Header with Actions */}
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
-                    <div className="flex flex-row gap-2">
-                    {/* Edit + Generate Button */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => editAndGenerateMutation.mutate()}
-                      disabled={isGeneratingAI || editAndGenerateMutation.isPending || !content || content.length < 50}
-                      className="gap-2"
-                      data-testid="button-edit-and-generate"
-                      title="إعادة صياغة المحتوى بأسلوب سبق ثم توليد كل الحقول"
-                    >
-                      {editAndGenerateMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <>
-                          <Wand2 className="h-4 w-4" />
-                        </>
-                      )}
-                      تحرير + توليد
-                    </Button>
-                    {/* Generate Only Button */}
             <Button
               variant="ghost"
               size="sm"
@@ -1897,27 +1789,6 @@ const generateSlug = (text: string) => {
           </div>
 
           <div className="flex items-center gap-2">
-                    <div className="flex flex-row gap-2">
-                    {/* Edit + Generate Button */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => editAndGenerateMutation.mutate()}
-                      disabled={isGeneratingAI || editAndGenerateMutation.isPending || !content || content.length < 50}
-                      className="gap-2"
-                      data-testid="button-edit-and-generate"
-                      title="إعادة صياغة المحتوى بأسلوب سبق ثم توليد كل الحقول"
-                    >
-                      {editAndGenerateMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <>
-                          <Wand2 className="h-4 w-4" />
-                        </>
-                      )}
-                      تحرير + توليد
-                    </Button>
-                    {/* Generate Only Button */}
             <Button
               variant="outline"
               onClick={() => handleSave(false)}
@@ -1928,27 +1799,6 @@ const generateSlug = (text: string) => {
               {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               حفظ كمسودة
             </Button>
-                    <div className="flex flex-row gap-2">
-                    {/* Edit + Generate Button */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => editAndGenerateMutation.mutate()}
-                      disabled={isGeneratingAI || editAndGenerateMutation.isPending || !content || content.length < 50}
-                      className="gap-2"
-                      data-testid="button-edit-and-generate"
-                      title="إعادة صياغة المحتوى بأسلوب سبق ثم توليد كل الحقول"
-                    >
-                      {editAndGenerateMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <>
-                          <Wand2 className="h-4 w-4" />
-                        </>
-                      )}
-                      تحرير + توليد
-                    </Button>
-                    {/* Generate Only Button */}
             <Button
               onClick={() => handleSave(true)}
               disabled={isSaving}
@@ -1987,27 +1837,6 @@ const generateSlug = (text: string) => {
                     className="flex-1"
                     data-testid="input-title"
                   />
-                    <div className="flex flex-row gap-2">
-                    {/* Edit + Generate Button */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => editAndGenerateMutation.mutate()}
-                      disabled={isGeneratingAI || editAndGenerateMutation.isPending || !content || content.length < 50}
-                      className="gap-2"
-                      data-testid="button-edit-and-generate"
-                      title="إعادة صياغة المحتوى بأسلوب سبق ثم توليد كل الحقول"
-                    >
-                      {editAndGenerateMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <>
-                          <Wand2 className="h-4 w-4" />
-                        </>
-                      )}
-                      تحرير + توليد
-                    </Button>
-                    {/* Generate Only Button */}
                   <Button
                     variant="outline"
                     size="icon"
@@ -2077,27 +1906,6 @@ const generateSlug = (text: string) => {
                   </div>
                 )}
                 <div className="flex gap-2">
-                    <div className="flex flex-row gap-2">
-                    {/* Edit + Generate Button */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => editAndGenerateMutation.mutate()}
-                      disabled={isGeneratingAI || editAndGenerateMutation.isPending || !content || content.length < 50}
-                      className="gap-2"
-                      data-testid="button-edit-and-generate"
-                      title="إعادة صياغة المحتوى بأسلوب سبق ثم توليد كل الحقول"
-                    >
-                      {editAndGenerateMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <>
-                          <Wand2 className="h-4 w-4" />
-                        </>
-                      )}
-                      تحرير + توليد
-                    </Button>
-                    {/* Generate Only Button */}
                   <Button
                     variant="outline"
                     onClick={() => document.getElementById("image-upload")?.click()}
@@ -2112,27 +1920,6 @@ const generateSlug = (text: string) => {
                     )}
                     {imageUrl ? "تغيير الصورة" : "رفع صورة"}
                   </Button>
-                    <div className="flex flex-row gap-2">
-                    {/* Edit + Generate Button */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => editAndGenerateMutation.mutate()}
-                      disabled={isGeneratingAI || editAndGenerateMutation.isPending || !content || content.length < 50}
-                      className="gap-2"
-                      data-testid="button-edit-and-generate"
-                      title="إعادة صياغة المحتوى بأسلوب سبق ثم توليد كل الحقول"
-                    >
-                      {editAndGenerateMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <>
-                          <Wand2 className="h-4 w-4" />
-                        </>
-                      )}
-                      تحرير + توليد
-                    </Button>
-                    {/* Generate Only Button */}
                   <Button
                     variant="outline"
                     onClick={() => setShowMediaPicker(true)}
@@ -2142,27 +1929,6 @@ const generateSlug = (text: string) => {
                     <ImageIcon className="h-4 w-4" />
                     اختر من المكتبة
                   </Button>
-                    <div className="flex flex-row gap-2">
-                    {/* Edit + Generate Button */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => editAndGenerateMutation.mutate()}
-                      disabled={isGeneratingAI || editAndGenerateMutation.isPending || !content || content.length < 50}
-                      className="gap-2"
-                      data-testid="button-edit-and-generate"
-                      title="إعادة صياغة المحتوى بأسلوب سبق ثم توليد كل الحقول"
-                    >
-                      {editAndGenerateMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <>
-                          <Wand2 className="h-4 w-4" />
-                        </>
-                      )}
-                      تحرير + توليد
-                    </Button>
-                    {/* Generate Only Button */}
                   <Button
                     variant="outline"
                     onClick={() => setShowAIImageDialog(true)}
@@ -2172,27 +1938,6 @@ const generateSlug = (text: string) => {
                     <Sparkles className="h-4 w-4 text-primary" />
                     توليد بالذكاء الاصطناعي
                   </Button>
-                    <div className="flex flex-row gap-2">
-                    {/* Edit + Generate Button */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => editAndGenerateMutation.mutate()}
-                      disabled={isGeneratingAI || editAndGenerateMutation.isPending || !content || content.length < 50}
-                      className="gap-2"
-                      data-testid="button-edit-and-generate"
-                      title="إعادة صياغة المحتوى بأسلوب سبق ثم توليد كل الحقول"
-                    >
-                      {editAndGenerateMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <>
-                          <Wand2 className="h-4 w-4" />
-                        </>
-                      )}
-                      تحرير + توليد
-                    </Button>
-                    {/* Generate Only Button */}
                   <Button
                     variant="outline"
                     onClick={() => setShowInfographicDialog(true)}
@@ -2202,27 +1947,6 @@ const generateSlug = (text: string) => {
                     <LayoutGrid className="h-4 w-4 text-primary" />
                     إنفوجرافيك
                   </Button>
-                    <div className="flex flex-row gap-2">
-                    {/* Edit + Generate Button */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => editAndGenerateMutation.mutate()}
-                      disabled={isGeneratingAI || editAndGenerateMutation.isPending || !content || content.length < 50}
-                      className="gap-2"
-                      data-testid="button-edit-and-generate"
-                      title="إعادة صياغة المحتوى بأسلوب سبق ثم توليد كل الحقول"
-                    >
-                      {editAndGenerateMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <>
-                          <Wand2 className="h-4 w-4" />
-                        </>
-                      )}
-                      تحرير + توليد
-                    </Button>
-                    {/* Generate Only Button */}
                   <Button
                     variant="outline"
                     onClick={() => setShowStoryCardsDialog(true)}
@@ -2243,27 +1967,6 @@ const generateSlug = (text: string) => {
                 {/* Delete Image Button - Show only when there's an image */}
                 {imageUrl && (
                   <div className="flex justify-end mt-3">
-                    <div className="flex flex-row gap-2">
-                    {/* Edit + Generate Button */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => editAndGenerateMutation.mutate()}
-                      disabled={isGeneratingAI || editAndGenerateMutation.isPending || !content || content.length < 50}
-                      className="gap-2"
-                      data-testid="button-edit-and-generate"
-                      title="إعادة صياغة المحتوى بأسلوب سبق ثم توليد كل الحقول"
-                    >
-                      {editAndGenerateMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <>
-                          <Wand2 className="h-4 w-4" />
-                        </>
-                      )}
-                      تحرير + توليد
-                    </Button>
-                    {/* Generate Only Button */}
                     <Button
                       variant="destructive"
                       size="sm"
@@ -2384,29 +2087,8 @@ const generateSlug = (text: string) => {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>محتوى المقال</span>
-                  {/* Edit+Generate AI Buttons */}
-                  <div className="flex flex-col items-end gap-2">
-                    <div className="flex flex-row gap-2">
-                    {/* Edit + Generate Button */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => editAndGenerateMutation.mutate()}
-                      disabled={isGeneratingAI || editAndGenerateMutation.isPending || !content || content.length < 50}
-                      className="gap-2"
-                      data-testid="button-edit-and-generate"
-                      title="إعادة صياغة المحتوى بأسلوب سبق ثم توليد كل الحقول"
-                    >
-                      {editAndGenerateMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <>
-                          <Wand2 className="h-4 w-4" />
-                        </>
-                      )}
-                      تحرير + توليد
-                    </Button>
-                    {/* Generate Only Button */}
+                  {/* All-in-One AI Button */}
+                  <div className="flex flex-col items-end gap-1">
                     <Button
                       variant="default"
                       size="sm"
@@ -2455,27 +2137,6 @@ const generateSlug = (text: string) => {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle>الملخص</CardTitle>
-                    <div className="flex flex-row gap-2">
-                    {/* Edit + Generate Button */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => editAndGenerateMutation.mutate()}
-                      disabled={isGeneratingAI || editAndGenerateMutation.isPending || !content || content.length < 50}
-                      className="gap-2"
-                      data-testid="button-edit-and-generate"
-                      title="إعادة صياغة المحتوى بأسلوب سبق ثم توليد كل الحقول"
-                    >
-                      {editAndGenerateMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <>
-                          <Wand2 className="h-4 w-4" />
-                        </>
-                      )}
-                      تحرير + توليد
-                    </Button>
-                    {/* Generate Only Button */}
                   <Button
                     variant="outline"
                     size="sm"
@@ -2657,27 +2318,6 @@ const generateSlug = (text: string) => {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>التصنيف</span>
-                    <div className="flex flex-row gap-2">
-                    {/* Edit + Generate Button */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => editAndGenerateMutation.mutate()}
-                      disabled={isGeneratingAI || editAndGenerateMutation.isPending || !content || content.length < 50}
-                      className="gap-2"
-                      data-testid="button-edit-and-generate"
-                      title="إعادة صياغة المحتوى بأسلوب سبق ثم توليد كل الحقول"
-                    >
-                      {editAndGenerateMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <>
-                          <Wand2 className="h-4 w-4" />
-                        </>
-                      )}
-                      تحرير + توليد
-                    </Button>
-                    {/* Generate Only Button */}
                   <Button
                     variant="ghost"
                     size="sm"
@@ -2747,27 +2387,6 @@ const generateSlug = (text: string) => {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>تحسين محركات البحث (SEO)</span>
-                    <div className="flex flex-row gap-2">
-                    {/* Edit + Generate Button */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => editAndGenerateMutation.mutate()}
-                      disabled={isGeneratingAI || editAndGenerateMutation.isPending || !content || content.length < 50}
-                      className="gap-2"
-                      data-testid="button-edit-and-generate"
-                      title="إعادة صياغة المحتوى بأسلوب سبق ثم توليد كل الحقول"
-                    >
-                      {editAndGenerateMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <>
-                          <Wand2 className="h-4 w-4" />
-                        </>
-                      )}
-                      تحرير + توليد
-                    </Button>
-                    {/* Generate Only Button */}
                   <Button
                     variant="ghost"
                     size="sm"
@@ -2936,27 +2555,6 @@ const generateSlug = (text: string) => {
                             احصل على توصيات تلقائية لتحسين ظهور المقال في محركات البحث
                           </p>
                         </div>
-                    <div className="flex flex-row gap-2">
-                    {/* Edit + Generate Button */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => editAndGenerateMutation.mutate()}
-                      disabled={isGeneratingAI || editAndGenerateMutation.isPending || !content || content.length < 50}
-                      className="gap-2"
-                      data-testid="button-edit-and-generate"
-                      title="إعادة صياغة المحتوى بأسلوب سبق ثم توليد كل الحقول"
-                    >
-                      {editAndGenerateMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <>
-                          <Wand2 className="h-4 w-4" />
-                        </>
-                      )}
-                      تحرير + توليد
-                    </Button>
-                    {/* Generate Only Button */}
                         <Button
                           variant="default"
                           size="sm"
@@ -2988,27 +2586,6 @@ const generateSlug = (text: string) => {
                             إنشاء بطاقات مُحسّنة لـ Twitter, Instagram, Facebook و WhatsApp
                           </p>
                         </div>
-                    <div className="flex flex-row gap-2">
-                    {/* Edit + Generate Button */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => editAndGenerateMutation.mutate()}
-                      disabled={isGeneratingAI || editAndGenerateMutation.isPending || !content || content.length < 50}
-                      className="gap-2"
-                      data-testid="button-edit-and-generate"
-                      title="إعادة صياغة المحتوى بأسلوب سبق ثم توليد كل الحقول"
-                    >
-                      {editAndGenerateMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <>
-                          <Wand2 className="h-4 w-4" />
-                        </>
-                      )}
-                      تحرير + توليد
-                    </Button>
-                    {/* Generate Only Button */}
                         <Button
                           variant="default"
                           size="sm"
@@ -3063,27 +2640,6 @@ const generateSlug = (text: string) => {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Label>Slug (الرابط)</Label>
-                    <div className="flex flex-row gap-2">
-                    {/* Edit + Generate Button */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => editAndGenerateMutation.mutate()}
-                      disabled={isGeneratingAI || editAndGenerateMutation.isPending || !content || content.length < 50}
-                      className="gap-2"
-                      data-testid="button-edit-and-generate"
-                      title="إعادة صياغة المحتوى بأسلوب سبق ثم توليد كل الحقول"
-                    >
-                      {editAndGenerateMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <>
-                          <Wand2 className="h-4 w-4" />
-                        </>
-                      )}
-                      تحرير + توليد
-                    </Button>
-                    {/* Generate Only Button */}
                         <Button
                           variant="ghost"
                           size="sm"
@@ -3243,27 +2799,6 @@ const generateSlug = (text: string) => {
           <div className="bg-background rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold">إنشاء القصص المصورة</h2>
-                    <div className="flex flex-row gap-2">
-                    {/* Edit + Generate Button */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => editAndGenerateMutation.mutate()}
-                      disabled={isGeneratingAI || editAndGenerateMutation.isPending || !content || content.length < 50}
-                      className="gap-2"
-                      data-testid="button-edit-and-generate"
-                      title="إعادة صياغة المحتوى بأسلوب سبق ثم توليد كل الحقول"
-                    >
-                      {editAndGenerateMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <>
-                          <Wand2 className="h-4 w-4" />
-                        </>
-                      )}
-                      تحرير + توليد
-                    </Button>
-                    {/* Generate Only Button */}
               <Button
                 variant="ghost"
                 size="icon"
@@ -3433,27 +2968,6 @@ function ImageCaptionForm({
       
       {/* Actions */}
       <div className="flex justify-between items-center pt-2">
-                    <div className="flex flex-row gap-2">
-                    {/* Edit + Generate Button */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => editAndGenerateMutation.mutate()}
-                      disabled={isGeneratingAI || editAndGenerateMutation.isPending || !content || content.length < 50}
-                      className="gap-2"
-                      data-testid="button-edit-and-generate"
-                      title="إعادة صياغة المحتوى بأسلوب سبق ثم توليد كل الحقول"
-                    >
-                      {editAndGenerateMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <>
-                          <Wand2 className="h-4 w-4" />
-                        </>
-                      )}
-                      تحرير + توليد
-                    </Button>
-                    {/* Generate Only Button */}
         <Button
           type="button"
           onClick={handleSave}
@@ -3465,27 +2979,6 @@ function ImageCaptionForm({
         </Button>
         
         {existingCaption && onDelete && (
-                    <div className="flex flex-row gap-2">
-                    {/* Edit + Generate Button */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => editAndGenerateMutation.mutate()}
-                      disabled={isGeneratingAI || editAndGenerateMutation.isPending || !content || content.length < 50}
-                      className="gap-2"
-                      data-testid="button-edit-and-generate"
-                      title="إعادة صياغة المحتوى بأسلوب سبق ثم توليد كل الحقول"
-                    >
-                      {editAndGenerateMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <>
-                          <Wand2 className="h-4 w-4" />
-                        </>
-                      )}
-                      تحرير + توليد
-                    </Button>
-                    {/* Generate Only Button */}
           <Button
             type="button"
             variant="destructive"
