@@ -177,7 +177,7 @@ export default function TopicsManagement() {
     enabled: !!angleId,
   });
 
-  const { data: topics = [], isLoading: isTopicsLoading } = useQuery<Topic[]>({
+  const { data: topicsData, isLoading: isTopicsLoading } = useQuery<{ topics: Topic[]; total: number }>({
     queryKey: ["/api/admin/muqtarab/angles", angleId, "topics"],
     queryFn: async () => {
       const res = await fetch(`/api/admin/muqtarab/angles/${angleId}/topics`);
@@ -186,6 +186,8 @@ export default function TopicsManagement() {
     },
     enabled: !!angleId,
   });
+  
+  const topics = topicsData?.topics || [];
 
   const createMutation = useMutation({
     mutationFn: async (data: TopicFormValues) => {

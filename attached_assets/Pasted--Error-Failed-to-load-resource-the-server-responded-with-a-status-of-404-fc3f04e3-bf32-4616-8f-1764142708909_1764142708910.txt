@@ -1,0 +1,27 @@
+[Error] Failed to load resource: the server responded with a status of 404 () (fc3f04e3-bf32-4616-8fc4-865fbd17a3cc, line 0)
+[Error] TypeError: p.map is not a function. (In 'p.map(T=>e.jsxs(zt,{"data-testid":`row-topic-${T.id}`,children:[e.jsx(Ie,{children:e.jsxs("div",{"data-testid":`text-topic-title-${T.id}`,children:[e.jsx("div",{className:"font-medium",children:T.title}),e.jsx("div",{className:"text-sm text-muted-foreground",children:e.jsx("code",{className:"bg-muted px-1 py-0.5 rounded text-xs",children:T.slug})})]})}),e.jsx(Ie,{"data-testid":`badge-status-${T.id}`,children:Sbs(T.status)}),e.jsx(Ie,{"data-testid":`text-published-at-${T.id}`,children:Cbs(T.publishedAt)}),e.jsx(Ie,{children:e.jsxs("div",{className:"flex items-center gap-2",children:[e.jsx(_,{size:"sm",variant:"ghost",onClick:()=>k(T),"data-testid":`button-edit-${T.id}`,children:e.jsx(Ss,{className:"h-4 w-4"})}),e.jsx(_,{size:"sm",variant:"ghost",onClick:()=>M(T),disabled:w.isPending||N.isPending,"data-testid":`button-publish-${T.id}`,children:T.status==="published"?e.jsx(dl,{className:"h-4 w-4"}):e.jsx(gn,{className:"h-4 w-4"})}),e.jsx(_,{size:"sm",variant:"ghost",onClick:()=>c(T),"data-testid":`button-delete-${T.id}`,children:e.jsx(hs,{className:"h-4 w-4"})}),T.status==="published"&&e.jsx(_,{size:"sm",variant:"ghost",asChild:!0,"data-testid":`button-view-${T.id}`,children:e.jsx("a",{href:`/muqtarab/${m==null?void 0:m.slug}/${T.slug}`,target:"_blank",rel:"noopener noreferrer",children:e.jsx(rm,{className:"h-4 w-4"})})})]})})]},T.id))', 'p.map' is undefined)
+Mbs — index-Bh_mrUy-.js:9044:17412
+rge — index-Bh_mrUy-.js:38:17133
+rue — index-Bh_mrUy-.js:40:3171
+n9e — index-Bh_mrUy-.js:40:40108
+vlt — index-Bh_mrUy-.js:40:40031
+uZ — index-Bh_mrUy-.js:40:39879
+xue — index-Bh_mrUy-.js:40:36203
+Twe — index-Bh_mrUy-.js:40:37015
+Ay — index-Bh_mrUy-.js:38:3321
+(anonymous function) — index-Bh_mrUy-.js:40:34510
+
+	nue (index-Bh_mrUy-.js:40:169)
+	(anonymous function) (index-Bh_mrUy-.js:40:396)
+	hwe (index-Bh_mrUy-.js:38:15647)
+	Awe (index-Bh_mrUy-.js:40:32280)
+	e9e (index-Bh_mrUy-.js:40:31695)
+	xlt (index-Bh_mrUy-.js:40:31239)
+	jlt (index-Bh_mrUy-.js:40:41256)
+	m1 (index-Bh_mrUy-.js:40:40602)
+	Twe (index-Bh_mrUy-.js:40:37163)
+	Ay (index-Bh_mrUy-.js:38:3321)
+	(anonymous function) (index-Bh_mrUy-.js:40:34510)
+[Error] TypeError: p.map is not a function. (In 'p.map(T=>e.jsxs(zt,{"data-testid":`row-topic-${T.id}`,children:[e.jsx(Ie,{children:e.jsxs("div",{"data-testid":`text-topic-title-${T.id}`,children:[e.jsx("div",{className:"font-medium",children:T.title}),e.jsx("div",{className:"text-sm text-muted-foreground",children:e.jsx("code",{className:"bg-muted px-1 py-0.5 rounded text-xs",children:T.slug})})]})}),e.jsx(Ie,{"data-testid":`badge-status-${T.id}`,children:Sbs(T.status)}),e.jsx(Ie,{"data-testid":`text-published-at-${T.id}`,children:Cbs(T.publishedAt)}),e.jsx(Ie,{children:e.jsxs("div",{className:"flex items-center gap-2",children:[e.jsx(_,{size:"sm",variant:"ghost",onClick:()=>k(T),"data-testid":`button-edit-${T.id}`,children:e.jsx(Ss,{className:"h-4 w-4"})}),e.jsx(_,{size:"sm",variant:"ghost",onClick:()=>M(T),disabled:w.isPending||N.isPending,"data-testid":`button-publish-${T.id}`,children:T.status==="published"?e.jsx(dl,{className:"h-4 w-4"}):e.jsx(gn,{className:"h-4 w-4"})}),e.jsx(_,{size:"sm",variant:"ghost",onClick:()=>c(T),"data-testid":`button-delete-${T.id}`,children:e.jsx(hs,{className:"h-4 w-4"})}),T.status==="published"&&e.jsx(_,{size:"sm",variant:"ghost",asChild:!0,"data-testid":`button-view-${T.id}`,children:e.jsx("a",{href:`/muqtarab/${m==null?void 0:m.slug}/${T.slug}`,target:"_blank",rel:"noopener noreferrer",children:e.jsx(rm,{className:"h-4 w-4"})})})]})})]},T.id))', 'p.map' is undefined)
+	Ay (index-Bh_mrUy-.js:38:3415)
+	(anonymous function) (index-Bh_mrUy-.js:40:34510)
