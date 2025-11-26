@@ -10047,6 +10047,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Bulk archive English articles
+  app.post("/api/en/dashboard/articles/bulk-archive", requireAuth, requirePermission("articles.delete"), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { articleIds } = req.body;
+
+      if (!Array.isArray(articleIds) || articleIds.length === 0) {
+        return res.status(400).json({ message: "Article IDs are required" });
+      }
+
+      // Archive articles by setting status to archived
+      await db
+        .update(enArticles)
+        .set({ status: "archived", updatedAt: new Date() })
+        .where(inArray(enArticles.id, articleIds));
+
+      // Invalidate caches when articles are bulk archived
+      memoryCache.invalidatePattern('^homepage:');
+      memoryCache.invalidatePattern('^blocks:');
+      memoryCache.invalidatePattern('^insights:');
+      memoryCache.invalidatePattern('^opinion:');
+      memoryCache.invalidatePattern('^trending:');
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "bulk_archived",
+        entityType: "en_article",
+        entityId: articleIds.join(","),
+        newValue: { count: articleIds.length, articleIds },
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json({ message: `Successfully archived ${articleIds.length} English articles` });
+    } catch (error) {
+      console.error("Error bulk archiving English articles:", error);
+      res.status(500).json({ message: "Failed to bulk archive English articles" });
+    }
+  });
+
   // Bulk delete (archive) English articles
   app.post("/api/en/dashboard/articles/bulk-delete", requireAuth, requirePermission("articles.delete"), async (req: any, res) => {
     try {
