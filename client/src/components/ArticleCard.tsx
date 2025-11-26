@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { ViewsCount } from "./ViewsCount";
 import { Link } from "wouter";
+import { getCacheBustedImageUrl } from "@/lib/imageUtils";
 import type { ArticleWithDetails } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
@@ -51,22 +52,18 @@ export function ArticleCard({
     return focalPoint ? `${focalPoint.x}% ${focalPoint.y}%` : 'center';
   };
 
-  // Convert gs:// URLs to proxy URLs for display
+  // Convert gs:// URLs to proxy URLs for display and add cache busting
   const getDisplayImageUrl = () => {
     if (!article.imageUrl) return null;
     
     // If it's a gs:// URL, it needs to be proxied
-    // We'll extract the media ID from usedIn or create a proxy URL
-    // For now, return as-is since gs:// URLs should be stored in database
-    // and will be handled by backend proxy
     if (article.imageUrl.startsWith('gs://')) {
-      // gs:// URLs should not be in articles anymore after our fix
-      // But if they are, we can't convert without media ID
       console.warn('[ArticleCard] Found gs:// URL in article, this should not happen:', article.imageUrl);
-      return article.imageUrl; // Will fail to load, but better than crashing
+      return article.imageUrl;
     }
     
-    return article.imageUrl;
+    // Add cache busting based on updatedAt
+    return getCacheBustedImageUrl(article.imageUrl, article.updatedAt);
   };
 
   const displayImageUrl = getDisplayImageUrl();

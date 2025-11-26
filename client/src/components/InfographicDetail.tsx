@@ -20,6 +20,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
+import { getCacheBustedImageUrl } from "@/lib/imageUtils";
 import type { ArticleWithDetails } from "@shared/schema";
 import DOMPurify from "isomorphic-dompurify";
 
@@ -109,6 +110,8 @@ export function InfographicDetail({
       })
     : '';
 
+  const imageUrl = getCacheBustedImageUrl(article.imageUrl, article.updatedAt);
+
   return (
     <article className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto">
@@ -159,7 +162,7 @@ export function InfographicDetail({
           onClick={() => setImageZoom(true)}
         >
           <img 
-            src={article.imageUrl || ""} 
+            src={imageUrl} 
             alt={article.title}
             className="w-full h-auto"
             data-testid="image-infographic-main"
@@ -295,7 +298,7 @@ export function InfographicDetail({
           </DialogClose>
           <div className="relative flex items-center justify-center">
             <img
-              src={article.imageUrl || ""}
+              src={imageUrl}
               alt={article.title}
               className="max-w-full max-h-[90vh] object-contain rounded-lg"
             />
