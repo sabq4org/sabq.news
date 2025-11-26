@@ -49,6 +49,7 @@ import Personalize from "@/pages/onboarding/Personalize";
 import Muqtarab from "@/pages/Muqtarab";
 import MuqtarabDetail from "@/pages/MuqtarabDetail";
 import DashboardMuqtarab from "@/pages/dashboard/DashboardMuqtarab";
+import TopicsManagement from "@/pages/dashboard/TopicsManagement";
 import TagsManagement from "@/pages/TagsManagement";
 import SmartLinksManagement from "@/pages/dashboard/SmartLinksManagement";
 import SmartJournalist from "@/pages/dashboard/SmartJournalist";
@@ -358,6 +359,7 @@ function Router() {
       <Route path="/dashboard/mirqab/algorithm-writes/:id/edit" component={CreateAlgorithmWrite} />
       
       <Route path="/dashboard/muqtarab" component={DashboardMuqtarab} />
+      <Route path="/admin/muqtarab/angles/:angleId/topics" component={TopicsManagement} />
       <Route path="/dashboard/smart-blocks" component={SmartBlocksPage} />
       
       {/* Audio Newsletters dashboard */}

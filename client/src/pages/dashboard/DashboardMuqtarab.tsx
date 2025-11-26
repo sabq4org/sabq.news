@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,6 +12,7 @@ import {
   Eye,
   EyeOff,
   Loader2,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -408,6 +409,16 @@ export default function DashboardMuqtarab() {
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                asChild
+                                data-testid={`button-topics-${angle.id}`}
+                              >
+                                <Link href={`/admin/muqtarab/angles/${angle.id}/topics`}>
+                                  <FileText className="h-4 w-4" />
+                                </Link>
+                              </Button>
                               <Button
                                 size="sm"
                                 variant="ghost"
