@@ -942,45 +942,54 @@ export default function ArticleDetail() {
         </div>
       </div>
 
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
-        {/* Statistics Cards Section - TailAdmin Style */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mb-8">
-          <MobileOptimizedKpiCard
-            label="المشاهدات"
-            value={(article.views ?? 0).toLocaleString('en-US')}
-            icon={Eye}
-            iconColor="text-primary"
-            iconBgColor="bg-primary/10"
-            testId="card-stat-views"
-          />
-          
-          <MobileOptimizedKpiCard
-            label="الإعجابات"
-            value={(article.reactionsCount ?? 0).toLocaleString('en-US')}
-            icon={Heart}
-            iconColor="text-red-500"
-            iconBgColor="bg-red-500/10"
-            testId="card-stat-reactions"
-          />
-          
-          <MobileOptimizedKpiCard
-            label="التعليقات"
-            value={(article.commentsCount ?? 0).toLocaleString('en-US')}
-            icon={MessageSquare}
-            iconColor="text-blue-500"
-            iconBgColor="bg-blue-500/10"
-            testId="card-stat-comments"
-          />
-          
-          <MobileOptimizedKpiCard
-            label="دقائق قراءة"
-            value={readingTime}
-            icon={Clock}
-            iconColor="text-orange-500"
-            iconBgColor="bg-orange-500/10"
-            testId="card-stat-reading-time"
-          />
+      {/* Statistics Cards Section - Compact Single Row (Same as Homepage) */}
+      <div className="bg-muted/30 border-b mb-0">
+        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+          <div className="grid grid-cols-4 gap-2">
+            <MobileOptimizedKpiCard
+              label="المشاهدات"
+              value={(article.views ?? 0).toLocaleString('en-US')}
+              icon={Eye}
+              iconColor="text-primary"
+              iconBgColor="bg-primary/10"
+              testId="card-stat-views"
+              className="compact"
+            />
+            
+            <MobileOptimizedKpiCard
+              label="الإعجابات"
+              value={(article.reactionsCount ?? 0).toLocaleString('en-US')}
+              icon={Heart}
+              iconColor="text-red-500"
+              iconBgColor="bg-red-500/10"
+              testId="card-stat-reactions"
+              className="compact"
+            />
+            
+            <MobileOptimizedKpiCard
+              label="التعليقات"
+              value={(article.commentsCount ?? 0).toLocaleString('en-US')}
+              icon={MessageSquare}
+              iconColor="text-blue-500"
+              iconBgColor="bg-blue-500/10"
+              testId="card-stat-comments"
+              className="compact"
+            />
+            
+            <MobileOptimizedKpiCard
+              label="دقائق قراءة"
+              value={readingTime}
+              icon={Clock}
+              iconColor="text-orange-500"
+              iconBgColor="bg-orange-500/10"
+              testId="card-stat-reading-time"
+              className="compact"
+            />
+          </div>
         </div>
+      </div>
+
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
