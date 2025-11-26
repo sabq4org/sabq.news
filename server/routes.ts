@@ -14,7 +14,7 @@ import autoImageRoutes from './routes/autoImageRoutes';
 import { ObjectStorageService, ObjectNotFoundError, objectStorageClient } from "./objectStorage";
 import { registerInfographicAiRoutes } from "./routes/infographicAi";
 import { getObjectAclPolicy, setObjectAclPolicy } from "./objectAcl";
-import { summarizeArticle, generateTitle, chatWithAssistant, analyzeCredibility, generateDailyActivityInsights, analyzeSEO, generateSmartContent } from "./openai";
+import { summarizeArticle, generateTitle, chatWithAssistant, analyzeCredibility, generateDailyActivityInsights, analyzeSEO, generateSmartContent, rewriteAndEnhanceContent } from "./openai";
 import { chatWithMultilingualAssistant, chatWithAssistantFallback, type ChatLanguage } from "./multilingual-chatbot";
 import { summarizeText, generateSocialPost, suggestImageQuery, translateContent, checkFactAccuracy, analyzeTrends } from "./ai-content-tools";
 import { importFromRssFeed } from "./rssImporter";
@@ -9290,6 +9290,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to create comment" });
     }
   });
+
+  // Edit + Smart Content Generation Endpoint (rewrites content in Sabq style then generates all fields)
+  app.post("/api/articles/edit-and-generate", isAuthenticated, requireAnyPermission('articles.create', 'articles.edit_any', 'articles.edit_own'), async (req: any, res) => {
+    try {
+      const { content, language = "ar" } = req.body;
+
+      if (!content || typeof content !== 'string' || content.trim().length === 0) {
+        return res.status(400).json({ message: "يجب توفير محتوى الخبر" });
+      }
+
+      console.log("[Edit+Generate API] Step 1: Rewriting content in Sabq style...");
+      
+      // Get available categories for better AI classification
+      const allCategories = await storage.getCategories();
+      const categoryList = allCategories.map(c => ({ nameAr: c.name, nameEn: c.nameEn || c.name }));
+      
+      // Step 1: Rewrite content in Sabq editorial style
+      const { analyzeAndEditWithSabqStyle } = await import("./ai/contentAnalyzer");
+      const editResult = await analyzeAndEditWithSabqStyle(content, language as "ar" | "en" | "ur", categoryList);
+      
+      console.log("[Edit+Generate API] Content rewritten. Quality score:", editResult.qualityScore);
+      console.log("[Edit+Generate API] Step 2: Generating smart content fields...");
+      
+      // Step 2: Generate all fields from the rewritten content
+      const rewrittenContent = editResult.optimized.content;
+      const generatedContent = await generateSmartContent(rewrittenContent, language as "ar" | "en");
+      
+      console.log("[Edit+Generate API] All fields generated successfully");
+      
+      // Return combined result
+      res.json({
+        // Rewritten content
+        editedContent: rewrittenContent,
+        editedLead: editResult.optimized.lead,
+        qualityScore: editResult.qualityScore,
+        detectedCategory: editResult.detectedCategory,
+        hasNewsValue: editResult.hasNewsValue,
+        issues: editResult.issues,
+        suggestions: editResult.suggestions,
+        // Generated fields
+        mainTitle: generatedContent.mainTitle,
+        subTitle: generatedContent.subTitle,
+        smartSummary: generatedContent.smartSummary,
+        keywords: generatedContent.keywords,
+        seo: generatedContent.seo,
+      });
+    } catch (error) {
+      console.error("[Edit+Generate API] Error:", error);
+      res.status(500).json({ message: "فشل في تحرير وتوليد المحتوى" });
+    }
+  });
+
 
   // ============================================================
   // ARTICLE MEDIA ASSETS ROUTES

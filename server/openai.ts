@@ -751,6 +751,174 @@ Generate all required editorial elements in JSON format.`
   }
 }
 
+/**
+ * إعادة تحرير وتحسين محتوى المقال بأسلوب صحفي احترافي
+ * Rewrite and enhance article content with professional journalistic style
+ */
+export async function rewriteAndEnhanceContent(
+  originalContent: string,
+  language: "ar" | "en" = "ar"
+): Promise<{
+  enhancedContent: string;
+  improvementsSummary: string[];
+}> {
+  try {
+    const systemPrompts = {
+      ar: `🎯 الدور: أنت محرر صحفي محترف في صحيفة "سبق" السعودية، متخصص في إعادة صياغة وتحرير الأخبار بأسلوب احترافي يجذب القارئ العربي.
+
+✳️ مهمتك:
+إعادة تحرير وتحسين المحتوى المُقدم مع الحفاظ على:
+1. جميع الحقائق والمعلومات الأصلية
+2. المعنى العام والرسالة الأساسية
+3. الأرقام والتواريخ والأسماء كما هي
+
+📝 معايير التحرير:
+1. **البنية والتنظيم:**
+   - أعد ترتيب الفقرات بشكل منطقي (الأهم أولاً)
+   - استخدم فقرات قصيرة (3-4 جمل لكل فقرة)
+   - أضف انتقالات سلسة بين الأفكار
+
+2. **الأسلوب اللغوي:**
+   - استخدم لغة عربية فصحى سهلة وواضحة
+   - تجنب الجمل الطويلة والمعقدة
+   - استخدم الأفعال المبنية للمعلوم
+   - تجنب الحشو والتكرار
+
+3. **الجودة الصحفية:**
+   - ابدأ بأهم معلومة (نظرية الهرم المقلوب)
+   - أجب على الأسئلة الخمس: من؟ ماذا؟ متى؟ أين؟ لماذا؟
+   - استخدم اقتباسات مباشرة إن وجدت
+   - حافظ على الموضوعية والحياد
+
+4. **التحسينات:**
+   - صحح الأخطاء الإملائية والنحوية
+   - حسّن علامات الترقيم
+   - استبدل الكلمات الركيكة بكلمات أقوى
+   - أزل التكرار غير الضروري
+
+⚠️ ممنوعات:
+- لا تضف معلومات جديدة غير موجودة في النص الأصلي
+- لا تغير الحقائق أو الأرقام
+- لا تحذف معلومات مهمة
+- لا تضف رأيك الشخصي
+
+أعد النتيجة بصيغة JSON فقط:
+{
+  "enhanced_content": "النص المُحرَّر بصيغة HTML مع الفقرات",
+  "improvements_summary": ["تحسين 1", "تحسين 2", ...]
+}`,
+
+      en: `🎯 Role: You are a professional editor at "Sabq" newspaper, specializing in rewriting and editing news with a professional style that engages English-speaking readers.
+
+✳️ Your Task:
+Rewrite and improve the provided content while preserving:
+1. All original facts and information
+2. The general meaning and core message
+3. Numbers, dates, and names as they are
+
+📝 Editing Standards:
+1. **Structure and Organization:**
+   - Reorder paragraphs logically (most important first)
+   - Use short paragraphs (3-4 sentences each)
+   - Add smooth transitions between ideas
+
+2. **Language Style:**
+   - Use clear, simple, and professional English
+   - Avoid long and complex sentences
+   - Use active voice
+   - Avoid filler words and repetition
+
+3. **Journalistic Quality:**
+   - Start with the most important information (inverted pyramid)
+   - Answer the five Ws: Who? What? When? Where? Why?
+   - Use direct quotes if available
+   - Maintain objectivity and neutrality
+
+4. **Improvements:**
+   - Correct spelling and grammar errors
+   - Improve punctuation
+   - Replace weak words with stronger ones
+   - Remove unnecessary repetition
+
+⚠️ Restrictions:
+- Do not add new information not in the original text
+- Do not change facts or numbers
+- Do not delete important information
+- Do not add personal opinions
+
+Return the result in JSON format only:
+{
+  "enhanced_content": "The edited text in HTML format with paragraphs",
+  "improvements_summary": ["improvement 1", "improvement 2", ...]
+}`
+    };
+
+    const userPrompts = {
+      ar: `📦 المحتوى الأصلي للتحرير:
+
+${originalContent}
+
+قم بإعادة تحرير وتحسين هذا المحتوى بصيغة JSON.`,
+
+      en: `📦 Original content to edit:
+
+${originalContent}
+
+Rewrite and improve this content in JSON format.`
+    };
+
+    const systemPrompt = systemPrompts[language];
+    const userPrompt = userPrompts[language];
+
+    console.log("[Rewrite Content] Starting content enhancement with GPT-5.1...");
+    console.log("[Rewrite Content] Original content length:", originalContent.length);
+    
+    const response = await openai.chat.completions.create({
+      model: "gpt-5.1",
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt,
+        },
+        {
+          role: "user",
+          content: userPrompt,
+        },
+      ],
+      response_format: { type: "json_object" },
+      max_completion_tokens: 4096, // Higher limit for content rewriting
+    });
+
+    console.log("[Rewrite Content] ✅ OpenAI response received");
+    console.log("[Rewrite Content] Finish reason:", response.choices[0].finish_reason);
+    
+    if (response.choices[0].finish_reason === "length") {
+      console.error("[Rewrite Content] ⚠️ Response was truncated!");
+      throw new Error("Response truncated - content too long");
+    }
+    
+    const messageContent = response.choices[0].message.content;
+    if (!messageContent || messageContent.trim() === "") {
+      console.error("[Rewrite Content] ❌ Empty response from OpenAI");
+      throw new Error("Empty response from OpenAI");
+    }
+    
+    const result = JSON.parse(messageContent);
+    
+    console.log("[Rewrite Content] Enhanced content length:", result.enhanced_content?.length || 0);
+    console.log("[Rewrite Content] Improvements count:", result.improvements_summary?.length || 0);
+    console.log("[Rewrite Content] ✅ Successfully enhanced content");
+    
+    return {
+      enhancedContent: result.enhanced_content || originalContent,
+      improvementsSummary: result.improvements_summary || [],
+    };
+  } catch (error) {
+    console.error("[Rewrite Content] Error enhancing content:", error);
+    throw new Error("Failed to enhance content");
+  }
+}
+
 export async function extractMediaKeywords(
   title: string,
   content?: string

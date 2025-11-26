@@ -43,6 +43,7 @@ import {
   X,
   BarChart3,
   CheckCircle2,
+  Wand2,
   Clock,
   RotateCcw,
   Trash2,
@@ -1226,6 +1227,120 @@ export default function ArticleEditor() {
     },
   });
 
+  // Edit and Generate All-in-One Mutation
+  // This rewrites the content first, then generates all metadata
+  const editAndGenerateMutation = useMutation({
+    mutationFn: async () => {
+      if (!content) {
+        throw new Error("يجب إدخال المحتوى أولاً");
+      }
+      
+      if (content.length < 100) {
+        throw new Error("المحتوى يجب أن يكون 100 حرف على الأقل");
+      }
+      
+      console.log('[Edit+Generate] Starting comprehensive edit and generation...');
+      console.log('[Edit+Generate] Original content length:', content.length);
+      
+      const result = await apiRequest("/api/articles/edit-and-generate", {
+        method: "POST",
+        body: JSON.stringify({ 
+          content, 
+          language: "ar" 
+        }),
+      });
+      
+      console.log('[Edit+Generate] Result received:', result);
+      return result;
+    },
+    onSuccess: (data: {
+      editedContent: string;
+      editedLead?: string;
+      qualityScore?: number;
+      detectedCategory?: string;
+      hasNewsValue?: boolean;
+      issues?: string[];
+      suggestions?: string[];
+      mainTitle: string;
+      subTitle: string;
+      smartSummary: string;
+      keywords: string[];
+      seo: {
+        metaTitle: string;
+        metaDescription: string;
+      };
+    }) => {
+      console.log('[Edit+Generate] Applying results...');
+      
+      const changes: string[] = [];
+      
+      // Apply edited content
+      if (data.editedContent) {
+        setContent(data.editedContent);
+        changes.push("✓ تم تحرير المحتوى");
+      }
+      
+      // Apply title
+      if (data.mainTitle) {
+        setTitle(data.mainTitle);
+        setSlug(generateSlug(data.mainTitle));
+        changes.push(`✓ العنوان: ${data.mainTitle.substring(0, 25)}...`);
+      }
+      
+      // Apply subtitle
+      if (data.subTitle) {
+        setSubtitle(data.subTitle);
+        changes.push("✓ العنوان الفرعي");
+      }
+      
+      // Apply summary/excerpt
+      if (data.smartSummary) {
+        setExcerpt(data.smartSummary);
+        changes.push("✓ الموجز الذكي");
+      }
+      
+      // Apply keywords
+      if (data.keywords?.length > 0) {
+        setKeywords(data.keywords);
+        changes.push(`✓ ${data.keywords.length} كلمة مفتاحية`);
+      }
+      
+      // Apply SEO
+      if (data.seo) {
+        setMetaTitle(data.seo.metaTitle);
+        setMetaDescription(data.seo.metaDescription);
+        changes.push("✓ بيانات SEO");
+      }
+      
+      // Apply lead if available
+      if (data.editedLead) {
+        changes.push("✓ المقدمة");
+      }
+      
+      toast({
+        title: `✨ تحرير وتوليد شامل${data.qualityScore ? ` (${data.qualityScore}/100)` : ''}`,
+        description: changes.join("\n"),
+        duration: 6000,
+      });
+      
+      // Show quality insights if available
+      if (data.issues && data.issues.length > 0) {
+        console.log('[Edit+Generate] Quality issues:', data.issues);
+      }
+      if (data.suggestions && data.suggestions.length > 0) {
+        console.log('[Edit+Generate] Suggestions:', data.suggestions);
+      }
+    },
+    onError: (error: Error) => {
+      console.error('[Edit+Generate] Error:', error);
+      toast({
+        title: "خطأ في التحرير والتوليد",
+        description: error.message || "فشل في تحرير وتوليد المحتوى",
+        variant: "destructive",
+      });
+    },
+  });
+
   const analyzeSEOMutation = useMutation({
     mutationFn: async () => {
       if (!id || isNewArticle) {
@@ -2087,30 +2202,57 @@ const generateSlug = (text: string) => {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>محتوى المقال</span>
-                  {/* All-in-One AI Button */}
-                  <div className="flex flex-col items-end gap-1">
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={handleGenerateAllInOne}
-                      disabled={isGeneratingAI || !content || content.length < 100}
-                      className="gap-2"
-                      data-testid="button-generate-all-in-one"
-                      title={
-                        !content 
-                          ? "يجب كتابة المحتوى أولاً (100+ حرف)"
-                          : content.length < 100
-                          ? `المحتوى قصير جداً (${content.length}/100 حرف)`
-                          : "توليد جميع التوليدات الذكية دفعة واحدة: العناوين، التصنيف، SEO، والموجز"
-                      }
-                    >
-                      {generateAllInOneMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Sparkles className="h-4 w-4" />
-                      )}
-                      توليد ذكي شامل
-                    </Button>
+                  {/* AI Buttons */}
+                  <div className="flex flex-col items-end gap-2">
+                    <div className="flex items-center gap-2">
+                      {/* Edit + Generate Button - Rewrites content then generates metadata */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => editAndGenerateMutation.mutate()}
+                        disabled={isGeneratingAI || editAndGenerateMutation.isPending || !content || content.length < 100}
+                        className="gap-2"
+                        data-testid="button-edit-and-generate"
+                        title={
+                          !content 
+                            ? "يجب كتابة المحتوى أولاً (100+ حرف)"
+                            : content.length < 100
+                            ? `المحتوى قصير جداً (${content.length}/100 حرف)`
+                            : "إعادة تحرير المحتوى بأسلوب صحفي احترافي ثم توليد العنوان والكلمات المفتاحية والموجز وبيانات SEO"
+                        }
+                      >
+                        {editAndGenerateMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Wand2 className="h-4 w-4" />
+                        )}
+                        تحرير وتوليد شامل
+                      </Button>
+                      
+                      {/* All-in-One AI Button - Only generates metadata */}
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={handleGenerateAllInOne}
+                        disabled={isGeneratingAI || !content || content.length < 100}
+                        className="gap-2"
+                        data-testid="button-generate-all-in-one"
+                        title={
+                          !content 
+                            ? "يجب كتابة المحتوى أولاً (100+ حرف)"
+                            : content.length < 100
+                            ? `المحتوى قصير جداً (${content.length}/100 حرف)`
+                            : "توليد جميع التوليدات الذكية دفعة واحدة: العناوين، التصنيف، SEO، والموجز"
+                        }
+                      >
+                        {generateAllInOneMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Sparkles className="h-4 w-4" />
+                        )}
+                        توليد ذكي شامل
+                      </Button>
+                    </div>
                     {(!content || content.length < 100) && (
                       <span className="text-xs text-muted-foreground">
                         {!content 
