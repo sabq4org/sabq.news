@@ -195,6 +195,8 @@ import {
   insertNotificationQueueSchema,
   insertNotificationsInboxSchema,
   insertAngleSchema,
+  insertTopicSchema,
+  updateTopicSchema,
   insertTagSchema,
   updateTagSchema,
   insertArticleTagSchema,
@@ -13262,6 +13264,45 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   });
 
   // ============================================================
+  // MUQTARAB TOPICS PUBLIC ROUTES
+  // ============================================================
+
+  // GET /api/muqtarab/angles/:angleSlug/topics - Get published topics for an angle
+  app.get("/api/muqtarab/angles/:angleSlug/topics", async (req, res) => {
+    try {
+      const { angleSlug } = req.params;
+      const limit = Number(req.query.limit) || 20;
+      
+      const topics = await storage.getPublishedTopicsByAngle(angleSlug, limit);
+      res.json({ topics });
+    } catch (error) {
+      console.error("Error fetching topics:", error);
+      res.status(500).json({ message: "Failed to fetch topics" });
+    }
+  });
+
+  // GET /api/muqtarab/topics/:slug - Get single topic by slug (public)
+  app.get("/api/muqtarab/topics/:slug", async (req, res) => {
+    try {
+      const { slug } = req.params;
+      const { angleId } = req.query as { angleId?: string };
+      
+      if (!angleId) {
+        return res.status(400).json({ message: "angleId query parameter required" });
+      }
+      
+      const topic = await storage.getTopicBySlug(angleId, slug);
+      if (!topic || topic.status !== 'published') {
+        return res.status(404).json({ message: "Topic not found" });
+      }
+      res.json(topic);
+    } catch (error) {
+      console.error("Error fetching topic:", error);
+      res.status(500).json({ message: "Failed to fetch topic" });
+    }
+  });
+
+  // ============================================================
   // MUQTARAB ADMIN ROUTES (RBAC Protected)
   // ============================================================
 
@@ -13333,6 +13374,114 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     } catch (error) {
       console.error("Error deleting angle:", error);
       res.status(500).json({ message: "فشل في حذف الزاوية" });
+    }
+  });
+
+  // ============================================================
+  // MUQTARAB TOPICS ADMIN ROUTES
+  // ============================================================
+
+  // GET /api/admin/muqtarab/angles/:angleId/topics - List all topics (admin)
+  app.get("/api/admin/muqtarab/angles/:angleId/topics", requireAuth, requirePermission("muqtarab.manage"), async (req: any, res) => {
+    try {
+      const { angleId } = req.params;
+      const { status, limit, offset } = req.query as { status?: string; limit?: string; offset?: string };
+      
+      const result = await storage.getTopicsByAngle(angleId, {
+        status: status as 'draft' | 'published' | 'archived' | undefined,
+        limit: limit ? Number(limit) : 20,
+        offset: offset ? Number(offset) : 0,
+      });
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching topics:", error);
+      res.status(500).json({ message: "Failed to fetch topics" });
+    }
+  });
+
+  // POST /api/admin/muqtarab/topics - Create new topic
+  app.post("/api/admin/muqtarab/topics", requireAuth, requirePermission("muqtarab.manage"), async (req: any, res) => {
+    try {
+      const userId = req.user!.id;
+      const parsed = insertTopicSchema.safeParse({ ...req.body, createdBy: userId });
+      
+      if (!parsed.success) {
+        return res.status(400).json({ message: "Invalid topic data", errors: parsed.error.errors });
+      }
+      
+      const topic = await storage.createTopic(parsed.data);
+      res.status(201).json(topic);
+    } catch (error) {
+      console.error("Error creating topic:", error);
+      res.status(500).json({ message: "Failed to create topic" });
+    }
+  });
+
+  // GET /api/admin/muqtarab/topics/:id - Get topic by ID (admin)
+  app.get("/api/admin/muqtarab/topics/:id", requireAuth, requirePermission("muqtarab.manage"), async (req: any, res) => {
+    try {
+      const topic = await storage.getTopicById(req.params.id);
+      if (!topic) {
+        return res.status(404).json({ message: "Topic not found" });
+      }
+      res.json(topic);
+    } catch (error) {
+      console.error("Error fetching topic:", error);
+      res.status(500).json({ message: "Failed to fetch topic" });
+    }
+  });
+
+  // PATCH /api/admin/muqtarab/topics/:id - Update topic
+  app.patch("/api/admin/muqtarab/topics/:id", requireAuth, requirePermission("muqtarab.manage"), async (req: any, res) => {
+    try {
+      const userId = req.user!.id;
+      const parsed = updateTopicSchema.safeParse({ ...req.body, updatedBy: userId });
+      
+      if (!parsed.success) {
+        return res.status(400).json({ message: "Invalid topic data", errors: parsed.error.errors });
+      }
+      
+      const topic = await storage.updateTopic(req.params.id, parsed.data);
+      res.json(topic);
+    } catch (error) {
+      console.error("Error updating topic:", error);
+      res.status(500).json({ message: "Failed to update topic" });
+    }
+  });
+
+  // POST /api/admin/muqtarab/topics/:id/publish - Publish topic
+  app.post("/api/admin/muqtarab/topics/:id/publish", requireAuth, requirePermission("muqtarab.manage"), async (req: any, res) => {
+    try {
+      const userId = req.user!.id;
+      const topic = await storage.publishTopic(req.params.id, userId);
+      res.json(topic);
+    } catch (error) {
+      console.error("Error publishing topic:", error);
+      res.status(500).json({ message: "Failed to publish topic" });
+    }
+  });
+
+  // POST /api/admin/muqtarab/topics/:id/unpublish - Unpublish topic  
+  app.post("/api/admin/muqtarab/topics/:id/unpublish", requireAuth, requirePermission("muqtarab.manage"), async (req: any, res) => {
+    try {
+      const userId = req.user!.id;
+      const topic = await storage.unpublishTopic(req.params.id, userId);
+      res.json(topic);
+    } catch (error) {
+      console.error("Error unpublishing topic:", error);
+      res.status(500).json({ message: "Failed to unpublish topic" });
+    }
+  });
+
+  // DELETE /api/admin/muqtarab/topics/:id - Delete topic
+  app.delete("/api/admin/muqtarab/topics/:id", requireAuth, requirePermission("muqtarab.manage"), async (req: any, res) => {
+    try {
+      await storage.deleteTopic(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting topic:", error);
+      res.status(500).json({ message: "Failed to delete topic" });
     }
   });
 
