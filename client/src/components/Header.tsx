@@ -91,16 +91,12 @@ export function Header({ user, onMenuClick }: HeaderProps) {
           {/* Logo - Left side (Desktop only) */}
           <div className="hidden md:flex items-center gap-3">
             <Link href="/">
-              <span className="flex items-center gap-2 hover-elevate active-elevate-2 rounded-md px-2 py-2 cursor-pointer group" data-testid="link-home" aria-label="الصفحة الرئيسية - سبق الذكية">
+              <span className="flex items-center gap-3 hover-elevate active-elevate-2 rounded-md px-2 py-2 cursor-pointer" data-testid="link-home" aria-label="الصفحة الرئيسية">
                 <img 
                   src={currentLogo} 
                   alt="سبق - SABQ" 
                   className="h-12 w-auto object-contain"
                 />
-                {/* Smart AI Badge */}
-                <div className="bg-gradient-to-br from-primary via-purple-500 to-blue-500 rounded-full p-1.5 shadow-lg animate-pulse">
-                  <Brain className="h-3.5 w-3.5 text-white" />
-                </div>
               </span>
             </Link>
           </div>
@@ -108,16 +104,12 @@ export function Header({ user, onMenuClick }: HeaderProps) {
           {/* Mobile Logo */}
           <div className="md:hidden flex items-center">
             <Link href="/">
-              <span className="flex items-center gap-2 hover-elevate active-elevate-2 rounded-md px-2 py-2 cursor-pointer group" data-testid="link-home-mobile" aria-label="الصفحة الرئيسية - سبق الذكية">
+              <span className="flex items-center gap-3 hover-elevate active-elevate-2 rounded-md px-2 py-2 cursor-pointer" data-testid="link-home-mobile" aria-label="الصفحة الرئيسية">
                 <img 
                   src={currentLogo} 
                   alt="سبق - SABQ" 
                   className="h-11 w-auto object-contain"
                 />
-                {/* Smart AI Badge */}
-                <div className="bg-gradient-to-br from-primary via-purple-500 to-blue-500 rounded-full p-1 shadow-lg animate-pulse">
-                  <Brain className="h-3 w-3 text-white" />
-                </div>
               </span>
             </Link>
           </div>
