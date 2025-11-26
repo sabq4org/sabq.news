@@ -97,14 +97,9 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                   alt="سبق - SABQ" 
                   className="h-12 w-auto object-contain"
                 />
-                {/* Smart AI Badge - Brain above "ذكية" */}
-                <div className="flex flex-col items-center gap-0.5">
-                  <div className="bg-gradient-to-br from-primary via-purple-500 to-blue-500 rounded-full p-1.5 shadow-lg animate-pulse">
-                    <Brain className="h-3.5 w-3.5 text-white" />
-                  </div>
-                  <span className="text-[10px] font-bold text-primary">
-                    ذكية
-                  </span>
+                {/* Smart AI Badge */}
+                <div className="bg-gradient-to-br from-primary via-purple-500 to-blue-500 rounded-full p-1.5 shadow-lg animate-pulse">
+                  <Brain className="h-3.5 w-3.5 text-white" />
                 </div>
               </span>
             </Link>
@@ -119,14 +114,9 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                   alt="سبق - SABQ" 
                   className="h-11 w-auto object-contain"
                 />
-                {/* Smart AI Badge - Brain above "ذكية" */}
-                <div className="flex flex-col items-center gap-0.5">
-                  <div className="bg-gradient-to-br from-primary via-purple-500 to-blue-500 rounded-full p-1 shadow-lg animate-pulse">
-                    <Brain className="h-3 w-3 text-white" />
-                  </div>
-                  <span className="text-[8px] font-bold text-primary">
-                    ذكية
-                  </span>
+                {/* Smart AI Badge */}
+                <div className="bg-gradient-to-br from-primary via-purple-500 to-blue-500 rounded-full p-1 shadow-lg animate-pulse">
+                  <Brain className="h-3 w-3 text-white" />
                 </div>
               </span>
             </Link>
