@@ -108,7 +108,7 @@ const angleFormSchema = insertAngleSchema.extend({
   colorHex: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "اللون يجب أن يكون بصيغة hex (#RRGGBB)"),
   iconKey: z.string().min(1, "رمز الأيقونة مطلوب"),
   nameEn: z.string().optional(),
-  coverImageUrl: z.string().url("رابط الصورة غير صحيح").optional().or(z.literal("")),
+  coverImageUrl: z.string().optional().or(z.literal("")),
   shortDesc: z.string().optional(),
   sortOrder: z.number().int().min(0).default(0),
   isActive: z.boolean().default(true),
