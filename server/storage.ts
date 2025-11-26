@@ -138,6 +138,10 @@ import {
   type InsertLoyaltyCampaign,
   type Angle,
   type InsertAngle,
+  topics,
+  type Topic,
+  type InsertTopic,
+  type UpdateTopic,
   type Experiment,
   type InsertExperiment,
   type ExperimentVariant,
@@ -606,6 +610,21 @@ export interface IStorage {
   linkArticleToAngle(articleId: string, angleId: string): Promise<void>;
   unlinkArticleFromAngle(articleId: string, angleId: string): Promise<void>;
   getArticleAngles(articleId: string): Promise<Angle[]>;
+  
+  // Topics CRUD
+  getTopicsByAngle(angleId: string, options?: {
+    status?: 'draft' | 'published' | 'archived';
+    limit?: number;
+    offset?: number;
+  }): Promise<{ topics: Topic[]; total: number }>;
+  getTopicBySlug(angleId: string, slug: string): Promise<Topic | undefined>;
+  getTopicById(id: string): Promise<Topic | undefined>;
+  createTopic(topic: InsertTopic): Promise<Topic>;
+  updateTopic(id: string, topic: UpdateTopic): Promise<Topic>;
+  deleteTopic(id: string): Promise<void>;
+  publishTopic(id: string, userId: string): Promise<Topic>;
+  unpublishTopic(id: string, userId: string): Promise<Topic>;
+  getPublishedTopicsByAngle(angleSlug: string, limit?: number): Promise<Topic[]>;
   
   // Homepage operations
   getHeroArticles(): Promise<ArticleWithDetails[]>;
@@ -7025,6 +7044,130 @@ export class DatabaseStorage implements IStorage {
       .orderBy(angles.sortOrder, angles.nameAr);
 
     return results.map((r) => r.angle);
+  }
+
+  // Topics CRUD operations
+  async getTopicsByAngle(angleId: string, options?: {
+    status?: 'draft' | 'published' | 'archived';
+    limit?: number;
+    offset?: number;
+  }): Promise<{ topics: Topic[]; total: number }> {
+    const conditions = [eq(topics.angleId, angleId)];
+    
+    if (options?.status) {
+      conditions.push(eq(topics.status, options.status));
+    }
+    
+    const whereClause = and(...conditions);
+    
+    const [{ count: totalCount }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(topics)
+      .where(whereClause);
+    
+    let query = db
+      .select()
+      .from(topics)
+      .where(whereClause)
+      .orderBy(desc(topics.createdAt));
+    
+    if (options?.limit) {
+      query = query.limit(options.limit) as any;
+    }
+    if (options?.offset) {
+      query = query.offset(options.offset) as any;
+    }
+    
+    const topicsList = await query;
+    
+    return {
+      topics: topicsList,
+      total: Number(totalCount),
+    };
+  }
+
+  async getTopicBySlug(angleId: string, slug: string): Promise<Topic | undefined> {
+    const [topic] = await db
+      .select()
+      .from(topics)
+      .where(and(eq(topics.angleId, angleId), eq(topics.slug, slug)));
+    return topic;
+  }
+
+  async getTopicById(id: string): Promise<Topic | undefined> {
+    const [topic] = await db
+      .select()
+      .from(topics)
+      .where(eq(topics.id, id));
+    return topic;
+  }
+
+  async createTopic(topic: InsertTopic): Promise<Topic> {
+    const [created] = await db
+      .insert(topics)
+      .values(topic)
+      .returning();
+    return created;
+  }
+
+  async updateTopic(id: string, topicData: UpdateTopic): Promise<Topic> {
+    const updateData: any = { ...topicData, updatedAt: new Date() };
+    const [updated] = await db
+      .update(topics)
+      .set(updateData)
+      .where(eq(topics.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteTopic(id: string): Promise<void> {
+    await db.delete(topics).where(eq(topics.id, id));
+  }
+
+  async publishTopic(id: string, userId: string): Promise<Topic> {
+    const [updated] = await db
+      .update(topics)
+      .set({
+        status: 'published',
+        publishedAt: new Date(),
+        updatedBy: userId,
+        updatedAt: new Date(),
+      })
+      .where(eq(topics.id, id))
+      .returning();
+    return updated;
+  }
+
+  async unpublishTopic(id: string, userId: string): Promise<Topic> {
+    const [updated] = await db
+      .update(topics)
+      .set({
+        status: 'draft',
+        publishedAt: null,
+        updatedBy: userId,
+        updatedAt: new Date(),
+      })
+      .where(eq(topics.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getPublishedTopicsByAngle(angleSlug: string, limit?: number): Promise<Topic[]> {
+    let query = db
+      .select({
+        topic: topics,
+      })
+      .from(topics)
+      .innerJoin(angles, eq(topics.angleId, angles.id))
+      .where(and(eq(angles.slug, angleSlug), eq(topics.status, 'published')))
+      .orderBy(desc(topics.publishedAt));
+    
+    if (limit) {
+      query = query.limit(limit) as any;
+    }
+    
+    const results = await query;
+    return results.map((r) => r.topic);
   }
 
   // Story operations
