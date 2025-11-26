@@ -1020,72 +1020,73 @@ export default function ArticleDetail() {
                 {article.title}
               </h1>
 
-              {/* Author Card */}
+              {/* Author Card - Compact Lite Version */}
               {resolvedAuthor && (
-                <div className="bg-muted/30 rounded-lg p-4">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-14 w-14 border-2 border-primary/20">
-                      <AvatarImage 
-                        src={resolvedAuthor?.profileImageUrl || ""} 
-                        alt={`${resolvedAuthor?.firstName || ""} ${resolvedAuthor?.lastName || ""}`.trim() || resolvedAuthor?.email || ""}
-                        className="object-cover"
-                      />
-                      <AvatarFallback className="bg-primary/10 text-primary text-lg font-bold">
-                        {getInitials(resolvedAuthor?.firstName, resolvedAuthor?.lastName, resolvedAuthor?.email)}
-                      </AvatarFallback>
-                    </Avatar>
-                    
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        {article.staff ? (
-                          <Link 
-                            href={`/reporter/${article.staff.slug}`} 
-                            className="text-lg font-bold hover:text-primary transition-colors flex items-center gap-1" 
-                            data-testid="link-reporter-profile"
-                          >
-                            <span data-testid="text-author-name">
-                              {resolvedAuthor?.firstName && resolvedAuthor?.lastName
-                                ? `${resolvedAuthor.firstName} ${resolvedAuthor.lastName}`
-                                : resolvedAuthor?.email}
-                            </span>
-                            {article.staff.isVerified && (
-                              <CheckCircle2 className="h-5 w-5 text-primary" />
-                            )}
-                          </Link>
-                        ) : (
-                          <p className="text-lg font-bold" data-testid="text-author-name">
-                            {resolvedAuthor?.firstName && resolvedAuthor?.lastName
-                              ? `${resolvedAuthor.firstName} ${resolvedAuthor.lastName}`
-                              : resolvedAuthor?.email}
-                          </p>
-                        )}
-                      </div>
-                      
-                      <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
-                        {timeAgo && (
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-4 w-4" />
-                            {timeAgo}
-                          </span>
-                        )}
-                        <span className="flex items-center gap-1">
-                          {readingTime} دقائق قراءة
-                        </span>
-                      </div>
-                    </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Avatar className="h-8 w-8 border border-primary/20">
+                    <AvatarImage 
+                      src={resolvedAuthor?.profileImageUrl || ""} 
+                      alt={`${resolvedAuthor?.firstName || ""} ${resolvedAuthor?.lastName || ""}`.trim() || resolvedAuthor?.email || ""}
+                      className="object-cover"
+                    />
+                    <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                      {getInitials(resolvedAuthor?.firstName, resolvedAuthor?.lastName, resolvedAuthor?.email)}
+                    </AvatarFallback>
+                  </Avatar>
+                  
+                  {article.staff ? (
+                    <Link 
+                      href={`/reporter/${article.staff.slug}`} 
+                      className="text-sm font-semibold hover:text-primary transition-colors flex items-center gap-1" 
+                      data-testid="link-reporter-profile"
+                    >
+                      <span data-testid="text-author-name">
+                        {resolvedAuthor?.firstName && resolvedAuthor?.lastName
+                          ? `${resolvedAuthor.firstName} ${resolvedAuthor.lastName}`
+                          : resolvedAuthor?.email}
+                      </span>
+                      {article.staff.isVerified && (
+                        <CheckCircle2 className="h-4 w-4 text-primary" />
+                      )}
+                    </Link>
+                  ) : (
+                    <span className="text-sm font-semibold" data-testid="text-author-name">
+                      {resolvedAuthor?.firstName && resolvedAuthor?.lastName
+                        ? `${resolvedAuthor.firstName} ${resolvedAuthor.lastName}`
+                        : resolvedAuthor?.email}
+                    </span>
+                  )}
 
-                    {user && !isOwnArticle && resolvedAuthorId && (
-                      isFollowing ? (
+                  <span className="text-muted-foreground">•</span>
+                  
+                  {timeAgo && (
+                    <>
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {timeAgo}
+                      </span>
+                      <span className="text-muted-foreground">•</span>
+                    </>
+                  )}
+                  
+                  <span className="text-xs text-muted-foreground">
+                    {readingTime} د قراءة
+                  </span>
+
+                  {user && !isOwnArticle && resolvedAuthorId && (
+                    <>
+                      <span className="text-muted-foreground">•</span>
+                      {isFollowing ? (
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           size="sm"
                           onClick={() => unfollowMutation.mutate()}
                           disabled={unfollowMutation.isPending}
-                          className="gap-1 shrink-0"
+                          className="h-7 px-2 gap-1 text-xs"
                           data-testid="button-unfollow-author"
                         >
-                          <UserCheck className="h-4 w-4" />
-                          متابع
+                          <UserCheck className="h-3 w-3" />
+                          متابَع
                         </Button>
                       ) : (
                         <Button
@@ -1093,15 +1094,15 @@ export default function ArticleDetail() {
                           size="sm"
                           onClick={() => followMutation.mutate()}
                           disabled={followMutation.isPending}
-                          className="gap-1 shrink-0"
+                          className="h-7 px-2 gap-1 text-xs"
                           data-testid="button-follow-author"
                         >
-                          <UserPlus className="h-4 w-4" />
+                          <UserPlus className="h-3 w-3" />
                           متابعة
                         </Button>
-                      )
-                    )}
-                  </div>
+                      )}
+                    </>
+                  )}
                 </div>
               )}
             </div>
@@ -1130,56 +1131,57 @@ export default function ArticleDetail() {
               );
             })()}
 
-            {/* Smart Summary - TailAdmin Style */}
+            {/* Smart Summary - Compact Lite Version */}
             {(article.aiSummary || article.excerpt) && (
               <Collapsible open={isSummaryExpanded} onOpenChange={setIsSummaryExpanded}>
-                <div className="bg-muted/50 border rounded-lg p-6 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Sparkles className="h-5 w-5 text-primary" />
-                      </div>
-                      <h3 className="text-lg font-bold">الموجز الذكي</h3>
+                <div className="bg-muted/30 border rounded-lg p-3 sm:p-4">
+                  <div className="flex items-start gap-2">
+                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <Sparkles className="h-3 w-3 text-primary" />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <CollapsibleTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="gap-1"
-                          data-testid="button-toggle-summary"
-                        >
-                          <span className="text-xs">{isSummaryExpanded ? "إخفاء" : "عرض الكل"}</span>
-                          <ChevronDown 
-                            className={`h-4 w-4 transition-transform duration-200 ${isSummaryExpanded ? 'rotate-180' : ''}`}
-                          />
-                        </Button>
-                      </CollapsibleTrigger>
-                      <Button
-                        variant={isPlaying ? "default" : "outline"}
-                        size="sm"
-                        className="gap-2"
-                        onClick={handlePlayAudio}
-                        disabled={isLoadingAudio}
-                        data-testid="button-listen-summary"
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <h3 className="text-sm font-bold">الموجز الذكي</h3>
+                        <div className="flex items-center gap-1">
+                          <CollapsibleTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-2 gap-1 text-xs"
+                              data-testid="button-toggle-summary"
+                            >
+                              {isSummaryExpanded ? "إخفاء" : "المزيد"}
+                              <ChevronDown 
+                                className={`h-3 w-3 transition-transform duration-200 ${isSummaryExpanded ? 'rotate-180' : ''}`}
+                              />
+                            </Button>
+                          </CollapsibleTrigger>
+                          <Button
+                            variant={isPlaying ? "default" : "ghost"}
+                            size="sm"
+                            className="h-6 w-6 p-0"
+                            onClick={handlePlayAudio}
+                            disabled={isLoadingAudio}
+                            data-testid="button-listen-summary"
+                          >
+                            {isLoadingAudio ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : isPlaying ? (
+                              <VolumeX className="h-3 w-3" />
+                            ) : (
+                              <Volume2 className="h-3 w-3" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                      <p 
+                        className={`text-xs sm:text-sm text-muted-foreground leading-relaxed ${!isSummaryExpanded ? 'line-clamp-3' : ''}`}
+                        data-testid="text-smart-summary"
                       >
-                        {isLoadingAudio ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : isPlaying ? (
-                          <VolumeX className="h-4 w-4" />
-                        ) : (
-                          <Volume2 className="h-4 w-4" />
-                        )}
-                        <span className="hidden md:inline">{isLoadingAudio ? "جاري التحميل..." : isPlaying ? "إيقاف" : "استمع للموجز"}</span>
-                      </Button>
+                        {article.aiSummary || article.excerpt}
+                      </p>
                     </div>
                   </div>
-                  <p 
-                    className={`text-muted-foreground leading-relaxed ${!isSummaryExpanded ? 'line-clamp-3' : ''}`}
-                    data-testid="text-smart-summary"
-                  >
-                    {article.aiSummary || article.excerpt}
-                  </p>
                 </div>
               </Collapsible>
             )}
