@@ -9303,7 +9303,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("[Edit+Generate API] Step 1: Rewriting content in Sabq style...");
       
       // Get available categories for better AI classification
-      const allCategories = await storage.getCategories();
+      const allCategories = await storage.getAllCategories();
       const categoryList = allCategories.map(c => ({ nameAr: c.name, nameEn: c.nameEn || c.name }));
       
       // Step 1: Rewrite content in Sabq editorial style

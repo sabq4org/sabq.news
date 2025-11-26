@@ -1,0 +1,80 @@
+
+7bf71313
+User
+📡 User admin-sabq subscribed to notification stream
+2025-11-26 16:31:24.04
+7bf71313
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-26 16:31:24.05
+7bf71313
+User
+1:31:24 PM [express] GET /api/notifications 304 in 134ms :: {"notifications":[{"id":"8eJCUeXgHOV-cV8…
+2025-11-26 16:31:24.30
+7bf71313
+User
+1:31:24 PM [express] GET /api/admin/users 304 in 468ms :: {"items":[{"id":"bkIhDx7BM8quPu2W1tB6Z","n…
+2025-11-26 16:31:30.15
+7bf71313
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-26 16:31:30.17
+7bf71313
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-26 16:31:30.20
+7bf71313
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-26 16:31:30.27
+7bf71313
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-26 16:31:30.27
+7bf71313
+User
+[Edit+Generate API] Step 1: Rewriting content in Sabq style...
+2025-11-26 16:31:30.27
+7bf71313
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-26 16:31:30.27
+7bf71313
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-26 16:31:30.27
+7bf71313
+User
+at file:///home/runner/workspace/dist/index.js:43906:43
+2025-11-26 16:31:30.27
+7bf71313
+User
+[Edit+Generate API] Error: TypeError: storage.getCategories is not a function
+2025-11-26 16:31:30.27
+7bf71313
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-11-26 16:31:30.27
+7bf71313
+User
+at file:///home/runner/workspace/dist/index.js:18067:5
+2025-11-26 16:31:30.27
+7bf71313
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+2025-11-26 16:31:30.30
+7bf71313
+User
+1:31:30 PM [express] POST /api/articles/edit-and-generate 500 in 175ms :: {"message":"فشل في تحرير و…
+2025-11-26 16:31:30.73
+7bf71313
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-26 16:31:30.75
+7bf71313
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-26 16:31:30.80
+7bf71313
+User
+1:31:30 PM [express] POST /api/accessibility/track 200 in 97ms :: {"success":true,"eventId":"188271c…
