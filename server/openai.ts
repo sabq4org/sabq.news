@@ -566,7 +566,7 @@ ${content.substring(0, 2000)}`;
   }
 }
 
-export async function generateSmartContent(newsContent: string): Promise<{
+export async function generateSmartContent(newsContent: string, language: "ar" | "en" = "ar"): Promise<{
   mainTitle: string;
   subTitle: string;
   smartSummary: string;
@@ -577,7 +577,8 @@ export async function generateSmartContent(newsContent: string): Promise<{
   };
 }> {
   try {
-    const systemPrompt = `🎯 الدور: أنت محرر خبير في صحيفة "سبق" السعودية، متخصص في كتابة الأخبار بأسلوب صحفي احترافي وسهل الفهم، يدعم تحسين محركات البحث (SEO) ويجذب القارئ العربي.
+    const systemPrompts = {
+      ar: `🎯 الدور: أنت محرر خبير في صحيفة "سبق" السعودية، متخصص في كتابة الأخبار بأسلوب صحفي احترافي وسهل الفهم، يدعم تحسين محركات البحث (SEO) ويجذب القارئ العربي.
 
 ✳️ المطلوب منك:
 1. **العنوان الرئيسي:**  
@@ -620,14 +621,72 @@ export async function generateSmartContent(newsContent: string): Promise<{
     "meta_title": "",
     "meta_description": ""
   }
-}`;
+}`,
 
-    const userPrompt = `📦 المدخلات:
+      en: `🎯 Role: You are an expert editor at "Sabq" newspaper, specializing in writing news articles with a professional journalistic style that is clear, SEO-optimized, and engaging for English-speaking readers.
+
+✳️ Requirements:
+1. **Main Title:**  
+   - Maximum 10 words.  
+   - Catchy, impactful, and suitable for "Sabq" newspaper style.  
+   - Include a primary keyword.  
+
+2. **Subtitle:**  
+   - A short explanatory sentence (15–25 words).  
+   - Complements the main title and gives readers a clear idea of the news content.  
+
+3. **Smart Summary:**  
+   - One paragraph (40–60 words).  
+   - Explains the main idea in clear, fluent English.  
+   - Must contain clear facts without exaggeration.  
+
+4. **Keywords:**  
+   - A list of 6–10 words or phrases.  
+   - Directly related to the news and optimized for search engine visibility.  
+
+5. **SEO Optimization:**  
+   - Generate professional "Meta Title" and "Meta Description".  
+   - Include keywords naturally in both texts.  
+   - Ensure the description does not exceed 160 characters.  
+
+🪄 Editorial Guidelines:
+- Use clear, simple, and professional English.  
+- Maintain the formal news style of "Sabq" newspaper.  
+- Avoid any bias or personal opinion.  
+- Use short and direct sentences.  
+- For breaking news, make the title convey urgency or surprise.
+
+Return the result in JSON format only with the following fields:
+{
+  "main_title": "",
+  "sub_title": "",
+  "smart_summary": "",
+  "keywords": [],
+  "seo": {
+    "meta_title": "",
+    "meta_description": ""
+  }
+}`
+    };
+
+    const userPrompts = {
+      ar: `📦 المدخلات:
 النص الخام أو تفاصيل الخبر:
 
 ${newsContent}
 
-قم بتوليد جميع العناصر التحريرية المطلوبة بصيغة JSON.`;
+قم بتوليد جميع العناصر التحريرية المطلوبة بصيغة JSON.`,
+
+      en: `📦 Input:
+Raw text or news details:
+
+${newsContent}
+
+Generate all required editorial elements in JSON format.`
+    };
+
+    const systemPrompt = systemPrompts[language];
+    const userPrompt = userPrompts[language];
 
     console.log("[Smart Content] Generating smart content with GPT-5...");
     console.log("[Smart Content] Input content length:", newsContent.length);

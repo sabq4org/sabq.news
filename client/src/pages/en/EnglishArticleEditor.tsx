@@ -578,7 +578,7 @@ export default function EnglishArticleEditor() {
     mutationFn: async () => {
       return await apiRequest("/api/articles/generate-content", {
         method: "POST",
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ content, language: "en" }),
       });
     },
     onSuccess: (data: {

@@ -9219,7 +9219,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Smart Content Generation Endpoint
   app.post("/api/articles/generate-content", isAuthenticated, requireAnyPermission('articles.create', 'articles.edit_any', 'articles.edit_own'), async (req: any, res) => {
     try {
-      const { content } = req.body;
+      const { content, language = "ar" } = req.body;
 
       if (!content || typeof content !== 'string' || content.trim().length === 0) {
         return res.status(400).json({ message: "يجب توفير محتوى الخبر" });
@@ -9227,7 +9227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("[Smart Content API] Generating content for news...");
       
-      const generatedContent = await generateSmartContent(content);
+      const generatedContent = await generateSmartContent(content, language as "ar" | "en");
 
       console.log("[Smart Content API] Content generated successfully");
       
@@ -23558,14 +23558,12 @@ Allow: /
     }
 
     try {
-      const validatedData = insertEnArticleSchema.parse({
-        ...req.body,
-        authorId: user.id,
-      });
+      const validatedData = insertEnArticleSchema.parse(req.body);
       
       // Set published_at if status is published
       const articleData = {
         ...validatedData,
+        authorId: user.id, // Add authorId here since schema omits it
         publishedAt: validatedData.status === 'published' ? new Date() : null,
       };
       

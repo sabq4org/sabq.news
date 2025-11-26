@@ -1,0 +1,139 @@
+2025-11-26 13:45:17.68
+8b455eb4
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-26 13:45:17.73
+8b455eb4
+User
+10:45:17 AM [express] POST /api/accessibility/track 200 in 233ms :: {"success":true,"eventId":"3b7f94…
+2025-11-26 13:45:23.22
+8b455eb4
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-26 13:45:23.24
+8b455eb4
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+
+2025-11-26 13:45:23.24
+8b455eb4
+User
+}
+2025-11-26 13:45:23.24
+8b455eb4
+User
+role: 'admin',
+2025-11-26 13:45:23.24
+8b455eb4
+User
+hasEnglish: true,
+2025-11-26 13:45:23.24
+8b455eb4
+User
+[EN Article POST] User check: {
+2025-11-26 13:45:23.24
+8b455eb4
+User
+userId: 'admin-sabq',
+2025-11-26 13:45:23.24
+8b455eb4
+User
+allowedLanguages: [ 'ar', 'en' ],
+2025-11-26 13:45:23.24
+8b455eb4
+User
+hasValidRole: true
+2025-11-26 13:45:23.27
+8b455eb4
+User
+column: 'author_id',
+2025-11-26 13:45:23.27
+8b455eb4
+User
+severity: 'ERROR',
+2025-11-26 13:45:23.27
+8b455eb4
+User
+internalPosition: undefined,
+2025-11-26 13:45:23.27
+8b455eb4
+User
+position: undefined,
+2025-11-26 13:45:23.27
+8b455eb4
+User
+schema: 'public',
+2025-11-26 13:45:23.27
+8b455eb4
+User
+file: 'execMain.c',
+2025-11-26 13:45:23.27
+8b455eb4
+User
+code: '23502',
+2025-11-26 13:45:23.27
+8b455eb4
+User
+at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+2025-11-26 13:45:23.27
+8b455eb4
+User
+table: 'en_articles',
+2025-11-26 13:45:23.27
+8b455eb4
+User
+hint: undefined,
+2025-11-26 13:45:23.27
+8b455eb4
+User
+dataType: undefined,
+2025-11-26 13:45:23.27
+8b455eb4
+User
+where: undefined,
+2025-11-26 13:45:23.27
+8b455eb4
+User
+routine: 'ExecConstraints'
+2025-11-26 13:45:23.27
+8b455eb4
+User
+}
+2025-11-26 13:45:23.27
+8b455eb4
+User
+internalQuery: undefined,
+2025-11-26 13:45:23.27
+8b455eb4
+User
+at async NeonPreparedQuery.execute (file:///home/runner/workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+2025-11-26 13:45:23.27
+8b455eb4
+User
+length: 827,
+2025-11-26 13:45:23.27
+8b455eb4
+User
+detail: 'Failing row contains (92e8920f-9c33-4134-b6db-22052e78ee07, Shura Island Unveiled as Red Sea’s New Luxury Eco-Tourism Have..., , shura-island-unveiled-as-red-seas-new-luxury-eco-tourism-haven,
+Shura Island, the newest landmark within Saudi Arabia’s Red..., , /api/media/proxy/751e5e9e-ff46-43c9-a79b-d9718b5abb8a, null, 874afd59-8648-49bc-aa89-b2e01f480169, null, RnP7eDOAl5T5rGpib9_8d, news, featured, instant, null, published, null, null, null, null, f, null, null, f, t, 0, 0, {"keywords": ["Shura Island", "saudi arabia"], "metaTitle": "Shu..., 2025-11-26 10:45:23.251, 2025-11-26 10:45:23.270608, 2025-11-26 10:45:23.270608, null).',
+2025-11-26 13:45:23.27
+8b455eb4
+User
+line: '2021',
+2025-11-26 13:45:23.27
+8b455eb4
+User
+constraint: undefined,
+2025-11-26 13:45:23.27
+8b455eb4
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-26 13:45:23.27
+8b455eb4
+User
+at async file:///home/runner/workspace/dist/index.js:53664:26 {
+2025-11-26 13:45:23.27
+8b455eb4
+User
+Error creating EN article: error: null value in column "author_id" of relation "en_articles" violates not-null constraint
+
