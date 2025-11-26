@@ -45,12 +45,12 @@ export function useMuqtarabAngles(sectionSlug: string, activeOnly = true) {
 }
 
 /**
- * جلب تفاصيل زاوية محددة
+ * جلب تفاصيل زاوية محددة مع المقالات المرتبطة
  * @param angleSlug - معرف الزاوية (slug)
- * @returns تفاصيل الزاوية مع حالة التحميل والأخطاء
+ * @returns تفاصيل الزاوية مع المقالات وحالة التحميل والأخطاء
  */
 export function useAngleDetail(angleSlug: string) {
-  return useQuery<Angle>({
+  return useQuery<AngleWithArticles>({
     queryKey: MUQTARAB_QUERY_KEYS.angleDetail(angleSlug),
     staleTime: 5 * 60 * 1000, // 5 minutes
     enabled: !!angleSlug,

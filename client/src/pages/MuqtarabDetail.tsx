@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
-import { useAngleDetail, useAngleArticles } from "@/lib/muqtarab";
+import { useAngleDetail } from "@/lib/muqtarab";
 import { ArrowRight, ChevronRight, Share2, Calendar, FileText } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { Circle } from "lucide-react";
@@ -34,17 +34,16 @@ export default function MuqtarabDetail() {
     retry: false,
   });
 
-  // Fetch angle details and articles
+  // Fetch angle details (includes linked articles)
   const { 
     data: angle, 
     isLoading: isLoadingAngle, 
     error: angleError 
   } = useAngleDetail(slug || "");
   
-  const { 
-    data: articles = [], 
-    isLoading: isLoadingArticles 
-  } = useAngleArticles(slug || "");
+  // Get articles from angle response
+  const articles = angle?.articles || [];
+  const isLoadingArticles = isLoadingAngle;
 
   // Fetch published topics for this angle
   const { 
