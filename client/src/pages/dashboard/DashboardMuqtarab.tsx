@@ -415,7 +415,7 @@ export default function DashboardMuqtarab() {
                                 asChild
                                 data-testid={`button-topics-${angle.id}`}
                               >
-                                <Link href={`/admin/muqtarab/angles/${angle.id}/topics`}>
+                                <Link href={`/dashboard/muqtarab/angles/${angle.id}/topics`}>
                                   <FileText className="h-4 w-4" />
                                 </Link>
                               </Button>
