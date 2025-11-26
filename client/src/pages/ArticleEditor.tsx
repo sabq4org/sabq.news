@@ -82,6 +82,8 @@ import { InfographicAiDialog } from "@/components/InfographicAiDialog";
 import { StoryCardsGenerator } from "@/components/StoryCardsGenerator";
 import { AutoImageGenerator } from "@/components/AutoImageGenerator";
 import { ThumbnailGenerator } from "@/components/ThumbnailGenerator";
+import { ImageUploadDialog } from "@/components/ImageUploadDialog";
+import { Progress } from "@/components/ui/progress";
 import type { Editor } from "@tiptap/react";
 import type { MediaFile } from "@shared/schema";
 
@@ -160,6 +162,10 @@ export default function ArticleEditor() {
   const [showAIImageDialog, setShowAIImageDialog] = useState(false);
   const [showInfographicDialog, setShowInfographicDialog] = useState(false);
   const [showStoryCardsDialog, setShowStoryCardsDialog] = useState(false);
+  const [showAlbumUploadDialog, setShowAlbumUploadDialog] = useState(false);
+  const [albumImages, setAlbumImages] = useState<string[]>([]);
+  const [isUploadingAlbumImage, setIsUploadingAlbumImage] = useState(false);
+  const [uploadingAlbumProgress, setUploadingAlbumProgress] = useState(0);
   
   // Auto-save states
   const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
@@ -276,6 +282,7 @@ export default function ArticleEditor() {
       setThumbnailUrl(validThumbnailUrl);
       setThumbnailManuallyDeleted((article as any).thumbnailManuallyDeleted || false);
       setImageFocalPoint((article as any).imageFocalPoint || null);
+      setAlbumImages((article as any).albumImages || []);
       const loadedArticleType = (article.articleType as any) || "news";
       setArticleType(loadedArticleType);
       // Handle infographic type
@@ -327,6 +334,7 @@ export default function ArticleEditor() {
       articleType,
       imageUrl,
       thumbnailUrl,
+      albumImages,
       imageFocalPoint,
       keywords,
       newsType,
@@ -376,6 +384,7 @@ export default function ArticleEditor() {
     if (draft.articleType) setArticleType(draft.articleType);
     if (draft.imageUrl) setImageUrl(draft.imageUrl);
     if (draft.thumbnailUrl) setThumbnailUrl(draft.thumbnailUrl);
+    if (draft.albumImages) setAlbumImages(draft.albumImages);
     if (draft.imageFocalPoint) setImageFocalPoint(draft.imageFocalPoint);
     if (draft.keywords) setKeywords(draft.keywords);
     if (draft.newsType) setNewsType(draft.newsType);
@@ -682,6 +691,7 @@ export default function ArticleEditor() {
         imageUrl: imageUrl || "",
         thumbnailUrl: thumbnailUrl || "",
         thumbnailManuallyDeleted: thumbnailManuallyDeleted,
+        albumImages: albumImages || [],
         imageFocalPoint: imageFocalPoint || null,
         articleType,
         publishType,
@@ -2865,6 +2875,107 @@ const generateSlug = (text: string) => {
                           <p>قم بإضافة صورة رئيسية للمقال أولاً</p>
                         </div>
                       )}
+                      
+                      {/* Album Images Section */}
+                      <div className="space-y-4 pt-6 border-t">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-1">
+                            <Label className="text-base flex items-center gap-2">
+                              <LayoutGrid className="h-4 w-4" />
+                              ألبوم الصور
+                            </Label>
+                            <p className="text-xs text-muted-foreground">
+                              صور إضافية تظهر داخل المقال
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs">
+                              {albumImages.length} صورة
+                            </Badge>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setShowAlbumUploadDialog(true)}
+                              disabled={isUploadingAlbumImage}
+                              className="gap-2"
+                              data-testid="button-add-album-image"
+                            >
+                              {isUploadingAlbumImage ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <ImagePlus className="h-4 w-4" />
+                              )}
+                              إضافة صور
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        {/* Album Images Grid - 2 columns */}
+                        {albumImages.length > 0 ? (
+                          <div className="grid grid-cols-2 gap-3">
+                            {albumImages.map((url, index) => (
+                              <div 
+                                key={`album-${index}`} 
+                                className="relative group rounded-lg overflow-hidden border bg-muted/30"
+                                data-testid={`album-image-${index}`}
+                              >
+                                <div className="aspect-square">
+                                  <img
+                                    src={url}
+                                    alt={`صورة الألبوم ${index + 1}`}
+                                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                    loading="lazy"
+                                  />
+                                </div>
+                                {/* Overlay with delete button */}
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                                  <Button
+                                    variant="destructive"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    onClick={() => {
+                                      const newImages = albumImages.filter((_, i) => i !== index);
+                                      setAlbumImages(newImages);
+                                      toast({
+                                        title: "تم حذف الصورة",
+                                        description: "تم حذف الصورة من الألبوم",
+                                      });
+                                    }}
+                                    data-testid={`button-delete-album-image-${index}`}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                                {/* Image number badge */}
+                                <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
+                                  {index + 1}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="border-2 border-dashed rounded-lg p-8 text-center bg-muted/20">
+                            <LayoutGrid className="h-10 w-10 mx-auto mb-3 text-muted-foreground/50" />
+                            <p className="text-sm text-muted-foreground mb-2">
+                              لا توجد صور في الألبوم
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              اضغط على "إضافة صور" لرفع صور جديدة
+                            </p>
+                          </div>
+                        )}
+                        
+                        {/* Upload Progress */}
+                        {isUploadingAlbumImage && (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">جاري رفع الصور...</span>
+                              <span className="font-medium">{uploadingAlbumProgress}%</span>
+                            </div>
+                            <Progress value={uploadingAlbumProgress} className="h-2" />
+                          </div>
+                        )}
+                      </div>
                     </TabsContent>
                   )}
                 </Tabs>
@@ -2974,6 +3085,29 @@ const generateSlug = (text: string) => {
           </div>
         </div>
       )}
+
+      {/* Album Image Upload Dialog */}
+      <ImageUploadDialog
+        open={showAlbumUploadDialog}
+        onOpenChange={setShowAlbumUploadDialog}
+        onImageUploaded={(url) => {
+          setAlbumImages(prev => [...prev, url]);
+          toast({
+            title: "تمت إضافة الصورة",
+            description: "تمت إضافة الصورة إلى الألبوم بنجاح",
+          });
+        }}
+        onAllImagesUploaded={(urls) => {
+          setAlbumImages(prev => [...prev, ...urls]);
+          setShowAlbumUploadDialog(false);
+          toast({
+            title: "تم رفع الصور بنجاح",
+            description: `تمت إضافة ${urls.length} صورة إلى الألبوم`,
+          });
+        }}
+        multiple={true}
+        maxFiles={10}
+      />
     </DashboardLayout>
   );
 }

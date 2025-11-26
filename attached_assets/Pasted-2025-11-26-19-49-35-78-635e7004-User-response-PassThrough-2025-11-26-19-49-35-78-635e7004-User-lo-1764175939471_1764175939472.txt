@@ -1,0 +1,120 @@
+2025-11-26 19:49:35.78
+635e7004
+User
+response: PassThrough {
+2025-11-26 19:49:35.78
+635e7004
+User
+location: 'If-Match'
+2025-11-26 19:49:35.78
+635e7004
+User
+}
+2025-11-26 19:49:35.78
+635e7004
+User
+_writableState: WritableState {
+2025-11-26 19:49:43.79
+635e7004
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-26 19:49:43.82
+635e7004
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-26 19:49:43.90
+635e7004
+User
+[UPDATE ARTICLE] Update data: { reporterId: null, reporterIdInBody: null, reporterIdInParsed: null }
+2025-11-26 19:49:43.92
+635e7004
+User
+authorId: 'email-agent-system'
+2025-11-26 19:49:43.92
+635e7004
+User
+[UPDATE ARTICLE] Article updated: {
+2025-11-26 19:49:43.92
+635e7004
+User
+articleId: 'iebUksKwg3S6E6QhvL8_o',
+2025-11-26 19:49:43.92
+635e7004
+User
+}
+2025-11-26 19:49:43.92
+635e7004
+User
+reporterId: null,
+2025-11-26 19:49:43.95
+635e7004
+User
+⏸️ [UPDATE ARTICLE] No notification sent - Status unchanged or not published
+2025-11-26 19:49:43.95
+635e7004
+User
+🔍 [UPDATE ARTICLE] Article ID: iebUksKwg3S6E6QhvL8_o, Title: من الهواية إلى الحرفة.. عبير العلي تحوّل الصلصال إلى حكايات فنية
+2025-11-26 19:49:43.95
+635e7004
+User
+🔍 [UPDATE ARTICLE] Article updated - Old status: published, New status: published
+2025-11-26 19:49:43.98
+635e7004
+User
+4:49:43 PM [express] PATCH /api/admin/articles/iebUksKwg3S6E6QhvL8_o 200 in 207ms :: {"id":"iebUksKw…
+2025-11-26 19:49:44.32
+635e7004
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-26 19:49:44.34
+635e7004
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-26 19:49:44.37
+635e7004
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-26 19:49:44.42
+635e7004
+User
+4:49:44 PM [express] GET /api/admin/articles/iebUksKwg3S6E6QhvL8_o/angles 304 in 122ms :: []
+2025-11-26 19:49:44.68
+635e7004
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-26 19:49:44.70
+635e7004
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-26 19:49:44.75
+635e7004
+User
+4:49:44 PM [express] GET /api/articles/iebUksKwg3S6E6QhvL8_o/media-assets 304 in 94ms :: []
+2025-11-26 19:49:44.76
+635e7004
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-26 19:49:44.76
+635e7004
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-26 19:49:44.79
+635e7004
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-26 19:49:44.81
+635e7004
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-26 19:49:44.85
+635e7004
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-26 19:49:44.86
+635e7004
+User
+4:49:44 PM [express] GET /api/admin/articles/iebUksKwg3S6E6QhvL8_o/angles 304 in 120ms :: []
+2025-11-26 19:49:44.90
+635e7004
+User
+4:49:44 PM [express] POST /api/accessibility/track 200 in 161ms :: {"success":true,"eventId":"d63649…

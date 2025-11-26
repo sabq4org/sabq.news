@@ -729,6 +729,7 @@ export const articles = pgTable("articles", {
   imageUrl: text("image_url"),
   thumbnailUrl: text("thumbnail_url"), // صورة الغلاف المصغرة 16:9 للعرض في القوائم
   thumbnailManuallyDeleted: boolean("thumbnail_manually_deleted").default(false), // Flag to prevent auto-generation after manual deletion
+  albumImages: text("album_images").array().default(sql`ARRAY[]::text[]`), // مصفوفة صور الألبوم الإضافية
   imageFocalPoint: jsonb("image_focal_point").$type<{
     x: number; // percentage 0-100 from left
     y: number; // percentage 0-100 from top
@@ -2356,6 +2357,7 @@ export const updateArticleSchema = z.object({
     z.literal("")
   ]).optional(),
   thumbnailManuallyDeleted: z.boolean().optional(),
+  albumImages: z.array(z.string()).optional(),
   imageFocalPoint: z.object({
     x: z.number().min(0).max(100),
     y: z.number().min(0).max(100),
