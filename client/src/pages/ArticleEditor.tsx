@@ -173,6 +173,9 @@ export default function ArticleEditor() {
   const [thumbnailOpen, setThumbnailOpen] = useState(false);
   const [smartLinksOpen, setSmartLinksOpen] = useState(false);
   
+  // Muqtarab angles state
+  const [selectedAngleIds, setSelectedAngleIds] = useState<string[]>([]);
+  
   // Use ref for immediate lock with URL tracking (prevents concurrent uploads even in StrictMode)
   const savingMediaMapRef = useRef<Map<string, Promise<string | null>>>(new Map());
   
@@ -203,6 +206,35 @@ export default function ArticleEditor() {
     queryKey: ["/api/articles", article?.id, "media-assets"],
     enabled: !isNewArticle && !!article?.id,
   });
+
+  // Fetch available Muqtarab angles
+  const { data: availableAngles = [] } = useQuery<{ id: string; nameAr: string; colorHex: string; iconKey: string }[]>({
+    queryKey: ["/api/admin/muqtarab/angles"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/muqtarab/angles");
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.angles || data || [];
+    },
+  });
+
+  // Fetch article's linked angles when editing
+  const { data: articleAngles = [] } = useQuery<{ id: string; nameAr: string; colorHex: string }[]>({
+    queryKey: ["/api/admin/articles", id, "angles"],
+    queryFn: async () => {
+      const res = await fetch(`/api/admin/articles/${id}/angles`);
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !isNewArticle && !!id,
+  });
+
+  // Sync article angles to state when loaded
+  useEffect(() => {
+    if (articleAngles.length > 0) {
+      setSelectedAngleIds(articleAngles.map(a => a.id));
+    }
+  }, [articleAngles]);
 
   // Load article data when editing
   useEffect(() => {
@@ -723,15 +755,63 @@ export default function ArticleEditor() {
         return result;
       }
     },
-    onSuccess: (data, variables) => {
+    onSuccess: async (data, variables) => {
+      // Get the article ID (from response for new articles, or from params for existing)
+      const savedArticleId = data?.id || id;
+      
+      // Sync angles if any are selected and we have an article ID
+      if (savedArticleId && selectedAngleIds.length > 0) {
+        try {
+          // Get current angles for comparison
+          const currentAnglesRes = await fetch(`/api/admin/articles/${savedArticleId}/angles`);
+          const currentAngles = currentAnglesRes.ok ? await currentAnglesRes.json() : [];
+          const currentAngleIds = currentAngles.map((a: any) => a.id);
+          
+          // Add new angles
+          for (const angleId of selectedAngleIds) {
+            if (!currentAngleIds.includes(angleId)) {
+              await fetch(`/api/admin/articles/${savedArticleId}/angles/${angleId}`, {
+                method: "POST",
+              });
+            }
+          }
+          
+          // Remove unselected angles
+          for (const angleId of currentAngleIds) {
+            if (!selectedAngleIds.includes(angleId)) {
+              await fetch(`/api/admin/articles/${savedArticleId}/angles/${angleId}`, {
+                method: "DELETE",
+              });
+            }
+          }
+        } catch (err) {
+          console.error("Error syncing angles:", err);
+        }
+      } else if (savedArticleId && selectedAngleIds.length === 0) {
+        // Remove all angles if none selected
+        try {
+          const currentAnglesRes = await fetch(`/api/admin/articles/${savedArticleId}/angles`);
+          const currentAngles = currentAnglesRes.ok ? await currentAnglesRes.json() : [];
+          for (const angle of currentAngles) {
+            await fetch(`/api/admin/articles/${savedArticleId}/angles/${angle.id}`, {
+              method: "DELETE",
+            });
+          }
+        } catch (err) {
+          console.error("Error removing angles:", err);
+        }
+      }
+      
       // Invalidate all article-related queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/articles"] });
       queryClient.invalidateQueries({ queryKey: ["/api/articles"] });
       queryClient.invalidateQueries({ queryKey: ["/api/homepage"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/muqtarab"] });
       
       // If updating existing article, also invalidate its specific query
       if (!isNewArticle && id) {
         queryClient.invalidateQueries({ queryKey: ["/api/dashboard/articles", id] });
+        queryClient.invalidateQueries({ queryKey: ["/api/admin/articles", id, "angles"] });
       }
       
       toast({
@@ -2263,6 +2343,40 @@ const generateSlug = (text: string) => {
                     ))}
                   </SelectContent>
                 </Select>
+                
+                {/* Muqtarab Angles - Compact inline section */}
+                {availableAngles.length > 0 && (
+                  <div className="pt-3 border-t">
+                    <Label className="text-xs text-muted-foreground mb-2 block">زوايا مُقترب</Label>
+                    <div className="flex flex-wrap gap-1.5" data-testid="angles-selector">
+                      {availableAngles.map((angle) => {
+                        const isSelected = selectedAngleIds.includes(angle.id);
+                        return (
+                          <Badge
+                            key={angle.id}
+                            variant={isSelected ? "default" : "outline"}
+                            className="cursor-pointer text-xs transition-all"
+                            style={{
+                              backgroundColor: isSelected ? angle.colorHex : 'transparent',
+                              borderColor: angle.colorHex,
+                              color: isSelected ? 'white' : angle.colorHex,
+                            }}
+                            onClick={() => {
+                              if (isSelected) {
+                                setSelectedAngleIds(prev => prev.filter(id => id !== angle.id));
+                              } else {
+                                setSelectedAngleIds(prev => [...prev, angle.id]);
+                              }
+                            }}
+                            data-testid={`badge-angle-${angle.id}`}
+                          >
+                            {angle.nameAr}
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
