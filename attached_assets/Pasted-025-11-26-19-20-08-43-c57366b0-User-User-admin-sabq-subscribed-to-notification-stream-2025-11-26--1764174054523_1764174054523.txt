@@ -1,0 +1,116 @@
+025-11-26 19:20:08.43
+c57366b0
+User
+📡 User admin-sabq subscribed to notification stream
+2025-11-26 19:20:08.49
+c57366b0
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-26 19:20:08.50
+c57366b0
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-26 19:20:08.51
+c57366b0
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-26 19:20:08.54
+c57366b0
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin, user has: system_admin, admin
+2025-11-26 19:20:08.60
+c57366b0
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-26 19:20:08.63
+c57366b0
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin, user has: system_admin, admin
+2025-11-26 19:20:08.64
+c57366b0
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-26 19:20:08.64
+c57366b0
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-26 19:20:08.67
+c57366b0
+User
+4:20:08 PM [express] GET /api/admin/publishers/b5517d5a-540b-4f86-b7da-b1f36b25a8f3 200 in 198ms :: …
+2025-11-26 19:20:08.71
+c57366b0
+User
+4:20:08 PM [express] GET /api/admin/publisher-reports/b5517d5a-540b-4f86-b7da-b1f36b25a8f3 200 in 23…
+2025-11-26 19:20:08.74
+c57366b0
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-26 19:20:08.74
+c57366b0
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-26 19:20:08.75
+c57366b0
+User
+📡 SSE connection opened for user: admin-sabq
+2025-11-26 19:20:08.75
+c57366b0
+User
+📡 User admin-sabq subscribed to notification stream
+2025-11-26 19:20:08.77
+c57366b0
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin, user has: system_admin, admin
+2025-11-26 19:20:08.83
+c57366b0
+User
+4:20:08 PM [express] GET /api/admin/publishers/b5517d5a-540b-4f86-b7da-b1f36b25a8f3/credits 200 in 3…
+2025-11-26 19:20:09.01
+c57366b0
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-26 19:20:09.04
+c57366b0
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-26 19:20:09.06
+c57366b0
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-26 19:20:09.11
+c57366b0
+User
+4:20:09 PM [express] GET /api/admin/articles 200 in 117ms :: []
+2025-11-26 19:20:25.94
+c57366b0
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-26 19:20:25.97
+c57366b0
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-26 19:20:25.99
+c57366b0
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin, user has: system_admin, admin
+2025-11-26 19:20:26.02
+c57366b0
+User
+expected: 'string',
+2025-11-26 19:20:26.02
+c57366b0
+User
+"path": [
+2025-11-26 19:20:26.02
+c57366b0
+User
+{
+2025-11-26 19:20:26.02
+c57366b0
+User
+path: [Array],
+2025-11-26 19:20:26.02
+c57366b0
+User
+"expected": "string",

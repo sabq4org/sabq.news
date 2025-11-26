@@ -7403,6 +7403,7 @@ export const updatePublisherSchema = z.object({
 
 export const insertPublisherCreditSchema = createInsertSchema(publisherCredits).omit({
   id: true,
+  publisherId: true,
   usedCredits: true,
   remainingCredits: true,
   createdAt: true,
