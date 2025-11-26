@@ -9300,36 +9300,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "يجب توفير محتوى الخبر" });
       }
 
-      console.log("[Edit+Generate API] Step 1: Rewriting content in Sabq style...");
+      console.log("[Edit+Generate API] Processing with parallel AI calls for best quality...");
       
       // Get available categories for better AI classification
       const allCategories = await storage.getAllCategories();
       const categoryList = allCategories.map(c => ({ nameAr: c.name, nameEn: c.nameEn || c.name }));
       
-      // Step 1: Rewrite content in Sabq editorial style
+      // Run both operations in parallel for better quality:
+      // 1. Smart content generation from ORIGINAL content (same as "توليد ذكي شامل")
+      // 2. Editorial rewrite separately
       const { analyzeAndEditWithSabqStyle } = await import("./ai/contentAnalyzer");
-      const editResult = await analyzeAndEditWithSabqStyle(content, language as "ar" | "en" | "ur", categoryList);
       
-      console.log("[Edit+Generate API] Content rewritten. Quality score:", editResult.qualityScore);
-      console.log("[Edit+Generate API] Step 2: Generating smart content fields...");
+      const [generatedContent, editResult] = await Promise.all([
+        // Use ORIGINAL content for smart generation (same quality as "توليد ذكي شامل")
+        generateSmartContent(content, language as "ar" | "en"),
+        // Rewrite content in Sabq style
+        analyzeAndEditWithSabqStyle(content, language as "ar" | "en" | "ur", categoryList)
+      ]);
       
-      // Step 2: Generate all fields from the rewritten content
-      const rewrittenContent = editResult.optimized.content;
-      const generatedContent = await generateSmartContent(rewrittenContent, language as "ar" | "en");
+      console.log("[Edit+Generate API] ✅ Both operations completed");
+      console.log("[Edit+Generate API] Quality score:", editResult.qualityScore);
+      console.log("[Edit+Generate API] Generated title:", generatedContent.mainTitle);
       
-      console.log("[Edit+Generate API] All fields generated successfully");
-      
-      // Return combined result
+      // Return combined result with best of both worlds
       res.json({
-        // Rewritten content
-        editedContent: rewrittenContent,
+        // Rewritten content from Sabq editor
+        editedContent: editResult.optimized.content,
         editedLead: editResult.optimized.lead,
         qualityScore: editResult.qualityScore,
         detectedCategory: editResult.detectedCategory,
         hasNewsValue: editResult.hasNewsValue,
         issues: editResult.issues,
         suggestions: editResult.suggestions,
-        // Generated fields
+        // Generated fields from smart content (same as "توليد ذكي شامل")
         mainTitle: generatedContent.mainTitle,
         subTitle: generatedContent.subTitle,
         smartSummary: generatedContent.smartSummary,
