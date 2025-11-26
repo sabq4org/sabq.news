@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation, Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,6 +13,44 @@ import {
   EyeOff,
   Loader2,
   FileText,
+  Upload,
+  X,
+  Search,
+  Check,
+  Newspaper,
+  LineChart,
+  BookOpenCheck,
+  TrendingUp,
+  Lightbulb,
+  Target,
+  Layers,
+  Compass,
+  Globe,
+  Radio,
+  Megaphone,
+  Award,
+  Flame,
+  Zap,
+  Star,
+  Heart,
+  MessageCircle,
+  Users,
+  Building,
+  Briefcase,
+  GraduationCap,
+  Microscope,
+  Landmark,
+  Scale,
+  Hammer,
+  Shield,
+  Leaf,
+  Sun,
+  Moon,
+  Cloud,
+  Droplet,
+  Mountain,
+  Waves,
+  type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -108,6 +146,282 @@ function generateSlug(nameAr: string): string {
     .replace(/[^a-z0-9-]/g, '')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
+}
+
+// Available icons for the picker
+const AVAILABLE_ICONS: { key: string; icon: LucideIcon; label: string }[] = [
+  { key: "Newspaper", icon: Newspaper, label: "صحيفة" },
+  { key: "LineChart", icon: LineChart, label: "مخطط" },
+  { key: "BookOpenCheck", icon: BookOpenCheck, label: "كتاب" },
+  { key: "TrendingUp", icon: TrendingUp, label: "صاعد" },
+  { key: "Lightbulb", icon: Lightbulb, label: "فكرة" },
+  { key: "Target", icon: Target, label: "هدف" },
+  { key: "Layers", icon: Layers, label: "طبقات" },
+  { key: "Compass", icon: Compass, label: "بوصلة" },
+  { key: "Globe", icon: Globe, label: "عالم" },
+  { key: "Radio", icon: Radio, label: "راديو" },
+  { key: "Megaphone", icon: Megaphone, label: "مكبر" },
+  { key: "Award", icon: Award, label: "جائزة" },
+  { key: "Flame", icon: Flame, label: "نار" },
+  { key: "Zap", icon: Zap, label: "برق" },
+  { key: "Star", icon: Star, label: "نجمة" },
+  { key: "Heart", icon: Heart, label: "قلب" },
+  { key: "MessageCircle", icon: MessageCircle, label: "رسالة" },
+  { key: "Users", icon: Users, label: "مستخدمين" },
+  { key: "Building", icon: Building, label: "مبنى" },
+  { key: "Briefcase", icon: Briefcase, label: "حقيبة" },
+  { key: "GraduationCap", icon: GraduationCap, label: "تعليم" },
+  { key: "Microscope", icon: Microscope, label: "علوم" },
+  { key: "Landmark", icon: Landmark, label: "معلم" },
+  { key: "Scale", icon: Scale, label: "ميزان" },
+  { key: "Hammer", icon: Hammer, label: "مطرقة" },
+  { key: "Shield", icon: Shield, label: "درع" },
+  { key: "Leaf", icon: Leaf, label: "ورقة" },
+  { key: "Sun", icon: Sun, label: "شمس" },
+  { key: "Moon", icon: Moon, label: "قمر" },
+  { key: "Cloud", icon: Cloud, label: "سحابة" },
+  { key: "Droplet", icon: Droplet, label: "قطرة" },
+  { key: "Mountain", icon: Mountain, label: "جبل" },
+  { key: "Waves", icon: Waves, label: "أمواج" },
+];
+
+// Icon Picker Component
+interface IconPickerProps {
+  value: string;
+  onChange: (value: string) => void;
+  colorHex?: string;
+}
+
+function IconPicker({ value, onChange, colorHex = "#3b82f6" }: IconPickerProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  const filteredIcons = AVAILABLE_ICONS.filter(
+    (item) =>
+      item.key.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.label.includes(searchQuery)
+  );
+
+  const selectedIcon = AVAILABLE_ICONS.find((item) => item.key === value);
+
+  return (
+    <div className="space-y-3">
+      <div className="relative">
+        <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="بحث عن أيقونة..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pr-10"
+          data-testid="input-icon-search"
+        />
+      </div>
+      
+      {selectedIcon && (
+        <div className="flex items-center gap-2 p-2 rounded-md bg-muted">
+          <div 
+            className="p-2 rounded-md" 
+            style={{ backgroundColor: colorHex }}
+          >
+            <selectedIcon.icon className="h-5 w-5 text-white" />
+          </div>
+          <span className="text-sm font-medium">{selectedIcon.label}</span>
+          <span className="text-xs text-muted-foreground">({selectedIcon.key})</span>
+        </div>
+      )}
+
+      <div className="grid grid-cols-6 gap-2 max-h-48 overflow-y-auto p-1">
+        {filteredIcons.map((item) => {
+          const IconComponent = item.icon;
+          const isSelected = value === item.key;
+          return (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => onChange(item.key)}
+              className={`
+                p-2 rounded-md border transition-all hover-elevate
+                ${isSelected 
+                  ? "border-primary bg-primary/10" 
+                  : "border-transparent hover:border-muted-foreground/20"
+                }
+              `}
+              title={item.label}
+              data-testid={`icon-option-${item.key}`}
+            >
+              <IconComponent 
+                className="h-5 w-5 mx-auto" 
+                style={isSelected ? { color: colorHex } : undefined}
+              />
+              {isSelected && (
+                <Check className="h-3 w-3 mx-auto mt-1 text-primary" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// Cover Image Upload Component
+interface CoverImageUploadProps {
+  value?: string | null;
+  onChange: (url: string | null) => void;
+  disabled?: boolean;
+}
+
+function CoverImageUpload({ value, onChange, disabled }: CoverImageUploadProps) {
+  const [uploading, setUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(value || null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    setPreviewUrl(value || null);
+  }, [value]);
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "خطأ",
+        description: "يرجى اختيار ملف صورة صالح",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "خطأ",
+        description: "حجم الصورة يجب أن لا يتجاوز 10 ميجابايت",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await fetch("/api/media/upload", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "فشل رفع الصورة");
+      }
+
+      const data = await response.json();
+      const imageUrl = data.url || data.publicUrl;
+      setPreviewUrl(imageUrl);
+      onChange(imageUrl);
+      
+      toast({
+        title: "تم الرفع بنجاح",
+        description: "تم رفع صورة الغلاف بنجاح",
+      });
+    } catch (error: any) {
+      toast({
+        title: "خطأ في رفع الصورة",
+        description: error.message || "حدث خطأ أثناء رفع الصورة",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleRemove = () => {
+    setPreviewUrl(null);
+    onChange(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  return (
+    <div className="space-y-3" data-testid="cover-image-upload">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileSelect}
+        className="hidden"
+        disabled={disabled || uploading}
+        data-testid="input-cover-file"
+      />
+
+      {previewUrl ? (
+        <div className="relative rounded-lg overflow-hidden border">
+          <img 
+            src={previewUrl} 
+            alt="صورة الغلاف" 
+            className="w-full h-40 object-cover"
+            data-testid="img-cover-preview"
+          />
+          <div className="absolute top-2 left-2 flex gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={disabled || uploading}
+              data-testid="button-change-cover"
+            >
+              <Upload className="h-4 w-4 ml-1" />
+              تغيير
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={handleRemove}
+              disabled={disabled || uploading}
+              data-testid="button-remove-cover"
+            >
+              <X className="h-4 w-4 ml-1" />
+              إزالة
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div
+          onClick={() => !disabled && !uploading && fileInputRef.current?.click()}
+          className={`
+            border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
+            transition-colors hover:border-primary/50 hover:bg-muted/50
+            ${disabled || uploading ? "opacity-50 cursor-not-allowed" : ""}
+          `}
+          data-testid="dropzone-cover"
+        >
+          {uploading ? (
+            <div className="flex flex-col items-center gap-2">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">جاري الرفع...</span>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <Upload className="h-8 w-8 text-muted-foreground" />
+              <span className="text-sm font-medium">اضغط لرفع صورة الغلاف</span>
+              <span className="text-xs text-muted-foreground">
+                PNG, JPG أو WebP (الحد الأقصى 10 ميجابايت)
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function DashboardMuqtarab() {
@@ -583,33 +897,28 @@ export default function DashboardMuqtarab() {
                     <FormItem>
                       <FormLabel>رمز الأيقونة *</FormLabel>
                       <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="Newspaper"
-                          data-testid="input-icon-key"
+                        <IconPicker
+                          value={field.value}
+                          onChange={field.onChange}
+                          colorHex={form.watch("colorHex")}
                         />
                       </FormControl>
-                      <FormDescription>
-                        اسم أيقونة من مكتبة Lucide (مثال: Newspaper, LineChart, BookOpenCheck)
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                {/* Cover Image URL */}
+                {/* Cover Image Upload */}
                 <FormField
                   control={form.control}
                   name="coverImageUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>رابط صورة الغلاف</FormLabel>
+                      <FormLabel>صورة الغلاف</FormLabel>
                       <FormControl>
-                        <Input
-                          {...field}
-                          type="url"
-                          placeholder="https://example.com/image.jpg"
-                          data-testid="input-cover-url"
+                        <CoverImageUpload
+                          value={field.value}
+                          onChange={(url) => field.onChange(url || "")}
                         />
                       </FormControl>
                       <FormMessage />
