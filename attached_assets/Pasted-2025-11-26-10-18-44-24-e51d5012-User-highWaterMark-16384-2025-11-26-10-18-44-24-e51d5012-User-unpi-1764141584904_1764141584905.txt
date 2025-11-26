@@ -1,0 +1,152 @@
+2025-11-26 10:18:44.24
+e51d5012
+User
+highWaterMark: 16384,
+2025-11-26 10:18:44.24
+e51d5012
+User
+unpipe: undefined
+2025-11-26 10:18:44.24
+e51d5012
+User
+request: {
+2025-11-26 10:18:44.24
+e51d5012
+User
+{
+2025-11-26 10:18:44.24
+e51d5012
+User
+bufferIndex: 0,
+2025-11-26 10:18:44.24
+e51d5012
+User
+at file:///home/runner/workspace/node_modules/@google-cloud/storage/build/esm/src/nodejs-common/util.js:552:22
+2025-11-26 10:18:44.24
+e51d5012
+User
+drain: undefined,
+2025-11-26 10:18:44.24
+e51d5012
+User
+headers: [Object],
+2025-11-26 10:18:44.24
+e51d5012
+User
+[Media Upload] File uploaded successfully
+2025-11-26 10:18:44.24
+e51d5012
+User
+pipes: [],
+2025-11-26 10:18:44.24
+e51d5012
+User
+corked: 0,
+2025-11-26 10:18:44.24
+e51d5012
+User
+at Util.parseHttpRespBody (file:///home/runner/workspace/node_modules/@google-cloud/storage/build/esm/src/nodejs-common/util.js:222:38)
+2025-11-26 10:18:44.24
+e51d5012
+User
+error: [Array],
+2025-11-26 10:18:44.24
+e51d5012
+User
+}
+2025-11-26 10:18:44.24
+e51d5012
+User
+body: '{\n' +
+2025-11-26 10:18:44.24
+e51d5012
+User
+pendingcb: 0,
+2025-11-26 10:18:44.24
+e51d5012
+User
+' "message": "The member bindings allUsers and allAuthenticatedUsers are not allowed since public access prevention is enforced.",\n' +
+2025-11-26 10:18:44.24
+e51d5012
+User
+onwrite: [Function: bound onwrite],
+2025-11-26 10:18:44.24
+e51d5012
+User
+],
+2025-11-26 10:18:44.24
+e51d5012
+User
+[Symbol(kBufferedValue)]: null,
+2025-11-26 10:18:44.24
+e51d5012
+User
+finish: undefined,
+2025-11-26 10:18:44.24
+e51d5012
+User
+bufferedIndex: 0,
+2025-11-26 10:18:44.24
+e51d5012
+User
+_readableState: ReadableState {
+2025-11-26 10:18:44.24
+e51d5012
+User
+close: undefined,
+2025-11-26 10:18:44.24
+e51d5012
+User
+location: 'If-Match'
+2025-11-26 10:18:44.24
+e51d5012
+User
+at /home/runner/workspace/node_modules/teeny-request/build/src/index.js:226:13
+2025-11-26 10:18:44.24
+e51d5012
+User
+at Util.handleResp (file:///home/runner/workspace/node_modules/@google-cloud/storage/build/esm/src/nodejs-common/util.js:162:30)
+2025-11-26 10:18:44.24
+e51d5012
+User
+_writableState: WritableState {
+2025-11-26 10:18:44.24
+e51d5012
+User
+},
+2025-11-26 10:19:00.04
+e51d5012
+User
+[AI Task Executor] Checking for pending tasks...
+2025-11-26 10:19:00.05
+e51d5012
+User
+[NotificationWorker] Starting queue processing...
+2025-11-26 10:19:00.05
+e51d5012
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-26 10:19:00.06
+e51d5012
+User
+🔄 Checking for scheduled audio newsletters...
+2025-11-26 10:19:00.17
+e51d5012
+User
+[NotificationWorker] Queue processing completed
+2025-11-26 10:19:00.17
+e51d5012
+User
+[NotificationWorker] Found 0 notifications to process
+2025-11-26 10:19:00.17
+e51d5012
+User
+Found 0 scheduled newsletters to process
+2025-11-26 10:19:00.17
+e51d5012
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-11-26 10:19:00.17
+e51d5012
+User
+[ScheduledPublisher] Found 0 articles ready to publish
