@@ -7385,18 +7385,18 @@ export const insertPublisherSchema = createInsertSchema(publishers).omit({
 });
 
 export const updatePublisherSchema = z.object({
-  agencyName: z.string().min(2).optional(),
-  agencyNameEn: z.string().min(2).optional(),
-  contactPerson: z.string().min(2).optional(),
-  contactPersonEn: z.string().min(2).optional(),
+  agencyName: z.string().min(2).optional().or(z.literal("")),
+  agencyNameEn: z.string().min(2).optional().or(z.literal("")),
+  contactPerson: z.string().min(2).optional().or(z.literal("")),
+  contactPersonEn: z.string().min(2).optional().or(z.literal("")),
   phoneNumber: z.string().optional(),
-  email: z.string().email().optional(),
+  email: z.string().email().optional().or(z.literal("")),
   logoUrl: z.string().nullable().optional(),
   commercialRegistration: z.string().optional(),
   taxNumber: z.string().optional(),
   address: z.string().optional(),
   isActive: z.boolean().optional(),
-  suspendedUntil: z.string().optional(),
+  suspendedUntil: z.string().nullable().optional(),
   suspensionReason: z.string().optional(),
   notes: z.string().optional(),
 });

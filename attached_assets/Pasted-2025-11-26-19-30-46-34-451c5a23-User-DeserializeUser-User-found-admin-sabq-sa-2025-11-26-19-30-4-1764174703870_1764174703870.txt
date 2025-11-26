@@ -1,0 +1,141 @@
+2025-11-26 19:30:46.34
+451c5a23
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-26 19:30:46.35
+451c5a23
+User
+4:30:46 PM [express] GET /api/themes/active 200 in 193ms
+2025-11-26 19:30:46.38
+451c5a23
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-26 19:30:46.41
+451c5a23
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin, user has: system_admin, admin
+2025-11-26 19:31:00.04
+451c5a23
+User
+[NotificationWorker] Starting queue processing...
+2025-11-26 19:31:00.04
+451c5a23
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-11-26 19:31:00.05
+451c5a23
+User
+🔄 Checking for scheduled audio newsletters...
+2025-11-26 19:31:00.06
+451c5a23
+User
+[AI Task Executor] Checking for pending tasks...
+2025-11-26 19:31:00.09
+451c5a23
+User
+[NotificationWorker] Queue processing completed
+2025-11-26 19:31:00.09
+451c5a23
+User
+[NotificationWorker] Found 0 notifications to process
+2025-11-26 19:31:00.16
+451c5a23
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-11-26 19:31:00.17
+451c5a23
+User
+Found 0 scheduled newsletters to process
+2025-11-26 19:31:05.84
+451c5a23
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-26 19:31:05.87
+451c5a23
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-26 19:31:05.90
+451c5a23
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin, user has: system_admin, admin
+2025-11-26 19:31:06.18
+451c5a23
+User
+4:31:06 PM [express] POST /api/admin/publishers/upload-logo 200 in 505ms :: {"url":"https://storage.…
+2025-11-26 19:31:06.50
+451c5a23
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-26 19:31:06.52
+451c5a23
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-26 19:31:06.58
+451c5a23
+User
+4:31:06 PM [express] POST /api/accessibility/track 200 in 100ms :: {"success":true,"eventId":"34a087…
+2025-11-26 19:31:11.52
+451c5a23
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-26 19:31:11.55
+451c5a23
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-26 19:31:11.57
+451c5a23
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin, user has: system_admin, admin
+2025-11-26 19:31:11.57
+451c5a23
+User
+]
+2025-11-26 19:31:11.57
+451c5a23
+User
+}
+2025-11-26 19:31:11.57
+451c5a23
+User
+"minimum": 2,
+2025-11-26 19:31:11.57
+451c5a23
+User
+code: 'too_small',
+2025-11-26 19:31:11.57
+451c5a23
+User
+issues: [
+2025-11-26 19:31:11.57
+451c5a23
+User
+path: [Array]
+2025-11-26 19:31:11.57
+451c5a23
+User
+addIssue: [Function (anonymous)],
+2025-11-26 19:31:11.57
+451c5a23
+User
+errors: [
+2025-11-26 19:31:11.57
+451c5a23
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2025-11-26 19:31:11.57
+451c5a23
+User
+"type": "string",
+2025-11-26 19:31:11.57
+451c5a23
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+2025-11-26 19:31:11.57
+451c5a23
+User
+"exact": false,
+2025-11-26 19:31:11.57
+451c5a23
+User
+"path": [
+
