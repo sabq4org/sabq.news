@@ -48,6 +48,7 @@ import OnboardingInterests from "@/pages/onboarding/SelectInterests";
 import Personalize from "@/pages/onboarding/Personalize";
 import Muqtarab from "@/pages/Muqtarab";
 import MuqtarabDetail from "@/pages/MuqtarabDetail";
+import TopicDetail from "@/pages/TopicDetail";
 import DashboardMuqtarab from "@/pages/dashboard/DashboardMuqtarab";
 import TopicsManagement from "@/pages/dashboard/TopicsManagement";
 import TagsManagement from "@/pages/TagsManagement";
@@ -293,6 +294,7 @@ function Router() {
       <Route path="/2fa-verify" component={TwoFactorVerify} />
       <Route path="/category/:slug" component={CategoryPage} />
       <Route path="/keyword/:keyword" component={KeywordPage} />
+      <Route path="/muqtarab/:angleSlug/topic/:topicSlug" component={TopicDetail} />
       <Route path="/muqtarab/:slug" component={MuqtarabDetail} />
       <Route path="/muqtarab" component={Muqtarab} />
       

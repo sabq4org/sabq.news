@@ -7,11 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { Card, CardContent } from "@/components/ui/card";
 import { useAngleDetail, useAngleArticles } from "@/lib/muqtarab";
-import { ArrowRight, ChevronRight, Share2 } from "lucide-react";
+import { ArrowRight, ChevronRight, Share2, Calendar, FileText } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { Circle } from "lucide-react";
-import type { ArticleWithDetails } from "@shared/schema";
+import type { ArticleWithDetails, Topic } from "@shared/schema";
 
 function getIconComponent(iconKey: string) {
   const iconName = iconKey as keyof typeof LucideIcons;
@@ -44,6 +45,22 @@ export default function MuqtarabDetail() {
     data: articles = [], 
     isLoading: isLoadingArticles 
   } = useAngleArticles(slug || "");
+
+  // Fetch published topics for this angle
+  const { 
+    data: topicsData, 
+    isLoading: isLoadingTopics 
+  } = useQuery<{ topics: Topic[] }>({
+    queryKey: ["/api/muqtarab/angles", slug, "topics"],
+    queryFn: async () => {
+      const res = await fetch(`/api/muqtarab/angles/${slug}/topics?limit=10`);
+      if (!res.ok) throw new Error("Failed to fetch topics");
+      return res.json();
+    },
+    enabled: !!slug,
+  });
+
+  const topics = topicsData?.topics || [];
 
   // Set page title and meta tags for SEO
   useEffect(() => {
@@ -323,6 +340,111 @@ export default function MuqtarabDetail() {
             ))}
           </div>
         )}
+
+        {/* Topics Section */}
+        <div className="mt-12">
+          <div className="mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold mb-2 flex items-center gap-2" data-testid="heading-topics">
+              <FileText className="h-6 w-6" />
+              المواضيع
+            </h2>
+            <Separator />
+          </div>
+
+          {/* Loading state for topics */}
+          {isLoadingTopics ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="grid-topics-loading">
+              {[1, 2, 3].map((i) => (
+                <Card key={i} className="overflow-hidden">
+                  <Skeleton className="h-48 w-full" />
+                  <CardContent className="p-4 space-y-3">
+                    <Skeleton className="h-6 w-3/4" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-2/3" />
+                    <Skeleton className="h-4 w-1/4" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : topics.length === 0 ? (
+            // Empty state for topics
+            <div className="text-center py-12">
+              <div 
+                className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
+                style={{ 
+                  backgroundColor: `${angle.colorHex}15`,
+                  color: angle.colorHex 
+                }}
+              >
+                <FileText className="w-8 h-8" />
+              </div>
+              <p className="text-lg text-muted-foreground" data-testid="text-topics-empty">
+                لا توجد مواضيع مرتبطة بهذه الزاوية حتى الآن
+              </p>
+            </div>
+          ) : (
+            // Topics grid
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="grid-topics">
+              {topics.map((topic: Topic) => (
+                <Link key={topic.id} href={`/muqtarab/${slug}/topic/${topic.slug}`}>
+                  <Card 
+                    className="overflow-hidden hover-elevate cursor-pointer group h-full"
+                    data-testid={`card-topic-${topic.id}`}
+                  >
+                    {/* Hero Image */}
+                    {topic.heroImageUrl && (
+                      <div className="relative h-48 overflow-hidden">
+                        <img 
+                          src={topic.heroImageUrl} 
+                          alt={topic.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                      </div>
+                    )}
+                    
+                    <CardContent className="p-4 space-y-3">
+                      {/* Title */}
+                      <h3 
+                        className="font-bold text-lg line-clamp-2 group-hover:text-primary transition-colors"
+                        data-testid={`text-topic-title-${topic.id}`}
+                      >
+                        {topic.title}
+                      </h3>
+                      
+                      {/* Excerpt */}
+                      {topic.excerpt && (
+                        <p 
+                          className="text-muted-foreground text-sm line-clamp-2"
+                          data-testid={`text-topic-excerpt-${topic.id}`}
+                        >
+                          {topic.excerpt}
+                        </p>
+                      )}
+                      
+                      {/* Published Date */}
+                      {topic.publishedAt && (
+                        <div 
+                          className="flex items-center gap-2 text-xs text-muted-foreground"
+                          data-testid={`text-topic-date-${topic.id}`}
+                        >
+                          <Calendar className="h-3 w-3" />
+                          <span>
+                            {new Date(topic.publishedAt).toLocaleDateString('ar-SA', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </span>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );

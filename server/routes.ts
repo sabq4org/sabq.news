@@ -13281,6 +13281,31 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     }
   });
 
+
+  // GET /api/muqtarab/angles/:angleSlug/topics/:topicSlug - Get single topic by angle slug and topic slug
+  app.get("/api/muqtarab/angles/:angleSlug/topics/:topicSlug", async (req, res) => {
+    try {
+      const { angleSlug, topicSlug } = req.params;
+      
+      // First get the angle by slug
+      const angle = await storage.getAngleBySlug(angleSlug);
+      if (!angle) {
+        return res.status(404).json({ message: "Angle not found" });
+      }
+      
+      // Then get the topic by angleId + topicSlug
+      const topic = await storage.getTopicBySlug(angle.id, topicSlug);
+      if (!topic || topic.status !== 'published') {
+        return res.status(404).json({ message: "Topic not found" });
+      }
+      
+      // Return both angle info and topic for breadcrumb building
+      res.json({ topic, angle });
+    } catch (error) {
+      console.error("Error fetching topic:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
   // GET /api/muqtarab/topics/:slug - Get single topic by slug (public)
   app.get("/api/muqtarab/topics/:slug", async (req, res) => {
     try {
