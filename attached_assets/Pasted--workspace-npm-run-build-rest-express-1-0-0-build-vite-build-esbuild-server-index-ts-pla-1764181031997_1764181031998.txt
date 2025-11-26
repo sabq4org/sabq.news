@@ -1,0 +1,52 @@
+~/workspace$ npm run build
+
+> rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+
+vite v5.4.20 building for production...
+transforming (49) src/pages/ArticleEditor.tsx
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+npx cap sync ios
+✓ 4704 modules transformed.
+../dist/public/index.html                                                2.10 kB │ gzip:     0.86 kB
+../dist/public/assets/sabq-logo-D1EnGNyQ.png                            20.23 kB
+../dist/public/assets/opendyslexic-latin-400-italic-sb4Uqald.woff2     112.36 kB
+../dist/public/assets/opendyslexic-latin-400-normal-nUhe5EwG.woff2     115.28 kB
+../dist/public/assets/opendyslexic-latin-700-normal-Bnmt45Ln.woff2     120.36 kB
+../dist/public/assets/opendyslexic-latin-400-italic-CgRVdIOb.woff      125.35 kB
+../dist/public/assets/opendyslexic-latin-400-normal-Cv3YY6GF.woff      128.78 kB
+../dist/public/assets/opendyslexic-latin-700-normal-wYUJcbXi.woff      135.08 kB
+../dist/public/assets/sabq_ai_mascot_1_1_1763712965053-Dzf_hMEt.png  1,551.43 kB
+../dist/public/assets/index-DSVgg-f0.css                               399.15 kB │ gzip:    54.33 kB
+../dist/public/assets/web-BeN0jm8F.js                                    0.12 kB │ gzip:     0.12 kB
+../dist/public/assets/web-C8tCzSPg.js                                    0.76 kB │ gzip:     0.35 kB
+../dist/public/assets/index-BtWr4lJF.js                              6,950.86 kB │ gzip: 1,680.05 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 32.32s
+
+  dist/index.js  2.8mb ⚠️
+
+⚡ Done in 120ms
+~/workspace$ npx cap sync ios
+✔ Copying web assets from public to ios/App/App/public in 16.43ms
+✔ Creating capacitor.config.json in ios/App/App in 2.18ms
+✔ copy ios in 134.97ms
+✔ Updating iOS plugins in 28.51ms
+[warn] Skipping pod install because CocoaPods is not installed
+[warn] Unable to find "xcodebuild". Skipping xcodebuild clean step...
+✔ Updating iOS native dependencies with pod install in 14.84ms
+[info] Found 4 Capacitor plugins for ios:
+       @capacitor/app@7.1.0
+       @capacitor/keyboard@7.0.3
+       @capacitor/splash-screen@7.0.3
+       @capacitor/status-bar@7.0.3
+✔ update ios in 118.12ms
+[info] Sync finished in 0.382s
+
+Thank you for helping improve Capacitor by sharing anonymous usage data! 💖
+Information about the data we collect is available on our website: https://capacitorjs.com/docs/next/cli/telemetry
+~/workspace$ 
