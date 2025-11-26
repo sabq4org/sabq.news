@@ -268,6 +268,43 @@ export const voiceSettingsSchema = z.object({
   pitch: z.number().optional(),
 }).optional();
 
+// Topic (Muqtarab) schemas
+export const topicStatusEnum = z.enum(["draft", "published", "archived"]);
+
+export const topicContentBlockSchema = z.object({
+  type: z.enum(["text", "image", "video", "link", "embed", "quote", "heading"]),
+  content: z.string().optional(),
+  url: z.string().optional(),
+  alt: z.string().optional(),
+  caption: z.string().optional(),
+  level: z.number().optional(),
+  metadata: z.record(z.any()).optional(),
+});
+
+export const topicContentSchema = z.object({
+  blocks: z.array(topicContentBlockSchema).optional(),
+  rawHtml: z.string().optional(),
+  plainText: z.string().optional(),
+}).optional();
+
+export const topicAttachmentsSchema = z.array(z.object({
+  id: z.string().optional(),
+  url: z.string(),
+  name: z.string(),
+  type: z.enum(["image", "video", "audio", "document", "other"]),
+  size: z.number().optional(),
+  mimeType: z.string().optional(),
+  caption: z.string().optional(),
+})).optional();
+
+export const topicSeoMetaSchema = z.object({
+  metaTitle: z.string().optional(),
+  metaDescription: z.string().optional(),
+  keywords: z.array(z.string()).optional(),
+  ogImage: z.string().optional(),
+  canonicalUrl: z.string().optional(),
+}).optional();
+
 // Internal announcements schemas
 export const channelsSchema = z.array(z.string()).optional();
 export const audienceRolesSchema = z.array(z.string()).optional();
@@ -1399,11 +1436,13 @@ export const angles = pgTable("angles", {
   shortDesc: text("short_desc"),
   sortOrder: integer("sort_order").default(0).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
+  managerUserId: varchar("manager_user_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_angles_active").on(table.isActive),
   index("idx_angles_sort").on(table.sortOrder),
+  index("idx_angles_manager").on(table.managerUserId),
 ]);
 
 // Junction table for article-angle many-to-many
@@ -1416,6 +1455,56 @@ export const articleAngles = pgTable("article_angles", {
   articleIdx: index("idx_article_angles_article").on(table.articleId),
   angleIdx: index("idx_article_angles_angle").on(table.angleId),
 }));
+
+// Topics table (مواضيع - Muqtarab topics within angles)
+export const topics = pgTable("topics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  angleId: varchar("angle_id").references(() => angles.id, { onDelete: "cascade" }).notNull(),
+  title: text("title").notNull(),
+  slug: text("slug").notNull(),
+  excerpt: text("excerpt"),
+  content: jsonb("content").$type<{
+    blocks?: Array<{
+      type: "text" | "image" | "video" | "link" | "embed" | "quote" | "heading";
+      content?: string;
+      url?: string;
+      alt?: string;
+      caption?: string;
+      level?: number;
+      metadata?: Record<string, any>;
+    }>;
+    rawHtml?: string;
+    plainText?: string;
+  }>(),
+  heroImageUrl: text("hero_image_url"),
+  attachments: jsonb("attachments").$type<Array<{
+    id?: string;
+    url: string;
+    name: string;
+    type: "image" | "video" | "audio" | "document" | "other";
+    size?: number;
+    mimeType?: string;
+    caption?: string;
+  }>>(),
+  seoMeta: jsonb("seo_meta").$type<{
+    metaTitle?: string;
+    metaDescription?: string;
+    keywords?: string[];
+    ogImage?: string;
+    canonicalUrl?: string;
+  }>(),
+  status: text("status").default("draft").notNull(),
+  publishedAt: timestamp("published_at"),
+  createdBy: varchar("created_by").references(() => users.id).notNull(),
+  updatedBy: varchar("updated_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_topics_angle_status").on(table.angleId, table.status),
+  index("idx_topics_slug").on(table.slug),
+  index("idx_topics_published").on(table.publishedAt),
+  uniqueIndex("idx_topics_angle_slug").on(table.angleId, table.slug),
+]);
 
 // Image assets table for managing uploads
 export const imageAssets = pgTable("image_assets", {
@@ -2125,6 +2214,21 @@ export const insertArticleAngleSchema = createInsertSchema(articleAngles).omit({
   createdAt: true 
 });
 
+export const insertTopicSchema = createInsertSchema(topics).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  status: topicStatusEnum.default("draft"),
+  content: topicContentSchema,
+  attachments: topicAttachmentsSchema,
+  seoMeta: topicSeoMetaSchema,
+});
+
+export const updateTopicSchema = insertTopicSchema.partial().extend({
+  updatedBy: z.string(),
+});
+
 export const insertImageAssetSchema = createInsertSchema(imageAssets).omit({ 
   id: true, 
   createdAt: true 
@@ -2636,6 +2740,10 @@ export type InsertAngle = z.infer<typeof insertAngleSchema>;
 export type ArticleAngle = typeof articleAngles.$inferSelect;
 export type InsertArticleAngle = z.infer<typeof insertArticleAngleSchema>;
 
+export type Topic = typeof topics.$inferSelect;
+export type InsertTopic = z.infer<typeof insertTopicSchema>;
+export type UpdateTopic = z.infer<typeof updateTopicSchema>;
+
 export type ImageAsset = typeof imageAssets.$inferSelect;
 export type InsertImageAsset = z.infer<typeof insertImageAssetSchema>;
 
@@ -2672,7 +2780,29 @@ export const anglesRelations = relations(angles, ({ one, many }) => ({
     fields: [angles.sectionId],
     references: [sections.id],
   }),
+  manager: one(users, {
+    fields: [angles.managerUserId],
+    references: [users.id],
+  }),
   articleAngles: many(articleAngles),
+  topics: many(topics),
+}));
+
+export const topicsRelations = relations(topics, ({ one }) => ({
+  angle: one(angles, {
+    fields: [topics.angleId],
+    references: [angles.id],
+  }),
+  creator: one(users, {
+    fields: [topics.createdBy],
+    references: [users.id],
+    relationName: "topicCreator",
+  }),
+  updater: one(users, {
+    fields: [topics.updatedBy],
+    references: [users.id],
+    relationName: "topicUpdater",
+  }),
 }));
 
 export const articlesRelations = relations(articles, ({ many }) => ({
