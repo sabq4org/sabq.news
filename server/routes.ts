@@ -27796,9 +27796,11 @@ Allow: /
         status: status as string,
         trustedSenderId: trustedSenderId as string,
         limit: limitNum,
-        hasMore,
         offset,
       });
+
+      const totalPages = Math.ceil(result.total / limitNum);
+      const hasMore = pageNum < totalPages;
 
       res.json({
         logs: result.logs,
@@ -27806,7 +27808,7 @@ Allow: /
         page: pageNum,
         limit: limitNum,
         hasMore,
-        totalPages: Math.ceil(result.total / limitNum),
+        totalPages,
       });
     } catch (error: any) {
       console.error('Error fetching email webhook logs:', error);
