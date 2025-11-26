@@ -1331,10 +1331,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Type 3: GCS paths (gs://) - stream from Object Storage
       if (storagePath.startsWith('gs://')) {
         const pathParts = storagePath.replace('gs://', '').split('/');
-        // Use the actual Replit bucket ID
-        const bucketName = process.env.REPLIT_OBJECT_BUCKET || 'replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138';
-        // Treat the entire path as the object path
-        const objectPath = pathParts.join('/');
+        // Extract bucket name from path (first part) and object path (remaining parts)
+        const bucketName = pathParts[0];
+        const objectPath = pathParts.slice(1).join('/');
+        
+        console.log('[Media Proxy] Streaming from bucket:', bucketName, 'path:', objectPath);
 
         // Get file from Object Storage
         const { objectStorageClient } = await import('./objectStorage');
