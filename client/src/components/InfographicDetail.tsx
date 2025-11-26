@@ -109,123 +109,150 @@ export function InfographicDetail({
     : '';
 
   return (
-    <div>
-      <div className="py-8">
-        {/* Header Section */}
-        <div className="text-center space-y-6 mb-10">
-          {/* Category Badge */}
-          {article.category && (
-            <div className="flex justify-center" data-testid="badge-infographic-category">
-              <Badge variant="outline" className="text-base px-4 py-1.5 bg-primary/5 border-primary/30">
-                {article.category.icon} {article.category.nameAr}
-              </Badge>
-            </div>
+    <div className="min-h-screen">
+      {/* Hero Section with Image */}
+      <div className="relative">
+        {/* Main Infographic Image - Full Width */}
+        <div className="relative group cursor-zoom-in" onClick={() => setImageZoom(true)}>
+          <img 
+            src={article.imageUrl || ""} 
+            alt={article.title}
+            className="w-full h-auto"
+            data-testid="image-infographic-main"
+          />
+          
+          {/* Gradient Overlay at Bottom */}
+          <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
+          
+          {/* AI Badge - Top Right */}
+          {(article.isAiGeneratedThumbnail || article.isAiGeneratedImage) && (
+            <Badge 
+              className="absolute top-3 right-3 z-10 gap-1 bg-purple-500/90 text-white border-0 backdrop-blur-sm text-xs"
+              data-testid={`badge-article-ai-image-${article.id}`}
+            >
+              <Brain className="h-3 w-3" />
+              AI
+            </Badge>
           )}
           
-          {/* Title */}
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight max-w-4xl mx-auto" data-testid="text-infographic-title">
-            {article.title}
-          </h1>
-          
-          {/* Meta Info */}
-          <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground flex-wrap">
-            {publishedDate && (
-              <span className="flex items-center gap-1.5">
-                <Calendar className="h-4 w-4" />
-                {publishedDate}
-              </span>
-            )}
-            <span className="flex items-center gap-1.5">
-              <Eye className="h-4 w-4" />
-              {(article.views || 0).toLocaleString('ar-SA')} مشاهدة
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Clock className="h-4 w-4" />
-              {readingTime} دقائق قراءة
-            </span>
+          {/* Zoom Indicator - Center on Hover */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
+            <div className="bg-white/90 dark:bg-black/80 rounded-full p-3 shadow-lg">
+              <ZoomIn className="h-6 w-6 text-foreground" />
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Main Infographic Image */}
-        <Card className="relative overflow-hidden mb-10 border-0 shadow-lg">
-          <div className="relative group">
-            <img 
-              src={article.imageUrl || ""} 
-              alt={article.title}
-              className="w-full h-auto cursor-zoom-in transition-transform duration-300"
-              onClick={() => setImageZoom(true)}
-              data-testid="image-infographic-main"
-            />
-            
-            {/* AI Generated Image Badge (Featured or Thumbnail) - Top Right */}
-            {(article.isAiGeneratedThumbnail || article.isAiGeneratedImage) && (
-              <Badge 
-                className="absolute top-4 right-4 z-10 gap-1.5 bg-purple-500/90 hover:bg-purple-600 text-white border-0 backdrop-blur-sm shadow-lg"
-                data-testid={`badge-article-ai-image-${article.id}`}
-              >
-                الصورة
-                <Brain className="h-3 w-3" aria-hidden="true" />
-              </Badge>
-            )}
-            
-            {/* Overlay with actions on hover */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+      {/* Content Section */}
+      <div className="px-4 -mt-8 relative z-10">
+        <div className="max-w-2xl mx-auto">
+          {/* Floating Action Bar */}
+          <Card className="p-3 mb-6 shadow-lg border-0 bg-card/95 backdrop-blur-sm">
+            <div className="flex items-center justify-between gap-2">
+              {/* Left: Stats */}
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Eye className="h-3.5 w-3.5" />
+                  {(article.views || 0).toLocaleString('ar-SA')}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Heart className="h-3.5 w-3.5" />
+                  {article.reactionsCount || 0}
+                </span>
+              </div>
+              
+              {/* Right: Actions */}
+              <div className="flex items-center gap-1">
                 <Button
-                  variant="secondary"
-                  size="sm"
-                  className="gap-2 bg-white/90 hover:bg-white"
-                  onClick={() => setImageZoom(true)}
-                  data-testid="button-zoom-infographic"
+                  variant={hasReacted ? "default" : "ghost"}
+                  size="icon"
+                  onClick={onReact}
+                  data-testid="button-infographic-react"
                 >
-                  <ZoomIn className="h-4 w-4" />
-                  عرض بالحجم الكامل
+                  <Heart className={`h-4 w-4 ${hasReacted ? 'fill-current' : ''}`} />
                 </Button>
                 
                 <Button
-                  variant="secondary"
-                  size="sm"
-                  className="gap-2 bg-white/90 hover:bg-white"
+                  variant={isBookmarked ? "default" : "ghost"}
+                  size="icon"
+                  onClick={onBookmark}
+                  data-testid="button-infographic-bookmark"
+                >
+                  <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={handleDownload}
                   data-testid="button-download-infographic"
                 >
                   <Download className="h-4 w-4" />
-                  تحميل
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleShare}
+                  data-testid="button-infographic-share"
+                >
+                  {copied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
                 </Button>
               </div>
             </div>
-          </div>
-        </Card>
+          </Card>
 
-        {/* Content Section */}
-        <div className="max-w-4xl mx-auto space-y-8">
+          {/* Category & Date */}
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
+            {article.category && (
+              <Badge variant="secondary" className="text-xs" data-testid="badge-infographic-category">
+                {article.category.icon} {article.category.nameAr}
+              </Badge>
+            )}
+            {publishedDate && (
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                {publishedDate}
+              </span>
+            )}
+          </div>
+          
+          {/* Title */}
+          <h1 className="text-2xl sm:text-3xl font-bold leading-tight mb-4" data-testid="text-infographic-title">
+            {article.title}
+          </h1>
+          
           {/* AI Summary or Excerpt */}
           {(article.aiSummary || article.excerpt) && (
-            <Card className="p-6 bg-primary/5 border-primary/20">
-              <div className="flex items-start gap-3">
+            <div className="mb-6 p-4 rounded-xl bg-muted/50 border border-border/50">
+              <div className="flex items-start gap-2">
                 {article.aiGenerated && (
-                  <Sparkles className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
+                  <Sparkles className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                 )}
-                <div className="space-y-2">
-                  <h3 className="font-bold text-lg">نبذة مختصرة</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {article.aiSummary || article.excerpt}
-                  </p>
-                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {article.aiSummary || article.excerpt}
+                </p>
               </div>
-            </Card>
+            </div>
+          )}
+          
+          {/* Additional Content if exists */}
+          {sanitizedContent && (
+            <div className="prose prose-sm dark:prose-invert max-w-none mb-6">
+              <div dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
+            </div>
           )}
           
           {/* Keywords */}
           {article.seo?.keywords && article.seo.keywords.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="font-bold text-lg">الكلمات المفتاحية</h3>
-              <div className="flex flex-wrap gap-2">
-                {article.seo.keywords.map((keyword, index) => (
+            <div className="mb-6">
+              <div className="flex flex-wrap gap-1.5">
+                {article.seo.keywords.slice(0, 6).map((keyword, index) => (
                   <Badge 
                     key={index} 
-                    variant="secondary"
-                    className="px-3 py-1.5 text-sm"
+                    variant="outline"
+                    className="text-xs px-2 py-0.5"
                     data-testid={`badge-keyword-${index}`}
                   >
                     {keyword}
@@ -235,75 +262,18 @@ export function InfographicDetail({
             </div>
           )}
           
-          {/* Additional Content if exists */}
-          {sanitizedContent && (
-            <div className="prose prose-lg dark:prose-invert max-w-none">
-              <div dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
-            </div>
-          )}
-          
-          {/* Action Buttons */}
-          <div className="flex items-center justify-center gap-4 py-6">
-            <Button
-              variant={hasReacted ? "default" : "outline"}
-              size="lg"
-              onClick={onReact}
-              className="gap-2 min-w-[120px]"
-              data-testid="button-infographic-react"
-            >
-              <Heart className={`h-5 w-5 ${hasReacted ? 'fill-current' : ''}`} />
-              <span>{article.reactionsCount || 0}</span>
-            </Button>
-            
-            <Button
-              variant={isBookmarked ? "default" : "outline"}
-              size="lg"
-              onClick={onBookmark}
-              className="gap-2"
-              data-testid="button-infographic-bookmark"
-            >
-              <Bookmark className={`h-5 w-5 ${isBookmarked ? 'fill-current' : ''}`} />
-              حفظ
-            </Button>
-            
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={handleShare}
-              className="gap-2"
-              data-testid="button-infographic-share"
-            >
-              {copied ? (
-                <>
-                  <Check className="h-5 w-5" />
-                  تم النسخ
-                </>
-              ) : (
-                <>
-                  <Share2 className="h-5 w-5" />
-                  مشاركة
-                </>
-              )}
-            </Button>
-          </div>
-          
-          <Separator />
-          
-          {/* Author Info */}
+          {/* Author Info - Compact */}
           {author && (
-            <div className="flex items-center gap-4 justify-center py-6">
-              <Avatar className="h-12 w-12 border-2 border-primary/20">
-                <AvatarImage 
-                  src={author.profileImageUrl || ""} 
-                  alt={authorName}
-                />
-                <AvatarFallback className="bg-primary/10 text-primary font-bold">
+            <div className="flex items-center gap-3 py-4 border-t border-border/50">
+              <Avatar className="h-10 w-10 border border-border/50">
+                <AvatarImage src={author.profileImageUrl || ""} alt={authorName} />
+                <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">
                   {authorName.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <p className="font-bold text-lg">{authorName}</p>
-                <p className="text-sm text-muted-foreground">كاتب المحتوى</p>
+                <p className="font-semibold text-sm">{authorName}</p>
+                <p className="text-xs text-muted-foreground">كاتب المحتوى</p>
               </div>
             </div>
           )}
