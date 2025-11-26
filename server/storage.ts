@@ -13600,6 +13600,15 @@ export class DatabaseStorage implements IStorage {
     // When two webhook deliveries arrive simultaneously, both will atomically append their parts
     const newMediaUrls = data.mediaUrls || [];
     
+    // First, try to delete any expired or processing records for this phone/token combo
+    // This ensures we start fresh if the previous message window expired
+    await db.execute(sql`
+      DELETE FROM pending_whatsapp_messages 
+      WHERE phone_number = ${data.phoneNumber} 
+      AND token = ${data.token} 
+      AND (is_processing = true OR expires_at <= NOW())
+    `);
+    
     const result = await db.execute(sql`
       INSERT INTO pending_whatsapp_messages (
         id, phone_number, token, token_id, user_id, 
@@ -13613,7 +13622,6 @@ export class DatabaseStorage implements IStorage {
         NOW(), NOW(), false, ${expiresAt}
       )
       ON CONFLICT (phone_number, token) 
-      WHERE is_processing = false AND expires_at > NOW()
       DO UPDATE SET
         message_parts = array_cat(pending_whatsapp_messages.message_parts, ARRAY[${data.messagePart}]::text[]),
         media_urls = array_cat(

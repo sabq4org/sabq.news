@@ -1,0 +1,130 @@
+2025-11-26 14:06:09.81
+1271c440
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-26 14:06:09.85
+1271c440
+User
+11:06:09 AM [express] GET /api/email-agent/senders 304 in 98ms :: [{"id":"99710a3d-7270-4007-a338-fc3…
+2025-11-26 14:06:09.86
+1271c440
+User
+11:06:09 AM [express] GET /api/email-agent/badge-stats 304 in 93ms :: {"newMessages":0,"publishedToda…
+
+2025-11-26 14:06:09.92
+1271c440
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-26 14:06:09.92
+1271c440
+User
+11:06:09 AM [express] GET /api/users 304 in 256ms :: [{"id":"email-agent-system","firstName":"المحرر"…
+2025-11-26 14:06:09.93
+1271c440
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-26 14:06:09.93
+1271c440
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-26 14:06:09.93
+1271c440
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-26 14:06:09.93
+1271c440
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-26 14:06:09.94
+1271c440
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-26 14:06:09.94
+1271c440
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-26 14:06:09.94
+1271c440
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-26 14:06:09.95
+1271c440
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-26 14:06:09.95
+1271c440
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-26 14:06:09.96
+1271c440
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-26 14:06:09.98
+1271c440
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-26 14:06:09.98
+1271c440
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+2025-11-26 14:06:09.98
+1271c440
+User
+at file:///home/runner/workspace/dist/index.js:17286:5
+2025-11-26 14:06:09.98
+1271c440
+User
+Error fetching email webhook logs: ReferenceError: hasMore is not defined
+2025-11-26 14:06:09.98
+1271c440
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-26 14:06:09.98
+1271c440
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-11-26 14:06:09.98
+1271c440
+User
+at file:///home/runner/workspace/dist/index.js:56684:9
+2025-11-26 14:06:10.00
+1271c440
+User
+11:06:10 AM [express] GET /api/email-agent/stats 304 in 239ms :: {"emailsReceived":0,"emailsPublished…
+2025-11-26 14:06:10.00
+1271c440
+User
+11:06:10 AM [express] GET /api/email-agent/logs 500 in 239ms :: {"error":"فشل في جلب سجلات البريد الإ…
+2025-11-26 14:06:10.01
+1271c440
+User
+11:06:10 AM [express] GET /api/announcements/active 304 in 255ms :: []
+2025-11-26 14:06:10.04
+1271c440
+User
+}
+2025-11-26 14:06:10.04
+1271c440
+User
+userId: 'admin-sabq',
+2025-11-26 14:06:10.04
+1271c440
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-26 14:06:10.04
+1271c440
+User
+🔍 /api/auth/user check: {
+2025-11-26 14:06:10.04
+1271c440
+User
+isAuthenticated: true,
+2025-11-26 14:06:10.04
+1271c440
+User
+hasUser: true,
+2025-11-26 14:06:10.04
+1271c440
+User
+sessionID: 'OyTsx9Ksirgm8yOHhvbX0Rz2cJfjlx23'
+

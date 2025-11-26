@@ -7014,7 +7014,7 @@ export const pendingWhatsappMessages = pgTable("pending_whatsapp_messages", {
   isProcessing: boolean("is_processing").default(false).notNull(),
   expiresAt: timestamp("expires_at").notNull(),
 }, (table) => [
-  index("pending_whatsapp_messages_phone_token_idx").on(table.phoneNumber, table.token),
+  uniqueIndex("pending_whatsapp_messages_phone_token_unique_idx").on(table.phoneNumber, table.token),
   index("pending_whatsapp_messages_expires_at_idx").on(table.expiresAt),
 ]);
 
