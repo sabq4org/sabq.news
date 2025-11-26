@@ -34,10 +34,14 @@ export async function sendWhatsAppMessage(options: SendWhatsAppMessageOptions): 
     console.log(`[WhatsApp Service]   - From: whatsapp:${whatsappNumber}`);
     console.log(`[WhatsApp Service]   - To: whatsapp:${options.to}`);
     console.log(`[WhatsApp Service]   - Body length: ${options.body.length} chars`);
+    console.log(`[WhatsApp Service]   - Full body: ${options.body}`);
+    
+    // Ensure phone number doesn't have duplicate whatsapp: prefix
+    const toNumber = options.to.replace(/^whatsapp:/i, '');
     
     const messageOptions: any = {
       from: `whatsapp:${whatsappNumber}`,
-      to: `whatsapp:${options.to}`,
+      to: `whatsapp:${toNumber}`,
       body: options.body,
     };
 
@@ -47,9 +51,14 @@ export async function sendWhatsAppMessage(options: SendWhatsAppMessageOptions): 
     }
 
     console.log(`[WhatsApp Service] 🔄 Calling Twilio API...`);
+    console.log(`[WhatsApp Service]   - Final to: ${messageOptions.to}`);
     const message = await twilioClient.messages.create(messageOptions);
     
-    console.log(`[WhatsApp Service] ✅ Message sent successfully: ${message.sid}`);
+    console.log(`[WhatsApp Service] ✅ Message sent successfully:`);
+    console.log(`[WhatsApp Service]   - SID: ${message.sid}`);
+    console.log(`[WhatsApp Service]   - Status: ${message.status}`);
+    console.log(`[WhatsApp Service]   - To: ${message.to}`);
+    console.log(`[WhatsApp Service]   - Date sent: ${message.dateSent}`);
     return true;
   } catch (error) {
     console.error('[WhatsApp Service] ❌ Failed to send message:', error instanceof Error ? error.message : error);
