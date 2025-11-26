@@ -207,11 +207,11 @@ export default function ArticleEditor() {
     enabled: !isNewArticle && !!article?.id,
   });
 
-  // Fetch available Muqtarab angles
+  // Fetch available Muqtarab angles (use public endpoint)
   const { data: availableAngles = [] } = useQuery<{ id: string; nameAr: string; colorHex: string; iconKey: string }[]>({
-    queryKey: ["/api/admin/muqtarab/angles"],
+    queryKey: ["/api/muqtarab/angles"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/muqtarab/angles");
+      const res = await fetch("/api/muqtarab/angles");
       if (!res.ok) return [];
       const data = await res.json();
       return data.angles || data || [];
@@ -770,8 +770,10 @@ export default function ArticleEditor() {
           // Add new angles
           for (const angleId of selectedAngleIds) {
             if (!currentAngleIds.includes(angleId)) {
-              await fetch(`/api/admin/articles/${savedArticleId}/angles/${angleId}`, {
+              await fetch(`/api/admin/articles/${savedArticleId}/angles`, {
                 method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ angleId }),
               });
             }
           }
