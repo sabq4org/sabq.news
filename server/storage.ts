@@ -2985,7 +2985,7 @@ export class DatabaseStorage implements IStorage {
     
     const aiCategoryIds = aiCategories.map(c => c.id);
     
-    const conditions = [
+    const baseConditions = [
       eq(articles.status, "published"),
       or(
         isNull(articles.articleType),
@@ -2995,7 +2995,7 @@ export class DatabaseStorage implements IStorage {
     
     // Exclude AI articles
     if (aiCategoryIds.length > 0) {
-      conditions.push(
+      baseConditions.push(
         or(
           isNull(articles.categoryId),
           not(inArray(articles.categoryId, aiCategoryIds))
@@ -3003,7 +3003,10 @@ export class DatabaseStorage implements IStorage {
       );
     }
     
-    const results = await db
+    // First, try to get an article explicitly marked as featured
+    const featuredConditions = [...baseConditions, eq(articles.isFeatured, true)];
+    
+    let results = await db
       .select({
         article: articles,
         category: categories,
@@ -3014,9 +3017,27 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .leftJoin(users, eq(articles.authorId, users.id))
       .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
-      .where(and(...conditions))
-      .orderBy(desc(articles.views), desc(articles.publishedAt))
+      .where(and(...featuredConditions))
+      .orderBy(desc(articles.publishedAt))
       .limit(1);
+
+    // If no explicitly featured article, fall back to most viewed
+    if (results.length === 0) {
+      results = await db
+        .select({
+          article: articles,
+          category: categories,
+          author: users,
+          reporter: reporterAlias,
+        })
+        .from(articles)
+        .leftJoin(categories, eq(articles.categoryId, categories.id))
+        .leftJoin(users, eq(articles.authorId, users.id))
+        .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
+        .where(and(...baseConditions))
+        .orderBy(desc(articles.views), desc(articles.publishedAt))
+        .limit(1);
+    }
 
     if (results.length === 0) return undefined;
 
