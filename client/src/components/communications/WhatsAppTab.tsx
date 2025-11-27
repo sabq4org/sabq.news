@@ -1103,7 +1103,7 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
 
       {/* Create Token Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent dir="rtl" data-testid="dialog-create-token">
+        <DialogContent dir="rtl" className="max-h-[90vh] overflow-y-auto" data-testid="dialog-create-token">
           <DialogHeader>
             <DialogTitle>إنشاء رمز واتساب جديد</DialogTitle>
             <DialogDescription>
@@ -1335,7 +1335,7 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
 
       {/* Edit Token Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent dir="rtl" data-testid="dialog-edit-token">
+        <DialogContent dir="rtl" className="max-h-[90vh] overflow-y-auto" data-testid="dialog-edit-token">
           <DialogHeader>
             <DialogTitle>تعديل رمز واتساب</DialogTitle>
             <DialogDescription>
