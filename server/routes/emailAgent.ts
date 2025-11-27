@@ -8,6 +8,8 @@ import { objectStorageClient } from "../objectStorage";
 import { nanoid } from "nanoid";
 import { isAuthenticated } from "../auth";
 import { requireRole, requirePermission } from "../rbac";
+import { db } from "../db";
+import { mediaFiles, articleMediaAssets } from "@shared/schema";
 
 const router = Router();
 
@@ -903,7 +905,7 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       displayOrder: 0, // Default display order
     };
 
-    let article;
+    let article: any;
     
     console.log("[Email Agent] 📝 Creating article...");
     console.log("[Email Agent]    - Language:", editorialResult.language);
@@ -928,6 +930,57 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       console.log("[Email Agent] ✅ Article created successfully:", article?.id);
       console.log("[Email Agent]    - Title:", articleData.title);
       console.log("[Email Agent]    - Status:", articleData.status);
+      
+      // 🖼️ Link ALL images to article (not just the featured image)
+      const imageAttachments = allAttachmentsMetadata.filter(a => a.type === 'image');
+      if (article && imageAttachments.length > 0) {
+        console.log(`[Email Agent] 🖼️ Linking ${imageAttachments.length} images to article...`);
+        
+        for (let i = 0; i < imageAttachments.length; i++) {
+          const img = imageAttachments[i];
+          try {
+            const titleWords = articleData.title.split(' ').slice(0, 8).join(' ');
+            let altText = i === 0 
+              ? `صورة ${titleWords}`
+              : `${articleData.excerpt?.split(' ').slice(0, 5).join(' ') || titleWords} - صورة ${i + 1}`;
+            
+            if (altText.length > 125) {
+              altText = altText.substring(0, 122) + "...";
+            }
+            
+            await db.transaction(async (tx) => {
+              const [mediaFile] = await tx.insert(mediaFiles).values({
+                fileName: img.filename,
+                originalName: img.filename,
+                url: img.url,
+                type: "image",
+                mimeType: img.contentType,
+                size: img.size,
+                category: "articles",
+                uploadedBy: reporterUser.id,
+                title: `${titleWords} - صورة ${i + 1}`,
+                keywords: ["email", "auto-upload"],
+                altText: altText,
+              }).returning();
+              
+              await tx.insert(articleMediaAssets).values({
+                articleId: article.id,
+                mediaFileId: mediaFile.id,
+                locale: editorialResult.language || "ar",
+                displayOrder: i,
+                altText: altText,
+                moderationStatus: "approved",
+                sourceName: "Email Agent",
+              });
+              
+              console.log(`[Email Agent] ✅ Linked image ${i + 1}/${imageAttachments.length}: ${img.filename}`);
+            });
+          } catch (linkError) {
+            console.error(`[Email Agent] ⚠️ Failed to link image ${i + 1}:`, linkError);
+          }
+        }
+        console.log(`[Email Agent] 🖼️ Finished linking ${imageAttachments.length} images`);
+      }
     } catch (createError) {
       console.error("[Email Agent] ❌ Error creating article:", createError);
       throw createError; // Re-throw to trigger catch block
