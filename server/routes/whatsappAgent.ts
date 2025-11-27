@@ -831,7 +831,9 @@ router.post("/webhook", async (req: Request, res: Response) => {
           title: aiResult.optimized.title,
           content: aiResult.optimized.content,
           excerpt: aiResult.optimized.lead,
-          seoKeywords: aiResult.optimized.seoKeywords,
+          seo: {
+            keywords: aiResult.optimized.seoKeywords || [],
+          },
         };
         
         // Update category if detected
@@ -1207,7 +1209,10 @@ router.post("/webhook", async (req: Request, res: Response) => {
         originalMessage: body,
         webhookLogId: webhookLog.id,
       },
-      seoKeywords: aiResult.optimized.seoKeywords,
+      // 🔑 SEO Keywords - stored in proper seo.keywords format
+      seo: {
+        keywords: aiResult.optimized.seoKeywords || [],
+      },
       // 🔥 Essential fields for article visibility
       articleType: "news", // Ensures article appears in homepage queries
       newsType: "regular", // Default news type (not breaking/featured)
