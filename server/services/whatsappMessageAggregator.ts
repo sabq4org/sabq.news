@@ -347,7 +347,17 @@ export async function processExpiredMessages(): Promise<void> {
     console.log(`[WhatsApp Aggregator] Found ${expiredMessages.length} expired messages to process`);
     
     for (const pending of expiredMessages) {
-      await processAggregatedMessage(pending);
+      try {
+        await processAggregatedMessage(pending);
+      } catch (messageError) {
+        console.error(`[WhatsApp Aggregator] ❌ Error processing message ${pending.id}:`, messageError);
+        // Continue with next message instead of stopping
+        try {
+          await storage.deletePendingWhatsappMessage(pending.id);
+        } catch (deleteError) {
+          console.error(`[WhatsApp Aggregator] Failed to cleanup:`, deleteError);
+        }
+      }
     }
   } catch (error) {
     console.error(`[WhatsApp Aggregator] Error in processExpiredMessages:`, error);

@@ -25,6 +25,21 @@ import compression from "compression";
 import fs from "fs";
 import path from "path";
 
+// ============================================
+// GLOBAL ERROR HANDLERS - حماية السيرفر من التوقف
+// ============================================
+process.on('uncaughtException', (error) => {
+  console.error('[CRITICAL] Uncaught Exception:', error.message);
+  console.error('[CRITICAL] Stack:', error.stack);
+  // Log but don't exit - let the process continue
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[CRITICAL] Unhandled Rejection at:', promise);
+  console.error('[CRITICAL] Reason:', reason);
+  // Log but don't exit - let the process continue
+});
+
 const app = express();
 
 // Trust proxy - important for rate limiting to work correctly behind proxies
