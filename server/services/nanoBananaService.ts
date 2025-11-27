@@ -305,41 +305,103 @@ export async function generateImage(
 
 /**
  * Upload generated image to Google Cloud Storage using Replit's Object Storage
+ * Optimizes images by converting to WebP and generating thumbnails
  */
 export async function uploadImageToStorage(
   imageBase64: string,
   fileName: string,
   mimeType: string = "image/png"
-): Promise<{ url: string; thumbnailUrl?: string }> {
+): Promise<{ url: string; thumbnailUrl?: string; blurDataUrl?: string }> {
   try {
+    const sharp = (await import('sharp')).default;
+    
     // Convert base64 to buffer
-    const imageBuffer = Buffer.from(imageBase64, 'base64');
+    const originalBuffer = Buffer.from(imageBase64, 'base64');
     
-    // Upload to public directory using ObjectStorageService
-    const filePath = `ai-generated/${fileName}`;
+    // Get image metadata
+    const metadata = await sharp(originalBuffer).metadata();
+    console.log(`[Nano Banana Pro] Original image: ${metadata.width}x${metadata.height}, format: ${metadata.format}`);
     
-    // Upload file as public
-    const result = await objectStorageService.uploadFile(
-      filePath,
-      imageBuffer,
-      mimeType,
-      "public" // Make it public
+    // Generate base filename without extension
+    const baseName = fileName.replace(/\.(png|jpg|jpeg|webp)$/i, '');
+    const timestamp = Date.now();
+    const uniqueBase = `${baseName}_${timestamp}`;
+    
+    // Convert to WebP with smart compression (maintains quality, reduces size by ~30-50%)
+    const webpBuffer = await sharp(originalBuffer)
+      .webp({ 
+        quality: 85,
+        effort: 6,
+        smartSubsample: true
+      })
+      .toBuffer();
+    
+    // Generate thumbnail (640x360 for 16:9 ratio)
+    const thumbnailBuffer = await sharp(originalBuffer)
+      .resize(640, 360, { fit: 'cover', position: 'center' })
+      .webp({ quality: 80 })
+      .toBuffer();
+    
+    // Generate tiny blur placeholder (20px wide, very low quality)
+    const blurBuffer = await sharp(originalBuffer)
+      .resize(20, 11, { fit: 'cover' })
+      .blur(2)
+      .webp({ quality: 20 })
+      .toBuffer();
+    const blurDataUrl = `data:image/webp;base64,${blurBuffer.toString('base64')}`;
+    
+    console.log(`[Nano Banana Pro] Compression: ${originalBuffer.length} -> ${webpBuffer.length} bytes (${Math.round((1 - webpBuffer.length/originalBuffer.length) * 100)}% reduction)`);
+    
+    // Create distinct filenames for each asset
+    const mainFileName = `${uniqueBase}.webp`;
+    const thumbFileName = `${uniqueBase}_thumb.webp`;
+    
+    // Upload main WebP image
+    const mainPath = `ai-generated/${mainFileName}`;
+    await objectStorageService.uploadFile(
+      mainPath,
+      webpBuffer,
+      "image/webp",
+      "public"
     );
     
-    console.log(`[Nano Banana Pro] Image uploaded to GCS:`, result.url);
+    // Upload thumbnail
+    const thumbPath = `ai-generated/${thumbFileName}`;
+    await objectStorageService.uploadFile(
+      thumbPath,
+      thumbnailBuffer,
+      "image/webp",
+      "public"
+    );
     
-    // Return URL through our public-objects endpoint instead of direct GCS URL
-    // This ensures proper access control and avoids CORS/permission issues
-    const publicUrl = `/public-objects/${filePath}`;
-    console.log(`[Nano Banana Pro] Public URL: ${publicUrl}`);
+    const publicUrl = `/public-objects/${mainPath}`;
+    const thumbnailUrl = `/public-objects/${thumbPath}`;
+    
+    console.log(`[Nano Banana Pro] Optimized image uploaded: ${publicUrl}`);
+    console.log(`[Nano Banana Pro] Thumbnail uploaded: ${thumbnailUrl}`);
     
     return {
       url: publicUrl,
-      thumbnailUrl: publicUrl // Same URL for now
+      thumbnailUrl,
+      blurDataUrl
     };
   } catch (error: any) {
-    console.error(`[Nano Banana Pro] Upload failed:`, error);
-    throw new Error(`Failed to upload image: ${error.message}`);
+    console.error(`[Nano Banana Pro] Upload/optimization failed:`, error);
+    
+    // Fallback: Upload without optimization - preserve original format
+    try {
+      const imageBuffer = Buffer.from(imageBase64, 'base64');
+      const timestamp = Date.now();
+      const baseName = fileName.replace(/\.(png|jpg|jpeg|webp)$/i, '');
+      const ext = fileName.match(/\.(png|jpg|jpeg|webp)$/i)?.[1] || 'png';
+      const fallbackFileName = `${baseName}_${timestamp}.${ext}`;
+      const filePath = `ai-generated/${fallbackFileName}`;
+      await objectStorageService.uploadFile(filePath, imageBuffer, mimeType, "public");
+      const publicUrl = `/public-objects/${filePath}`;
+      return { url: publicUrl, thumbnailUrl: publicUrl };
+    } catch (fallbackError: any) {
+      throw new Error(`Failed to upload image: ${fallbackError.message}`);
+    }
   }
 }
 

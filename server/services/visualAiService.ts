@@ -331,6 +331,7 @@ export interface NewsImageGenerationResult {
   success: boolean;
   imageUrl?: string;
   thumbnailUrl?: string;
+  blurDataUrl?: string;
   generationTime?: number;
   cost?: number;
   error?: string;
@@ -410,17 +411,18 @@ Requirements:
       };
     }
     
-    // Upload to GCS
+    // Upload to GCS with WebP optimization and thumbnail generation
     const fileName = `news-${Date.now()}-${Math.random().toString(36).substring(7)}.png`;
     const { uploadImageToStorage } = await import("./nanoBananaService");
     const uploaded = await uploadImageToStorage(result.imageData, fileName);
     
-    console.log(`[Visual AI] News image generated in ${generationTime}ms`);
+    console.log(`[Visual AI] News image generated and optimized in ${generationTime}ms`);
     
     return {
       success: true,
       imageUrl: uploaded.url,
       thumbnailUrl: uploaded.thumbnailUrl,
+      blurDataUrl: uploaded.blurDataUrl,
       generationTime,
       cost: result.cost
     };

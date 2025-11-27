@@ -87,19 +87,62 @@ export class ObjectStorageService {
     return null;
   }
 
-  async downloadObject(file: File, res: Response, cacheTtlSec: number = 3600) {
+  async downloadObject(file: File, res: Response, cacheTtlSec?: number) {
     try {
       const [metadata] = await file.getMetadata();
       const aclPolicy = await getObjectAclPolicy(file);
       const isPublic = aclPolicy?.visibility === "public";
       
-      res.set({
-        "Content-Type": metadata.contentType || "application/octet-stream",
-        "Content-Length": metadata.size,
-        "Cache-Control": `${
-          isPublic ? "public" : "private"
-        }, max-age=${cacheTtlSec}`,
-      });
+      // Determine content type with validation
+      const contentType = metadata.contentType || "application/octet-stream";
+      
+      // Only treat as image if content type is explicitly an image type
+      const validImageTypes = [
+        'image/webp', 'image/png', 'image/jpeg', 'image/jpg', 
+        'image/gif', 'image/svg+xml', 'image/avif'
+      ];
+      const isImage = validImageTypes.includes(contentType.toLowerCase());
+      const isWebP = contentType.toLowerCase() === "image/webp";
+      
+      // Cache durations:
+      // - WebP images: 1 year (optimized, immutable content)
+      // - Other images: 1 week
+      // - Other files: 1 hour
+      let defaultCacheTtl = 3600; // 1 hour default
+      let useImmutable = false;
+      
+      if (isImage) {
+        if (isWebP) {
+          defaultCacheTtl = 31536000; // 1 year
+          useImmutable = true;
+        } else {
+          defaultCacheTtl = 604800; // 1 week
+        }
+      }
+      
+      const finalCacheTtl = cacheTtlSec ?? defaultCacheTtl;
+      
+      const headers: Record<string, string | number> = {
+        "Content-Type": contentType,
+        "Cache-Control": `${isPublic ? "public" : "private"}, max-age=${finalCacheTtl}${useImmutable ? ", immutable" : ""}`,
+      };
+      
+      // Add Content-Length if available
+      if (metadata.size) {
+        headers["Content-Length"] = metadata.size;
+      }
+      
+      // Add ETag for conditional requests (helps with caching validation)
+      if (metadata.etag) {
+        headers["ETag"] = metadata.etag;
+      }
+      
+      // Add Vary header for content negotiation on images
+      if (isImage) {
+        headers["Vary"] = "Accept";
+      }
+      
+      res.set(headers);
 
       const stream = file.createReadStream();
 
