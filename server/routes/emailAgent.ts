@@ -6,6 +6,8 @@ import { storage } from "../storage";
 import { analyzeAndEditWithSabqStyle, detectLanguage, normalizeLanguageCode } from "../ai/contentAnalyzer";
 import { objectStorageClient } from "../objectStorage";
 import { nanoid } from "nanoid";
+import { isAuthenticated } from "../auth";
+import { requireRole, requirePermission } from "../rbac";
 
 const router = Router();
 
@@ -1063,8 +1065,8 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/email-agent/stats - Get email agent statistics
-router.get("/stats", async (req: Request, res: Response) => {
+// GET /api/email-agent/stats - Get email agent statistics (admin only)
+router.get("/stats", isAuthenticated, requirePermission('admin.manage_settings'), async (req: Request, res: Response) => {
   try {
     // Calculate stats directly from webhook logs for today
     const today = new Date();
@@ -1105,8 +1107,8 @@ router.get("/stats", async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/email-agent/badge-stats - Get badge notification statistics
-router.get("/badge-stats", async (req: Request, res: Response) => {
+// GET /api/email-agent/badge-stats - Get badge notification statistics (admin only)
+router.get("/badge-stats", isAuthenticated, requirePermission('admin.manage_settings'), async (req: Request, res: Response) => {
   try {
     // Calculate today's date range
     const today = new Date();
@@ -1133,8 +1135,8 @@ router.get("/badge-stats", async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/email-agent/senders - Get all trusted senders
-router.get("/senders", async (req: Request, res: Response) => {
+// GET /api/email-agent/senders - Get all trusted senders (admin only)
+router.get("/senders", isAuthenticated, requirePermission('admin.manage_settings'), async (req: Request, res: Response) => {
   try {
     const senders = await storage.getTrustedSenders();
     return res.json(senders);
@@ -1147,8 +1149,8 @@ router.get("/senders", async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/email-agent/senders/:id - Get a specific trusted sender
-router.get("/senders/:id", async (req: Request, res: Response) => {
+// GET /api/email-agent/senders/:id - Get a specific trusted sender (admin only)
+router.get("/senders/:id", isAuthenticated, requirePermission('admin.manage_settings'), async (req: Request, res: Response) => {
   try {
     const sender = await storage.getTrustedSenderById(req.params.id);
     if (!sender) {
@@ -1164,25 +1166,10 @@ router.get("/senders/:id", async (req: Request, res: Response) => {
   }
 });
 
-// POST /api/email-agent/senders - Create a new trusted sender
-router.post("/senders", async (req: Request, res: Response) => {
+// POST /api/email-agent/senders - Create a new trusted sender (admin only)
+router.post("/senders", isAuthenticated, requirePermission('admin.manage_settings'), async (req: Request, res: Response) => {
   try {
     const userId = (req.user as any)?.id;
-    
-    if (!userId) {
-      const existingSenders = await storage.getTrustedSenders();
-      if (existingSenders.length > 0) {
-        return res.status(401).json({ 
-          message: "Unauthorized - Authentication required to add additional senders" 
-        });
-      }
-      
-      console.log("[Email Agent] Bootstrap mode: Creating first trusted sender without authentication");
-      const sender = await storage.createTrustedSender(req.body, null as any);
-      console.log("[Email Agent] First trusted sender created successfully:", sender.email);
-      return res.status(201).json(sender);
-    }
-
     const sender = await storage.createTrustedSender(req.body, userId);
     return res.status(201).json(sender);
   } catch (error: any) {
@@ -1194,14 +1181,9 @@ router.post("/senders", async (req: Request, res: Response) => {
   }
 });
 
-// PUT /api/email-agent/senders/:id - Update a trusted sender
-router.put("/senders/:id", async (req: Request, res: Response) => {
+// PUT /api/email-agent/senders/:id - Update a trusted sender (admin only)
+router.put("/senders/:id", isAuthenticated, requirePermission('admin.manage_settings'), async (req: Request, res: Response) => {
   try {
-    const userId = (req.user as any)?.id;
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
     const sender = await storage.updateTrustedSender(req.params.id, req.body);
     return res.json(sender);
   } catch (error: any) {
@@ -1213,14 +1195,9 @@ router.put("/senders/:id", async (req: Request, res: Response) => {
   }
 });
 
-// DELETE /api/email-agent/senders/:id - Delete a trusted sender
-router.delete("/senders/:id", async (req: Request, res: Response) => {
+// DELETE /api/email-agent/senders/:id - Delete a trusted sender (admin only)
+router.delete("/senders/:id", isAuthenticated, requirePermission('admin.manage_settings'), async (req: Request, res: Response) => {
   try {
-    const userId = (req.user as any)?.id;
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
     await storage.deleteTrustedSender(req.params.id);
     return res.json({ message: "Trusted sender deleted successfully" });
   } catch (error: any) {
@@ -1232,8 +1209,13 @@ router.delete("/senders/:id", async (req: Request, res: Response) => {
   }
 });
 
-// 🔍 Diagnostic endpoint - Test if webhooks can reach the server
+// 🔍 Diagnostic endpoint - Test if webhooks can reach the server (development only)
 router.post("/webhook-test", async (req: Request, res: Response) => {
+  // Only allow in development environment to prevent abuse in production
+  if (process.env.NODE_ENV === 'production' && !process.env.ENABLE_WEBHOOK_TEST) {
+    return res.status(404).json({ error: "Not found" });
+  }
+  
   console.log("🔍 [WEBHOOK TEST] ==================== START ====================");
   console.log("🔍 [WEBHOOK TEST] Received request!");
   console.log("🔍 [WEBHOOK TEST] Method:", req.method);
