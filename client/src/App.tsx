@@ -60,6 +60,7 @@ import DailyBrief from "@/pages/DailyBrief";
 import MomentByMoment from "@/pages/MomentByMoment";
 import ComingSoon from "@/pages/ComingSoon";
 import UserBehavior from "@/pages/UserBehavior";
+import AdvancedAnalytics from "@/pages/AdvancedAnalytics";
 import Notifications from "@/pages/Notifications";
 import NotificationAdmin from "@/pages/NotificationAdmin";
 import RecommendationSettings from "@/pages/recommendation-settings";
@@ -493,6 +494,7 @@ function Router() {
       <Route path="/dashboard/analytics" component={ComingSoon} />
       <Route path="/dashboard/analytics/trending" component={ComingSoon} />
       <Route path="/dashboard/analytics/behavior" component={UserBehavior} />
+      <Route path="/dashboard/analytics/advanced" component={AdvancedAnalytics} />
       <Route path="/dashboard/analytics/ab-tests/:id" component={ABTestDetail} />
       <Route path="/dashboard/analytics/ab-tests" component={ABTestsManagement} />
       <Route path="/dashboard/analytics/recommendations" component={RecommendationAnalytics} />

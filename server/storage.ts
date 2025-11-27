@@ -370,6 +370,14 @@ import {
   type InsertAiScheduledTask,
   // AI Image Generations
   aiImageGenerations,
+  readingSessions,
+  sectionAnalytics,
+  navigationPaths,
+  trafficSources,
+  hourlyEngagementRollups,
+  realTimeMetrics,
+  articleEngagementScores,
+  readerJourneyMilestones,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -1912,6 +1920,209 @@ export interface IStorage {
   updateIfoxEditorialCalendarEntry(id: string, data: Partial<InsertIfoxEditorialCalendar>): Promise<IfoxEditorialCalendar>;
   deleteIfoxEditorialCalendarEntry(id: string): Promise<void>;
   updateIfoxEditorialCalendarStatus(id: string, status: string, articleId?: string): Promise<IfoxEditorialCalendar>;
+  
+  // Advanced Reader Behavior Analytics
+  createReadingSession(data: {
+    sessionId: string;
+    userId?: string;
+    deviceType?: string;
+    platform?: string;
+    browser?: string;
+    screenWidth?: number;
+    screenHeight?: number;
+    referrerDomain?: string;
+    referrerUrl?: string;
+    utmSource?: string;
+    utmMedium?: string;
+    utmCampaign?: string;
+    utmTerm?: string;
+    utmContent?: string;
+    landingPage?: string;
+    isNewVisitor?: boolean;
+    country?: string;
+    city?: string;
+    language?: string;
+  }): Promise<{ id: string }>;
+  
+  endReadingSession(sessionId: string, data: {
+    exitPage?: string;
+    totalDurationMs?: number;
+    totalPagesViewed?: number;
+    totalArticlesRead?: number;
+  }): Promise<void>;
+  
+  recordSectionAnalytic(data: {
+    sessionId?: string;
+    articleId: string;
+    userId?: string;
+    sectionIndex: number;
+    sectionType?: string;
+    paragraphIndex?: number;
+    dwellTimeMs?: number;
+    scrollDepthStart?: number;
+    scrollDepthEnd?: number;
+    visibleTimeMs?: number;
+    heatScore?: number;
+    wasHighlighted?: boolean;
+    wasShared?: boolean;
+    interactionCount?: number;
+  }): Promise<void>;
+  
+  recordBatchSectionAnalytics(events: Array<{
+    sessionId?: string;
+    articleId: string;
+    userId?: string;
+    sectionIndex: number;
+    sectionType?: string;
+    paragraphIndex?: number;
+    dwellTimeMs?: number;
+    scrollDepthStart?: number;
+    scrollDepthEnd?: number;
+    visibleTimeMs?: number;
+    heatScore?: number;
+    wasHighlighted?: boolean;
+    wasShared?: boolean;
+    interactionCount?: number;
+  }>): Promise<void>;
+  
+  recordNavigationPath(data: {
+    sessionId: string;
+    userId?: string;
+    fromPageType?: string;
+    fromPageId?: string;
+    fromArticleId?: string;
+    fromCategoryId?: string;
+    toPageType: string;
+    toPageId?: string;
+    toArticleId?: string;
+    toCategoryId?: string;
+    transitionType?: string;
+    dwellTimeOnFromMs?: number;
+    scrollDepthOnFrom?: number;
+  }): Promise<void>;
+  
+  recordTrafficSource(data: {
+    sessionId: string;
+    sourceType: string;
+    sourceMedium?: string;
+    sourceChannel?: string;
+    referrerDomain?: string;
+    referrerPath?: string;
+    searchKeyword?: string;
+    socialPlatform?: string;
+    campaignName?: string;
+    campaignSource?: string;
+    articleId?: string;
+  }): Promise<void>;
+  
+  getAdvancedAnalyticsOverview(range: string): Promise<{
+    sessions: {
+      total: number;
+      uniqueUsers: number;
+      newVisitors: number;
+      returningVisitors: number;
+      avgDuration: number;
+      avgPagesPerSession: number;
+    };
+    engagement: {
+      avgScrollDepth: number;
+      avgTimeOnPage: number;
+      bounceRate: number;
+      completionRate: number;
+    };
+    topArticles: Array<{
+      articleId: string;
+      title: string;
+      views: number;
+      avgTimeOnPage: number;
+      engagementScore: number;
+    }>;
+    topCategories: Array<{
+      categoryId: string;
+      name: string;
+      views: number;
+      avgEngagement: number;
+    }>;
+  }>;
+  
+  getArticleHeatmap(articleId: string): Promise<Array<{
+    sectionIndex: number;
+    avgDwellTime: number;
+    avgScrollDepth: number;
+    heatScore: number;
+    viewCount: number;
+  }>>;
+  
+  getNavigationPaths(range: string, limit: number): Promise<Array<{
+    fromPage: string;
+    toPage: string;
+    count: number;
+    avgDwellTime: number;
+  }>>;
+  
+  getTrafficSourcesAnalytics(range: string): Promise<{
+    byType: Array<{ type: string; count: number; percentage: number }>;
+    bySocial: Array<{ platform: string; count: number; percentage: number }>;
+    byReferrer: Array<{ domain: string; count: number; percentage: number }>;
+  }>;
+  
+  getPeakHoursAnalytics(range: string): Promise<{
+    hourly: Array<{ hour: number; count: number; avgEngagement: number }>;
+    daily: Array<{ day: string; count: number; avgEngagement: number }>;
+  }>;
+  
+  getRealTimeMetrics(): Promise<{
+    activeUsers: number;
+    currentPageViews: number;
+    topCurrentArticles: Array<{ articleId: string; title: string; viewers: number }>;
+    recentEvents: Array<{ type: string; count: number; trend: number }>;
+  }>;
+  
+  getTopEngagementScores(limit: number, sortBy: string): Promise<Array<{
+    articleId: string;
+    title: string;
+    overallScore: number;
+    engagementRate: number;
+    avgTimeOnPage: number;
+    avgScrollDepth: number;
+    uniqueVisitors: number;
+  }>>;
+  
+  getCategoryAnalytics(range: string): Promise<Array<{
+    categoryId: string;
+    name: string;
+    articleCount: number;
+    totalViews: number;
+    avgEngagement: number;
+    topArticle: string | null;
+  }>>;
+  
+  getDeviceAnalytics(range: string): Promise<{
+    byDevice: Array<{ device: string; count: number; percentage: number }>;
+    byPlatform: Array<{ platform: string; count: number; percentage: number }>;
+    byBrowser: Array<{ browser: string; count: number; percentage: number }>;
+  }>;
+  
+  getArticleEngagementDetails(articleId: string): Promise<{
+    score: number | null;
+    metrics: {
+      avgTimeOnPage: number;
+      avgScrollDepth: number;
+      bounceRate: number;
+      shareCount: number;
+      commentCount: number;
+      reactionCount: number;
+      bookmarkCount: number;
+      uniqueVisitors: number;
+      returningVisitors: number;
+    };
+    peakHour: number | null;
+    topReferrer: string | null;
+    topDevice: string | null;
+  }>;
+  
+  calculateArticleEngagementScore(articleId: string): Promise<void>;
+  calculateAllEngagementScores(): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -16452,6 +16663,805 @@ export class DatabaseStorage implements IStorage {
       .where(eq(ifoxEditorialCalendar.id, id))
       .returning();
     return updated;
+  }
+  
+  // ============================================
+  // ADVANCED READER BEHAVIOR ANALYTICS
+  // ============================================
+  
+  async createReadingSession(data: {
+    sessionId: string;
+    userId?: string;
+    deviceType?: string;
+    platform?: string;
+    browser?: string;
+    screenWidth?: number;
+    screenHeight?: number;
+    referrerDomain?: string;
+    referrerUrl?: string;
+    utmSource?: string;
+    utmMedium?: string;
+    utmCampaign?: string;
+    utmTerm?: string;
+    utmContent?: string;
+    landingPage?: string;
+    isNewVisitor?: boolean;
+    country?: string;
+    city?: string;
+    language?: string;
+  }): Promise<{ id: string }> {
+    const [session] = await db
+      .insert(readingSessions)
+      .values(data)
+      .returning({ id: readingSessions.id });
+    return session;
+  }
+  
+  async endReadingSession(sessionId: string, data: {
+    exitPage?: string;
+    totalDurationMs?: number;
+    totalPagesViewed?: number;
+    totalArticlesRead?: number;
+  }): Promise<void> {
+    await db
+      .update(readingSessions)
+      .set({
+        endedAt: new Date(),
+        ...data,
+      })
+      .where(eq(readingSessions.sessionId, sessionId));
+  }
+  
+  async recordSectionAnalytic(data: {
+    sessionId?: string;
+    articleId: string;
+    userId?: string;
+    sectionIndex: number;
+    sectionType?: string;
+    paragraphIndex?: number;
+    dwellTimeMs?: number;
+    scrollDepthStart?: number;
+    scrollDepthEnd?: number;
+    visibleTimeMs?: number;
+    heatScore?: number;
+    wasHighlighted?: boolean;
+    wasShared?: boolean;
+    interactionCount?: number;
+  }): Promise<void> {
+    await db.insert(sectionAnalytics).values(data);
+  }
+  
+  async recordBatchSectionAnalytics(events: Array<{
+    sessionId?: string;
+    articleId: string;
+    userId?: string;
+    sectionIndex: number;
+    sectionType?: string;
+    paragraphIndex?: number;
+    dwellTimeMs?: number;
+    scrollDepthStart?: number;
+    scrollDepthEnd?: number;
+    visibleTimeMs?: number;
+    heatScore?: number;
+    wasHighlighted?: boolean;
+    wasShared?: boolean;
+    interactionCount?: number;
+  }>): Promise<void> {
+    if (events.length === 0) return;
+    await db.insert(sectionAnalytics).values(events);
+  }
+  
+  async recordNavigationPath(data: {
+    sessionId: string;
+    userId?: string;
+    fromPageType?: string;
+    fromPageId?: string;
+    fromArticleId?: string;
+    fromCategoryId?: string;
+    toPageType: string;
+    toPageId?: string;
+    toArticleId?: string;
+    toCategoryId?: string;
+    transitionType?: string;
+    dwellTimeOnFromMs?: number;
+    scrollDepthOnFrom?: number;
+  }): Promise<void> {
+    await db.insert(navigationPaths).values(data);
+  }
+  
+  async recordTrafficSource(data: {
+    sessionId: string;
+    sourceType: string;
+    sourceMedium?: string;
+    sourceChannel?: string;
+    referrerDomain?: string;
+    referrerPath?: string;
+    searchKeyword?: string;
+    socialPlatform?: string;
+    campaignName?: string;
+    campaignSource?: string;
+    articleId?: string;
+  }): Promise<void> {
+    await db.insert(trafficSources).values(data);
+  }
+  
+  async getAdvancedAnalyticsOverview(range: string): Promise<{
+    sessions: {
+      total: number;
+      uniqueUsers: number;
+      newVisitors: number;
+      returningVisitors: number;
+      avgDuration: number;
+      avgPagesPerSession: number;
+    };
+    engagement: {
+      avgScrollDepth: number;
+      avgTimeOnPage: number;
+      bounceRate: number;
+      completionRate: number;
+    };
+    topArticles: Array<{
+      articleId: string;
+      title: string;
+      views: number;
+      avgTimeOnPage: number;
+      engagementScore: number;
+    }>;
+    topCategories: Array<{
+      categoryId: string;
+      name: string;
+      views: number;
+      avgEngagement: number;
+    }>;
+  }> {
+    const days = parseInt(range) || 7;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    
+    // Session stats
+    const sessionStats = await db
+      .select({
+        total: sql<number>`count(*)::int`,
+        uniqueUsers: sql<number>`count(distinct ${readingSessions.userId})::int`,
+        newVisitors: sql<number>`count(case when ${readingSessions.isNewVisitor} = true then 1 end)::int`,
+        avgDuration: sql<number>`coalesce(avg(${readingSessions.totalDurationMs}), 0)::int`,
+        avgPages: sql<number>`coalesce(avg(${readingSessions.totalPagesViewed}), 0)::float`,
+      })
+      .from(readingSessions)
+      .where(gte(readingSessions.startedAt, startDate));
+    
+    const stats = sessionStats[0] || { total: 0, uniqueUsers: 0, newVisitors: 0, avgDuration: 0, avgPages: 0 };
+    
+    // Engagement stats from reading history
+    const engagementStats = await db
+      .select({
+        avgScrollDepth: sql<number>`coalesce(avg(${readingHistory.scrollDepth}), 0)::float`,
+        avgTimeOnPage: sql<number>`coalesce(avg(${readingHistory.readDuration}), 0)::int`,
+        completionRate: sql<number>`coalesce(avg(${readingHistory.completionRate}), 0)::float`,
+      })
+      .from(readingHistory)
+      .where(gte(readingHistory.readAt, startDate));
+    
+    const engagement = engagementStats[0] || { avgScrollDepth: 0, avgTimeOnPage: 0, completionRate: 0 };
+    
+    // Top articles
+    const topArticlesData = await db
+      .select({
+        articleId: readingHistory.articleId,
+        title: articles.title,
+        views: sql<number>`count(*)::int`,
+        avgTimeOnPage: sql<number>`coalesce(avg(${readingHistory.readDuration}), 0)::int`,
+        engagementScore: sql<number>`coalesce(avg(${readingHistory.engagementScore}), 0)::float`,
+      })
+      .from(readingHistory)
+      .innerJoin(articles, eq(readingHistory.articleId, articles.id))
+      .where(gte(readingHistory.readAt, startDate))
+      .groupBy(readingHistory.articleId, articles.title)
+      .orderBy(desc(sql`count(*)`))
+      .limit(10);
+    
+    // Top categories
+    const topCategoriesData = await db
+      .select({
+        categoryId: articles.categoryId,
+        name: categories.nameAr,
+        views: sql<number>`count(*)::int`,
+        avgEngagement: sql<number>`coalesce(avg(${readingHistory.engagementScore}), 0)::float`,
+      })
+      .from(readingHistory)
+      .innerJoin(articles, eq(readingHistory.articleId, articles.id))
+      .leftJoin(categories, eq(articles.categoryId, categories.id))
+      .where(gte(readingHistory.readAt, startDate))
+      .groupBy(articles.categoryId, categories.nameAr)
+      .orderBy(desc(sql`count(*)`))
+      .limit(10);
+    
+    return {
+      sessions: {
+        total: stats.total,
+        uniqueUsers: stats.uniqueUsers,
+        newVisitors: stats.newVisitors,
+        returningVisitors: stats.total - stats.newVisitors,
+        avgDuration: stats.avgDuration,
+        avgPagesPerSession: Number(stats.avgPages.toFixed(2)),
+      },
+      engagement: {
+        avgScrollDepth: Number(engagement.avgScrollDepth.toFixed(2)),
+        avgTimeOnPage: engagement.avgTimeOnPage,
+        bounceRate: 0,
+        completionRate: Number(engagement.completionRate.toFixed(2)),
+      },
+      topArticles: topArticlesData.map(a => ({
+        articleId: a.articleId,
+        title: a.title || '',
+        views: a.views,
+        avgTimeOnPage: a.avgTimeOnPage,
+        engagementScore: Number(a.engagementScore.toFixed(3)),
+      })),
+      topCategories: topCategoriesData.map(c => ({
+        categoryId: c.categoryId || '',
+        name: c.name || 'غير مصنف',
+        views: c.views,
+        avgEngagement: Number(c.avgEngagement.toFixed(3)),
+      })),
+    };
+  }
+  
+  async getArticleHeatmap(articleId: string): Promise<Array<{
+    sectionIndex: number;
+    avgDwellTime: number;
+    avgScrollDepth: number;
+    heatScore: number;
+    viewCount: number;
+  }>> {
+    const heatmapData = await db
+      .select({
+        sectionIndex: sectionAnalytics.sectionIndex,
+        avgDwellTime: sql<number>`coalesce(avg(${sectionAnalytics.dwellTimeMs}), 0)::int`,
+        avgScrollDepth: sql<number>`coalesce(avg((${sectionAnalytics.scrollDepthStart} + ${sectionAnalytics.scrollDepthEnd}) / 2), 0)::float`,
+        heatScore: sql<number>`coalesce(avg(${sectionAnalytics.heatScore}), 0)::float`,
+        viewCount: sql<number>`count(*)::int`,
+      })
+      .from(sectionAnalytics)
+      .where(eq(sectionAnalytics.articleId, articleId))
+      .groupBy(sectionAnalytics.sectionIndex)
+      .orderBy(asc(sectionAnalytics.sectionIndex));
+    
+    return heatmapData.map(h => ({
+      sectionIndex: h.sectionIndex,
+      avgDwellTime: h.avgDwellTime,
+      avgScrollDepth: Number(h.avgScrollDepth.toFixed(2)),
+      heatScore: Number(h.heatScore.toFixed(3)),
+      viewCount: h.viewCount,
+    }));
+  }
+  
+  async getNavigationPaths(range: string, limit: number): Promise<Array<{
+    fromPage: string;
+    toPage: string;
+    count: number;
+    avgDwellTime: number;
+  }>> {
+    const days = parseInt(range) || 7;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    
+    const pathsData = await db
+      .select({
+        fromPage: sql<string>`coalesce(${navigationPaths.fromPageType}, 'direct')`,
+        toPage: navigationPaths.toPageType,
+        count: sql<number>`count(*)::int`,
+        avgDwellTime: sql<number>`coalesce(avg(${navigationPaths.dwellTimeOnFromMs}), 0)::int`,
+      })
+      .from(navigationPaths)
+      .where(gte(navigationPaths.occurredAt, startDate))
+      .groupBy(navigationPaths.fromPageType, navigationPaths.toPageType)
+      .orderBy(desc(sql`count(*)`))
+      .limit(limit);
+    
+    return pathsData.map(p => ({
+      fromPage: p.fromPage,
+      toPage: p.toPage || '',
+      count: p.count,
+      avgDwellTime: p.avgDwellTime,
+    }));
+  }
+  
+  async getTrafficSourcesAnalytics(range: string): Promise<{
+    byType: Array<{ type: string; count: number; percentage: number }>;
+    bySocial: Array<{ platform: string; count: number; percentage: number }>;
+    byReferrer: Array<{ domain: string; count: number; percentage: number }>;
+  }> {
+    const days = parseInt(range) || 7;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    
+    // By source type
+    const byTypeData = await db
+      .select({
+        type: trafficSources.sourceType,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(trafficSources)
+      .where(gte(trafficSources.createdAt, startDate))
+      .groupBy(trafficSources.sourceType)
+      .orderBy(desc(sql`count(*)`));
+    
+    const totalType = byTypeData.reduce((sum, t) => sum + t.count, 0);
+    
+    // By social platform
+    const bySocialData = await db
+      .select({
+        platform: trafficSources.socialPlatform,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(trafficSources)
+      .where(and(
+        gte(trafficSources.createdAt, startDate),
+        isNotNull(trafficSources.socialPlatform)
+      ))
+      .groupBy(trafficSources.socialPlatform)
+      .orderBy(desc(sql`count(*)`));
+    
+    const totalSocial = bySocialData.reduce((sum, s) => sum + s.count, 0);
+    
+    // By referrer domain
+    const byReferrerData = await db
+      .select({
+        domain: trafficSources.referrerDomain,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(trafficSources)
+      .where(and(
+        gte(trafficSources.createdAt, startDate),
+        isNotNull(trafficSources.referrerDomain)
+      ))
+      .groupBy(trafficSources.referrerDomain)
+      .orderBy(desc(sql`count(*)`))
+      .limit(20);
+    
+    const totalReferrer = byReferrerData.reduce((sum, r) => sum + r.count, 0);
+    
+    return {
+      byType: byTypeData.map(t => ({
+        type: t.type || 'unknown',
+        count: t.count,
+        percentage: totalType > 0 ? Number(((t.count / totalType) * 100).toFixed(1)) : 0,
+      })),
+      bySocial: bySocialData.map(s => ({
+        platform: s.platform || 'unknown',
+        count: s.count,
+        percentage: totalSocial > 0 ? Number(((s.count / totalSocial) * 100).toFixed(1)) : 0,
+      })),
+      byReferrer: byReferrerData.map(r => ({
+        domain: r.domain || 'direct',
+        count: r.count,
+        percentage: totalReferrer > 0 ? Number(((r.count / totalReferrer) * 100).toFixed(1)) : 0,
+      })),
+    };
+  }
+  
+  async getPeakHoursAnalytics(range: string): Promise<{
+    hourly: Array<{ hour: number; count: number; avgEngagement: number }>;
+    daily: Array<{ day: string; count: number; avgEngagement: number }>;
+  }> {
+    const days = parseInt(range) || 7;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    
+    // Hourly distribution
+    const hourlyData = await db
+      .select({
+        hour: sql<number>`extract(hour from ${readingHistory.readAt})::int`,
+        count: sql<number>`count(*)::int`,
+        avgEngagement: sql<number>`coalesce(avg(${readingHistory.engagementScore}), 0)::float`,
+      })
+      .from(readingHistory)
+      .where(gte(readingHistory.readAt, startDate))
+      .groupBy(sql`extract(hour from ${readingHistory.readAt})`)
+      .orderBy(sql`extract(hour from ${readingHistory.readAt})`);
+    
+    // Daily distribution
+    const dailyData = await db
+      .select({
+        day: sql<string>`to_char(${readingHistory.readAt}, 'Day')`,
+        count: sql<number>`count(*)::int`,
+        avgEngagement: sql<number>`coalesce(avg(${readingHistory.engagementScore}), 0)::float`,
+      })
+      .from(readingHistory)
+      .where(gte(readingHistory.readAt, startDate))
+      .groupBy(sql`to_char(${readingHistory.readAt}, 'Day')`)
+      .orderBy(sql`min(extract(dow from ${readingHistory.readAt}))`);
+    
+    return {
+      hourly: hourlyData.map(h => ({
+        hour: h.hour,
+        count: h.count,
+        avgEngagement: Number(h.avgEngagement.toFixed(3)),
+      })),
+      daily: dailyData.map(d => ({
+        day: d.day.trim(),
+        count: d.count,
+        avgEngagement: Number(d.avgEngagement.toFixed(3)),
+      })),
+    };
+  }
+  
+  async getRealTimeMetrics(): Promise<{
+    activeUsers: number;
+    currentPageViews: number;
+    topCurrentArticles: Array<{ articleId: string; title: string; viewers: number }>;
+    recentEvents: Array<{ type: string; count: number; trend: number }>;
+  }> {
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+    
+    // Active sessions in last 5 minutes
+    const [activeStats] = await db
+      .select({
+        activeUsers: sql<number>`count(distinct ${readingSessions.userId})::int`,
+        currentPageViews: sql<number>`sum(${readingSessions.totalPagesViewed})::int`,
+      })
+      .from(readingSessions)
+      .where(and(
+        gte(readingSessions.startedAt, fiveMinutesAgo),
+        isNull(readingSessions.endedAt)
+      ));
+    
+    // Top current articles
+    const topArticles = await db
+      .select({
+        articleId: readingHistory.articleId,
+        title: articles.title,
+        viewers: sql<number>`count(distinct ${readingHistory.userId})::int`,
+      })
+      .from(readingHistory)
+      .innerJoin(articles, eq(readingHistory.articleId, articles.id))
+      .where(gte(readingHistory.readAt, fiveMinutesAgo))
+      .groupBy(readingHistory.articleId, articles.title)
+      .orderBy(desc(sql`count(distinct ${readingHistory.userId})`))
+      .limit(5);
+    
+    // Recent events comparison
+    const [currentEvents] = await db
+      .select({
+        reads: sql<number>`count(*)::int`,
+      })
+      .from(readingHistory)
+      .where(gte(readingHistory.readAt, fiveMinutesAgo));
+    
+    const [previousEvents] = await db
+      .select({
+        reads: sql<number>`count(*)::int`,
+      })
+      .from(readingHistory)
+      .where(and(
+        gte(readingHistory.readAt, tenMinutesAgo),
+        lt(readingHistory.readAt, fiveMinutesAgo)
+      ));
+    
+    const currentReads = currentEvents?.reads || 0;
+    const previousReads = previousEvents?.reads || 0;
+    const trend = previousReads > 0 ? ((currentReads - previousReads) / previousReads) * 100 : 0;
+    
+    return {
+      activeUsers: activeStats?.activeUsers || 0,
+      currentPageViews: activeStats?.currentPageViews || 0,
+      topCurrentArticles: topArticles.map(a => ({
+        articleId: a.articleId,
+        title: a.title || '',
+        viewers: a.viewers,
+      })),
+      recentEvents: [
+        { type: 'reads', count: currentReads, trend: Number(trend.toFixed(1)) },
+      ],
+    };
+  }
+  
+  async getTopEngagementScores(limit: number, sortBy: string): Promise<Array<{
+    articleId: string;
+    title: string;
+    overallScore: number;
+    engagementRate: number;
+    avgTimeOnPage: number;
+    avgScrollDepth: number;
+    uniqueVisitors: number;
+  }>> {
+    const orderByColumn = sortBy === 'engagementRate' 
+      ? articleEngagementScores.engagementRate 
+      : articleEngagementScores.overallScore;
+    
+    const scores = await db
+      .select({
+        articleId: articleEngagementScores.articleId,
+        title: articles.title,
+        overallScore: articleEngagementScores.overallScore,
+        engagementRate: articleEngagementScores.engagementRate,
+        avgTimeOnPage: articleEngagementScores.avgTimeOnPage,
+        avgScrollDepth: articleEngagementScores.avgScrollDepth,
+        uniqueVisitors: articleEngagementScores.uniqueVisitors,
+      })
+      .from(articleEngagementScores)
+      .innerJoin(articles, eq(articleEngagementScores.articleId, articles.id))
+      .orderBy(desc(orderByColumn))
+      .limit(limit);
+    
+    return scores.map(s => ({
+      articleId: s.articleId,
+      title: s.title || '',
+      overallScore: Number(s.overallScore?.toFixed(3) || 0),
+      engagementRate: Number(s.engagementRate?.toFixed(3) || 0),
+      avgTimeOnPage: s.avgTimeOnPage || 0,
+      avgScrollDepth: Number(s.avgScrollDepth?.toFixed(2) || 0),
+      uniqueVisitors: s.uniqueVisitors || 0,
+    }));
+  }
+  
+  async getCategoryAnalytics(range: string): Promise<Array<{
+    categoryId: string;
+    name: string;
+    articleCount: number;
+    totalViews: number;
+    avgEngagement: number;
+    topArticle: string | null;
+  }>> {
+    const days = parseInt(range) || 7;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    
+    const categoryData = await db
+      .select({
+        categoryId: categories.id,
+        name: categories.nameAr,
+        articleCount: sql<number>`count(distinct ${articles.id})::int`,
+        totalViews: sql<number>`count(${readingHistory.id})::int`,
+        avgEngagement: sql<number>`coalesce(avg(${readingHistory.engagementScore}), 0)::float`,
+      })
+      .from(categories)
+      .leftJoin(articles, eq(articles.categoryId, categories.id))
+      .leftJoin(readingHistory, and(
+        eq(readingHistory.articleId, articles.id),
+        gte(readingHistory.readAt, startDate)
+      ))
+      .groupBy(categories.id, categories.nameAr)
+      .orderBy(desc(sql`count(${readingHistory.id})`))
+      .limit(15);
+    
+    return categoryData.map(c => ({
+      categoryId: c.categoryId,
+      name: c.name || 'غير مصنف',
+      articleCount: c.articleCount,
+      totalViews: c.totalViews,
+      avgEngagement: Number(c.avgEngagement.toFixed(3)),
+      topArticle: null,
+    }));
+  }
+  
+  async getDeviceAnalytics(range: string): Promise<{
+    byDevice: Array<{ device: string; count: number; percentage: number }>;
+    byPlatform: Array<{ platform: string; count: number; percentage: number }>;
+    byBrowser: Array<{ browser: string; count: number; percentage: number }>;
+  }> {
+    const days = parseInt(range) || 7;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    
+    // By device type
+    const byDeviceData = await db
+      .select({
+        device: readingSessions.deviceType,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(readingSessions)
+      .where(gte(readingSessions.startedAt, startDate))
+      .groupBy(readingSessions.deviceType)
+      .orderBy(desc(sql`count(*)`));
+    
+    const totalDevice = byDeviceData.reduce((sum, d) => sum + d.count, 0);
+    
+    // By platform
+    const byPlatformData = await db
+      .select({
+        platform: readingSessions.platform,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(readingSessions)
+      .where(gte(readingSessions.startedAt, startDate))
+      .groupBy(readingSessions.platform)
+      .orderBy(desc(sql`count(*)`));
+    
+    const totalPlatform = byPlatformData.reduce((sum, p) => sum + p.count, 0);
+    
+    // By browser
+    const byBrowserData = await db
+      .select({
+        browser: readingSessions.browser,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(readingSessions)
+      .where(gte(readingSessions.startedAt, startDate))
+      .groupBy(readingSessions.browser)
+      .orderBy(desc(sql`count(*)`));
+    
+    const totalBrowser = byBrowserData.reduce((sum, b) => sum + b.count, 0);
+    
+    return {
+      byDevice: byDeviceData.map(d => ({
+        device: d.device || 'unknown',
+        count: d.count,
+        percentage: totalDevice > 0 ? Number(((d.count / totalDevice) * 100).toFixed(1)) : 0,
+      })),
+      byPlatform: byPlatformData.map(p => ({
+        platform: p.platform || 'unknown',
+        count: p.count,
+        percentage: totalPlatform > 0 ? Number(((p.count / totalPlatform) * 100).toFixed(1)) : 0,
+      })),
+      byBrowser: byBrowserData.map(b => ({
+        browser: b.browser || 'unknown',
+        count: b.count,
+        percentage: totalBrowser > 0 ? Number(((b.count / totalBrowser) * 100).toFixed(1)) : 0,
+      })),
+    };
+  }
+  
+  async getArticleEngagementDetails(articleId: string): Promise<{
+    score: number | null;
+    metrics: {
+      avgTimeOnPage: number;
+      avgScrollDepth: number;
+      bounceRate: number;
+      shareCount: number;
+      commentCount: number;
+      reactionCount: number;
+      bookmarkCount: number;
+      uniqueVisitors: number;
+      returningVisitors: number;
+    };
+    peakHour: number | null;
+    topReferrer: string | null;
+    topDevice: string | null;
+  }> {
+    const [scoreData] = await db
+      .select()
+      .from(articleEngagementScores)
+      .where(eq(articleEngagementScores.articleId, articleId));
+    
+    if (!scoreData) {
+      return {
+        score: null,
+        metrics: {
+          avgTimeOnPage: 0,
+          avgScrollDepth: 0,
+          bounceRate: 0,
+          shareCount: 0,
+          commentCount: 0,
+          reactionCount: 0,
+          bookmarkCount: 0,
+          uniqueVisitors: 0,
+          returningVisitors: 0,
+        },
+        peakHour: null,
+        topReferrer: null,
+        topDevice: null,
+      };
+    }
+    
+    return {
+      score: scoreData.overallScore,
+      metrics: {
+        avgTimeOnPage: scoreData.avgTimeOnPage || 0,
+        avgScrollDepth: scoreData.avgScrollDepth || 0,
+        bounceRate: scoreData.bounceRate || 0,
+        shareCount: scoreData.shareCount || 0,
+        commentCount: scoreData.commentCount || 0,
+        reactionCount: scoreData.reactionCount || 0,
+        bookmarkCount: scoreData.bookmarkCount || 0,
+        uniqueVisitors: scoreData.uniqueVisitors || 0,
+        returningVisitors: scoreData.returningVisitors || 0,
+      },
+      peakHour: scoreData.peakHour,
+      topReferrer: scoreData.topReferrer,
+      topDevice: scoreData.topDevice,
+    };
+  }
+  
+  async calculateArticleEngagementScore(articleId: string): Promise<void> {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    // Get reading history stats
+    const [readingStats] = await db
+      .select({
+        avgTimeOnPage: sql<number>`coalesce(avg(${readingHistory.readDuration}), 0)::int`,
+        avgScrollDepth: sql<number>`coalesce(avg(${readingHistory.scrollDepth}), 0)::float`,
+        avgEngagement: sql<number>`coalesce(avg(${readingHistory.engagementScore}), 0)::float`,
+        uniqueVisitors: sql<number>`count(distinct ${readingHistory.userId})::int`,
+      })
+      .from(readingHistory)
+      .where(and(
+        eq(readingHistory.articleId, articleId),
+        gte(readingHistory.readAt, thirtyDaysAgo)
+      ));
+    
+    // Get interaction counts
+    const [reactionData] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(reactions)
+      .where(eq(reactions.articleId, articleId));
+    
+    const [commentData] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(comments)
+      .where(eq(comments.articleId, articleId));
+    
+    const [bookmarkData] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(bookmarks)
+      .where(eq(bookmarks.articleId, articleId));
+    
+    // Calculate overall score (weighted average)
+    const avgTime = readingStats?.avgTimeOnPage || 0;
+    const avgScroll = readingStats?.avgScrollDepth || 0;
+    const avgEngagement = readingStats?.avgEngagement || 0;
+    const uniqueVisitors = readingStats?.uniqueVisitors || 0;
+    const reactionCount = reactionData?.count || 0;
+    const commentCount = commentData?.count || 0;
+    const bookmarkCount = bookmarkData?.count || 0;
+    
+    const overallScore = (
+      (avgEngagement * 0.3) +
+      ((avgScroll / 100) * 0.2) +
+      ((Math.min(avgTime, 300) / 300) * 0.2) +
+      (Math.min(reactionCount / 100, 1) * 0.1) +
+      (Math.min(commentCount / 20, 1) * 0.1) +
+      (Math.min(bookmarkCount / 50, 1) * 0.1)
+    );
+    
+    // Upsert the score
+    await db
+      .insert(articleEngagementScores)
+      .values({
+        articleId,
+        overallScore,
+        engagementRate: avgEngagement,
+        avgTimeOnPage: avgTime,
+        avgScrollDepth: avgScroll,
+        reactionCount,
+        commentCount,
+        bookmarkCount,
+        uniqueVisitors,
+        lastCalculated: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: articleEngagementScores.articleId,
+        set: {
+          overallScore,
+          engagementRate: avgEngagement,
+          avgTimeOnPage: avgTime,
+          avgScrollDepth: avgScroll,
+          reactionCount,
+          commentCount,
+          bookmarkCount,
+          uniqueVisitors,
+          lastCalculated: new Date(),
+        },
+      });
+  }
+  
+  async calculateAllEngagementScores(): Promise<void> {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    // Get all articles with recent activity
+    const recentArticles = await db
+      .select({ articleId: readingHistory.articleId })
+      .from(readingHistory)
+      .where(gte(readingHistory.readAt, thirtyDaysAgo))
+      .groupBy(readingHistory.articleId);
+    
+    for (const article of recentArticles) {
+      await this.calculateArticleEngagementScore(article.articleId);
+    }
   }
 }
 

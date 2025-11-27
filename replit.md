@@ -28,6 +28,7 @@ AI-generated images are automatically optimized through the following pipeline:
 -   **AI-Powered Recommendations:** Personalized article recommendations.
 -   **Content Management:** Lifecycle management for articles, news, users, and categories, with an advanced WYSIWYG editor and Smart Media Library.
 -   **Analytics Dashboards:** Trilingual AI Analytics Dashboard and a professional dashboard for KPIs.
+-   **Advanced Reader Behavior Analytics:** Comprehensive tracking of reading sessions, section-level engagement heatmaps, navigation paths between pages, traffic source attribution (direct/social/referrer), peak hours and daily distribution analysis, real-time active user metrics, device and browser analytics, and article engagement scoring system. Database tables: `reading_sessions`, `section_analytics`, `navigation_paths`, `traffic_sources`, `hourly_engagement_rollups`, `real_time_metrics`, `article_engagement_scores`.
 -   **AI Content Features:** AI article classification, multi-type article support, multilingual SEO generation, AI ChatBot Assistant, Audio Summary, Daily Briefs, Smart Content Generation System, Deep Analysis Engine (multi-model AI analysis), and AI Image Transparency System.
 -   **iFox Content Generator:** Automated AI content generation system for articles and images, including auto-publishing and notifications.
 -   **iFox Public Articles Page:** Public-facing page displaying AI-generated articles with URL-based category filtering.
