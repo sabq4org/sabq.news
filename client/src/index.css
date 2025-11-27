@@ -21,15 +21,15 @@
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
 
-  --background: 45 100% 96.86%;
+  --background: 60deg 6.67% 97.06%;
 
-  --foreground: 38.18 53.23% 24.31%;
+  --foreground: 220deg 19.48% 15.1%;
 
-  --border: 44.21 26.76% 86.08%;
+  --border: 220deg 13.04% 90.98%;
 
-  --card: 47.14 87.5% 96.86%;
+  --card: 0deg 0% 100%;
 
-  --card-foreground: 210 25% 7.8431%;
+  --card-foreground: 220deg 19.48% 15.1%;
 
   --card-border: 220 24% 88%;
 
@@ -49,31 +49,31 @@
 
   --sidebar-ring: 202.8169 89.1213% 53.1373%;
 
-  --popover: 0 0% 100%;
+  --popover: 0deg 0% 100%;
 
-  --popover-foreground: 210 25% 7.8431%;
+  --popover-foreground: 220deg 19.48% 15.1%;
 
   --popover-border: 220 24% 88%;
 
-  --primary: 38.23 87.6% 74.71%;
+  --primary: 219.8deg 84.17% 52.94%;
 
-  --primary-foreground: 39.27 43.31% 24.9%;
+  --primary-foreground: 0deg 0% 98.04%;
 
-  --secondary: 39.27 43.31% 24.9%;
+  --secondary: 220deg 9.68% 93.92%;
 
-  --secondary-foreground: 39.75 86.96% 81.96%;
+  --secondary-foreground: 217.89deg 14.96% 24.9%;
 
-  --muted: 38.4 60.98% 91.96%;
+  --muted: 220deg 100% 97.06%;
 
-  --muted-foreground: 38.18 53.23% 24.31%;
+  --muted-foreground: 220deg 9.8% 70%;
 
   --footer: 220 15% 30%;
 
   --footer-foreground: 0 0% 95%;
 
-  --accent: 74.4 39.68% 87.65%;
+  --accent: 220deg 24.59% 88.04%;
 
-  --accent-foreground: 91.43 10.55% 39.02%;
+  --accent-foreground: 220deg 19.48% 15.1%;
 
   --accent-blue: 220 84% 88%;
 
@@ -81,9 +81,9 @@
 
   --accent-green: 142 70% 86%;
 
-  --destructive: 0.49 54.19% 55.49%;
+  --destructive: 0deg 74.9% 50%;
 
-  --destructive-foreground: 0 0% 100%;
+  --destructive-foreground: 0deg 0% 98.04%;
 
   --success: 142 70% 45%;
 
@@ -97,13 +97,13 @@
 
   --info-foreground: 0 0% 98%;
 
-  --input: 44.21 26.76% 86.08%;
-  --ring: 39.27 43.31% 24.9%;
-  --chart-1: 203.8863 88.2845% 53.1373%;
-  --chart-2: 159.7826 100% 36.0784%;
-  --chart-3: 42.0290 92.8251% 56.2745%;
-  --chart-4: 147.1429 78.5047% 41.9608%;
-  --chart-5: 341.4894 75.2000% 50.9804%;
+  --input: 220deg 9.8% 70%;
+  --ring: 219.8deg 84.17% 52.94%;
+  --chart-1: 219.8deg 84.17% 52.94%;
+  --chart-2: 243.06deg 75.12% 59.02%;
+  --chart-3: 141.99deg 70.31% 44.9%;
+  --chart-4: 195.08deg 74.9% 50%;
+  --chart-5: 34.78deg 90.39% 55.1%;
 
   /* AI Accent Colors - Professional Blue Tones */
   --ai-primary: 220 84% 53%;
