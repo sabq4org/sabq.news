@@ -11,7 +11,7 @@ import { eq } from "drizzle-orm";
 // تم تغيير وقت الانتظار إلى 0 للنشر الفوري
 // الأخبار الطويلة ستُنشر عبر البريد الذكي بدلاً من ذلك
 const AGGREGATION_WINDOW_SECONDS = 0;
-const PROCESSING_INTERVAL_MS = 2000;
+const PROCESSING_INTERVAL_MS = 1000; // تقليل الفترة من 2 ثانية إلى 1 ثانية للرد السريع
 
 interface ProcessingContext {
   phoneNumber: string;

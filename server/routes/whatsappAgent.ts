@@ -1128,26 +1128,23 @@ router.post("/webhook", async (req: Request, res: Response) => {
       processingTimeMs: Date.now() - startTime,
     });
     
-    // Send confirmation message
-    if (isFirst) {
-      // First message - inform user about instant publishing
-      const confirmMessage = AGGREGATION_WINDOW_SECONDS === 0
-        ? `✅ تم استلام رسالتك\n\n⚡ سيتم النشر الفوري خلال ثوانٍ\n\n📎 يمكنك إرسال المزيد من الصور قبل النشر`
-        : `✅ تم استلام رسالتك\n\n📝 يمكنك إرسال المزيد من الرسائل أو الصور خلال ${AGGREGATION_WINDOW_SECONDS} ثانية\n\n💡 أرسل "إرسال" للنشر فوراً`;
-      await sendWhatsAppMessage({
-        to: phoneNumber,
-        body: confirmMessage,
-      });
-    } else {
-      // Additional parts - confirm receipt
-      const partsCount = pending.messageParts.length;
-      const mediaCount = pending.mediaUrls?.length || 0;
-      
-      await sendWhatsAppMessage({
-        to: phoneNumber,
-        body: `✅ تم إضافة الجزء ${partsCount}\n📎 الصور: ${mediaCount}\n\n💡 أرسل "إرسال" للنشر فوراً`,
-      });
+    // Skip confirmation message for instant publishing (AGGREGATION_WINDOW_SECONDS === 0)
+    // The publication link will be sent immediately after processing
+    if (AGGREGATION_WINDOW_SECONDS > 0) {
+      if (isFirst) {
+        await sendWhatsAppMessage({
+          to: phoneNumber,
+          body: `✅ تم استلام رسالتك\n📝 أرسل المزيد خلال ${AGGREGATION_WINDOW_SECONDS} ثانية أو "إرسال" للنشر`,
+        });
+      } else {
+        const partsCount = pending.messageParts.length;
+        await sendWhatsAppMessage({
+          to: phoneNumber,
+          body: `✅ تم إضافة الجزء ${partsCount} - أرسل "إرسال" للنشر`,
+        });
+      }
     }
+    // For instant publishing, no need for confirmation - link will arrive shortly
     
     console.log("[WhatsApp Agent] ============ WEBHOOK END (AGGREGATION) ============");
     return res.status(200).send('OK');

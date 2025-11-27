@@ -21,22 +21,57 @@ export interface SendWhatsAppMessageOptions {
   mediaUrl?: string;
 }
 
+export interface SendMessageResult {
+  success: boolean;
+  sid?: string;
+  status?: string;
+  error?: string;
+}
+
+async function sendWithRetry(
+  messageOptions: any, 
+  maxRetries: number = 3,
+  delayMs: number = 500
+): Promise<SendMessageResult> {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const message = await twilioClient!.messages.create(messageOptions);
+      return {
+        success: true,
+        sid: message.sid,
+        status: message.status
+      };
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      console.warn(`[WhatsApp Service] ⚠️ Attempt ${attempt}/${maxRetries} failed: ${lastError.message}`);
+      
+      if (attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, delayMs * attempt));
+      }
+    }
+  }
+  
+  return {
+    success: false,
+    error: lastError?.message || 'Unknown error after retries'
+  };
+}
+
 export async function sendWhatsAppMessage(options: SendWhatsAppMessageOptions): Promise<boolean> {
   if (!twilioClient || !whatsappNumber) {
     console.error('[WhatsApp Service] ❌ Twilio not configured');
-    console.error('[WhatsApp Service]   - twilioClient:', !!twilioClient);
-    console.error('[WhatsApp Service]   - whatsappNumber:', whatsappNumber);
     return false;
   }
 
+  const startTime = Date.now();
+  
   try {
     console.log(`[WhatsApp Service] 📨 Sending WhatsApp message...`);
-    console.log(`[WhatsApp Service]   - From: whatsapp:${whatsappNumber}`);
-    console.log(`[WhatsApp Service]   - To: whatsapp:${options.to}`);
-    console.log(`[WhatsApp Service]   - Body length: ${options.body.length} chars`);
-    console.log(`[WhatsApp Service]   - Full body: ${options.body}`);
+    console.log(`[WhatsApp Service]   - To: ${options.to}`);
+    console.log(`[WhatsApp Service]   - Body: ${options.body.substring(0, 100)}...`);
     
-    // Ensure phone number doesn't have duplicate whatsapp: prefix
     const toNumber = options.to.replace(/^whatsapp:/i, '');
     
     const messageOptions: any = {
@@ -47,25 +82,21 @@ export async function sendWhatsAppMessage(options: SendWhatsAppMessageOptions): 
 
     if (options.mediaUrl) {
       messageOptions.mediaUrl = [options.mediaUrl];
-      console.log(`[WhatsApp Service]   - Media URL: ${options.mediaUrl}`);
     }
 
-    console.log(`[WhatsApp Service] 🔄 Calling Twilio API...`);
-    console.log(`[WhatsApp Service]   - Final to: ${messageOptions.to}`);
-    const message = await twilioClient.messages.create(messageOptions);
+    const result = await sendWithRetry(messageOptions, 3, 300);
+    const elapsed = Date.now() - startTime;
     
-    console.log(`[WhatsApp Service] ✅ Message sent successfully:`);
-    console.log(`[WhatsApp Service]   - SID: ${message.sid}`);
-    console.log(`[WhatsApp Service]   - Status: ${message.status}`);
-    console.log(`[WhatsApp Service]   - To: ${message.to}`);
-    console.log(`[WhatsApp Service]   - Date sent: ${message.dateSent}`);
-    return true;
-  } catch (error) {
-    console.error('[WhatsApp Service] ❌ Failed to send message:', error instanceof Error ? error.message : error);
-    if (error instanceof Error) {
-      console.error('[WhatsApp Service] Error details:', error);
-      console.error('[WhatsApp Service] Stack:', error.stack);
+    if (result.success) {
+      console.log(`[WhatsApp Service] ✅ Message sent in ${elapsed}ms - SID: ${result.sid} - Status: ${result.status}`);
+      return true;
+    } else {
+      console.error(`[WhatsApp Service] ❌ Failed after retries (${elapsed}ms): ${result.error}`);
+      return false;
     }
+  } catch (error) {
+    const elapsed = Date.now() - startTime;
+    console.error(`[WhatsApp Service] ❌ Exception (${elapsed}ms):`, error instanceof Error ? error.message : error);
     return false;
   }
 }
