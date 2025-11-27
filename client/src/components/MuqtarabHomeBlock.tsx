@@ -104,7 +104,7 @@ export function MuqtarabHomeBlock() {
             const angleColor = topic.angle.colorHex || "#6366f1";
 
             return (
-              <Link key={topic.id} href={`/muqtarab/${topic.angle.slug}/${topic.slug}`}>
+              <Link key={topic.id} href={`/muqtarab/${topic.angle.slug}/topic/${topic.slug}`}>
                 <div
                   className="group relative rounded-2xl overflow-hidden hover-elevate active-elevate-2 cursor-pointer h-64"
                   data-testid={`muqtarab-topic-${topic.id}`}
