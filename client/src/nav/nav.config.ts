@@ -134,6 +134,14 @@ export const navConfig: NavItem[] = [
         roles: ["admin", "editor", "reviewer"],
       },
       {
+        id: "ai_moderation",
+        labelKey: "nav.ai_moderation",
+        labelAr: "الرقابة الذكية",
+        path: "/admin/comments/moderation",
+        icon: ShieldCheck,
+        roles: ["admin"],
+      },
+      {
         id: "muqtarab",
         labelKey: "nav.muqtarab",
         labelAr: "مُقترب",
