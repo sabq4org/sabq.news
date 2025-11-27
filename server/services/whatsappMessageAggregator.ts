@@ -182,15 +182,14 @@ async function processAggregatedMessage(pending: PendingWhatsappMessage): Promis
           // البحث عن الوسم أو إنشاؤه
           let existingTag = await db.select().from(tags).where(eq(tags.slug, tagSlug)).limit(1);
           
-          let tagId: number;
+          let tagId: string;
           if (existingTag.length > 0) {
             tagId = existingTag[0].id;
           } else {
             const [newTag] = await db.insert(tags).values({
-              slug: tagSlug,
               nameAr: cleanKeyword,
               nameEn: cleanKeyword,
-              nameUr: cleanKeyword,
+              slug: tagSlug,
             }).returning();
             tagId = newTag.id;
             console.log(`[WhatsApp Aggregator] Created new tag: ${cleanKeyword}`);
