@@ -587,6 +587,35 @@ export interface IStorage {
   rejectComment(commentId: string, moderatorId: string, reason?: string): Promise<Comment>;
   restoreComment(commentId: string): Promise<Comment>;
   
+  // AI Comment Moderation operations
+  getCommentById(commentId: string): Promise<Comment | undefined>;
+  updateCommentModeration(commentId: string, data: {
+    aiModerationScore?: number;
+    aiClassification?: string;
+    aiDetectedIssues?: string[];
+    aiModerationReason?: string;
+    aiAnalyzedAt?: Date;
+  }): Promise<void>;
+  updateCommentStatus(commentId: string, data: {
+    status: string;
+    moderatedBy?: string;
+    moderatedAt?: Date;
+    moderationReason?: string;
+  }): Promise<void>;
+  getCommentsForModeration(filters: {
+    classification?: string;
+    status?: string;
+    search?: string;
+    page: number;
+    limit: number;
+  }): Promise<{ comments: CommentWithUser[]; total: number }>;
+  getCommentModerationStats(): Promise<{
+    approvedToday: number;
+    pendingReview: number;
+    rejectedToday: number;
+    averageScore: number;
+  }>;
+  
   // Reaction operations
   toggleReaction(articleId: string, userId: string): Promise<{ hasReacted: boolean }>;
   getReactionsByArticle(articleId: string): Promise<number>;
@@ -3730,6 +3759,146 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return updated;
+  }
+
+  // AI Comment Moderation operations
+  async getCommentById(commentId: string): Promise<Comment | undefined> {
+    const [comment] = await db
+      .select()
+      .from(comments)
+      .where(eq(comments.id, commentId))
+      .limit(1);
+    return comment;
+  }
+
+  async updateCommentModeration(commentId: string, data: {
+    aiModerationScore?: number;
+    aiClassification?: string;
+    aiDetectedIssues?: string[];
+    aiModerationReason?: string;
+    aiAnalyzedAt?: Date;
+  }): Promise<void> {
+    await db
+      .update(comments)
+      .set({
+        aiModerationScore: data.aiModerationScore,
+        aiClassification: data.aiClassification,
+        aiDetectedIssues: data.aiDetectedIssues,
+        aiModerationReason: data.aiModerationReason,
+        aiAnalyzedAt: data.aiAnalyzedAt,
+      })
+      .where(eq(comments.id, commentId));
+  }
+
+  async updateCommentStatus(commentId: string, data: {
+    status: string;
+    moderatedBy?: string;
+    moderatedAt?: Date;
+    moderationReason?: string;
+  }): Promise<void> {
+    await db
+      .update(comments)
+      .set({
+        status: data.status,
+        moderatedBy: data.moderatedBy || null,
+        moderatedAt: data.moderatedAt || null,
+        moderationReason: data.moderationReason || null,
+      })
+      .where(eq(comments.id, commentId));
+  }
+
+  async getCommentsForModeration(filters: {
+    classification?: string;
+    status?: string;
+    search?: string;
+    page: number;
+    limit: number;
+  }): Promise<{ comments: CommentWithUser[]; total: number }> {
+    const conditions = [];
+    
+    if (filters.classification) {
+      conditions.push(eq(comments.aiClassification, filters.classification));
+    }
+    
+    if (filters.status) {
+      conditions.push(eq(comments.status, filters.status));
+    }
+    
+    if (filters.search) {
+      conditions.push(
+        sql`${comments.content} ILIKE ${'%' + filters.search + '%'}`
+      );
+    }
+    
+    const offset = (filters.page - 1) * filters.limit;
+    
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(comments)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+    
+    const results = await db
+      .select({
+        comment: comments,
+        user: users,
+      })
+      .from(comments)
+      .leftJoin(users, eq(comments.userId, users.id))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(comments.createdAt))
+      .limit(filters.limit)
+      .offset(offset);
+    
+    return {
+      comments: results.map((r) => ({
+        ...r.comment,
+        user: r.user!,
+      })),
+      total: Number(countResult.count),
+    };
+  }
+
+  async getCommentModerationStats(): Promise<{
+    approvedToday: number;
+    pendingReview: number;
+    rejectedToday: number;
+    averageScore: number;
+  }> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const [approvedResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(comments)
+      .where(and(
+        eq(comments.status, 'approved'),
+        sql`${comments.moderatedAt} >= ${today}`
+      ));
+    
+    const [pendingResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(comments)
+      .where(eq(comments.aiClassification, 'review'));
+    
+    const [rejectedResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(comments)
+      .where(and(
+        eq(comments.status, 'rejected'),
+        sql`${comments.moderatedAt} >= ${today}`
+      ));
+    
+    const [scoreResult] = await db
+      .select({ avg: sql<number>`COALESCE(AVG(${comments.aiModerationScore}), 0)` })
+      .from(comments)
+      .where(sql`${comments.aiModerationScore} IS NOT NULL`);
+    
+    return {
+      approvedToday: Number(approvedResult.count),
+      pendingReview: Number(pendingResult.count),
+      rejectedToday: Number(rejectedResult.count),
+      averageScore: Math.round(Number(scoreResult.avg)),
+    };
   }
 
   // Reaction operations

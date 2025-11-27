@@ -8,6 +8,7 @@ import { registerDataStoryRoutes } from './data-story-routes';
 import journalistAgentRoutes from './journalist-agent-routes';
 import emailAgentRoutes from './routes/emailAgent';
 import whatsappAgentRoutes from './routes/whatsappAgent';
+import commentModerationRoutes from './routes/commentModeration';
 import { startMessageAggregatorJob } from './services/whatsappMessageAggregator';
 import ifoxAiManagementRoutes from './routes/ifox/ai-management';
 import autoImageRoutes from './routes/autoImageRoutes';
@@ -27800,6 +27801,7 @@ Allow: /
   // Mount the WhatsApp agent webhook routes
   app.use("/api/whatsapp", whatsappAgentRoutes);
   // ============================================================
+  app.use('/api/moderation', commentModerationRoutes);
   // IFOX AI MANAGEMENT ROUTES
   // ============================================================
   

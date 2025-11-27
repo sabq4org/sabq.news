@@ -875,11 +875,18 @@ export const comments = pgTable("comments", {
   currentSentiment: text("current_sentiment"), // positive, neutral, negative (denormalized for performance)
   currentSentimentConfidence: real("current_sentiment_confidence"), // 0-1
   sentimentAnalyzedAt: timestamp("sentiment_analyzed_at"),
+  // AI Moderation fields - نظام الرقابة الذكية
+  aiModerationScore: integer("ai_moderation_score"), // 0-100
+  aiClassification: text("ai_classification"), // safe, review, reject
+  aiDetectedIssues: jsonb("ai_detected_issues").$type<string[]>(), // toxicity, hate_speech, spam, etc.
+  aiModerationReason: text("ai_moderation_reason"), // شرح سبب التصنيف
+  aiAnalyzedAt: timestamp("ai_analyzed_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_comments_article_status").on(table.articleId, table.status),
   index("idx_comments_user").on(table.userId),
   index("idx_comments_status").on(table.status),
+  index("idx_comments_ai_classification").on(table.aiClassification),
 ]);
 
 // Comment sentiment analysis (tracks sentiment history)
