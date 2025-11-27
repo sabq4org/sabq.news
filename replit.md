@@ -14,6 +14,15 @@ The platform utilizes an RTL-first design with custom light/dark theming, Arabic
 ### Technical Implementations
 The frontend uses Next.js 15, React 18, Vite, Wouter for routing, TypeScript, and TanStack Query. The backend is Express.js with TypeScript, exposing RESTful APIs. Authentication is handled by Passport.js (local, Google OAuth, Apple OAuth). PostgreSQL (Neon serverless) is the database, accessed via Drizzle ORM. Google Cloud Storage handles file storage, and Server-Sent Events (SSE) provide real-time features.
 
+### Image Optimization Pipeline
+AI-generated images are automatically optimized through the following pipeline:
+- **WebP Conversion**: Images converted to WebP with quality 85, effort 6, smart subsampling (~30-50% size reduction)
+- **Thumbnail Generation**: 640×360 WebP thumbnails at quality 80 for fast loading
+- **Blur Placeholder**: 20×11 base64 WebP blur data URL for progressive loading
+- **Unique Filenames**: Timestamp-based naming (`baseName_timestamp.webp`, `baseName_timestamp_thumb.webp`)
+- **Cache Headers**: WebP=1 year+immutable, other images=1 week, files=1 hour, with ETag support
+- **OptimizedImage Component**: CSS gradient shimmer placeholders, automatic WebP detection, srcset/sizes support, IntersectionObserver lazy loading
+
 ### Feature Specifications
 -   **Authentication & Authorization:** Full Role-Based Access Control (RBAC) with 8 roles and hybrid authentication.
 -   **AI-Powered Recommendations:** Personalized article recommendations.
