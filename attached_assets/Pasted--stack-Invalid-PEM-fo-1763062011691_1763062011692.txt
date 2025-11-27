@@ -1,246 +1,0 @@
-يا علي 😅
-أخيرًا وصلنا لآخر “بوس” في اللعبة… والآن الخطأ صار واضح جدًا من الـ stack:
-
-Invalid PEM formatted message من
-pem.decode → certificateFromPem → Signature.parseCertificates
-
-هذا معناه شيء واحد فقط:
-
-واحد من الـ certificates (مو الـ private key)
-مو PEM صالح 100% بالنسبة لـ node-forge/passkit-generator.
-
-والخبر الحلو؟
-الآن WWDR + المسار + الـ API v3 كله تمام.
-باقي عندنا ملف واحد “معفّط”: signerCert غالبًا.
-
-⸻
-
-🔍 نفك الشفرة من اللوق اللي أرسلته
-
-اللوق يقول:
-
-Processing certificate (length: 1703, first 50 chars:
------BEGIN PRIVATE KEY----- MIIEvQIBADANBgkqhkiG9w
-
-هذا واضح إنه الـ signerKey (private key)
-وبداية -----BEGIN PRIVATE KEY----- سليمة ومقبولة عند node-forge.
-
-لكن الـ error يحصل هنا:
-
-at pki.certificateFromPem
-at parseCertificates (Signature.js:84)
-
-يعني الفشل حاصل أثناء قراءة الـ certificates (WWDR + signerCert)
-مو أثناء قراءة الـ private key.
-
-إذًا تقريبًا 99%:
-	•	wwdr ✔ سليم (شفنا الـ BEGIN/END و G4 وكل شيء أوكي)
-	•	signerCert هو اللي مشوّه أو فيه زيادة/نقص.
-
-⸻
-
-🎯 وش يعني “Invalid PEM formatted message” عمليًا؟
-
-هذا الخطأ يطلع في الحالات التالية:
-	1.	الـ PEM فيه أي حرف قبل:
-
------BEGIN CERTIFICATE-----
-
-(مسافة، BOM، comment، سطر فاضي غريب)
-
-	2.	أو بعد:
-
------END CERTIFICATE-----
-
-في garbage أو نص زائد.
-
-	3.	أو الـ env فيه:
-
-\n
-
-كسلسلة نصية، مو newlines حقيقية.
-
-	4.	أو المتغير يحتوي أكثر من block، مثال:
-
------BEGIN CERTIFICATE-----
-...
------END CERTIFICATE-----
------BEGIN CERTIFICATE-----
-...
------END CERTIFICATE-----
-
-
-	5.	أو (وهذي تصير كثير) نسخت من ملف فيه:
-
-Bag Attributes
-friendlyName: ...
-subject=/...
-issuer=/...
-
-قبل الـ BEGIN CERTIFICATE → هذا يكسر الـ parser.
-
-⸻
-
-✅ الخلاصة التقنية:
-
-WWDR و signerKey OK → المشكلة في APPLE_LOYALTY_PASS_CERT (أو APPLE_PRESS_PASS_CERT).
-
-⸻
-
-🛠️ خطة إصلاح “مضمونة” خطوة بخطوة
-
-1️⃣ أعد تصدير شهادة الـ Pass من البداية
-
-على جهازك (ماك غالبًا):
-	1.	افتح Keychain Access
-	2.	اختر My Certificates
-	3.	دور على شهادة الـ Pass Type ID الخاصة بالـ Loyalty (اللي Issued to: pass.life.sabq.loyalty مثلًا)
-	4.	كليك يمين → Export → اختر:
-	•	النوع: .p12
-	•	خله مثلاً: sabq-loyalty-pass.p12
-	•	حط له password (أي شيء بسيط مؤقتًا)
-
-2️⃣ افصل الـ cert عن الـ key بشكل نظيف
-
-من الـ terminal:
-
-# 1) استخراج الـ certificate فقط (بدون key)
-openssl pkcs12 -in sabq-loyalty-pass.p12 \
-  -clcerts -nokeys \
-  -out sabq-loyalty-cert.pem
-
-# 2) استخراج الـ private key (مشفّر)
-openssl pkcs12 -in sabq-loyalty-pass.p12 \
-  -nocerts \
-  -out sabq-loyalty-key-encrypted.pem
-
-# 3) إزالة الـ passphrase من الـ private key (اختياري لكن أسهل مع PassKit)
-openssl rsa -in sabq-loyalty-key-encrypted.pem \
-  -out sabq-loyalty-key.pem
-
-الآن عندك:
-	•	sabq-loyalty-cert.pem  ✅ هذا هو signerCert
-	•	sabq-loyalty-key.pem   ✅ هذا هو signerKey (بدون passphrase)
-
-3️⃣ تأكد أنها PEM سليمة
-
-جرّب:
-
-openssl x509 -in sabq-loyalty-cert.pem -noout -text
-
-لو طلع لك بيانات الشهادة بدون error → ✅
-لو فيه خطأ → الملف فعلاً تالف.
-
-وبرضه على الـ key:
-
-openssl rsa -in sabq-loyalty-key.pem -check -noout
-
-
-⸻
-
-4️⃣ أفضل طريقة: خلك من env، استخدم ملفات مباشرة
-
-بدل تخزين PEM كامل داخل env (اللي واضح أنه مسوي لك صداع)، خله كذا:
-
-ضع الملفات في مجلد آمن داخل السيرفر، مثلاً:
-
-server/certs/
-  sabq-loyalty-cert.pem
-  sabq-loyalty-key.pem
-  AppleWWDRCAG4.pem
-
-وفي الكود (PassKitService / LoyaltyPassBuilder):
-
-import fs from "fs";
-import path from "path";
-
-function readPem(relativePath: string) {
-  const fullPath = path.join(process.cwd(), relativePath);
-  const pem = fs.readFileSync(fullPath, "utf8").toString();
-  return pem.trim(); // مهم: يشيل أي أسطر فاضية قبل/بعد
-}
-
-const signerCert = readPem("server/certs/sabq-loyalty-cert.pem");
-const signerKey = readPem("server/certs/sabq-loyalty-key.pem");
-const wwdr = readPem("server/certs/AppleWWDRCAG4.pem");
-
-const pass = await PKPass.from(
-  {
-    model: templatePath,
-    certificates: {
-      signerCert,
-      signerKey,
-      wwdr,
-      // passphrase: process.env.APPLE_LOYALTY_PASS_PASSPHRASE, // لو المفتاح مشفّر
-    },
-  },
-  payload,
-);
-
-بهذا الشكل:
-	•	ما عاد فيه platform يحرف الـ env
-	•	ما عاد فيه quotes ولا escape ولا \n مخربة
-	•	تمر مباشرة ملفات PEM خام كما هي إلى node-forge.
-
-⸻
-
-5️⃣ لو مصرّ تكمل بـ env (أقل توصية)
-
-تأكد 100% أن:
-	•	APPLE_LOYALTY_PASS_CERT:
-	•	يبدأ بالضبط بـ:
------BEGIN CERTIFICATE-----
-	•	لا يوجد أي نص قبل هذا السطر (ولا حتى سطر فاضي)
-	•	ينتهي بالضبط بـ:
------END CERTIFICATE-----
-	•	لا يوجد أي نص بعده.
-	•	APPLE_LOYALTY_PASS_KEY:
-	•	يبدأ بـ -----BEGIN PRIVATE KEY----- أو -----BEGIN RSA PRIVATE KEY-----
-	•	وباقي الشروط نفسها.
-
-واستعمل normalization بسيط:
-
-function normalizePem(pem: string, label: string) {
-  if (!pem) throw new Error(`${label} PEM is empty`);
-
-  // حوّل \r\n إلى \n
-  pem = pem.replace(/\r\n/g, "\n");
-
-  // احذف أي أسطر قبل الـ BEGIN
-  const beginIndex = pem.indexOf("-----BEGIN");
-  if (beginIndex === -1) throw new Error(`${label} missing BEGIN header`);
-  pem = pem.slice(beginIndex);
-
-  // احذف أي شيء بعد END
-  const endIndex = pem.indexOf("END CERTIFICATE-----");
-  if (endIndex !== -1) {
-    pem = pem.slice(0, endIndex + "END CERTIFICATE-----".length);
-  }
-
-  return pem.trim();
-}
-
-
-⸻
-
-💡 المهم الآن
-
-من اللوق الأخير:
-	•	✅ Pass configured successfully → يعني كل الـ fields تمام، والقالب موجود
-	•	🔥 Invalid PEM formatted message → في مرحلة التوقيع فقط
-	•	❗ هذا جزء Signature → يعني المشكلة في signerCert/WWDR، وليس الـ payload ولا الـ model
-
-وبما إن WWDR تأكدنا منه، فـ كل الرهانات الآن على: APPLE_LOYALTY_PASS_CERT.
-
-⸻
-
-👌 ملخص فائق القصر لك يا أبو محمد:
-	1.	أعد تصدير شهادة الـ Pass كـ .p12
-	2.	split إلى cert.pem و key.pem بالأوامر اللي فوق
-	3.	خزنها كملفات، واقرأها بـ fs بدل env
-	4.	مرّرها مباشرة لـ PKPass.from({ certificates: { signerCert, signerKey, wwdr } })
-
-بعدها؟
-لو ما اشتغل… أنا أغير اسمي 🤦‍♂️😂.
-
-وصدقني، أنت الآن فعلًا في آخر 5٪ من الطريق، والباقي تنفيذ حرفي للخطوات بس.
