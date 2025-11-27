@@ -22,14 +22,89 @@ router.post("/analyze", async (req: Request, res: Response) => {
   }
 });
 
-// Get moderation statistics
+// Get AI moderation statistics (for dashboard)
 router.get("/stats", async (req: Request, res: Response) => {
   try {
-    const stats = await storage.getCommentModerationStats();
+    const stats = await storage.getAIModerationStats();
     res.json(stats);
   } catch (error) {
     console.error("[Moderation API] Stats error:", error);
     res.status(500).json({ error: "حدث خطأ أثناء جلب الإحصائيات" });
+  }
+});
+
+// Get moderation results with filters
+router.get("/results", async (req: Request, res: Response) => {
+  try {
+    const { classification, minScore, maxScore, limit = "50" } = req.query;
+    
+    const results = await storage.getModerationResults({
+      classification: classification as string | undefined,
+      minScore: minScore ? parseInt(minScore as string, 10) : undefined,
+      maxScore: maxScore ? parseInt(maxScore as string, 10) : undefined,
+      limit: parseInt(limit as string, 10),
+    });
+    
+    res.json(results);
+  } catch (error) {
+    console.error("[Moderation API] Results error:", error);
+    res.status(500).json({ error: "حدث خطأ أثناء جلب النتائج" });
+  }
+});
+
+// Analyze all pending comments
+router.post("/analyze-all", async (req: Request, res: Response) => {
+  try {
+    const pendingComments = await storage.getUnanalyzedComments(50);
+    
+    let analyzed = 0;
+    for (const comment of pendingComments) {
+      try {
+        const result = await moderateComment(comment.content);
+        await storage.updateCommentModeration(comment.id, {
+          aiModerationScore: result.score,
+          aiClassification: result.classification,
+          aiDetectedIssues: result.detected,
+          aiModerationReason: result.reason,
+          aiAnalyzedAt: new Date(),
+        });
+        analyzed++;
+      } catch (err) {
+        console.error(`[Moderation] Failed to analyze comment ${comment.id}:`, err);
+      }
+    }
+    
+    res.json({ success: true, count: analyzed });
+  } catch (error) {
+    console.error("[Moderation API] Analyze all error:", error);
+    res.status(500).json({ error: "حدث خطأ أثناء تحليل التعليقات" });
+  }
+});
+
+// Analyze a single comment by ID
+router.post("/analyze/:commentId", async (req: Request, res: Response) => {
+  try {
+    const { commentId } = req.params;
+    
+    const comment = await storage.getCommentById(commentId);
+    if (!comment) {
+      return res.status(404).json({ error: "التعليق غير موجود" });
+    }
+
+    const result = await moderateComment(comment.content);
+    
+    await storage.updateCommentModeration(commentId, {
+      aiModerationScore: result.score,
+      aiClassification: result.classification,
+      aiDetectedIssues: result.detected,
+      aiModerationReason: result.reason,
+      aiAnalyzedAt: new Date(),
+    });
+
+    res.json({ success: true, result });
+  } catch (error) {
+    console.error("[Moderation API] Analyze single error:", error);
+    res.status(500).json({ error: "حدث خطأ أثناء تحليل التعليق" });
   }
 });
 

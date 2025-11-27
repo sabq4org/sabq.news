@@ -4,7 +4,7 @@ const openai = new OpenAI();
 
 export interface ModerationResult {
   score: number; // 0-100
-  classification: "safe" | "review" | "reject";
+  classification: "safe" | "flagged" | "spam" | "harmful";
   detected: string[]; // toxicity, hate_speech, spam, etc.
   reason: string;
 }
@@ -14,31 +14,34 @@ const MODERATION_PROMPT = `أنت نظام رقابة تعليقات لموقع 
 حلّل التعليق التالي وقيّمه حسب المعايير التالية:
 
 1. قيّم احتمالية وجود:
-   - الإساءة والسباب (toxicity)
+   - الإساءة والسباب (profanity)
    - العنصرية أو خطاب الكراهية (hate_speech)
    - التحرش أو التقليل من الآخرين (harassment)
-   - المحتوى الجنسي أو غير اللائق (sexual_content)
-   - التهديد أو التحريض (threats)
+   - المحتوى الجنسي أو غير اللائق (adult_content)
+   - التهديد أو التحريض أو العنف (violence)
    - الأخبار الكاذبة أو الادعاءات الخطرة (misinformation)
-   - السبام أو الروابط العشوائية (spam)
-   - المقارنة الشخصية المسيئة (personal_attack)
+   - السبام أو الروابط العشوائية أو الترويج الذاتي (spam, self_promotion)
+   - الهجوم الشخصي (personal_attack)
+   - خارج الموضوع (off_topic)
 
 2. أرجع نتيجة واحدة فقط من التصنيفات التالية:
-   - safe (آمن للنشر)
-   - review (يحتاج مراجعة بشرية)
-   - reject (مرفوض تمامًا)
+   - safe (آمن للنشر - لا توجد مشاكل)
+   - flagged (مشكوك فيه - يحتاج مراجعة بشرية)
+   - spam (محتوى مزعج أو ترويج ذاتي)
+   - harmful (ضار - يحتوي خطاب كراهية أو عنف أو تحرش)
 
 3. أرجع درجة رقمية من 0 إلى 100:
-   - 80–100 → Safe (آمن)
-   - 40–79  → Review (يحتاج مراجعة)
-   - 0–39   → Reject (مرفوض)
+   - 80–100 → safe (آمن)
+   - 60–79  → flagged (مشكوك فيه)
+   - 40–59  → spam (سبام)
+   - 0–39   → harmful (ضار)
 
 4. أعد النتيجة فقط بصيغة JSON بهذا الشكل:
 
 {
   "score": رقم,
-  "classification": "safe | review | reject",
-  "detected": ["toxicity", "hate_speech", "spam"...],
+  "classification": "safe | flagged | spam | harmful",
+  "detected": ["hate_speech", "profanity", "spam", "harassment", "violence", "misinformation", "personal_attack", "adult_content", "off_topic", "self_promotion"],
   "reason": "شرح قصير جداً يوضح السبب"
 }
 
@@ -71,20 +74,24 @@ export async function moderateComment(commentText: string): Promise<ModerationRe
       console.error("[Comment Moderation] Empty response from AI");
       return {
         score: 50,
-        classification: "review",
-        detected: ["unknown"],
-        reason: "لم يتمكن النظام من تحليل التعليق"
+        classification: "flagged",
+        detected: ["ai_error"],
+        reason: "لم يتمكن النظام من تحليل التعليق - يحتاج مراجعة بشرية"
       };
     }
 
     const result = JSON.parse(content) as ModerationResult;
     
     // Validate and normalize the result
+    const validClassifications = ["safe", "flagged", "spam", "harmful"];
     const normalizedResult: ModerationResult = {
       score: Math.min(100, Math.max(0, result.score || 50)),
-      classification: ["safe", "review", "reject"].includes(result.classification) 
-        ? result.classification 
-        : result.score >= 80 ? "safe" : result.score >= 40 ? "review" : "reject",
+      classification: validClassifications.includes(result.classification) 
+        ? result.classification as ModerationResult["classification"]
+        : result.score >= 80 ? "safe" 
+          : result.score >= 60 ? "flagged" 
+          : result.score >= 40 ? "spam" 
+          : "harmful",
       detected: Array.isArray(result.detected) ? result.detected : [],
       reason: result.reason || "تم التحليل بنجاح"
     };
@@ -96,20 +103,22 @@ export async function moderateComment(commentText: string): Promise<ModerationRe
     console.error("[Comment Moderation] Error:", error);
     return {
       score: 50,
-      classification: "review",
-      detected: ["error"],
-      reason: "حدث خطأ أثناء تحليل التعليق"
+      classification: "flagged",
+      detected: ["ai_error"],
+      reason: "حدث خطأ أثناء تحليل التعليق - يحتاج مراجعة بشرية"
     };
   }
 }
 
-export function getStatusFromClassification(classification: string): string {
+export function getStatusFromClassification(classification: string): "approved" | "rejected" | "pending" {
   switch (classification) {
     case "safe":
       return "approved";
-    case "reject":
+    case "harmful":
       return "rejected";
-    case "review":
+    case "spam":
+      return "rejected";
+    case "flagged":
     default:
       return "pending";
   }

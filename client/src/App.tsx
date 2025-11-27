@@ -69,6 +69,7 @@ import UserRecommendationSettings from "@/pages/UserRecommendationSettings";
 import RecommendationAnalytics from "@/pages/RecommendationAnalytics";
 import SentimentAnalytics from "@/pages/dashboard/SentimentAnalytics";
 import DashboardComments from "@/pages/DashboardComments";
+import AIModerationDashboard from "@/pages/admin/AIModerationDashboard";
 import MyFollows from "@/pages/MyFollows";
 import MyKeywords from "@/pages/MyKeywords";
 import StoryAdmin from "@/pages/StoryAdmin";
@@ -482,6 +483,7 @@ function Router() {
       <Route path="/dashboard/tags" component={TagsManagement} />
       <Route path="/dashboard/smart-links" component={SmartLinksManagement} />
       <Route path="/dashboard/comments" component={DashboardComments} />
+      <Route path="/dashboard/ai-moderation" component={AIModerationDashboard} />
       <Route path="/dashboard/data-stories" component={DataStoryGenerator} />
       <Route path="/dashboard/smart-journalist" component={SmartJournalist} />
       <Route path="/dashboard/tasks" component={TasksPage} />

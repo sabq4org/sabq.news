@@ -9141,6 +9141,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Don't fail the request if loyalty fails
         }
 
+
+
         // Track user event for daily summary analytics
         try {
           await trackUserEvent({
@@ -9164,6 +9166,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.id;
       const result = await storage.toggleBookmark(req.params.id, userId);
+
+
 
       // Track user event for daily summary analytics (when bookmarking, not unbookmarking)
       if (result.isBookmarked) {
@@ -9340,6 +9344,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (error) {
         console.error("Error recording loyalty points:", error);
       }
+
+
+      // AI Moderation - تحليل التعليق بالذكاء الاصطناعي (background task)
+      const commentId = comment.id;
+      const commentContent = comment.content;
+      (async () => {
+        try {
+          const { moderateComment, getStatusFromClassification } = await import("./ai/commentModeration");
+          const moderationResult = await moderateComment(commentContent);
+          
+          // Update moderation data
+          await storage.updateCommentModeration(commentId, {
+            aiModerationScore: moderationResult.score,
+            aiClassification: moderationResult.classification,
+            aiDetectedIssues: moderationResult.detected,
+            aiModerationReason: moderationResult.reason,
+            aiAnalyzedAt: new Date(),
+          });
+          
+          // Update comment status based on AI classification
+          const newStatus = getStatusFromClassification(moderationResult.classification);
+          if (newStatus !== "pending") {
+            await storage.updateCommentStatus(commentId, {
+              status: newStatus,
+              moderatedAt: new Date(),
+              moderationReason: moderationResult.classification === "safe" 
+                ? "تم الاعتماد تلقائياً بواسطة الذكاء الاصطناعي"
+                : `تم الرفض تلقائياً - ${moderationResult.reason}`,
+            });
+          }
+          
+          console.log(`[AI Moderation] Comment ${commentId} analyzed: ${moderationResult.classification} (${moderationResult.score}%) -> status: ${newStatus}`);
+        } catch (error) {
+          console.error("[AI Moderation] Error analyzing comment:", error);
+        }
+      })();
+
 
       // Track user event for daily summary analytics
       try {
@@ -12189,7 +12230,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         console.error("Error recording loyalty points:", error);
       }
 
-      res.json({ success: true });
     } catch (error) {
       console.error("Error logging behavior:", error);
       res.status(500).json({ message: "Failed to log behavior" });

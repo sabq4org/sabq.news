@@ -615,6 +615,36 @@ export interface IStorage {
     rejectedToday: number;
     averageScore: number;
   }>;
+  getAIModerationStats(): Promise<{
+    total: number;
+    safe: number;
+    flagged: number;
+    spam: number;
+    harmful: number;
+    pending: number;
+    averageScore: number;
+  }>;
+  getUnanalyzedComments(limit: number): Promise<{ id: string; content: string }[]>;
+  getModerationResults(filters: {
+    classification?: string;
+    minScore?: number;
+    maxScore?: number;
+    limit: number;
+  }): Promise<{
+    commentId: string;
+    moderationScore: number;
+    aiClassification: string;
+    detectedIssues: string[];
+    aiModerationAnalyzedAt: string;
+    comment: {
+      id: string;
+      content: string;
+      status: string;
+      createdAt: string;
+      user: { id: string; firstName?: string; lastName?: string; email: string };
+      articleId: string;
+    };
+  }[]>;
   
   // Reaction operations
   toggleReaction(articleId: string, userId: string): Promise<{ hasReacted: boolean }>;
@@ -3899,6 +3929,142 @@ export class DatabaseStorage implements IStorage {
       rejectedToday: Number(rejectedResult.count),
       averageScore: Math.round(Number(scoreResult.avg)),
     };
+  }
+
+  async getAIModerationStats(): Promise<{
+    total: number;
+    safe: number;
+    flagged: number;
+    spam: number;
+    harmful: number;
+    pending: number;
+    averageScore: number;
+  }> {
+    const [totalResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(comments)
+      .where(sql`${comments.aiClassification} IS NOT NULL`);
+    
+    const [safeResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(comments)
+      .where(eq(comments.aiClassification, 'safe'));
+    
+    const [flaggedResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(comments)
+      .where(eq(comments.aiClassification, 'flagged'));
+    
+    const [spamResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(comments)
+      .where(eq(comments.aiClassification, 'spam'));
+    
+    const [harmfulResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(comments)
+      .where(eq(comments.aiClassification, 'harmful'));
+    
+    const [pendingResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(comments)
+      .where(sql`${comments.aiClassification} IS NULL`);
+    
+    const [scoreResult] = await db
+      .select({ avg: sql<number>`COALESCE(AVG(${comments.aiModerationScore}), 0)` })
+      .from(comments)
+      .where(sql`${comments.aiModerationScore} IS NOT NULL`);
+    
+    return {
+      total: Number(totalResult.count),
+      safe: Number(safeResult.count),
+      flagged: Number(flaggedResult.count),
+      spam: Number(spamResult.count),
+      harmful: Number(harmfulResult.count),
+      pending: Number(pendingResult.count),
+      averageScore: Math.round(Number(scoreResult.avg)),
+    };
+  }
+
+  async getUnanalyzedComments(limit: number): Promise<{ id: string; content: string }[]> {
+    const results = await db
+      .select({
+        id: comments.id,
+        content: comments.content,
+      })
+      .from(comments)
+      .where(sql`${comments.aiClassification} IS NULL`)
+      .orderBy(desc(comments.createdAt))
+      .limit(limit);
+    
+    return results;
+  }
+
+  async getModerationResults(filters: {
+    classification?: string;
+    minScore?: number;
+    maxScore?: number;
+    limit: number;
+  }): Promise<{
+    commentId: string;
+    moderationScore: number;
+    aiClassification: string;
+    detectedIssues: string[];
+    aiModerationAnalyzedAt: string;
+    comment: {
+      id: string;
+      content: string;
+      status: string;
+      createdAt: string;
+      user: { id: string; firstName?: string; lastName?: string; email: string };
+      articleId: string;
+    };
+  }[]> {
+    const conditions: SQL[] = [sql`${comments.aiClassification} IS NOT NULL`];
+    
+    if (filters.classification) {
+      conditions.push(eq(comments.aiClassification, filters.classification));
+    }
+    
+    if (filters.minScore !== undefined) {
+      conditions.push(sql`${comments.aiModerationScore} >= ${filters.minScore}`);
+    }
+    
+    if (filters.maxScore !== undefined) {
+      conditions.push(sql`${comments.aiModerationScore} <= ${filters.maxScore}`);
+    }
+    
+    const results = await db
+      .select({
+        comment: comments,
+        user: users,
+      })
+      .from(comments)
+      .leftJoin(users, eq(comments.userId, users.id))
+      .where(and(...conditions))
+      .orderBy(desc(comments.aiAnalyzedAt))
+      .limit(filters.limit);
+    
+    return results.map((r) => ({
+      commentId: r.comment.id,
+      moderationScore: r.comment.aiModerationScore || 0,
+      aiClassification: r.comment.aiClassification || 'unknown',
+      detectedIssues: r.comment.aiDetectedIssues || [],
+      aiModerationAnalyzedAt: r.comment.aiAnalyzedAt?.toISOString() || new Date().toISOString(),
+      comment: {
+        id: r.comment.id,
+        content: r.comment.content,
+        status: r.comment.status,
+        createdAt: r.comment.createdAt.toISOString(),
+        user: {
+          id: r.user?.id || '',
+          firstName: r.user?.firstName || undefined,
+          lastName: r.user?.lastName || undefined,
+          email: r.user?.email || '',
+        },
+        articleId: r.comment.articleId,
+      },
+    }));
   }
 
   // Reaction operations
