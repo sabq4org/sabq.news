@@ -73,17 +73,6 @@ export default function NewsListSummary({
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                       loading="lazy"
                     />
-                    {item.newsType === "breaking" && (
-                      <div className="absolute top-2 right-2 bg-destructive text-destructive-foreground px-2 py-1 rounded text-xs font-bold">
-                        عاجل
-                      </div>
-                    )}
-                    {isNewArticle(item.publishedAt) && item.newsType !== "breaking" && (
-                      <div className="absolute top-2 right-2 bg-emerald-500 text-white px-2 py-1 rounded text-xs font-bold flex items-center gap-1">
-                        <Flame className="h-3 w-3" />
-                        جديد
-                      </div>
-                    )}
                   </div>
                 </a>
               </Link>
@@ -91,15 +80,33 @@ export default function NewsListSummary({
 
             {/* Content */}
             <div className="flex-1 min-w-0">
-              {/* Category */}
-              {showCategory && item.category && (
-                <span
-                  className="inline-block px-3 py-1 rounded-full text-xs font-semibold text-white mb-2"
-                  style={{ backgroundColor: item.category.color || accent }}
-                >
-                  {item.category.name}
-                </span>
-              )}
+              {/* Category and Breaking/New Badges */}
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                {/* Breaking News Badge */}
+                {item.newsType === "breaking" && (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-destructive text-destructive-foreground animate-pulse">
+                    عاجل
+                  </span>
+                )}
+                
+                {/* New Article Badge */}
+                {isNewArticle(item.publishedAt) && item.newsType !== "breaking" && (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500 text-white">
+                    <Flame className="h-3 w-3" />
+                    جديد
+                  </span>
+                )}
+
+                {/* Category */}
+                {showCategory && item.category && (
+                  <span
+                    className="inline-block px-3 py-1 rounded-full text-xs font-semibold text-white"
+                    style={{ backgroundColor: item.category.color || accent }}
+                  >
+                    {item.category.name}
+                  </span>
+                )}
+              </div>
 
               {/* Title */}
               <Link href={`/${item.slug}`}>

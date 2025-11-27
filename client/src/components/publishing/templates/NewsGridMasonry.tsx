@@ -71,17 +71,6 @@ export default function NewsGridMasonry({
                       }}
                       loading="lazy"
                     />
-                    {item.newsType === "breaking" && (
-                      <div className="absolute top-3 right-3 bg-destructive text-destructive-foreground px-2 py-1 rounded text-xs font-bold">
-                        عاجل
-                      </div>
-                    )}
-                    {isNewArticle(item.publishedAt) && item.newsType !== "breaking" && (
-                      <div className="absolute top-3 right-3 bg-emerald-500 text-white px-2 py-1 rounded text-xs font-bold flex items-center gap-1">
-                        <Flame className="h-3 w-3" />
-                        جديد
-                      </div>
-                    )}
                   </div>
                 </a>
               </Link>
@@ -89,15 +78,33 @@ export default function NewsGridMasonry({
 
             {/* Content */}
             <div className="p-4">
-              {/* Category */}
-              {item.category && (
-                <span
-                  className="inline-block px-2 py-1 rounded text-xs font-semibold text-white mb-2"
-                  style={{ backgroundColor: item.category.color || accent }}
-                >
-                  {item.category.name}
-                </span>
-              )}
+              {/* Category and Breaking/New Badges */}
+              <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                {/* Breaking News Badge */}
+                {item.newsType === "breaking" && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold bg-destructive text-destructive-foreground animate-pulse">
+                    عاجل
+                  </span>
+                )}
+                
+                {/* New Article Badge */}
+                {isNewArticle(item.publishedAt) && item.newsType !== "breaking" && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold bg-emerald-500 text-white">
+                    <Flame className="h-3 w-3" />
+                    جديد
+                  </span>
+                )}
+
+                {/* Category */}
+                {item.category && (
+                  <span
+                    className="inline-block px-2 py-0.5 rounded text-xs font-semibold text-white"
+                    style={{ backgroundColor: item.category.color || accent }}
+                  >
+                    {item.category.name}
+                  </span>
+                )}
+              </div>
 
               {/* Title */}
               <Link href={`/${item.slug}`}>

@@ -46,34 +46,39 @@ export default function HeroSplit({ item, accent = "hsl(var(--primary))", classN
             ) : (
               <div className="w-full h-full bg-muted" />
             )}
-            {item.newsType === "breaking" && (
-              <div className="absolute top-4 right-4 bg-destructive text-destructive-foreground px-3 py-1 rounded-md text-xs font-bold">
-                عاجل
-              </div>
-            )}
-            {isNewArticle(item.publishedAt) && item.newsType !== "breaking" && (
-              <div className="absolute top-4 right-4 bg-emerald-500 text-white px-3 py-1 rounded-md text-xs font-bold flex items-center gap-1">
-                <Flame className="h-3 w-3" />
-                جديد
-              </div>
-            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent md:hidden" />
           </a>
         </Link>
 
         {/* Content Section */}
         <div className="flex flex-col justify-center p-6 md:p-8 lg:p-10">
-          {/* Category Badge */}
-          {item.category && (
-            <div className="mb-4">
+          {/* Category and Breaking/New Badges */}
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            {/* Breaking News Badge */}
+            {item.newsType === "breaking" && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-destructive text-destructive-foreground animate-pulse">
+                عاجل
+              </span>
+            )}
+            
+            {/* New Article Badge */}
+            {isNewArticle(item.publishedAt) && item.newsType !== "breaking" && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500 text-white">
+                <Flame className="h-3 w-3" />
+                جديد
+              </span>
+            )}
+
+            {/* Category Badge */}
+            {item.category && (
               <span
                 className="inline-block px-3 py-1 rounded-full text-xs font-semibold text-white"
                 style={{ backgroundColor: item.category.color || accent }}
               >
                 {item.category.name}
               </span>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Title */}
           <Link href={`/${item.slug}`} onClick={handleClick}>

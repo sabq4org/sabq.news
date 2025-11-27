@@ -45,17 +45,6 @@ export default function SpotlightCard({
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"
               />
-              {item.newsType === "breaking" && (
-                <div className="absolute top-4 right-4 bg-destructive text-destructive-foreground px-3 py-1.5 rounded-lg text-xs font-bold backdrop-blur-sm">
-                  عاجل
-                </div>
-              )}
-              {isNewArticle(item.publishedAt) && item.newsType !== "breaking" && (
-                <div className="absolute top-4 right-4 bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold backdrop-blur-sm flex items-center gap-1">
-                  <Flame className="h-3 w-3" />
-                  جديد
-                </div>
-              )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
             </div>
           </a>
@@ -64,17 +53,33 @@ export default function SpotlightCard({
 
       {/* Content */}
       <div className="p-6">
-        {/* Category */}
-        {item.category && (
-          <div className="mb-3">
+        {/* Category and Breaking/New Badges */}
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          {/* Breaking News Badge */}
+          {item.newsType === "breaking" && (
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-destructive text-destructive-foreground animate-pulse">
+              عاجل
+            </span>
+          )}
+          
+          {/* New Article Badge */}
+          {isNewArticle(item.publishedAt) && item.newsType !== "breaking" && (
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500 text-white">
+              <Flame className="h-3 w-3" />
+              جديد
+            </span>
+          )}
+
+          {/* Category */}
+          {item.category && (
             <span
               className="inline-block px-3 py-1 rounded-full text-xs font-semibold text-white"
               style={{ backgroundColor: item.category.color || accent }}
             >
               {item.category.name}
             </span>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Title */}
         <Link href={`/${item.slug}`}>

@@ -69,15 +69,25 @@ export default function NewsListBasic({
 
             {/* Content */}
             <div className="flex-1 min-w-0">
-              {/* Category */}
-              {showCategory && item.category && (
-                <span
-                  className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-white mb-1"
-                  style={{ backgroundColor: item.category.color || accent }}
-                >
-                  {item.category.name}
-                </span>
-              )}
+              {/* Category and Breaking Badge */}
+              <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                {/* Breaking News Badge */}
+                {(item as any).newsType === "breaking" && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-destructive text-destructive-foreground animate-pulse">
+                    عاجل
+                  </span>
+                )}
+                
+                {/* Category */}
+                {showCategory && item.category && (
+                  <span
+                    className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-white"
+                    style={{ backgroundColor: item.category.color || accent }}
+                  >
+                    {item.category.name}
+                  </span>
+                )}
+              </div>
 
               {/* Title */}
               <Link href={`/${item.slug}`}>

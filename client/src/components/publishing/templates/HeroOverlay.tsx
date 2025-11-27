@@ -51,32 +51,33 @@ export default function HeroOverlay({ item, accent = "hsl(var(--primary))", clas
 
           {/* Content Overlay */}
           <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10 lg:p-12">
-            {/* Breaking News Badge */}
-            {item.newsType === "breaking" && (
-              <div className="absolute top-6 right-6 bg-destructive text-destructive-foreground px-4 py-2 rounded-lg text-sm font-bold animate-pulse">
-                عاجل
-              </div>
-            )}
-            
-            {/* New Article Badge */}
-            {isNewArticle(item.publishedAt) && item.newsType !== "breaking" && (
-              <div className="absolute top-6 right-6 bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1.5">
-                <Flame className="h-4 w-4" />
-                جديد
-              </div>
-            )}
+            {/* Category and Breaking/New Badges */}
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              {/* Breaking News Badge */}
+              {item.newsType === "breaking" && (
+                <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-bold bg-destructive text-destructive-foreground animate-pulse">
+                  عاجل
+                </span>
+              )}
+              
+              {/* New Article Badge */}
+              {isNewArticle(item.publishedAt) && item.newsType !== "breaking" && (
+                <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-bold bg-emerald-500 text-white">
+                  <Flame className="h-4 w-4" />
+                  جديد
+                </span>
+              )}
 
-            {/* Category Badge */}
-            {item.category && (
-              <div className="mb-4">
+              {/* Category Badge */}
+              {item.category && (
                 <span
                   className="inline-block px-4 py-1.5 rounded-full text-sm font-semibold text-white"
                   style={{ backgroundColor: item.category.color || accent }}
                 >
                   {item.category.name}
                 </span>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Title - High Contrast White Text */}
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 line-clamp-3 hover:underline decoration-2 underline-offset-4">

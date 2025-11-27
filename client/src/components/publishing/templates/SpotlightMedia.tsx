@@ -83,13 +83,6 @@ export default function SpotlightMedia({
               </button>
             )}
 
-            {/* Badge */}
-            {item.newsType === "breaking" && (
-              <div className="absolute top-4 right-4 bg-destructive text-destructive-foreground px-3 py-1.5 rounded-lg text-xs font-bold backdrop-blur-sm">
-                عاجل
-              </div>
-            )}
-
             {/* Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
           </>
@@ -98,17 +91,25 @@ export default function SpotlightMedia({
 
       {/* Content */}
       <div className="p-6">
-        {/* Category */}
-        {item.category && (
-          <div className="mb-3">
+        {/* Category and Breaking Badge */}
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          {/* Breaking News Badge */}
+          {item.newsType === "breaking" && (
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-destructive text-destructive-foreground animate-pulse">
+              عاجل
+            </span>
+          )}
+
+          {/* Category */}
+          {item.category && (
             <span
               className="inline-block px-3 py-1 rounded-full text-xs font-semibold text-white"
               style={{ backgroundColor: item.category.color || accent }}
             >
               {item.category.name}
             </span>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Title */}
         <Link href={`/${item.slug}`}>
