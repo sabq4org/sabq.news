@@ -1,13 +1,17 @@
 import { storage } from "../storage";
-import { PendingWhatsappMessage } from "@shared/schema";
+import { PendingWhatsappMessage, tags, articleTags } from "@shared/schema";
 import { sendWhatsAppMessage, extractTokenFromMessage, removeTokenFromMessage } from "./whatsapp";
 import { analyzeAndEditWithSabqStyle, detectLanguage } from "../ai/contentAnalyzer";
 import { nanoid } from "nanoid";
 import { db } from "../db";
 import { mediaFiles, articleMediaAssets } from "@shared/schema";
+import { memoryCache } from "../memoryCache";
+import { eq } from "drizzle-orm";
 
-const AGGREGATION_WINDOW_SECONDS = 30;
-const PROCESSING_INTERVAL_MS = 5000;
+// تم تغيير وقت الانتظار إلى 0 للنشر الفوري
+// الأخبار الطويلة ستُنشر عبر البريد الذكي بدلاً من ذلك
+const AGGREGATION_WINDOW_SECONDS = 0;
+const PROCESSING_INTERVAL_MS = 2000;
 
 interface ProcessingContext {
   phoneNumber: string;
@@ -155,6 +159,64 @@ async function processAggregatedMessage(pending: PendingWhatsappMessage): Promis
     } as any);
     
     console.log(`[WhatsApp Aggregator] Article created: ${article.id}`);
+    
+    // إنشاء الوسوم من الكلمات المفتاحية
+    const seoKeywords = aiResult.optimized.seoKeywords || [];
+    if (seoKeywords.length > 0) {
+      console.log(`[WhatsApp Aggregator] Creating ${seoKeywords.length} tags from keywords...`);
+      
+      for (const keyword of seoKeywords.slice(0, 8)) {
+        try {
+          const cleanKeyword = keyword.trim();
+          if (!cleanKeyword || cleanKeyword.length < 2) continue;
+          
+          const tagSlug = cleanKeyword
+            .toLowerCase()
+            .replace(/[\s_]+/g, '-')
+            .replace(/[^\u0600-\u06FFa-z0-9-]/g, '')
+            .replace(/-+/g, '-')
+            .replace(/^-|-$/g, '');
+          
+          if (!tagSlug) continue;
+          
+          // البحث عن الوسم أو إنشاؤه
+          let existingTag = await db.select().from(tags).where(eq(tags.slug, tagSlug)).limit(1);
+          
+          let tagId: number;
+          if (existingTag.length > 0) {
+            tagId = existingTag[0].id;
+          } else {
+            const [newTag] = await db.insert(tags).values({
+              slug: tagSlug,
+              nameAr: cleanKeyword,
+              nameEn: cleanKeyword,
+              nameUr: cleanKeyword,
+            }).returning();
+            tagId = newTag.id;
+            console.log(`[WhatsApp Aggregator] Created new tag: ${cleanKeyword}`);
+          }
+          
+          // ربط الوسم بالمقال
+          await db.insert(articleTags).values({
+            articleId: article.id,
+            tagId: tagId,
+          }).onConflictDoNothing();
+          
+        } catch (tagError) {
+          console.error(`[WhatsApp Aggregator] Failed to create/link tag "${keyword}":`, tagError);
+        }
+      }
+    }
+    
+    // مسح الكاش فوراً لظهور الخبر مباشرة
+    memoryCache.invalidatePattern('^homepage:');
+    memoryCache.invalidatePattern('^blocks:');
+    memoryCache.invalidatePattern('^insights:');
+    memoryCache.invalidatePattern('^opinion:');
+    memoryCache.invalidatePattern('^trending:');
+    memoryCache.invalidatePattern('^articles:');
+    memoryCache.invalidatePattern('^category:');
+    console.log(`[WhatsApp Aggregator] Cache invalidated for immediate visibility`);
     
     if (mediaUrls.length > 0) {
       console.log(`[WhatsApp Aggregator] Linking ${mediaUrls.length} images to article...`);
