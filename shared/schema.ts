@@ -8719,6 +8719,353 @@ export const ifoxEditorialCalendarRelations = relations(ifoxEditorialCalendar, (
   }),
 }));
 
+// ============================================
+// ADVANCED READER BEHAVIOR ANALYTICS SYSTEM
+// ============================================
+
+// Reading Sessions - Track complete reading sessions
+export const readingSessions = pgTable("reading_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id),
+  sessionId: varchar("session_id").notNull(),
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  endedAt: timestamp("ended_at"),
+  deviceType: text("device_type"),
+  platform: text("platform"),
+  browser: text("browser"),
+  screenWidth: integer("screen_width"),
+  screenHeight: integer("screen_height"),
+  referrerDomain: text("referrer_domain"),
+  referrerUrl: text("referrer_url"),
+  utmSource: text("utm_source"),
+  utmMedium: text("utm_medium"),
+  utmCampaign: text("utm_campaign"),
+  utmTerm: text("utm_term"),
+  utmContent: text("utm_content"),
+  landingPage: text("landing_page"),
+  exitPage: text("exit_page"),
+  totalDurationMs: integer("total_duration_ms"),
+  totalPagesViewed: integer("total_pages_viewed").default(0),
+  totalArticlesRead: integer("total_articles_read").default(0),
+  isNewVisitor: boolean("is_new_visitor").default(false),
+  country: text("country"),
+  city: text("city"),
+  language: text("language").default("ar"),
+}, (table) => [
+  index("idx_reading_sessions_user").on(table.userId),
+  index("idx_reading_sessions_session").on(table.sessionId),
+  index("idx_reading_sessions_started").on(table.startedAt.desc()),
+  index("idx_reading_sessions_device").on(table.deviceType),
+  index("idx_reading_sessions_source").on(table.utmSource, table.utmMedium),
+]);
+
+// Section Analytics - Track section-level engagement within articles
+export const sectionAnalytics = pgTable("section_analytics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").references(() => readingSessions.id, { onDelete: "cascade" }),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id),
+  sectionIndex: integer("section_index").notNull(),
+  sectionType: text("section_type"),
+  paragraphIndex: integer("paragraph_index"),
+  dwellTimeMs: integer("dwell_time_ms").default(0),
+  scrollDepthStart: integer("scroll_depth_start"),
+  scrollDepthEnd: integer("scroll_depth_end"),
+  visibleTimeMs: integer("visible_time_ms").default(0),
+  heatScore: real("heat_score"),
+  wasHighlighted: boolean("was_highlighted").default(false),
+  wasShared: boolean("was_shared").default(false),
+  interactionCount: integer("interaction_count").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_section_analytics_session").on(table.sessionId),
+  index("idx_section_analytics_article").on(table.articleId),
+  index("idx_section_analytics_section").on(table.articleId, table.sectionIndex),
+  index("idx_section_analytics_heat").on(table.articleId, table.heatScore.desc()),
+]);
+
+// Navigation Paths - Track user navigation between pages/articles
+export const navigationPaths = pgTable("navigation_paths", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").references(() => readingSessions.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id),
+  fromPageType: text("from_page_type"),
+  fromPageId: varchar("from_page_id"),
+  fromArticleId: varchar("from_article_id").references(() => articles.id, { onDelete: "set null" }),
+  fromCategoryId: varchar("from_category_id").references(() => categories.id, { onDelete: "set null" }),
+  toPageType: text("to_page_type").notNull(),
+  toPageId: varchar("to_page_id"),
+  toArticleId: varchar("to_article_id").references(() => articles.id, { onDelete: "set null" }),
+  toCategoryId: varchar("to_category_id").references(() => categories.id, { onDelete: "set null" }),
+  transitionType: text("transition_type"),
+  dwellTimeOnFromMs: integer("dwell_time_on_from_ms"),
+  scrollDepthOnFrom: integer("scroll_depth_on_from"),
+  occurredAt: timestamp("occurred_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_nav_paths_session").on(table.sessionId),
+  index("idx_nav_paths_from_article").on(table.fromArticleId),
+  index("idx_nav_paths_to_article").on(table.toArticleId),
+  index("idx_nav_paths_occurred").on(table.occurredAt.desc()),
+  index("idx_nav_paths_transition").on(table.transitionType),
+]);
+
+// Traffic Sources - Detailed referrer and source tracking
+export const trafficSources = pgTable("traffic_sources", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").references(() => readingSessions.id, { onDelete: "cascade" }).notNull(),
+  sourceType: text("source_type").notNull(),
+  sourceMedium: text("source_medium"),
+  sourceChannel: text("source_channel"),
+  referrerDomain: text("referrer_domain"),
+  referrerPath: text("referrer_path"),
+  searchKeyword: text("search_keyword"),
+  socialPlatform: text("social_platform"),
+  campaignName: text("campaign_name"),
+  campaignSource: text("campaign_source"),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "set null" }),
+  conversionValue: real("conversion_value"),
+  isConverted: boolean("is_converted").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_traffic_sources_session").on(table.sessionId),
+  index("idx_traffic_sources_type").on(table.sourceType),
+  index("idx_traffic_sources_social").on(table.socialPlatform),
+  index("idx_traffic_sources_domain").on(table.referrerDomain),
+  index("idx_traffic_sources_created").on(table.createdAt.desc()),
+]);
+
+// Hourly Engagement Rollups - Pre-aggregated hourly statistics
+export const hourlyEngagementRollups = pgTable("hourly_engagement_rollups", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  dateHour: timestamp("date_hour").notNull(),
+  metric: text("metric").notNull(),
+  value: real("value").notNull(),
+  dimensions: jsonb("dimensions"),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }),
+  categoryId: varchar("category_id").references(() => categories.id, { onDelete: "cascade" }),
+  deviceType: text("device_type"),
+  platform: text("platform"),
+  language: text("language"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_hourly_rollups_hour").on(table.dateHour.desc()),
+  index("idx_hourly_rollups_metric").on(table.metric),
+  index("idx_hourly_rollups_article").on(table.articleId),
+  index("idx_hourly_rollups_category").on(table.categoryId),
+  index("idx_hourly_rollups_composite").on(table.dateHour, table.metric, table.articleId),
+]);
+
+// Real-time Metrics - For live dashboard updates
+export const realTimeMetrics = pgTable("real_time_metrics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  metric: text("metric").notNull(),
+  value: real("value").notNull(),
+  windowStart: timestamp("window_start").notNull(),
+  windowEnd: timestamp("window_end").notNull(),
+  dimensions: jsonb("dimensions"),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }),
+  categoryId: varchar("category_id").references(() => categories.id, { onDelete: "cascade" }),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_realtime_metrics_metric").on(table.metric),
+  index("idx_realtime_metrics_window").on(table.windowStart, table.windowEnd),
+  index("idx_realtime_metrics_article").on(table.articleId),
+]);
+
+// Article Engagement Scores - Pre-calculated engagement scores per article
+export const articleEngagementScores = pgTable("article_engagement_scores", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }).notNull().unique(),
+  overallScore: real("overall_score").default(0),
+  readabilityScore: real("readability_score"),
+  engagementRate: real("engagement_rate"),
+  avgTimeOnPage: integer("avg_time_on_page"),
+  avgScrollDepth: real("avg_scroll_depth"),
+  bounceRate: real("bounce_rate"),
+  shareCount: integer("share_count").default(0),
+  commentCount: integer("comment_count").default(0),
+  reactionCount: integer("reaction_count").default(0),
+  bookmarkCount: integer("bookmark_count").default(0),
+  uniqueVisitors: integer("unique_visitors").default(0),
+  returningVisitors: integer("returning_visitors").default(0),
+  peakHour: integer("peak_hour"),
+  topReferrer: text("top_referrer"),
+  topDevice: text("top_device"),
+  lastCalculated: timestamp("last_calculated").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_engagement_scores_article").on(table.articleId),
+  index("idx_engagement_scores_overall").on(table.overallScore.desc()),
+  index("idx_engagement_scores_rate").on(table.engagementRate.desc()),
+]);
+
+// Reader Journey Milestones - Track key moments in reader journey
+export const readerJourneyMilestones = pgTable("reader_journey_milestones", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  sessionId: varchar("session_id").references(() => readingSessions.id, { onDelete: "cascade" }),
+  milestoneType: text("milestone_type").notNull(),
+  milestoneValue: text("milestone_value"),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "set null" }),
+  categoryId: varchar("category_id").references(() => categories.id, { onDelete: "set null" }),
+  metadata: jsonb("metadata"),
+  achievedAt: timestamp("achieved_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_journey_milestones_user").on(table.userId),
+  index("idx_journey_milestones_type").on(table.milestoneType),
+  index("idx_journey_milestones_achieved").on(table.achievedAt.desc()),
+]);
+
+// Relations for Advanced Analytics
+export const readingSessionsRelations = relations(readingSessions, ({ one, many }) => ({
+  user: one(users, {
+    fields: [readingSessions.userId],
+    references: [users.id],
+  }),
+  sectionAnalytics: many(sectionAnalytics),
+  navigationPaths: many(navigationPaths),
+  trafficSources: many(trafficSources),
+  milestones: many(readerJourneyMilestones),
+}));
+
+export const sectionAnalyticsRelations = relations(sectionAnalytics, ({ one }) => ({
+  session: one(readingSessions, {
+    fields: [sectionAnalytics.sessionId],
+    references: [readingSessions.id],
+  }),
+  article: one(articles, {
+    fields: [sectionAnalytics.articleId],
+    references: [articles.id],
+  }),
+  user: one(users, {
+    fields: [sectionAnalytics.userId],
+    references: [users.id],
+  }),
+}));
+
+export const navigationPathsRelations = relations(navigationPaths, ({ one }) => ({
+  session: one(readingSessions, {
+    fields: [navigationPaths.sessionId],
+    references: [readingSessions.id],
+  }),
+  user: one(users, {
+    fields: [navigationPaths.userId],
+    references: [users.id],
+  }),
+  fromArticle: one(articles, {
+    fields: [navigationPaths.fromArticleId],
+    references: [articles.id],
+  }),
+  toArticle: one(articles, {
+    fields: [navigationPaths.toArticleId],
+    references: [articles.id],
+  }),
+}));
+
+export const trafficSourcesRelations = relations(trafficSources, ({ one }) => ({
+  session: one(readingSessions, {
+    fields: [trafficSources.sessionId],
+    references: [readingSessions.id],
+  }),
+  article: one(articles, {
+    fields: [trafficSources.articleId],
+    references: [articles.id],
+  }),
+}));
+
+export const articleEngagementScoresRelations = relations(articleEngagementScores, ({ one }) => ({
+  article: one(articles, {
+    fields: [articleEngagementScores.articleId],
+    references: [articles.id],
+  }),
+}));
+
+export const readerJourneyMilestonesRelations = relations(readerJourneyMilestones, ({ one }) => ({
+  user: one(users, {
+    fields: [readerJourneyMilestones.userId],
+    references: [users.id],
+  }),
+  session: one(readingSessions, {
+    fields: [readerJourneyMilestones.sessionId],
+    references: [readingSessions.id],
+  }),
+  article: one(articles, {
+    fields: [readerJourneyMilestones.articleId],
+    references: [articles.id],
+  }),
+  category: one(categories, {
+    fields: [readerJourneyMilestones.categoryId],
+    references: [categories.id],
+  }),
+}));
+
+// Insert schemas for Advanced Analytics
+export const insertReadingSessionSchema = createInsertSchema(readingSessions).omit({
+  id: true,
+  startedAt: true,
+});
+
+export const insertSectionAnalyticsSchema = createInsertSchema(sectionAnalytics).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertNavigationPathSchema = createInsertSchema(navigationPaths).omit({
+  id: true,
+  occurredAt: true,
+});
+
+export const insertTrafficSourceSchema = createInsertSchema(trafficSources).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertHourlyEngagementRollupSchema = createInsertSchema(hourlyEngagementRollups).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertRealTimeMetricSchema = createInsertSchema(realTimeMetrics).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export const insertArticleEngagementScoreSchema = createInsertSchema(articleEngagementScores).omit({
+  id: true,
+  createdAt: true,
+  lastCalculated: true,
+});
+
+export const insertReaderJourneyMilestoneSchema = createInsertSchema(readerJourneyMilestones).omit({
+  id: true,
+  achievedAt: true,
+});
+
+// Select types for Advanced Analytics
+export type ReadingSession = typeof readingSessions.$inferSelect;
+export type InsertReadingSession = z.infer<typeof insertReadingSessionSchema>;
+
+export type SectionAnalytic = typeof sectionAnalytics.$inferSelect;
+export type InsertSectionAnalytic = z.infer<typeof insertSectionAnalyticsSchema>;
+
+export type NavigationPath = typeof navigationPaths.$inferSelect;
+export type InsertNavigationPath = z.infer<typeof insertNavigationPathSchema>;
+
+export type TrafficSource = typeof trafficSources.$inferSelect;
+export type InsertTrafficSource = z.infer<typeof insertTrafficSourceSchema>;
+
+export type HourlyEngagementRollup = typeof hourlyEngagementRollups.$inferSelect;
+export type InsertHourlyEngagementRollup = z.infer<typeof insertHourlyEngagementRollupSchema>;
+
+export type RealTimeMetric = typeof realTimeMetrics.$inferSelect;
+export type InsertRealTimeMetric = z.infer<typeof insertRealTimeMetricSchema>;
+
+export type ArticleEngagementScore = typeof articleEngagementScores.$inferSelect;
+export type InsertArticleEngagementScore = z.infer<typeof insertArticleEngagementScoreSchema>;
+
+export type ReaderJourneyMilestone = typeof readerJourneyMilestones.$inferSelect;
+export type InsertReaderJourneyMilestone = z.infer<typeof insertReaderJourneyMilestoneSchema>;
+
 // Insert schemas for iFox AI Management
 export const insertIfoxAiPreferencesSchema = createInsertSchema(ifoxAiPreferences).omit({
   id: true,
