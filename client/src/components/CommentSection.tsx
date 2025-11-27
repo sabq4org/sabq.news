@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { MessageCircle, Send, CornerDownLeft, ChevronDown, UserPlus, UserCheck } from "lucide-react";
+import { MessageCircle, Send, CornerDownLeft, ChevronDown, UserPlus, UserCheck, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CommentWithUser } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
@@ -199,6 +199,12 @@ export function CommentSection({
               <p className={`${isReply ? 'text-xs' : 'text-sm'} leading-relaxed whitespace-pre-wrap`} data-testid={`text-comment-content-${comment.id}`}>
                 {comment.content}
               </p>
+              {comment.status === "approved" && comment.aiClassification === "safe" && (
+                <div className="flex items-center gap-1 mt-2 text-xs text-green-600 dark:text-green-400" data-testid={`ai-approved-badge-${comment.id}`}>
+                  <Sparkles className="h-3 w-3" />
+                  <span>تمت الموافقة تلقائياً</span>
+                </div>
+              )}
             </div>
 
             {currentUser && canReply && (

@@ -640,7 +640,7 @@ export default function ArticleDetail() {
       queryClient.invalidateQueries({ queryKey: ["/api/articles", slug, "comments"] });
       toast({
         title: "شكراً لمشاركتك",
-        description: "سيتم مراجعة تعليقك من قبل فريق التحرير للتأكد من التزامه بمعايير المجتمع ونشره في أقرب وقت",
+        description: "يتم تحليل تعليقك الآن بواسطة الذكاء الاصطناعي للتأكد من التزامه بمعايير المجتمع. سيُنشر تلقائياً إذا كان آمناً.",
       });
     },
     onError: (error: Error) => {
