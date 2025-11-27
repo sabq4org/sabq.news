@@ -1196,6 +1196,76 @@ router.get("/badge-stats", isAuthenticated, requirePermission('admin.manage_sett
   }
 });
 
+// GET /api/email-agent/logs - Get email webhook logs with pagination (admin only)
+router.get("/logs", isAuthenticated, requirePermission('admin.manage_settings'), async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 50;
+    const status = req.query.status as string;
+    const offset = (page - 1) * limit;
+    
+    // Build filters with pagination
+    const filters: { status?: string; trustedSenderId?: string; limit?: number; offset?: number } = {
+      limit,
+      offset,
+    };
+    if (status && status !== 'all') {
+      filters.status = status;
+    }
+    
+    // Get logs with filters (returns { logs, total })
+    const result = await storage.getEmailWebhookLogs(filters);
+    
+    return res.json({
+      logs: result.logs,
+      total: result.total,
+      page,
+      limit,
+      totalPages: Math.ceil(result.total / limit),
+    });
+  } catch (error: any) {
+    console.error("[Email Agent] Error fetching logs:", error);
+    return res.status(500).json({
+      message: "Failed to fetch email logs",
+      error: error.message,
+    });
+  }
+});
+
+// GET /api/email-agent/logs/:id - Get a specific webhook log (admin only)
+router.get("/logs/:id", isAuthenticated, requirePermission('admin.manage_settings'), async (req: Request, res: Response) => {
+  try {
+    const result = await storage.getEmailWebhookLogs();
+    const log = result.logs.find((l: any) => l.id === req.params.id);
+    
+    if (!log) {
+      return res.status(404).json({ message: "Log not found" });
+    }
+    
+    return res.json(log);
+  } catch (error: any) {
+    console.error("[Email Agent] Error fetching log:", error);
+    return res.status(500).json({
+      message: "Failed to fetch log",
+      error: error.message,
+    });
+  }
+});
+
+// DELETE /api/email-agent/logs/:id - Delete a webhook log (admin only)
+router.delete("/logs/:id", isAuthenticated, requirePermission('admin.manage_settings'), async (req: Request, res: Response) => {
+  try {
+    await storage.deleteEmailWebhookLog(req.params.id);
+    return res.json({ message: "Log deleted successfully" });
+  } catch (error: any) {
+    console.error("[Email Agent] Error deleting log:", error);
+    return res.status(500).json({
+      message: "Failed to delete log",
+      error: error.message,
+    });
+  }
+});
+
 // GET /api/email-agent/senders - Get all trusted senders (admin only)
 router.get("/senders", isAuthenticated, requirePermission('admin.manage_settings'), async (req: Request, res: Response) => {
   try {
