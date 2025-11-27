@@ -308,22 +308,22 @@ export default function UrduArticleDetail() {
               data-testid="text-article-content"
             />
 
-            {/* Additional Images */}
-            {mediaAssets && mediaAssets.length > 0 && (() => {
-              // Filter out hero image (displayOrder === 0) and sort by displayOrder
-              const additionalImages = mediaAssets
-                .filter((asset: any) => asset.displayOrder !== 0)
-                .sort((a: any, b: any) => a.displayOrder - b.displayOrder);
+            {/* Additional Images - from mediaAssets table OR albumImages field */}
+            {(() => {
+              const mediaAdditionalImages = mediaAssets
+                ?.filter((asset: any) => asset.displayOrder !== 0)
+                .sort((a: any, b: any) => a.displayOrder - b.displayOrder) || [];
+              const albumImages = (article as any).albumImages || [];
               
-              if (additionalImages.length === 0) return null;
+              if (mediaAdditionalImages.length === 0 && albumImages.length === 0) return null;
               
               return (
                 <div className="mb-12 border rounded-lg p-6 bg-card">
                   <h3 className="text-lg font-bold mb-6">تصاویر گیلری</h3>
                   <div className="space-y-8">
-                    {additionalImages.map((asset: any, index: number) => (
+                    {mediaAdditionalImages.map((asset: any, index: number) => (
                       <ImageWithCaption
-                        key={asset.id || index}
+                        key={asset.id || `media-${index}`}
                         imageUrl={asset.url}
                         altText={asset.altText || `تصویر ${index + 1}`}
                         captionHtml={asset.captionHtml}
@@ -332,6 +332,14 @@ export default function UrduArticleDetail() {
                         sourceUrl={asset.sourceUrl}
                         relatedArticleSlugs={asset.relatedArticleSlugs}
                         keywordTags={asset.keywordTags}
+                        className="w-full"
+                      />
+                    ))}
+                    {albumImages.map((url: string, index: number) => (
+                      <ImageWithCaption
+                        key={`album-${index}`}
+                        imageUrl={url}
+                        altText={`تصویر ${mediaAdditionalImages.length + index + 1}`}
                         className="w-full"
                       />
                     ))}

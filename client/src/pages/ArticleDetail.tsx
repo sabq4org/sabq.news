@@ -1221,22 +1221,27 @@ export default function ArticleDetail() {
               />
             </div>
 
-            {/* Additional Images */}
-            {mediaAssets && mediaAssets.length > 0 && (() => {
-              // Filter out hero image (displayOrder === 0) and sort by displayOrder
-              const additionalImages = mediaAssets
-                .filter((asset: any) => asset.displayOrder !== 0)
-                .sort((a: any, b: any) => a.displayOrder - b.displayOrder);
+            {/* Additional Images - from mediaAssets table OR albumImages field */}
+            {(() => {
+              // First check mediaAssets from article_media_assets table
+              const mediaAdditionalImages = mediaAssets
+                ?.filter((asset: any) => asset.displayOrder !== 0)
+                .sort((a: any, b: any) => a.displayOrder - b.displayOrder) || [];
               
-              if (additionalImages.length === 0) return null;
+              // Then check albumImages from article field (legacy/editor uploads)
+              const albumImages = (article as any).albumImages || [];
+              
+              // If neither has images, don't render
+              if (mediaAdditionalImages.length === 0 && albumImages.length === 0) return null;
               
               return (
                 <div className="bg-card border rounded-lg p-6 space-y-8">
                   <h3 className="text-lg font-bold mb-4">الصور المرفقة</h3>
                   <div className="space-y-8">
-                    {additionalImages.map((asset: any, index: number) => (
+                    {/* Display mediaAssets first */}
+                    {mediaAdditionalImages.map((asset: any, index: number) => (
                       <ImageWithCaption
-                        key={asset.id || index}
+                        key={asset.id || `media-${index}`}
                         imageUrl={asset.url}
                         altText={asset.altText || `صورة ${index + 1}`}
                         captionHtml={asset.captionHtml}
@@ -1245,6 +1250,15 @@ export default function ArticleDetail() {
                         sourceUrl={asset.sourceUrl}
                         relatedArticleSlugs={asset.relatedArticleSlugs}
                         keywordTags={asset.keywordTags}
+                        className="w-full"
+                      />
+                    ))}
+                    {/* Display albumImages (from article field) */}
+                    {albumImages.map((url: string, index: number) => (
+                      <ImageWithCaption
+                        key={`album-${index}`}
+                        imageUrl={url}
+                        altText={`صورة ${mediaAdditionalImages.length + index + 1}`}
                         className="w-full"
                       />
                     ))}
