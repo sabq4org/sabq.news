@@ -955,6 +955,14 @@ router.post("/webhook", async (req: Request, res: Response) => {
       
       await storage.updateArticle(existingArticle.id, { status: 'archived' });
       
+      // مسح الكاش فوراً لإزالة الخبر من القوائم
+      memoryCache.invalidatePattern('^homepage:');
+      memoryCache.invalidatePattern('^blocks:');
+      memoryCache.invalidatePattern('^trending:');
+      memoryCache.invalidatePattern('^articles:');
+      memoryCache.invalidatePattern('^category:');
+      console.log(`[WhatsApp Agent] Cache invalidated for article archive`);
+      
       await storage.updateWhatsappWebhookLog(webhookLog.id, {
         status: "processed",
         reason: "article_archived",
@@ -1005,6 +1013,15 @@ router.post("/webhook", async (req: Request, res: Response) => {
       // Toggle breaking status
       const newNewsType = existingArticle.newsType === 'breaking' ? 'regular' : 'breaking';
       await storage.updateArticle(existingArticle.id, { newsType: newNewsType });
+      
+      // مسح الكاش فوراً لظهور التغيير مباشرة على الصفحة الرئيسية
+      memoryCache.invalidatePattern('^homepage:');
+      memoryCache.invalidatePattern('^blocks:');
+      memoryCache.invalidatePattern('^breaking:');
+      memoryCache.invalidatePattern('^trending:');
+      memoryCache.invalidatePattern('^articles:');
+      memoryCache.invalidatePattern('^category:');
+      console.log(`[WhatsApp Agent] Cache invalidated for breaking news change`);
       
       await storage.updateWhatsappWebhookLog(webhookLog.id, {
         status: "processed",
