@@ -63,8 +63,8 @@ export function QuickActionsSection() {
         </div>
       </div>
 
-      {/* Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
+      {/* Grid - 2 columns on mobile for better space utilization */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-4">
         {actions.map((action) => (
           <QuickActionCard
             key={action.id}

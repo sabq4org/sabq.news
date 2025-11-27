@@ -292,8 +292,8 @@ function Dashboard() {
           <QuickActionsSection />
         </div>
 
-        {/* Main Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        {/* Main Stats Cards - 2 columns on mobile for better space utilization */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6">
           {/* Articles Stats */}
           <Card className="shadow-sm shadow-indigo-50 dark:shadow-none hover-elevate transition-all" data-testid="card-articles-stats">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
@@ -391,8 +391,8 @@ function Dashboard() {
           </Card>
         </div>
 
-        {/* Today's Activity Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        {/* Today's Activity Stats - 2 columns on mobile */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6">
           <Card data-testid="card-views-today-stats" className="border-l-4 border-l-primary/50">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">المشاهدات اليوم</CardTitle>
@@ -478,8 +478,8 @@ function Dashboard() {
           </Card>
         </div>
 
-        {/* Secondary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Secondary Stats - 2 columns on mobile */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4 md:gap-6">
           <Card data-testid="card-categories-stats">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">التصنيفات</CardTitle>
@@ -539,8 +539,8 @@ function Dashboard() {
           </Card>
         </div>
 
-        {/* Platform Services Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        {/* Platform Services Stats - 2 columns on mobile */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6">
           {/* Audio Newsletters */}
           <Card data-testid="card-audio-newsletters-stats" className="border-t-4 border-t-purple-500/50">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
@@ -638,8 +638,8 @@ function Dashboard() {
           </Card>
         </div>
 
-        {/* AI & Smart Features Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* AI & Smart Features Stats - 2 columns on mobile */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4 md:gap-6">
           {/* AI Tasks */}
           <Card data-testid="card-ai-tasks-stats">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
@@ -890,8 +890,8 @@ function Dashboard() {
           </Card>
         </div>
 
-        {/* Upcoming Reminders and Tasks */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6" data-testid="grid-reminders-tasks">
+        {/* Upcoming Reminders and Tasks - 2 columns on all screens */}
+        <div className="grid grid-cols-2 gap-2 sm:gap-4 md:gap-6" data-testid="grid-reminders-tasks">
           <UpcomingRemindersWidget />
           <UpcomingTasksWidget />
         </div>
