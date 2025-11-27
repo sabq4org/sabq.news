@@ -87,6 +87,11 @@ export default function ArticleDetail() {
     enabled: !!article?.id,
   });
 
+  const { data: articleTags = [] } = useQuery<Array<{ id: string; nameAr: string; nameEn: string; slug: string }>>({
+    queryKey: ["/api/articles", article?.id, "tags"],
+    enabled: !!article?.id,
+  });
+
   // Unified author resolution for both news and opinion articles
   const resolvedAuthorId = article?.articleType === 'opinion'
     ? article?.opinionAuthor?.id
@@ -1186,14 +1191,27 @@ export default function ArticleDetail() {
               </Collapsible>
             )}
 
-            {/* Keywords */}
-            {article.seo?.keywords && article.seo.keywords.length > 0 && (
+            {/* Keywords - from SEO field OR article_tags table */}
+            {((article.seo?.keywords && article.seo.keywords.length > 0) || articleTags.length > 0) && (
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-muted-foreground">الكلمات المفتاحية</h3>
                 <div className="flex flex-wrap gap-2">
-                  {article.seo.keywords.map((keyword, index) => (
+                  {/* Display article tags first (from article_tags table - WhatsApp/Email) */}
+                  {articleTags.map((tag, index) => (
                     <Badge 
-                      key={index}
+                      key={`tag-${tag.id}`}
+                      variant="secondary"
+                      className="cursor-pointer hover-elevate active-elevate-2 transition-all duration-300 hover:scale-105"
+                      onClick={() => setLocation(`/keyword/${encodeURIComponent(tag.nameAr)}`)}
+                      data-testid={`badge-tag-${index}`}
+                    >
+                      {tag.nameAr}
+                    </Badge>
+                  ))}
+                  {/* Display SEO keywords if no article tags (from SEO field - editor) */}
+                  {articleTags.length === 0 && article.seo?.keywords?.map((keyword, index) => (
+                    <Badge 
+                      key={`seo-${index}`}
                       variant="secondary"
                       className="cursor-pointer hover-elevate active-elevate-2 transition-all duration-300 hover:scale-105"
                       onClick={() => setLocation(`/keyword/${encodeURIComponent(keyword)}`)}

@@ -56,6 +56,11 @@ export default function UrduArticleDetail() {
     enabled: !!article?.id,
   });
 
+  const { data: articleTags = [] } = useQuery<Array<{ id: string; nameAr: string; nameEn: string; slug: string }>>({
+    queryKey: ["/api/articles", article?.id, "tags"],
+    enabled: !!article?.id,
+  });
+
   const reactMutation = useMutation({
     mutationFn: async () => {
       if (!article) return;
@@ -384,16 +389,29 @@ export default function UrduArticleDetail() {
               </Button>
             </div>
 
-            {/* Keywords/Tags */}
-            {article.seo?.keywords && article.seo.keywords.length > 0 && (
+            {/* Keywords/Tags - from SEO field OR article_tags table */}
+            {((article.seo?.keywords && article.seo.keywords.length > 0) || articleTags.length > 0) && (
               <div className="pt-8 border-t">
                 <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
                   متعلقہ عنوانات
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {article.seo.keywords.map((keyword, index) => (
+                  {/* Display article tags first (from article_tags table - WhatsApp/Email) */}
+                  {articleTags.map((tag, index) => (
                     <Badge
-                      key={index}
+                      key={`tag-${tag.id}`}
+                      variant="secondary"
+                      className="cursor-pointer hover-elevate active-elevate-2 transition-all duration-300"
+                      onClick={() => setLocation(`/ur/keyword/${encodeURIComponent(tag.nameAr)}`)}
+                      data-testid={`badge-tag-${index}`}
+                    >
+                      {tag.nameAr}
+                    </Badge>
+                  ))}
+                  {/* Display SEO keywords if no article tags */}
+                  {articleTags.length === 0 && article.seo?.keywords?.map((keyword, index) => (
+                    <Badge
+                      key={`seo-${index}`}
                       variant="secondary"
                       className="cursor-pointer hover-elevate active-elevate-2 transition-all duration-300"
                       onClick={() => setLocation(`/ur/keyword/${encodeURIComponent(keyword)}`)}
