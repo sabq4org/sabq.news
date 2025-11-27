@@ -30,6 +30,8 @@ interface CategoryColumnData {
     id: string;
     title: string;
     image?: string;
+    thumbnailUrl?: string | null;
+    imageFocalPoint?: { x: number; y: number } | null;
     href: string;
     meta: {
       age: string;
@@ -58,6 +60,9 @@ interface QuadCategoriesData {
 
 // Featured Card Component
 function FeaturedCard({ data }: { data: CategoryColumnData["featured"] }) {
+  // Use thumbnail if available, otherwise fall back to main image
+  const displayImage = data.thumbnailUrl || data.image;
+  
   return (
     <Link href={data.href}>
       <div 
@@ -66,15 +71,15 @@ function FeaturedCard({ data }: { data: CategoryColumnData["featured"] }) {
       >
         {/* Image */}
         <div className="relative aspect-[16/9] bg-muted overflow-hidden">
-          {data.image ? (
+          {displayImage ? (
             <img
-              src={data.image}
+              src={displayImage}
               alt={data.title}
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               loading="lazy"
               style={{
-                objectPosition: (data as any).imageFocalPoint
-                  ? `${(data as any).imageFocalPoint.x}% ${(data as any).imageFocalPoint.y}%`
+                objectPosition: data.imageFocalPoint
+                  ? `${data.imageFocalPoint.x}% ${data.imageFocalPoint.y}%`
                   : 'center'
               }}
             />
@@ -231,12 +236,17 @@ function MobileCompactList({ items }: { items: CategoryColumnData[] }) {
               <div className="flex gap-3 mb-2 group" data-testid={`mobile-featured-${item.featured.id}`}>
                 {/* Wider Thumbnail */}
                 <div className="relative flex-shrink-0 w-28 h-20 rounded overflow-hidden">
-                  {item.featured.image ? (
+                  {(item.featured.thumbnailUrl || item.featured.image) ? (
                     <img
-                      src={item.featured.image}
+                      src={item.featured.thumbnailUrl || item.featured.image}
                       alt={item.featured.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                       loading="lazy"
+                      style={{
+                        objectPosition: item.featured.imageFocalPoint
+                          ? `${item.featured.imageFocalPoint.x}% ${item.featured.imageFocalPoint.y}%`
+                          : 'center'
+                      }}
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-muted to-muted/50" />

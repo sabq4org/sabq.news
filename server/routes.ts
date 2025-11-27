@@ -19577,6 +19577,8 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         }
 
         const featured = {
+          imageFocalPoint: featuredData.article.imageFocalPoint || null,
+          thumbnailUrl: featuredData.article.thumbnailUrl || null,
           id: featuredData.article.id,
           title: featuredData.article.title,
           image: featuredData.article.imageUrl,
@@ -19899,6 +19901,8 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         }
 
         const featured = {
+          imageFocalPoint: featuredData.article.imageFocalPoint || null,
+          thumbnailUrl: featuredData.article.thumbnailUrl || null,
           id: featuredData.article.id,
           title: featuredData.article.title,
           image: featuredData.article.imageUrl,
@@ -20171,6 +20175,8 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         }
 
         const featured = {
+          imageFocalPoint: featuredData.article.imageFocalPoint || null,
+          thumbnailUrl: featuredData.article.thumbnailUrl || null,
           id: featuredArticle.id,
           title: featuredArticle.title,
           image: featuredArticle.imageUrl,
