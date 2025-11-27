@@ -9,6 +9,7 @@ import { insertWhatsappTokenSchema, mediaFiles, articleMediaAssets } from "@shar
 import crypto from "crypto";
 import { db } from "../db";
 import { addMessagePart, shouldForceProcess, AGGREGATION_WINDOW_SECONDS } from "../services/whatsappMessageAggregator";
+import { memoryCache } from "../memoryCache";
 
 const router = Router();
 
@@ -1293,6 +1294,13 @@ router.post("/webhook", async (req: Request, res: Response) => {
       }
       
       console.log(`[WhatsApp Agent] 🔗 Successfully processed ${imageMedia.length} images for article`);
+    }
+
+    // 🔄 INVALIDATE HOMEPAGE CACHE - New article should appear immediately
+    if (articleStatus === 'published') {
+      console.log(`[WhatsApp Agent] 🗑️ Invalidating homepage cache for immediate article visibility...`);
+      memoryCache.invalidatePattern('^homepage:');
+      console.log(`[WhatsApp Agent] ✅ Homepage cache invalidated`);
     }
 
     await storage.updateWhatsappTokenUsage(whatsappToken.id);

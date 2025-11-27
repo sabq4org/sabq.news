@@ -228,6 +228,8 @@ export default function Home() {
 
   const { data: homepage, isLoading, error } = useQuery<HomepageData>({
     queryKey: ["/api/homepage"],
+    staleTime: 30 * 1000, // Data becomes stale after 30 seconds
+    refetchInterval: 60 * 1000, // Auto-refresh every 60 seconds
   });
 
   // Fetch homepage statistics

@@ -10,6 +10,7 @@ import { isAuthenticated } from "../auth";
 import { requireRole, requirePermission } from "../rbac";
 import { db } from "../db";
 import { mediaFiles, articleMediaAssets } from "@shared/schema";
+import { memoryCache } from "../memoryCache";
 
 const router = Router();
 
@@ -980,6 +981,13 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
           }
         }
         console.log(`[Email Agent] 🖼️ Finished linking ${imageAttachments.length} images`);
+      }
+      
+      // 🔄 INVALIDATE HOMEPAGE CACHE - New article should appear immediately
+      if (trustedSender.autoPublish && article) {
+        console.log(`[Email Agent] 🗑️ Invalidating homepage cache for immediate article visibility...`);
+        memoryCache.invalidatePattern('^homepage:');
+        console.log(`[Email Agent] ✅ Homepage cache invalidated`);
       }
     } catch (createError) {
       console.error("[Email Agent] ❌ Error creating article:", createError);
