@@ -295,10 +295,26 @@ async function processAggregatedMessage(pending: PendingWhatsappMessage): Promis
       ? `السلام عليكم\n✅ تم نشر الخبر بنجاح${partsInfo}\n\nhttps://sabq.news/article/${slug}`
       : `السلام عليكم\n📝 تم حفظ الخبر كمسودة${partsInfo}\nسيتم مراجعته قبل النشر`;
     
-    await sendWhatsAppMessage({
-      to: pending.phoneNumber,
-      body: replyMessage,
-    });
+    console.log(`[WhatsApp Aggregator] 📤 Sending publication reply to ${pending.phoneNumber}...`);
+    console.log(`[WhatsApp Aggregator] 📤 Reply message: ${replyMessage}`);
+    
+    try {
+      const sendResult = await sendWhatsAppMessage({
+        to: pending.phoneNumber,
+        body: replyMessage,
+      });
+      
+      if (sendResult) {
+        console.log(`[WhatsApp Aggregator] ✅ Publication link SENT SUCCESSFULLY to ${pending.phoneNumber}`);
+      } else {
+        console.error(`[WhatsApp Aggregator] ❌ sendWhatsAppMessage returned FALSE - Twilio not configured?`);
+      }
+    } catch (sendError) {
+      console.error(`[WhatsApp Aggregator] ❌ EXCEPTION sending reply:`, sendError instanceof Error ? sendError.message : sendError);
+      if (sendError instanceof Error) {
+        console.error(`[WhatsApp Aggregator] Stack:`, sendError.stack);
+      }
+    }
     
     console.log(`[WhatsApp Aggregator] ✅ Successfully processed aggregated message: ${pending.id}`);
     
