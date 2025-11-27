@@ -282,9 +282,11 @@ export default function AIModerationDashboard() {
       <div className="space-y-6" dir="rtl">
         <div className="flex items-center justify-between">
           <div>
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-1">
               <Brain className="h-8 w-8 text-primary" />
               <h1 className="text-3xl font-bold">الرقابة الذكية</h1>
+            </div>
+            <div className="flex items-center gap-2 mb-2 mr-10">
               <Badge variant="secondary" className="gap-1">
                 <Sparkles className="h-3 w-3" />
                 GPT-4o-mini
@@ -440,8 +442,8 @@ export default function AIModerationDashboard() {
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full md:w-auto grid-cols-5 gap-2">
+        <Tabs value={activeTab} onValueChange={setActiveTab} dir="rtl">
+          <TabsList className="grid w-full md:w-auto grid-cols-5 gap-2" dir="rtl">
             <TabsTrigger value="all" data-testid="tab-all">
               الكل ({stats?.total || 0})
             </TabsTrigger>
@@ -483,7 +485,7 @@ export default function AIModerationDashboard() {
                   const ClassIcon = classification.icon;
 
                   return (
-                    <Card key={result.commentId} data-testid={`moderation-result-${result.commentId}`}>
+                    <Card key={result.commentId} data-testid={`moderation-result-${result.commentId}`} dir="rtl">
                       <CardContent className="p-4">
                         <div className="flex items-start gap-4">
                           <div className={`p-3 rounded-lg ${classification.bg}`}>
