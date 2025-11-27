@@ -137,7 +137,7 @@ export const navConfig: NavItem[] = [
         id: "ai_moderation",
         labelKey: "nav.ai_moderation",
         labelAr: "الرقابة الذكية",
-        path: "/admin/comments/moderation",
+        path: "/dashboard/ai-moderation",
         icon: ShieldCheck,
         roles: ["admin"],
       },
