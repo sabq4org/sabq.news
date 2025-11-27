@@ -6233,6 +6233,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const updatedArticle = await storage.archiveArticle(articleId, userId);
 
+      // Invalidate caches when articles are archived
+      memoryCache.invalidatePattern('^homepage:');
+      memoryCache.invalidatePattern('^blocks:');
+      memoryCache.invalidatePattern('^insights:');
+      memoryCache.invalidatePattern('^opinion:');
+      memoryCache.invalidatePattern('^trending:');
+
       // Log activity
       await logActivity({
         userId,
@@ -6270,6 +6277,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const updatedArticle = await storage.restoreArticle(articleId, userId);
+
+      // Invalidate caches when articles are restored
+      memoryCache.invalidatePattern('^homepage:');
+      memoryCache.invalidatePattern('^blocks:');
+      memoryCache.invalidatePattern('^insights:');
+      memoryCache.invalidatePattern('^opinion:');
+      memoryCache.invalidatePattern('^trending:');
 
       // Log activity
       await logActivity({
