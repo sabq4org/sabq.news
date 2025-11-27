@@ -1110,10 +1110,13 @@ router.post("/webhook", async (req: Request, res: Response) => {
     
     // Send confirmation message
     if (isFirst) {
-      // First message - inform user about aggregation window
+      // First message - inform user about instant publishing
+      const confirmMessage = AGGREGATION_WINDOW_SECONDS === 0
+        ? `✅ تم استلام رسالتك\n\n⚡ سيتم النشر الفوري خلال ثوانٍ\n\n📎 يمكنك إرسال المزيد من الصور قبل النشر`
+        : `✅ تم استلام رسالتك\n\n📝 يمكنك إرسال المزيد من الرسائل أو الصور خلال ${AGGREGATION_WINDOW_SECONDS} ثانية\n\n💡 أرسل "إرسال" للنشر فوراً`;
       await sendWhatsAppMessage({
         to: phoneNumber,
-        body: `✅ تم استلام رسالتك\n\n📝 يمكنك إرسال المزيد من الرسائل أو الصور خلال ${AGGREGATION_WINDOW_SECONDS} ثانية\n\n💡 أرسل "إرسال" للنشر فوراً`,
+        body: confirmMessage,
       });
     } else {
       // Additional parts - confirm receipt
