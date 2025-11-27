@@ -9153,6 +9153,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+
+  // Record reading time for an article
+  app.post("/api/articles/:id/reading-time", isAuthenticated, checkUserStatus(), async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const articleId = req.params.id;
+      const { duration } = req.body;
+
+      if (!duration || typeof duration !== 'number' || duration < 5) {
+        return res.status(400).json({ message: "Invalid duration. Minimum 5 seconds required." });
+      }
+
+      // Cap duration at 30 minutes (1800 seconds) to filter out unrealistic values
+      const cappedDuration = Math.min(duration, 1800);
+
+      await storage.recordArticleRead(userId, articleId, cappedDuration);
+      res.json({ success: true, duration: cappedDuration });
+    } catch (error) {
+      console.error("Error recording reading time:", error);
+      res.status(500).json({ message: "Failed to record reading time" });
+    }
+  });
   app.post("/api/articles/:id/analyze-credibility", isAuthenticated, async (req: any, res) => {
     try {
       const articleId = req.params.id;

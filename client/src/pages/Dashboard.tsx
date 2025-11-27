@@ -528,10 +528,10 @@ function Dashboard() {
               ) : (
                 <>
                   <div className="text-2xl font-bold" data-testid="text-avg-time">
-                    {Math.floor((stats?.engagement.averageTimeOnSite || 0) / 60)}:{String((stats?.engagement.averageTimeOnSite || 0) % 60).padStart(2, '0')}
+                    {(stats?.engagement.averageTimeOnSite || 0) > 0 ? `${Math.floor((stats?.engagement.averageTimeOnSite || 0) / 60)}:${String((stats?.engagement.averageTimeOnSite || 0) % 60).padStart(2, '0')}` : 'غير متاح'}
                   </div>
                   <p className="text-xs text-muted-foreground" data-testid="text-avg-time-description">
-                    دقيقة:ثانية لكل مقال
+                    {(stats?.engagement.averageTimeOnSite || 0) > 0 ? 'دقيقة:ثانية لكل مقال' : 'سيتم التحديث عند توفر بيانات'}
                   </p>
                 </>
               )}
