@@ -73,19 +73,21 @@ app.use(
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: isDevelopment 
-          ? ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://platform.twitter.com", "https://cdn.syndication.twimg.com"] // Vite needs these in dev + Twitter
-          : ["'self'", "'unsafe-inline'", "https://platform.twitter.com", "https://cdn.syndication.twimg.com"], // Production: allow inline scripts for Vite + Twitter
-        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://ton.twimg.com"], // Allow inline styles for Vite + Twitter
-        imgSrc: ["'self'", "data:", "https:", "blob:", "https://*.twimg.com"], // Allow Twitter images
+          ? ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://platform.twitter.com", "https://cdn.syndication.twimg.com"]
+          : ["'self'", "https://platform.twitter.com", "https://cdn.syndication.twimg.com"],
+        styleSrc: isDevelopment
+          ? ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://ton.twimg.com"]
+          : ["'self'", "https://fonts.googleapis.com", "https://ton.twimg.com"],
+        imgSrc: ["'self'", "data:", "https:", "blob:", "https://*.twimg.com"],
         fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
         connectSrc: [
           "'self'",
-          "ws:", // WebSocket in development
-          "wss:", // WebSocket in production
+          ...(isDevelopment ? ["ws:", "wss:"] : ["wss:"]),
           "https://api.openai.com",
           "https://api.elevenlabs.io",
           "https://storage.googleapis.com",
-          "https://syndication.twitter.com" // Twitter API
+          "https://syndication.twitter.com",
+          "https://generativelanguage.googleapis.com"
         ],
         mediaSrc: ["'self'", "https:", "blob:"],
         objectSrc: ["'none'"],
@@ -93,17 +95,25 @@ app.use(
           "'self'", 
           "https://platform.twitter.com", 
           "https://twitter.com", 
-          "https://x.com", // Twitter embeds
-          "https://www.youtube.com", // YouTube videos
-          "https://www.dailymotion.com" // Dailymotion videos
+          "https://x.com",
+          "https://www.youtube.com",
+          "https://www.dailymotion.com"
         ],
         baseUri: ["'self'"],
-        formAction: ["'self'"],
+        formAction: ["'self'", "https://appleid.apple.com"],
         upgradeInsecureRequests: isDevelopment ? null : [],
       },
     },
     crossOriginEmbedderPolicy: false,
     crossOriginResourcePolicy: { policy: "cross-origin" },
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true
+    },
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+    noSniff: true,
+    xssFilter: true,
   })
 );
 

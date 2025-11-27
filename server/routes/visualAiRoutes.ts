@@ -8,7 +8,11 @@ import {
   imageAnalysis, 
   socialMediaCards, 
   visualRecommendations, 
-  storyCards 
+  storyCards,
+  visualAiAnalyzeRequestSchema,
+  visualAiSocialCardsRequestSchema,
+  visualAiTrackPerformanceRequestSchema,
+  visualAiRecommendationDecisionSchema
 } from "@shared/schema";
 import { 
   analyzeImage, 
@@ -23,6 +27,7 @@ import {
 } from "../services/socialMediaCardsService";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { isAuthenticated } from "../auth";
+import { z } from "zod";
 
 const router = Router();
 
@@ -37,20 +42,29 @@ const router = Router();
 router.post("/analyze", isAuthenticated, async (req: Request, res: Response) => {
   try {
     const userId = (req.user as any)?.id;
+    
+    // Validate request body with Zod
+    const parseResult = visualAiAnalyzeRequestSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json({ 
+        error: "بيانات غير صالحة",
+        details: parseResult.error.errors.map(e => ({
+          field: e.path.join('.'),
+          message: e.message
+        }))
+      });
+    }
+    
     const {
       imageUrl,
       articleId,
       articleTitle,
       articleContent,
-      checkQuality = true,
-      generateAltText = true,
-      detectContent = true,
-      checkRelevance = false
-    }: ImageAnalysisRequest & { articleId?: string } = req.body;
-
-    if (!imageUrl) {
-      return res.status(400).json({ error: "imageUrl is required" });
-    }
+      checkQuality,
+      generateAltText,
+      detectContent,
+      checkRelevance
+    } = parseResult.data;
 
     console.log(`[Visual AI API] Analyzing image for user ${userId}`);
 

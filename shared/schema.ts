@@ -8124,6 +8124,64 @@ export type StoryCard = typeof storyCards.$inferSelect;
 export type InsertStoryCard = z.infer<typeof insertStoryCardSchema>;
 
 // ============================================
+// VISUAL AI REQUEST VALIDATION SCHEMAS
+// ============================================
+
+// Schema for image analysis API requests
+export const visualAiAnalyzeRequestSchema = z.object({
+  imageUrl: z.string().url("يجب أن يكون رابط صورة صالح"),
+  articleId: z.string().uuid().optional(),
+  articleTitle: z.string().max(500).optional(),
+  articleContent: z.string().max(50000).optional(),
+  checkQuality: z.boolean().default(true),
+  generateAltText: z.boolean().default(true),
+  detectContent: z.boolean().default(true),
+  checkRelevance: z.boolean().default(false),
+});
+export type VisualAiAnalyzeRequest = z.infer<typeof visualAiAnalyzeRequestSchema>;
+
+// Schema for news image generation requests
+export const visualAiGenerateImageRequestSchema = z.object({
+  articleTitle: z.string().min(5, "عنوان المقال قصير جداً").max(500),
+  articleContent: z.string().min(50, "محتوى المقال قصير جداً").max(50000).optional(),
+  articleId: z.string().uuid().optional(),
+  style: z.enum(["photorealistic", "illustration", "infographic", "abstract", "news"]).default("photorealistic"),
+  aspectRatio: z.enum(["16:9", "4:3", "1:1", "9:16"]).default("16:9"),
+  includeText: z.boolean().default(false),
+  language: z.enum(["ar", "en", "ur"]).default("ar"),
+});
+export type VisualAiGenerateImageRequest = z.infer<typeof visualAiGenerateImageRequestSchema>;
+
+// Schema for social media cards generation
+export const visualAiSocialCardsRequestSchema = z.object({
+  articleId: z.string().uuid("معرف المقال غير صالح"),
+  articleTitle: z.string().min(5).max(500),
+  articleSummary: z.string().max(1000).optional(),
+  articleImage: z.string().url().optional(),
+  platforms: z.array(z.enum(["twitter", "instagram", "facebook", "whatsapp", "linkedin"])).min(1).default(["twitter"]),
+  language: z.enum(["ar", "en", "ur"]).default("ar"),
+  template: z.enum(["standard", "breaking", "analysis", "opinion", "sports", "tech"]).default("standard"),
+});
+export type VisualAiSocialCardsRequest = z.infer<typeof visualAiSocialCardsRequestSchema>;
+
+// Schema for card performance tracking
+export const visualAiTrackPerformanceRequestSchema = z.object({
+  cardId: z.string().uuid("معرف البطاقة غير صالح"),
+  platform: z.enum(["twitter", "instagram", "facebook", "whatsapp", "linkedin"]),
+  eventType: z.enum(["view", "click", "share", "download"]),
+  metadata: z.record(z.any()).optional(),
+});
+export type VisualAiTrackPerformanceRequest = z.infer<typeof visualAiTrackPerformanceRequestSchema>;
+
+// Schema for visual recommendations decision
+export const visualAiRecommendationDecisionSchema = z.object({
+  recommendationId: z.string().uuid(),
+  action: z.enum(["apply", "dismiss", "defer"]),
+  feedback: z.string().max(500).optional(),
+});
+export type VisualAiRecommendationDecision = z.infer<typeof visualAiRecommendationDecisionSchema>;
+
+// ============================================
 // HOMEPAGE STATISTICS
 // ============================================
 
