@@ -13335,6 +13335,18 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     }
   });
 
+
+  // Get latest published topics for homepage block
+  app.get("/api/muqtarab/latest-topics", async (req, res) => {
+    try {
+      const limit = Number(req.query.limit) || 3;
+      const topics = await storage.getLatestPublishedTopics(limit);
+      res.json({ topics });
+    } catch (error) {
+      console.error("Error fetching latest topics:", error);
+      res.status(500).json({ message: "Failed to fetch latest topics" });
+    }
+  });
   // Get all angles (with optional active filter)
   app.get("/api/muqtarab/angles", async (req, res) => {
     try {

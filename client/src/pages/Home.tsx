@@ -18,6 +18,7 @@ import { SmartNewsBlock } from "@/components/SmartNewsBlock";
 import { QuadCategoriesBlock } from "@/components/QuadCategoriesBlock";
 import { IFoxHomeBlock } from "@/components/IFoxHomeBlock";
 import { OpinionArticlesBlock } from "@/components/OpinionArticlesBlock";
+import { MuqtarabHomeBlock } from "@/components/MuqtarabHomeBlock";
 import { AdSlot } from "@/components/AdSlot";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -467,6 +468,11 @@ export default function Home() {
           {/* Opinion Articles Block */}
           <div className="scroll-fade-in">
             <OpinionArticlesBlock />
+          </div>
+
+          {/* Muqtarab Block */}
+          <div className="scroll-fade-in">
+            <MuqtarabHomeBlock />
           </div>
         </div>
 

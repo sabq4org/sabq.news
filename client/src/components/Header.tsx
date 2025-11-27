@@ -81,6 +81,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
     { name: "عمق", href: "/omq" },
     { name: "المرقاب", href: "/mirqab" },
     { name: "مقالات", href: "/opinion" },
+    { name: "مُقترب", href: "/muqtarab" },
     { name: "لحظة بلحظة", href: "/moment-by-moment" },
   ];
 
@@ -390,6 +391,15 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                 data-testid="link-mobile-chatbot"
               >
                 المساعد الذكي
+              </span>
+            </Link>
+            <Link href="/muqtarab">
+              <span
+                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover-elevate active-elevate-2 cursor-pointer"
+                onClick={() => setMobileMenuOpen(false)}
+                data-testid="link-mobile-muqtarab"
+              >
+                مُقترب
               </span>
             </Link>
             {user && (

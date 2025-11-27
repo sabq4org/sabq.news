@@ -625,6 +625,7 @@ export interface IStorage {
   publishTopic(id: string, userId: string): Promise<Topic>;
   unpublishTopic(id: string, userId: string): Promise<Topic>;
   getPublishedTopicsByAngle(angleSlug: string, limit?: number): Promise<Topic[]>;
+  getLatestPublishedTopics(limit?: number): Promise<Array<Topic & { angle: { id: string; name: string; slug: string; icon?: string | null; colorHex?: string | null } }>>;
   
   // Homepage operations
   getHeroArticles(): Promise<ArticleWithDetails[]>;
@@ -7189,6 +7190,33 @@ export class DatabaseStorage implements IStorage {
     
     const results = await query;
     return results.map((r) => r.topic);
+  }
+
+  async getLatestPublishedTopics(limit: number = 3): Promise<Array<Topic & { angle: { id: string; name: string; slug: string; icon?: string | null; colorHex?: string | null } }>> {
+    const results = await db
+      .select({
+        topic: topics,
+        angle: {
+          id: angles.id,
+          name: angles.nameAr,
+          slug: angles.slug,
+          icon: angles.iconKey,
+          colorHex: angles.colorHex,
+        },
+      })
+      .from(topics)
+      .innerJoin(angles, eq(topics.angleId, angles.id))
+      .where(and(
+        eq(topics.status, 'published'),
+        eq(angles.isActive, true)
+      ))
+      .orderBy(desc(topics.publishedAt))
+      .limit(limit);
+    
+    return results.map((r) => ({
+      ...r.topic,
+      angle: r.angle,
+    }));
   }
 
   // Story operations
