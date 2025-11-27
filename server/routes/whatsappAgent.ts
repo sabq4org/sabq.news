@@ -954,22 +954,19 @@ router.post("/webhook", async (req: Request, res: Response) => {
       }
       
       await storage.updateArticle(existingArticle.id, { status: 'archived' });
+      await storage.updateArticle(existingArticle.id, { status: 'archived' });
       
-      // مسح الكاش فوراً لإزالة الخبر من القوائم
-      memoryCache.invalidatePattern('^homepage:');
-      memoryCache.invalidatePattern('^blocks:');
-      memoryCache.invalidatePattern('^trending:');
-      memoryCache.invalidatePattern('^articles:');
-      memoryCache.invalidatePattern('^category:');
-      console.log(`[WhatsApp Agent] Cache invalidated for article archive`);
+      // مسح الكاش فوراً وإشعار المتصفحات لإزالة الخبر من القوائم
+      memoryCache.invalidatePatterns([
+        "^homepage:",
+        "^blocks:",
+        "^trending:",
+        "^articles:",
+        "^category:"
+      ]);
+      console.log(`[WhatsApp Agent] Cache invalidated and SSE broadcast for article archive`);
       
       await storage.updateWhatsappWebhookLog(webhookLog.id, {
-        status: "processed",
-        reason: "article_archived",
-        userId: whatsappToken.userId,
-        token: token,
-        articleId: existingArticle.id,
-        processingTimeMs: Date.now() - startTime,
       });
       
       await sendWhatsAppMessage({
@@ -1014,14 +1011,17 @@ router.post("/webhook", async (req: Request, res: Response) => {
       const newNewsType = existingArticle.newsType === 'breaking' ? 'regular' : 'breaking';
       await storage.updateArticle(existingArticle.id, { newsType: newNewsType });
       
-      // مسح الكاش فوراً لظهور التغيير مباشرة على الصفحة الرئيسية
-      memoryCache.invalidatePattern('^homepage:');
-      memoryCache.invalidatePattern('^blocks:');
-      memoryCache.invalidatePattern('^breaking:');
-      memoryCache.invalidatePattern('^trending:');
-      memoryCache.invalidatePattern('^articles:');
-      memoryCache.invalidatePattern('^category:');
-      console.log(`[WhatsApp Agent] Cache invalidated for breaking news change`);
+      // مسح الكاش فوراً وإشعار المتصفحات لظهور التغيير مباشرة
+      memoryCache.invalidatePatterns([
+        "^homepage:",
+        "^blocks:",
+        "^breaking:",
+        "^trending:",
+        "^articles:",
+        "^category:"
+      ]);
+      console.log(`[WhatsApp Agent] Cache invalidated and SSE broadcast for breaking news change`);
+      
       
       await storage.updateWhatsappWebhookLog(webhookLog.id, {
         status: "processed",

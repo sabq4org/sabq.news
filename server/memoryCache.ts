@@ -1,10 +1,44 @@
 import memoizee from 'memoizee';
+import type { Response } from 'express';
 
 interface CacheEntry<T> {
   data: T;
   timestamp: number;
   ttl: number;
 }
+
+// SSE Connection Manager for cache invalidation broadcasts
+class SSEConnectionManager {
+  private connections: Set<Response> = new Set();
+
+  addConnection(res: Response): void {
+    this.connections.add(res);
+    console.log(`[SSE] Client connected (total: ${this.connections.size})`);
+  }
+
+  removeConnection(res: Response): void {
+    this.connections.delete(res);
+    console.log(`[SSE] Client disconnected (total: ${this.connections.size})`);
+  }
+
+  broadcast(data: { type: string; patterns?: string[] }): void {
+    const message = `data: ${JSON.stringify(data)}\n\n`;
+    for (const res of Array.from(this.connections)) {
+      try {
+        res.write(message);
+      } catch (e) {
+        // Connection might be closed
+        this.connections.delete(res);
+      }
+    }
+  }
+
+  getConnectionCount(): number {
+    return this.connections.size;
+  }
+}
+
+export const sseConnectionManager = new SSEConnectionManager();
 
 class MemoryCache {
   private cache: Map<string, CacheEntry<any>> = new Map();
@@ -50,13 +84,57 @@ class MemoryCache {
     this.cache.delete(key);
   }
 
-  invalidatePattern(pattern: string): void {
+  // Invalidate cache patterns and broadcast to all SSE clients
+  invalidatePattern(pattern: string, broadcast: boolean = false): void {
     const regex = new RegExp(pattern);
     const keys = Array.from(this.cache.keys());
+    let invalidatedCount = 0;
+    
     for (const key of keys) {
       if (regex.test(key)) {
         this.cache.delete(key);
+        invalidatedCount++;
       }
+    }
+    
+    // Broadcast to SSE clients if requested
+    if (broadcast && invalidatedCount > 0) {
+      const patternName = pattern.replace('^', '').replace(':', '');
+      sseConnectionManager.broadcast({
+        type: 'cache_invalidated',
+        patterns: [patternName],
+      });
+    }
+  }
+
+  // Invalidate multiple patterns and broadcast once
+  invalidatePatterns(patterns: string[]): void {
+    const invalidatedPatterns: string[] = [];
+    
+    for (const pattern of patterns) {
+      const regex = new RegExp(pattern);
+      const keys = Array.from(this.cache.keys());
+      let invalidatedCount = 0;
+      
+      for (const key of keys) {
+        if (regex.test(key)) {
+          this.cache.delete(key);
+          invalidatedCount++;
+        }
+      }
+      
+      if (invalidatedCount > 0) {
+        invalidatedPatterns.push(pattern.replace('^', '').replace(':', ''));
+      }
+    }
+    
+    // Broadcast once with all invalidated patterns
+    if (invalidatedPatterns.length > 0) {
+      sseConnectionManager.broadcast({
+        type: 'cache_invalidated',
+        patterns: invalidatedPatterns,
+      });
+      console.log(`[Cache] Invalidated and broadcast: ${invalidatedPatterns.join(', ')}`);
     }
   }
 

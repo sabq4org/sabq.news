@@ -34,7 +34,7 @@ import { classifyArticle } from './ai-classifier';
 import { generateSeoMetadata } from './seo-generator';
 import { cacheControl, noCache, withETag, CACHE_DURATIONS } from "./cacheMiddleware";
 import { passKitService, type PressPassData, type LoyaltyPassData } from "./lib/passkit/PassKitService";
-import { memoryCache, CACHE_TTL, withCache } from "./memoryCache";
+import { memoryCache, CACHE_TTL, withCache, sseConnectionManager } from "./memoryCache";
 import pLimit from 'p-limit';
 import { db } from "./db";
 import { eq, and, or, desc, asc, ilike, sql, inArray, gte, lt, lte, aliasedTable, isNull, ne, not, isNotNull } from "drizzle-orm";
@@ -6686,6 +6686,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error fetching activity log:", error);
       res.status(500).json({ message: "Failed to fetch activity log" });
     }
+  });
+
+  // ============================================================
+  // CACHE INVALIDATION SSE STREAM (for instant updates)
+  // ============================================================
+  
+  app.get("/api/cache-invalidation/stream", (req, res) => {
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.setHeader("X-Accel-Buffering", "no"); // Disable nginx buffering
+    res.flushHeaders();
+
+    // Add to SSE connection manager
+    sseConnectionManager.addConnection(res);
+
+    // Send heartbeat every 30 seconds to keep connection alive
+    const heartbeat = setInterval(() => {
+      try {
+        res.write(": heartbeat\n\n");
+      } catch (e) {
+        clearInterval(heartbeat);
+        sseConnectionManager.removeConnection(res);
+      }
+    }, 30000);
+
+    // Clean up on close
+    req.on("close", () => {
+      clearInterval(heartbeat);
+      sseConnectionManager.removeConnection(res);
+    });
   });
 
   // ============================================================

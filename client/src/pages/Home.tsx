@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { MobileOptimizedKpiCard } from "@/components/MobileOptimizedKpiCard";
@@ -226,11 +226,36 @@ export default function Home() {
     retry: false,
   });
 
-  const { data: homepage, isLoading, error } = useQuery<HomepageData>({
+  const { data: homepage, isLoading, error, refetch: refetchHomepage } = useQuery<HomepageData>({
     queryKey: ["/api/homepage"],
-    staleTime: 30 * 1000, // Data becomes stale after 30 seconds
-    refetchInterval: 60 * 1000, // Auto-refresh every 60 seconds
+    staleTime: 15 * 1000, // Data becomes stale after 15 seconds
+    refetchInterval: 20 * 1000, // Auto-refresh every 20 seconds for breaking news
   });
+
+  // Listen for SSE cache invalidation events (for instant breaking news updates)
+  useEffect(() => {
+    const eventSource = new EventSource('/api/cache-invalidation/stream');
+    
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'cache_invalidated' && data.patterns?.includes('homepage')) {
+          console.log('[SSE] Homepage cache invalidated, refetching...');
+          refetchHomepage();
+        }
+      } catch (e) {
+        // Ignore parse errors (heartbeat messages)
+      }
+    };
+
+    eventSource.onerror = () => {
+      // Silent reconnect on error
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, [refetchHomepage]);
 
   // Fetch homepage statistics
   const { data: stats } = useQuery<{
