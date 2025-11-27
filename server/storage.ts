@@ -13853,7 +13853,8 @@ export class DatabaseStorage implements IStorage {
     mediaUrls?: string[];
     aggregationWindowSeconds?: number;
   }): Promise<PendingWhatsappMessage> {
-    const windowSeconds = data.aggregationWindowSeconds || 30;
+    // استخدام ?? بدلاً من || للسماح بالقيمة 0 للنشر الفوري
+    const windowSeconds = data.aggregationWindowSeconds ?? 30;
     const expiresAt = new Date(Date.now() + windowSeconds * 1000);
     
     // Use atomic upsert with array_cat to prevent race conditions
