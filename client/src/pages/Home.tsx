@@ -234,12 +234,18 @@ export default function Home() {
 
   // Listen for SSE cache invalidation events (for instant breaking news updates)
   useEffect(() => {
+    console.log('[SSE] Connecting to cache invalidation stream...');
     const eventSource = new EventSource('/api/cache-invalidation/stream');
     
+    eventSource.onopen = () => {
+      console.log('[SSE] Connected to cache invalidation stream');
+    };
+    
     eventSource.onmessage = (event) => {
+      console.log('[SSE] Received message:', event.data);
       try {
         const data = JSON.parse(event.data);
-        if (data.type === 'cache_invalidated' && data.patterns?.includes('homepage')) {
+        if (data.type === 'cache_invalidated' && data.patterns?.some((p: string) => p.includes('homepage') || p.includes('breaking') || p.includes('blocks'))) {
           console.log('[SSE] Homepage cache invalidated, refetching...');
           refetchHomepage();
         }
@@ -248,11 +254,12 @@ export default function Home() {
       }
     };
 
-    eventSource.onerror = () => {
-      // Silent reconnect on error
+    eventSource.onerror = (err) => {
+      console.log('[SSE] Connection error, will reconnect...', err);
     };
 
     return () => {
+      console.log('[SSE] Closing connection');
       eventSource.close();
     };
   }, [refetchHomepage]);

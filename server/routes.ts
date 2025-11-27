@@ -6723,7 +6723,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // HOMEPAGE ROUTE
   // ============================================================
 
-  app.get("/api/homepage", cacheControl({ maxAge: CACHE_DURATIONS.MEDIUM }), async (req: any, res) => {
+  app.get("/api/homepage", noCache(), async (req: any, res) => {
     try {
       const userId = req.user?.id;
       // ✅ Validate and clamp limit/offset
