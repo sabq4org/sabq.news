@@ -1242,6 +1242,7 @@ export default function ArticleDetail() {
             {/* Additional Images - from mediaAssets table OR albumImages field */}
             {(() => {
               // First check mediaAssets from article_media_assets table
+              // Note: API returns { ...assetFields, mediaFile: { ...mediaFileFields } }
               const mediaAdditionalImages = mediaAssets
                 ?.filter((asset: any) => asset.displayOrder !== 0)
                 .sort((a: any, b: any) => a.displayOrder - b.displayOrder) || [];
@@ -1260,8 +1261,8 @@ export default function ArticleDetail() {
                     {mediaAdditionalImages.map((asset: any, index: number) => (
                       <ImageWithCaption
                         key={asset.id || `media-${index}`}
-                        imageUrl={asset.url}
-                        altText={asset.altText || `صورة ${index + 1}`}
+                        imageUrl={asset.mediaFile?.url || asset.url}
+                        altText={asset.altText || asset.mediaFile?.altText || `صورة ${index + 1}`}
                         captionHtml={asset.captionHtml}
                         captionPlain={asset.captionPlain}
                         sourceName={asset.sourceName}
