@@ -4169,6 +4169,59 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
+  // Update reading progress with scroll depth and completion rate
+  async updateReadingProgress(
+    userId: string, 
+    articleId: string, 
+    scrollDepth: number, 
+    readDuration?: number
+  ): Promise<void> {
+    // Calculate completion rate based on scroll depth
+    // If user scrolled past 90%, consider it complete
+    const completionRate = Math.min(100, scrollDepth);
+    
+    // Check if there's already a reading history entry for this user/article
+    const existing = await db
+      .select()
+      .from(readingHistory)
+      .where(
+        and(
+          eq(readingHistory.userId, userId),
+          eq(readingHistory.articleId, articleId)
+        )
+      )
+      .orderBy(desc(readingHistory.readAt))
+      .limit(1);
+
+    if (existing.length > 0) {
+      // Update the most recent reading record with higher scroll depth
+      const currentScrollDepth = existing[0].scrollDepth || 0;
+      const currentCompletionRate = existing[0].completionRate || 0;
+      
+      // Only update if new values are higher
+      if (scrollDepth > currentScrollDepth || completionRate > currentCompletionRate) {
+        await db
+          .update(readingHistory)
+          .set({
+            scrollDepth: Math.max(scrollDepth, currentScrollDepth),
+            completionRate: Math.max(completionRate, currentCompletionRate),
+            readDuration: readDuration || existing[0].readDuration,
+            readAt: new Date(), // Update timestamp
+          })
+          .where(eq(readingHistory.id, existing[0].id));
+      }
+    } else {
+      // Create new reading history entry with scroll depth
+      await db.insert(readingHistory).values({
+        userId,
+        articleId,
+        scrollDepth,
+        completionRate,
+        readDuration,
+      });
+    }
+  }
+
   async getUserReadingHistory(userId: string, limit: number = 20): Promise<ArticleWithDetails[]> {
     const reporterAlias = aliasedTable(users, 'reporter');
     

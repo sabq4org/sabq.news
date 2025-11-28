@@ -12182,6 +12182,16 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
                 scrollDepth: meta.scrollDepth,
               },
             });
+            
+            // Update reading_history with scroll depth for Continue Reading feature
+            if (meta.scrollDepth && typeof meta.scrollDepth === 'number') {
+              await storage.updateReadingProgress(
+                userId,
+                meta.articleId,
+                meta.scrollDepth,
+                meta.readTime || meta.duration
+              );
+            }
           } else if (eventType === "article_view") {
             await trackUserEvent({
               userId,
