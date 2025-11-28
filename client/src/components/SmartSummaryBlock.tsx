@@ -257,56 +257,56 @@ export function SmartSummaryBlock() {
 
         <CollapsibleContent>
           {/* Metrics - Mobile: 2x2 Grid */}
-          <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 lg:hidden mb-5">
-            <div className="rounded-xl p-3 space-y-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800" data-testid="metric-وقت القراءة-mobile">
+          <div className="grid grid-cols-2 gap-2 lg:hidden mb-4">
+            <div className="rounded-lg p-2.5 space-y-1.5 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800" data-testid="metric-وقت القراءة-mobile">
               <div className="flex items-center justify-between">
                 <div className="text-blue-600 dark:text-blue-400">
-                  <BookOpen className="h-5 w-5" />
+                  <BookOpen className="h-4 w-4" />
                 </div>
-                <TrendingUp className="h-3 w-3 text-muted-foreground" />
+                <TrendingUp className="h-2.5 w-2.5 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-lg font-bold text-foreground">{insights.metrics.readingTime} دقيقة</p>
-                <p className="text-xs text-muted-foreground">وقت القراءة</p>
+                <p className="text-base font-bold text-foreground">{insights.metrics.readingTime} دقيقة</p>
+                <p className="text-[10px] text-muted-foreground">وقت القراءة</p>
               </div>
             </div>
             
-            <div className="rounded-xl p-3 space-y-2 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800" data-testid="metric-معدل الإكمال-mobile">
+            <div className="rounded-lg p-2.5 space-y-1.5 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800" data-testid="metric-معدل الإكمال-mobile">
               <div className="flex items-center justify-between">
                 <div className="text-green-600 dark:text-green-400">
-                  <Percent className="h-5 w-5" />
+                  <Percent className="h-4 w-4" />
                 </div>
-                <TrendingUp className="h-3 w-3 text-muted-foreground" />
+                <TrendingUp className="h-2.5 w-2.5 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-lg font-bold text-foreground">{insights.metrics.completionRate}%</p>
-                <p className="text-xs text-muted-foreground">معدل الإكمال</p>
+                <p className="text-base font-bold text-foreground">{insights.metrics.completionRate}%</p>
+                <p className="text-[10px] text-muted-foreground">معدل الإكمال</p>
               </div>
             </div>
             
-            <div className="rounded-xl p-3 space-y-2 bg-pink-50 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-800" data-testid="metric-الإعجابات-mobile">
+            <div className="rounded-lg p-2.5 space-y-1.5 bg-pink-50 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-800" data-testid="metric-الإعجابات-mobile">
               <div className="flex items-center justify-between">
                 <div className="text-pink-600 dark:text-pink-400">
-                  <Heart className="h-5 w-5" />
+                  <Heart className="h-4 w-4" />
                 </div>
-                <TrendingUp className="h-3 w-3 text-muted-foreground" />
+                <TrendingUp className="h-2.5 w-2.5 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-lg font-bold text-foreground">{insights.metrics.likes}</p>
-                <p className="text-xs text-muted-foreground">الإعجابات</p>
+                <p className="text-base font-bold text-foreground">{insights.metrics.likes}</p>
+                <p className="text-[10px] text-muted-foreground">الإعجابات</p>
               </div>
             </div>
             
-            <div className="rounded-xl p-3 space-y-2 bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800" data-testid="metric-التعليقات-mobile">
+            <div className="rounded-lg p-2.5 space-y-1.5 bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800" data-testid="metric-التعليقات-mobile">
               <div className="flex items-center justify-between">
                 <div className="text-purple-600 dark:text-purple-400">
-                  <MessageSquare className="h-5 w-5" />
+                  <MessageSquare className="h-4 w-4" />
                 </div>
-                <TrendingUp className="h-3 w-3 text-muted-foreground" />
+                <TrendingUp className="h-2.5 w-2.5 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-lg font-bold text-foreground">{insights.metrics.comments}</p>
-                <p className="text-xs text-muted-foreground">التعليقات</p>
+                <p className="text-base font-bold text-foreground">{insights.metrics.comments}</p>
+                <p className="text-[10px] text-muted-foreground">التعليقات</p>
               </div>
             </div>
           </div>
