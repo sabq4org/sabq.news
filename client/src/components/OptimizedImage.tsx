@@ -159,9 +159,8 @@ export function OptimizedImage({
     return generateResponsiveSrcSet(src);
   }, [src, srcSet]);
   
-  // Use provided blurDataUrl (base64) or generate lightweight CSS gradient
+  // Generate lightweight CSS gradient placeholder
   const gradientPlaceholder = useMemo(() => generateGradientPlaceholder(src), [src]);
-  const hasBlurDataUrl = !!blurDataUrl;
 
   useEffect(() => {
     if (priority) {
@@ -250,38 +249,17 @@ export function OptimizedImage({
       className={`relative overflow-hidden ${className}`}
       style={aspectRatio ? { aspectRatio } : undefined}
     >
-      {/* Gradient/blur placeholder - shows while main image loads */}
+      {/* Simple gradient placeholder - shows while main image loads */}
       {!isLoaded && (
-        <>
-          {/* Base gradient layer */}
-          <div 
-            className="absolute inset-0 w-full h-full"
-            style={{
-              background: hasBlurDataUrl 
-                ? `url(${blurDataUrl})` 
-                : gradientPlaceholder,
-              backgroundSize: 'cover',
-              backgroundPosition: objectPosition,
-              filter: hasBlurDataUrl ? 'blur(10px)' : 'none',
-              transform: hasBlurDataUrl ? 'scale(1.05)' : 'none',
-            }}
-            aria-hidden="true"
-          />
-          {/* Shimmer overlay for progressive loading effect */}
-          {!hasBlurDataUrl && (
-            <div 
-              className="absolute inset-0 w-full h-full overflow-hidden"
-              aria-hidden="true"
-            >
-              <div 
-                className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite]"
-                style={{
-                  background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%)',
-                }}
-              />
-            </div>
-          )}
-        </>
+        <div 
+          className="absolute inset-0 w-full h-full bg-muted/30"
+          style={{
+            background: gradientPlaceholder,
+            backgroundSize: 'cover',
+            backgroundPosition: objectPosition,
+          }}
+          aria-hidden="true"
+        />
       )}
       
       {/* Main image with progressive loading */}
