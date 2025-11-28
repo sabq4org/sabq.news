@@ -13878,15 +13878,14 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     return `${baseSlug}-${Date.now()}`;
   }
 
-  // 1. GET /api/tags - Get all tags with filters and sorting
+
+  // 1. GET /api/tags - Get all tags with filters and sorting (with accurate usage count)
   app.get("/api/tags", async (req, res) => {
     try {
       const { status, search } = req.query;
 
-      let query = db.select().from(tags);
-
-      // Build where conditions
-      const conditions = [];
+      // Build base query with calculated usage count from articleTags
+      const conditions: any[] = [];
       
       if (status) {
         conditions.push(eq(tags.status, status as string));
@@ -13902,12 +13901,33 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         );
       }
 
+      // Get all tags
+      let query = db.select().from(tags);
       if (conditions.length > 0) {
         query = query.where(and(...conditions)) as any;
       }
+      const allTags = await query.orderBy(desc(tags.createdAt));
 
-      // Order by usage count descending
-      const result = await query.orderBy(desc(tags.usageCount));
+      // Get actual usage counts from articleTags table
+      const usageCounts = await db
+        .select({
+          tagId: articleTags.tagId,
+          count: sql<number>`count(*)`.as("count"),
+        })
+        .from(articleTags)
+        .groupBy(articleTags.tagId);
+
+      // Create a map for quick lookup
+      const countMap = new Map(usageCounts.map(uc => [uc.tagId, Number(uc.count)]));
+
+      // Merge counts with tags
+      const result = allTags.map(tag => ({
+        ...tag,
+        usageCount: countMap.get(tag.id) || 0,
+      }));
+
+      // Sort by usage count descending
+      result.sort((a, b) => b.usageCount - a.usageCount);
 
       res.json(result);
     } catch (error) {
@@ -13916,8 +13936,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     }
   });
 
-  // 2. GET /api/tags/:id - Get specific tag with article count
-  app.get("/api/tags/:id", async (req, res) => {
     try {
       const { id } = req.params;
 

@@ -1,0 +1,76 @@
+2025-11-28 16:15:07.87
+85abf332
+User
+📡 SSE connection opened for user: admin-sabq
+2025-11-28 16:15:07.87
+85abf332
+User
+📡 User admin-sabq subscribed to notification stream
+2025-11-28 16:15:07.91
+85abf332
+User
+1:15:07 PM [express] GET /api/admin/articles/metrics 304 in 195ms :: {"published":120,"scheduled":0,…
+2025-11-28 16:15:08.02
+85abf332
+User
+1:15:08 PM [express] GET /api/admin/articles 304 in 292ms :: [{"id":"70HmXroQPbSxWalNs_xa-","title":…
+2025-11-28 16:15:10.27
+85abf332
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-28 16:15:10.30
+85abf332
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-28 16:15:10.32
+85abf332
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-28 16:15:10.59
+85abf332
+User
+1:15:10 PM [express] GET /api/admin/articles 200 in 326ms :: [{"id":"58d08d25-477e-4052-92e3-b8a32b6…
+2025-11-28 16:15:18.84
+85abf332
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-28 16:15:18.87
+85abf332
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-28 16:15:18.89
+85abf332
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-11-28 16:15:19.06
+85abf332
+User
+Error bulk permanently deleting articles: ReferenceError: whatsappWebhookLogs is not defined
+2025-11-28 16:15:19.06
+85abf332
+User
+at file:///home/runner/workspace/dist/index.js:43697:23
+2025-11-28 16:15:19.06
+85abf332
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-28 16:15:19.09
+85abf332
+User
+1:15:19 PM [express] POST /api/admin/articles/bulk-delete-permanent 500 in 268ms :: {"message":"Fail…
+2025-11-28 16:15:19.47
+85abf332
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-11-28 16:15:19.50
+85abf332
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-11-28 16:15:19.55
+85abf332
+User
+1:15:19 PM [express] POST /api/accessibility/track 200 in 102ms :: {"success":true,"eventId":"c6f8af…
+2025-11-28 16:15:19.55
+85abf332
+User
+1:15:19 PM [express] POST /api/accessibility/track 200 in 102ms :: {"success":true,"eventId":"c6f8af…
