@@ -4856,46 +4856,220 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getContinueReading(userId: string, limit: number = 5): Promise<Array<ArticleWithDetails & { progress: number; lastReadAt: Date }>> {
-    const reporterAlias = aliasedTable(users, 'reporter');
-    
-    const results = await db
-      .select({
-        article: articles,
-        category: categories,
-        author: users,
-        reporter: reporterAlias,
-        scrollDepth: readingHistory.scrollDepth,
-        completionRate: readingHistory.completionRate,
-        lastReadAt: readingHistory.readAt,
-      })
-      .from(readingHistory)
-      .innerJoin(articles, eq(readingHistory.articleId, articles.id))
-      .leftJoin(categories, eq(articles.categoryId, categories.id))
-      .leftJoin(users, eq(articles.authorId, users.id))
-      .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
-      .where(
-        and(
-          eq(readingHistory.userId, userId),
-          eq(articles.status, 'published'),
-          sql`COALESCE(${readingHistory.completionRate}, ${readingHistory.scrollDepth}, 0) < 75`,
-          sql`${readingHistory.readAt} > NOW() - INTERVAL '14 days'`
-        )
+    // Use raw SQL with DISTINCT ON to get unique articles with their max progress
+    const query = sql`
+      WITH article_progress AS (
+        SELECT DISTINCT ON (rh.article_id)
+          rh.article_id,
+          GREATEST(
+            COALESCE(MAX(rh.scroll_depth) OVER (PARTITION BY rh.article_id), 0),
+            COALESCE(MAX(rh.completion_rate) OVER (PARTITION BY rh.article_id), 0)
+          ) as max_progress,
+          rh.read_at as last_read_at
+        FROM reading_history rh
+        WHERE rh.user_id = ${userId}
+          AND rh.read_at > NOW() - INTERVAL '14 days'
+        ORDER BY rh.article_id, rh.read_at DESC
       )
-      .orderBy(desc(readingHistory.readAt))
-      .limit(limit);
-
-    return results.map((row) => ({
-      ...row.article,
-      category: row.category || undefined,
-      author: row.author ? {
-        ...row.author,
-        passwordHash: null,
-      } : row.reporter ? {
-        ...row.reporter,
-        passwordHash: null,
+      SELECT 
+        a.*,
+        c.id as category_id,
+        c.name_ar as category_name_ar,
+        c.name_en as category_name_en,
+        c.slug as category_slug,
+        c.description as category_description,
+        c.color as category_color,
+        c.icon as category_icon,
+        c.hero_image_url as category_hero_image_url,
+        c.display_order as category_display_order,
+        c.status as category_status,
+        c.created_at as category_created_at,
+        u.id as author_id,
+        u.email as author_email,
+        u.first_name as author_first_name,
+        u.last_name as author_last_name,
+        u.bio as author_bio,
+        u.phone_number as author_phone_number,
+        u.profile_image_url as author_profile_image_url,
+        u.role as author_role,
+        u.status as author_status,
+        u.is_profile_complete as author_is_profile_complete,
+        u.email_verified as author_email_verified,
+        u.phone_verified as author_phone_verified,
+        u.verification_badge as author_verification_badge,
+        u.created_at as author_created_at,
+        r.id as reporter_id,
+        r.email as reporter_email,
+        r.first_name as reporter_first_name,
+        r.last_name as reporter_last_name,
+        r.bio as reporter_bio,
+        r.phone_number as reporter_phone_number,
+        r.profile_image_url as reporter_profile_image_url,
+        r.role as reporter_role,
+        r.status as reporter_status,
+        r.is_profile_complete as reporter_is_profile_complete,
+        r.email_verified as reporter_email_verified,
+        r.phone_verified as reporter_phone_verified,
+        r.verification_badge as reporter_verification_badge,
+        r.created_at as reporter_created_at,
+        ap.max_progress as progress,
+        ap.last_read_at
+      FROM article_progress ap
+      INNER JOIN articles a ON a.id = ap.article_id
+      LEFT JOIN categories c ON c.id = a.category_id
+      LEFT JOIN users u ON u.id = a.author_id
+      LEFT JOIN users r ON r.id = a.reporter_id
+      WHERE a.status = 'published'
+        AND ap.max_progress < 75
+      ORDER BY ap.last_read_at DESC
+      LIMIT ${limit}
+    `;
+    
+    const results = await db.execute(query);
+    
+    return (results.rows as any[]).map((row) => ({
+      id: row.id,
+      title: row.title,
+      subtitle: row.subtitle,
+      slug: row.slug,
+      content: row.content,
+      excerpt: row.excerpt,
+      imageUrl: row.image_url,
+      imageFocalPoint: row.image_focal_point,
+      categoryId: row.category_id,
+      authorId: row.author_id,
+      reporterId: row.reporter_id,
+      articleType: row.article_type,
+      newsType: row.news_type,
+      publishType: row.publish_type,
+      scheduledAt: row.scheduled_at,
+      status: row.status,
+      reviewStatus: row.review_status,
+      reviewedBy: row.reviewed_by,
+      reviewedAt: row.reviewed_at,
+      reviewNotes: row.review_notes,
+      hideFromHomepage: row.hide_from_homepage,
+      aiSummary: row.ai_summary,
+      aiGenerated: row.ai_generated,
+      isFeatured: row.is_featured,
+      displayOrder: row.display_order,
+      views: row.views,
+      seo: row.seo,
+      seoMetadata: row.seo_metadata,
+      credibilityScore: row.credibility_score,
+      credibilityAnalysis: row.credibility_analysis,
+      credibilityLastUpdated: row.credibility_last_updated,
+      source: row.source,
+      sourceMetadata: row.source_metadata,
+      sourceUrl: row.source_url,
+      verifiedBy: row.verified_by,
+      verifiedAt: row.verified_at,
+      thumbnailUrl: row.thumbnail_url,
+      isAiGeneratedImage: row.is_ai_generated_image,
+      aiImageModel: row.ai_image_model,
+      aiImagePrompt: row.ai_image_prompt,
+      isAiGeneratedThumbnail: row.is_ai_generated_thumbnail,
+      aiThumbnailModel: row.ai_thumbnail_model,
+      aiThumbnailPrompt: row.ai_thumbnail_prompt,
+      isPublisherContent: row.is_publisher_content || false,
+      publisherStatus: row.publisher_status || null,
+      publisherReviewedBy: row.publisher_reviewed_by || null,
+      publisherReviewedAt: row.publisher_reviewed_at || null,
+      publisherReviewNotes: row.publisher_review_notes || null,
+      isPublisherNews: row.is_publisher_news || false,
+      publisherId: row.publisher_id || null,
+      publisherCreditDeducted: row.publisher_credit_deducted || false,
+      publisherSubmittedAt: row.publisher_submitted_at || null,
+      publisherApprovedAt: row.publisher_approved_at || null,
+      publisherApprovedBy: row.publisher_approved_by || null,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      category: row.category_id ? {
+        id: row.category_id,
+        nameAr: row.category_name_ar,
+        nameEn: row.category_name_en,
+        slug: row.category_slug,
+        description: row.category_description,
+        color: row.category_color,
+        icon: row.category_icon,
+        heroImageUrl: row.category_hero_image_url,
+        displayOrder: row.category_display_order,
+        status: row.category_status,
+        createdAt: row.category_created_at,
       } : undefined,
-      progress: Math.max(row.scrollDepth || 0, row.completionRate || 0),
-      lastReadAt: row.lastReadAt,
+      author: row.author_id ? {
+        id: row.author_id,
+        email: row.author_email,
+        passwordHash: null,
+        firstName: row.author_first_name,
+        lastName: row.author_last_name,
+        bio: row.author_bio,
+        phoneNumber: row.author_phone_number,
+        profileImageUrl: row.author_profile_image_url,
+        role: row.author_role,
+        status: row.author_status,
+        isProfileComplete: row.author_is_profile_complete,
+        emailVerified: row.author_email_verified || false,
+        phoneVerified: row.author_phone_verified || false,
+        verificationBadge: row.author_verification_badge || 'none',
+        twoFactorSecret: null,
+        twoFactorEnabled: false,
+        twoFactorBackupCodes: null,
+        twoFactorMethod: 'authenticator',
+        lastActivityAt: null,
+        suspendedUntil: null,
+        suspensionReason: null,
+        bannedUntil: null,
+        banReason: null,
+        accountLocked: false,
+        lockedUntil: null,
+        failedLoginAttempts: 0,
+        deletedAt: null,
+        authProvider: 'local',
+        googleId: null,
+        appleId: null,
+        firstNameEn: null,
+        lastNameEn: null,
+        allowedLanguages: ['ar'],
+        createdAt: row.author_created_at,
+      } : row.reporter_id ? {
+        id: row.reporter_id,
+        email: row.reporter_email,
+        passwordHash: null,
+        firstName: row.reporter_first_name,
+        lastName: row.reporter_last_name,
+        bio: row.reporter_bio,
+        phoneNumber: row.reporter_phone_number,
+        profileImageUrl: row.reporter_profile_image_url,
+        role: row.reporter_role,
+        status: row.reporter_status,
+        isProfileComplete: row.reporter_is_profile_complete,
+        emailVerified: row.reporter_email_verified || false,
+        phoneVerified: row.reporter_phone_verified || false,
+        verificationBadge: row.reporter_verification_badge || 'none',
+        twoFactorSecret: null,
+        twoFactorEnabled: false,
+        twoFactorBackupCodes: null,
+        twoFactorMethod: 'authenticator',
+        lastActivityAt: null,
+        suspendedUntil: null,
+        suspensionReason: null,
+        bannedUntil: null,
+        banReason: null,
+        accountLocked: false,
+        lockedUntil: null,
+        failedLoginAttempts: 0,
+        deletedAt: null,
+        authProvider: 'local',
+        googleId: null,
+        appleId: null,
+        firstNameEn: null,
+        lastNameEn: null,
+        allowedLanguages: ['ar'],
+        createdAt: row.reporter_created_at,
+      } : undefined,
+      progress: Math.round(Number(row.progress) || 0),
+      lastReadAt: row.last_read_at,
     })) as Array<ArticleWithDetails & { progress: number; lastReadAt: Date }>;
   }
 
