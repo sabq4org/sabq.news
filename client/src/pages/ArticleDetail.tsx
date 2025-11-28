@@ -849,29 +849,19 @@ export default function ArticleDetail() {
     return (
       <div className="min-h-screen bg-background" dir="rtl">
         <Header user={user} />
-        <div className="container mx-auto px-4 lg:px-8">
-          <div className="flex flex-col lg:flex-row gap-8 relative">
-            {/* Main Content */}
-            <div className="flex-1 min-w-0">
-              <InfographicDetail 
-                article={article}
-                onReact={handleReact}
-                onBookmark={handleBookmark}
-                hasReacted={article.hasReacted}
-                isBookmarked={article.isBookmarked}
-                shortLink={shortLink}
-              />
-            </div>
-            
-            {/* Sidebar - Related Infographics */}
-            <aside className="lg:w-96 lg:sticky lg:top-20 lg:h-fit">
-              <RelatedInfographics currentSlug={slug} />
-            </aside>
-          </div>
-        </div>
+        
+        {/* Full-width Infographic Detail with integrated carousel */}
+        <InfographicDetail 
+          article={article}
+          onReact={handleReact}
+          onBookmark={handleBookmark}
+          hasReacted={article.hasReacted}
+          isBookmarked={article.isBookmarked}
+          shortLink={shortLink}
+        />
         
         {/* Comments Section */}
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
           <Separator className="mb-8" />
           <CommentSection
             articleId={article.id}
@@ -880,45 +870,6 @@ export default function ArticleDetail() {
             onSubmitComment={handleComment}
           />
         </div>
-        
-        {/* Related Articles */}
-        {relatedArticles.length > 0 && (
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-            <h2 className="text-2xl font-bold mb-6">مقالات ذات صلة</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {relatedArticles.slice(0, 3).map((relatedArticle) => (
-                <Link
-                  key={relatedArticle.id}
-                  href={`/article/${relatedArticle.slug}`}
-                  className="block group"
-                  data-testid={`link-related-article-${relatedArticle.id}`}
-                >
-                  <div className="bg-card border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
-                    {relatedArticle.imageUrl && (
-                      <div className="aspect-[16/9] overflow-hidden">
-                        <img
-                          src={relatedArticle.imageUrl}
-                          alt={relatedArticle.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                    )}
-                    <div className="p-4">
-                      <h3 className="font-bold line-clamp-2 group-hover:text-primary transition-colors">
-                        {relatedArticle.title}
-                      </h3>
-                      {relatedArticle.excerpt && (
-                        <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-                          {relatedArticle.excerpt}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     );
   }
