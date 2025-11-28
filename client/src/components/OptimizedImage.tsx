@@ -250,38 +250,20 @@ export function OptimizedImage({
       className={`relative overflow-hidden ${className}`}
       style={aspectRatio ? { aspectRatio } : undefined}
     >
-      {/* Gradient/blur placeholder - shows while main image loads */}
+      {/* Simple gradient placeholder - Safari-safe, no transforms or animations */}
       {!isLoaded && (
-        <>
-          {/* Base gradient layer */}
-          <div 
-            className="absolute inset-0 w-full h-full"
-            style={{
-              background: hasBlurDataUrl 
-                ? `url(${blurDataUrl})` 
-                : gradientPlaceholder,
-              backgroundSize: 'cover',
-              backgroundPosition: objectPosition,
-              filter: hasBlurDataUrl ? 'blur(10px)' : 'none',
-              transform: hasBlurDataUrl ? 'scale(1.05)' : 'none',
-            }}
-            aria-hidden="true"
-          />
-          {/* Shimmer overlay for progressive loading effect */}
-          {!hasBlurDataUrl && (
-            <div 
-              className="absolute inset-0 w-full h-full overflow-hidden"
-              aria-hidden="true"
-            >
-              <div 
-                className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite]"
-                style={{
-                  background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%)',
-                }}
-              />
-            </div>
-          )}
-        </>
+        <div 
+          className="absolute inset-0 w-full h-full"
+          style={{
+            background: hasBlurDataUrl 
+              ? `url(${blurDataUrl})` 
+              : gradientPlaceholder,
+            backgroundSize: 'cover',
+            backgroundPosition: objectPosition,
+            filter: hasBlurDataUrl ? 'blur(10px)' : 'none',
+          }}
+          aria-hidden="true"
+        />
       )}
       
       {/* Main image with progressive loading */}
@@ -301,7 +283,6 @@ export function OptimizedImage({
               }`}
               style={imageStyles}
               loading={priority ? "eager" : "lazy"}
-              fetchPriority={priority ? "high" : fetchPriority}
               onLoad={handleLoad}
               onError={handleError}
               decoding="async"
@@ -317,7 +298,6 @@ export function OptimizedImage({
             }`}
             style={imageStyles}
             loading={priority ? "eager" : "lazy"}
-            fetchPriority={priority ? "high" : fetchPriority}
             onLoad={handleLoad}
             onError={handleError}
             decoding="async"
