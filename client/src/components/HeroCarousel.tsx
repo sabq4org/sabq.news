@@ -1,14 +1,23 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Volume2, TrendingUp, Bell, Zap, Star, Flame, Brain } from "lucide-react";
+import { Volume2, TrendingUp, Bell, Zap, Star, Flame, Brain, ChevronLeft, ChevronRight } from "lucide-react";
 import { ViewsCount } from "./ViewsCount";
 import { OptimizedImage } from "./OptimizedImage";
 import type { ArticleWithDetails } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
+
+// Detect iOS Safari to use simplified carousel (prevents zoom bug)
+const isIOSSafari = (): boolean => {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+  return isIOS && isSafari;
+};
 
 // Helper function to check if article is new (published within last 3 hours)
 const isNewArticle = (publishedAt: Date | string | null | undefined) => {
@@ -23,10 +32,325 @@ interface HeroCarouselProps {
   articles: ArticleWithDetails[];
 }
 
+// Simple fade carousel for iOS Safari (no transforms)
+function SafariHeroCarousel({ articles }: HeroCarouselProps) {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  useEffect(() => {
+    if (articles.length <= 1) return;
+    
+    const interval = setInterval(() => {
+      setSelectedIndex((prev) => (prev + 1) % articles.length);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [articles.length]);
+
+  if (!articles || articles.length === 0) return null;
+
+  const formatPublishedDate = (date: Date | string | null) => {
+    if (!date) return "";
+    const dateObj = typeof date === "string" ? new Date(date) : date;
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }).format(dateObj);
+  };
+
+  const getObjectPosition = (article: any) => {
+    const focalPoint = article.imageFocalPoint;
+    return focalPoint ? `${focalPoint.x}% ${focalPoint.y}%` : 'center';
+  };
+
+  const article = articles[selectedIndex];
+
+  const goToPrev = () => {
+    setSelectedIndex((prev) => (prev - 1 + articles.length) % articles.length);
+  };
+
+  const goToNext = () => {
+    setSelectedIndex((prev) => (prev + 1) % articles.length);
+  };
+
+  return (
+    <>
+      <div className="relative w-full rounded-lg bg-card" dir="rtl">
+        {/* Single article view - no transforms */}
+        <article role="article" aria-label={article.title}>
+          <Link href={`/article/${article.slug}`} aria-label={`اقرأ المقال: ${article.title}`}>
+            {/* Mobile: Vertical Layout */}
+            <div className="md:hidden relative cursor-pointer group">
+              {/* Image - using standard img tag for Safari safety */}
+              {(article.thumbnailUrl ?? article.imageUrl) && (
+                <div className="relative aspect-[16/9] rounded-t-lg bg-muted">
+                  <img
+                    src={(article.thumbnailUrl ?? article.imageUrl) || ""}
+                    alt={article.title}
+                    className="w-full h-full object-cover rounded-t-lg"
+                    style={{ objectPosition: getObjectPosition(article) }}
+                    loading="eager"
+                  />
+                </div>
+              )}
+              
+              {/* Content */}
+              <div className={`p-4 rounded-b-lg ${
+                article.newsType === "breaking" 
+                  ? "bg-destructive/10" 
+                  : "bg-card"
+              }`}>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {(article.isAiGeneratedThumbnail || article.isAiGeneratedImage) && (
+                      <Badge 
+                        className="shrink-0 bg-purple-500/90 hover:bg-purple-600 text-white border-0 text-xs gap-1"
+                        data-testid={`badge-hero-ai-image-mobile-${article.id}`}
+                      >
+                        الصورة
+                        <Brain className="h-3 w-3" aria-hidden="true" />
+                      </Badge>
+                    )}
+                    {article.newsType === "breaking" ? (
+                      <Badge 
+                        variant="destructive" 
+                        className="shrink-0 text-xs gap-1"
+                        data-testid={`badge-breaking-${article.id}`}
+                      >
+                        <Zap className="h-3 w-3" />
+                        عاجل
+                      </Badge>
+                    ) : isNewArticle(article.publishedAt) ? (
+                      <Badge 
+                        className="shrink-0 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600 text-xs gap-1"
+                        data-testid={`badge-new-${article.id}`}
+                      >
+                        <Flame className="h-3 w-3" />
+                        جديد
+                      </Badge>
+                    ) : article.category && (
+                      <Badge 
+                        variant="default" 
+                        className="shrink-0 text-xs"
+                        data-testid={`badge-category-${article.id}`}
+                      >
+                        {article.category.nameAr}
+                      </Badge>
+                    )}
+                    {article.aiGenerated && (
+                      <Badge 
+                        className="shrink-0 bg-violet-500/90 hover:bg-violet-600 text-white border-0 text-xs gap-1"
+                        data-testid={`badge-hero-ai-content-mobile-${article.id}`}
+                      >
+                        <Brain className="h-3 w-3" aria-hidden="true" />
+                        محتوى AI
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  <h1 
+                    className={`text-lg font-bold line-clamp-2 ${
+                      article.newsType === "breaking"
+                        ? "text-destructive"
+                        : "text-foreground"
+                    }`}
+                    data-testid={`heading-hero-title-${article.id}`}
+                  >
+                    {article.title}
+                  </h1>
+                  
+                  {article.excerpt && (
+                    <p className="text-muted-foreground text-sm line-clamp-2">
+                      {article.excerpt}
+                    </p>
+                  )}
+
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <ViewsCount 
+                      views={article.views || 0}
+                      iconClassName="h-3 w-3"
+                    />
+                    {article.publishedAt && (
+                      <span className="text-xs">{formatPublishedDate(article.publishedAt)}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Desktop: Horizontal Layout */}
+            <div className="hidden md:block relative h-[400px] cursor-pointer group">
+              <div className="flex flex-row h-full">
+                {/* Image - 50% of width */}
+                <div className="w-1/2 h-full relative bg-muted">
+                  {(article.thumbnailUrl ?? article.imageUrl) ? (
+                    <img
+                      src={(article.thumbnailUrl ?? article.imageUrl) || ""}
+                      alt={article.title}
+                      className="w-full h-full object-cover"
+                      style={{ objectPosition: getObjectPosition(article) }}
+                      loading="eager"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
+                  )}
+                </div>
+
+                {/* Content - 50% of width */}
+                <div className={`w-1/2 h-full flex flex-col justify-center p-8 lg:p-12 ${
+                  article.newsType === "breaking" 
+                    ? "bg-destructive/10" 
+                    : "bg-card"
+                }`}>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {(article.isAiGeneratedThumbnail || article.isAiGeneratedImage) && (
+                        <Badge 
+                          className="shrink-0 gap-1.5 bg-purple-500/90 hover:bg-purple-600 text-white border-0"
+                          data-testid={`badge-hero-ai-image-${article.id}`}
+                        >
+                          الصورة
+                          <Brain className="h-3.5 w-3.5" aria-hidden="true" />
+                        </Badge>
+                      )}
+                      {article.newsType === "breaking" ? (
+                        <Badge 
+                          variant="destructive" 
+                          className="shrink-0 gap-1"
+                          data-testid={`badge-breaking-${article.id}`}
+                        >
+                          <Zap className="h-3 w-3" />
+                          عاجل
+                        </Badge>
+                      ) : isNewArticle(article.publishedAt) ? (
+                        <Badge 
+                          className="shrink-0 bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600 gap-1"
+                          data-testid={`badge-new-${article.id}`}
+                        >
+                          <Flame className="h-3 w-3" />
+                          جديد
+                        </Badge>
+                      ) : article.category && (
+                        <Badge 
+                          variant="default" 
+                          className="shrink-0"
+                          data-testid={`badge-category-${article.id}`}
+                        >
+                          {article.category.nameAr}
+                        </Badge>
+                      )}
+                      {article.aiGenerated && (
+                        <Badge 
+                          className="shrink-0 bg-violet-500/90 hover:bg-violet-600 text-white border-0 gap-1"
+                          data-testid={`badge-hero-ai-content-${article.id}`}
+                        >
+                          <Brain className="h-3 w-3" aria-hidden="true" />
+                          محتوى AI
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    <h1 
+                      className={`text-3xl lg:text-4xl font-bold line-clamp-3 ${
+                        article.newsType === "breaking"
+                          ? "text-destructive"
+                          : "text-foreground"
+                      }`}
+                      data-testid={`heading-hero-title-${article.id}`}
+                    >
+                      {article.title}
+                    </h1>
+                    
+                    {article.excerpt && (
+                      <p className="text-muted-foreground text-base line-clamp-2">
+                        {article.excerpt}
+                      </p>
+                    )}
+
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground pt-2">
+                      <ViewsCount 
+                        views={article.views || 0}
+                        iconClassName="h-4 w-4"
+                      />
+                      {article.publishedAt && (
+                        <span>{formatPublishedDate(article.publishedAt)}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Link>
+        </article>
+
+        {/* Navigation arrows for multiple articles */}
+        {articles.length > 1 && (
+          <>
+            <button
+              onClick={(e) => { e.preventDefault(); goToNext(); }}
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors"
+              aria-label="الخبر التالي"
+              data-testid="button-hero-next"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
+              onClick={(e) => { e.preventDefault(); goToPrev(); }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors"
+              aria-label="الخبر السابق"
+              data-testid="button-hero-prev"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* Thumbnail navigation */}
+      {articles.length > 1 && (
+        <div className="mt-4 flex gap-2 justify-center w-full px-4">
+          {articles.slice(0, 3).map((art, index) => (
+            <button
+              key={index}
+              className={`relative flex-shrink-0 w-16 h-12 sm:w-20 sm:h-14 rounded-md border-2 transition-all bg-muted ${
+                index === selectedIndex
+                  ? "border-primary"
+                  : "border-transparent opacity-70 hover:opacity-100 hover:border-border"
+              }`}
+              onClick={() => setSelectedIndex(index)}
+              data-testid={`button-carousel-thumbnail-${index}`}
+            >
+              {(art.thumbnailUrl ?? art.imageUrl) ? (
+                <img
+                  src={(art.thumbnailUrl ?? art.imageUrl) || ""}
+                  alt={art.title}
+                  className="w-full h-full object-cover rounded-md"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 rounded-md" />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+// Standard Embla carousel for non-Safari browsers
 export function HeroCarousel({ articles }: HeroCarouselProps) {
+  const [isSafariIOS, setIsSafariIOS] = useState(false);
+  
+  useEffect(() => {
+    setIsSafariIOS(isIOSSafari());
+  }, []);
+
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
     loop: true, 
-    direction: "rtl"
+    direction: "rtl",
+    // Disable drag on iOS Safari as backup
+    watchDrag: !isSafariIOS
   });
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -36,7 +360,7 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
   }, [emblaApi]);
 
   useEffect(() => {
-    if (!emblaApi) return;
+    if (!emblaApi || isSafariIOS) return;
     onSelect();
     emblaApi.on("select", onSelect);
     emblaApi.on("reInit", onSelect);
@@ -50,7 +374,12 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
       emblaApi.off("select", onSelect);
       emblaApi.off("reInit", onSelect);
     };
-  }, [emblaApi, onSelect]);
+  }, [emblaApi, onSelect, isSafariIOS]);
+
+  // Use Safari-safe carousel on iOS Safari
+  if (isSafariIOS) {
+    return <SafariHeroCarousel articles={articles} />;
+  }
 
   if (!articles || articles.length === 0) return null;
 
