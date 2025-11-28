@@ -33,6 +33,27 @@ const IMAGE_WIDTHS: Record<ImageSize, number> = {
   original: 0
 };
 
+// Generate CSS gradient placeholder based on dominant color or fallback
+// This is lightweight and doesn't require fetching any additional resources
+function generateGradientPlaceholder(src: string): string {
+  // Create a subtle gradient placeholder based on src hash for consistency
+  if (!src) return 'linear-gradient(135deg, hsl(var(--muted)) 0%, hsl(var(--muted-foreground)/0.1) 100%)';
+  
+  // Simple hash for consistent color per image
+  let hash = 0;
+  for (let i = 0; i < src.length; i++) {
+    hash = ((hash << 5) - hash) + src.charCodeAt(i);
+    hash |= 0;
+  }
+  
+  // Generate subtle gradient based on hash
+  const hue = Math.abs(hash) % 360;
+  const saturation = 5 + (Math.abs(hash >> 8) % 10); // Very low saturation
+  const lightness = 85 + (Math.abs(hash >> 16) % 10); // High lightness
+  
+  return `linear-gradient(135deg, hsl(${hue} ${saturation}% ${lightness}%) 0%, hsl(${hue} ${saturation}% ${lightness - 5}%) 100%)`;
+}
+
 // Build optimized image URL with query parameters for server-side optimization
 function buildOptimizedUrl(src: string, options?: { 
   width?: number; 
@@ -138,6 +159,9 @@ export function OptimizedImage({
     return generateResponsiveSrcSet(src);
   }, [src, srcSet]);
   
+  // Use provided blurDataUrl (base64) or generate lightweight CSS gradient
+  const gradientPlaceholder = useMemo(() => generateGradientPlaceholder(src), [src]);
+  const hasBlurDataUrl = !!blurDataUrl;
 
   useEffect(() => {
     if (priority) {
@@ -226,12 +250,38 @@ export function OptimizedImage({
       className={`relative overflow-hidden ${className}`}
       style={aspectRatio ? { aspectRatio } : undefined}
     >
-      {/* Static placeholder - shows while main image loads */}
+      {/* Gradient/blur placeholder - shows while main image loads */}
       {!isLoaded && (
-        <div 
-          className="absolute inset-0 w-full h-full bg-muted/50"
-          aria-hidden="true"
-        />
+        <>
+          {/* Base gradient layer */}
+          <div 
+            className="absolute inset-0 w-full h-full"
+            style={{
+              background: hasBlurDataUrl 
+                ? `url(${blurDataUrl})` 
+                : gradientPlaceholder,
+              backgroundSize: 'cover',
+              backgroundPosition: objectPosition,
+              filter: hasBlurDataUrl ? 'blur(10px)' : 'none',
+              transform: hasBlurDataUrl ? 'scale(1.05)' : 'none',
+            }}
+            aria-hidden="true"
+          />
+          {/* Shimmer overlay for progressive loading effect */}
+          {!hasBlurDataUrl && (
+            <div 
+              className="absolute inset-0 w-full h-full overflow-hidden"
+              aria-hidden="true"
+            >
+              <div 
+                className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite]"
+                style={{
+                  background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%)',
+                }}
+              />
+            </div>
+          )}
+        </>
       )}
       
       {/* Main image with progressive loading */}
