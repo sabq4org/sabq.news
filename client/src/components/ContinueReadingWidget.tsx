@@ -83,19 +83,19 @@ export function ContinueReadingWidget() {
               href={`/article/${article.slug}`}
               data-testid={`link-continue-article-${article.id}`}
             >
-              <Card className="group hover-elevate transition-all duration-200 h-full overflow-hidden bg-white dark:bg-card border border-border/50 shadow-sm">
+              <Card className="group hover-elevate transition-all duration-200 h-full overflow-hidden bg-white dark:bg-card border border-slate-200 dark:border-border/50 shadow-sm">
                 <CardContent className="p-0">
                   {article.imageUrl && (
-                    <div className="relative h-32 overflow-hidden">
+                    <div className="relative h-32 sm:h-36 overflow-hidden">
                       <img
                         src={article.imageUrl}
                         alt={article.title}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                       <Badge
                         variant="secondary"
-                        className="absolute bottom-2 right-2 bg-primary/90 text-primary-foreground"
+                        className="absolute bottom-2 right-2 bg-primary text-primary-foreground text-xs font-medium shadow-sm"
                         data-testid={`badge-progress-${article.id}`}
                       >
                         {article.progress}% مقروء
@@ -103,18 +103,18 @@ export function ContinueReadingWidget() {
                     </div>
                   )}
                   <div className="p-4 bg-white dark:bg-card">
-                    <h3 className="font-semibold text-sm line-clamp-2 mb-2 text-foreground group-hover:text-primary transition-colors">
+                    <h3 className="font-semibold text-sm line-clamp-2 mb-3 text-slate-800 dark:text-foreground group-hover:text-primary transition-colors">
                       {article.title}
                     </h3>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <Progress
                         value={article.progress}
-                        className="h-1.5"
+                        className="h-2 bg-slate-100 dark:bg-slate-800"
                         data-testid={`progress-${article.id}`}
                       />
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-1.5 text-slate-500 dark:text-muted-foreground">
+                          <Clock className="h-3.5 w-3.5" />
                           <span>
                             {formatDistanceToNow(new Date(article.lastReadAt), {
                               addSuffix: true,
@@ -122,9 +122,9 @@ export function ContinueReadingWidget() {
                             })}
                           </span>
                         </div>
-                        <div className="flex items-center gap-1 text-primary">
+                        <div className="flex items-center gap-1.5 text-primary font-medium">
                           <span>أكمل القراءة</span>
-                          <ArrowLeft className="h-3 w-3" />
+                          <ArrowLeft className="h-3.5 w-3.5" />
                         </div>
                       </div>
                     </div>
