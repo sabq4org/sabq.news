@@ -43,6 +43,7 @@ import {
   Eye,
   MessageSquare,
   Archive,
+  Zap,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { formatDistanceToNow } from "date-fns";
@@ -1005,6 +1006,12 @@ export default function ArticleDetail() {
                 {article.category && (
                   <Badge variant="outline" className="bg-primary/5 border-primary/30 gap-1" data-testid="badge-article-category">
                     {article.category.icon} {article.category.nameAr}
+                  </Badge>
+                )}
+                {article.newsType === 'breaking' && (
+                  <Badge className="bg-red-600 hover:bg-red-700 text-white border-red-600 gap-1" data-testid="badge-article-urgent">
+                    <Zap className="h-3 w-3" />
+                    عاجل
                   </Badge>
                 )}
                 {article.status === 'archived' && (user?.role === 'system_admin' || user?.role === 'admin' || user?.role === 'editor') && (

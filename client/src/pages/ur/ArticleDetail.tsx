@@ -21,6 +21,7 @@ import {
   ChevronDown,
   ChevronUp,
   Archive,
+  Zap,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
@@ -178,6 +179,12 @@ export default function UrduArticleDetail() {
                 <Badge variant="outline" className="bg-primary/5 border-primary/30" data-testid="badge-category">
                   {article.category.name}
                 </Badge>
+                {article.newsType === 'breaking' && (
+                  <Badge className="bg-red-600 hover:bg-red-700 text-white border-red-600 gap-1" data-testid="badge-article-urgent">
+                    <Zap className="h-3 w-3" />
+                    فوری
+                  </Badge>
+                )}
                 {article.status === 'archived' && (user?.role === 'system_admin' || user?.role === 'admin' || user?.role === 'editor') && (
                   <Badge variant="secondary" className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 border-yellow-300 dark:border-yellow-700 gap-1" data-testid="badge-article-archived">
                     <Archive className="h-3 w-3" />
