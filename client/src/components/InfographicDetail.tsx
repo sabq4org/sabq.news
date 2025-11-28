@@ -31,6 +31,7 @@ import { Link } from "wouter";
 import { getCacheBustedImageUrl } from "@/lib/imageUtils";
 import type { ArticleWithDetails } from "@shared/schema";
 import DOMPurify from "isomorphic-dompurify";
+import { OptimizedImage } from "@/components/OptimizedImage";
 
 interface InfographicDetailProps {
   article: ArticleWithDetails;
@@ -189,11 +190,13 @@ export function InfographicDetail({
           
           {/* Main Image */}
           <div className="relative max-w-5xl mx-auto px-0 sm:px-4 lg:px-8">
-            <img 
+            <OptimizedImage 
               src={imageUrl} 
               alt={article.title}
               className="w-full h-auto max-h-[85vh] object-contain mx-auto rounded-none sm:rounded-xl shadow-2xl"
               data-testid="image-infographic-main"
+              priority={true}
+              preferSize="large"
             />
             
             {/* AI Badge */}
@@ -417,11 +420,12 @@ export function InfographicDetail({
                   <Card className="overflow-hidden hover-elevate h-full border-muted">
                     <div className="aspect-[4/3] w-full overflow-hidden bg-muted">
                       {infographic.imageUrl ? (
-                        <img
+                        <OptimizedImage
                           src={infographic.imageUrl}
                           alt={infographic.title}
                           className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                          loading="lazy"
+                          priority={false}
+                          preferSize="medium"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
