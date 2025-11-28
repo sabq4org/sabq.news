@@ -904,6 +904,7 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       newsType: "regular", // Default news type (not breaking/featured)
       hideFromHomepage: false, // Article must be visible on homepage
       displayOrder: 0, // Default display order
+      source: "email", // 📧 Mark as created via Smart Email Agent
     };
 
     let article: any;
