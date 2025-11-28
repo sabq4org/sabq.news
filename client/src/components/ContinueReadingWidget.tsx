@@ -83,7 +83,7 @@ export function ContinueReadingWidget() {
               href={`/article/${article.slug}`}
               data-testid={`link-continue-article-${article.id}`}
             >
-              <Card className="group hover-elevate transition-all duration-200 h-full overflow-hidden">
+              <Card className="group hover-elevate transition-all duration-200 h-full overflow-hidden bg-white dark:bg-card border border-border/50 shadow-sm">
                 <CardContent className="p-0">
                   {article.imageUrl && (
                     <div className="relative h-32 overflow-hidden">
@@ -102,8 +102,8 @@ export function ContinueReadingWidget() {
                       </Badge>
                     </div>
                   )}
-                  <div className="p-4">
-                    <h3 className="font-semibold text-sm line-clamp-2 mb-2 group-hover:text-primary transition-colors">
+                  <div className="p-4 bg-white dark:bg-card">
+                    <h3 className="font-semibold text-sm line-clamp-2 mb-2 text-foreground group-hover:text-primary transition-colors">
                       {article.title}
                     </h3>
                     <div className="space-y-2">

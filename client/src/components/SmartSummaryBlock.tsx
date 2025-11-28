@@ -45,24 +45,32 @@ interface MetricCardProps {
 
 function MetricCard({ icon, label, value, color }: MetricCardProps) {
   const colorClasses: Record<string, string> = {
-    blue: "text-blue-500 bg-blue-50 dark:bg-blue-950/20",
-    green: "text-green-500 bg-green-50 dark:bg-green-950/20",
-    pink: "text-pink-500 bg-pink-50 dark:bg-pink-950/20",
-    purple: "text-purple-500 bg-purple-50 dark:bg-purple-950/20",
+    blue: "bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800",
+    green: "bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800",
+    pink: "bg-pink-50 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-800",
+    purple: "bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800",
+  };
+
+  const iconClasses: Record<string, string> = {
+    blue: "text-blue-600 dark:text-blue-400",
+    green: "text-green-600 dark:text-green-400",
+    pink: "text-pink-600 dark:text-pink-400",
+    purple: "text-purple-600 dark:text-purple-400",
   };
 
   const colorClass = colorClasses[color] || colorClasses.blue;
+  const iconClass = iconClasses[color] || iconClasses.blue;
 
   return (
     <div className={`${colorClass} rounded-xl p-3 space-y-2`} data-testid={`metric-${label}`}>
       <div className="flex items-center justify-between">
-        <div className={`${color === 'blue' ? 'text-blue-500' : color === 'green' ? 'text-green-500' : color === 'pink' ? 'text-pink-500' : 'text-purple-500'}`}>
+        <div className={iconClass}>
           {icon}
         </div>
         <TrendingUp className="h-3 w-3 text-muted-foreground" />
       </div>
       <div>
-        <p className="text-lg font-bold">{value}</p>
+        <p className="text-lg font-bold text-foreground">{value}</p>
         <p className="text-xs text-muted-foreground">{label}</p>
       </div>
     </div>
@@ -216,7 +224,7 @@ export function SmartSummaryBlock() {
   return (
     <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
       <Card 
-        className="rounded-2xl p-5 bg-gradient-to-br from-slate-50 to-white dark:from-gray-800 dark:to-gray-900 shadow-sm border-2 border-primary/10"
+        className="rounded-2xl p-5 bg-white dark:bg-gray-900 shadow-sm border border-border"
         data-testid="card-smart-summary"
         dir="rtl"
       >
@@ -250,54 +258,54 @@ export function SmartSummaryBlock() {
         <CollapsibleContent>
           {/* Metrics - Mobile: 2x2 Grid */}
           <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 lg:hidden mb-5">
-            <div className="rounded-xl p-3 space-y-2 bg-blue-50 dark:bg-blue-950/20" data-testid="metric-وقت القراءة-mobile">
+            <div className="rounded-xl p-3 space-y-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800" data-testid="metric-وقت القراءة-mobile">
               <div className="flex items-center justify-between">
-                <div className="text-blue-500">
+                <div className="text-blue-600 dark:text-blue-400">
                   <BookOpen className="h-5 w-5" />
                 </div>
                 <TrendingUp className="h-3 w-3 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-lg font-bold">{insights.metrics.readingTime} دقيقة</p>
+                <p className="text-lg font-bold text-foreground">{insights.metrics.readingTime} دقيقة</p>
                 <p className="text-xs text-muted-foreground">وقت القراءة</p>
               </div>
             </div>
             
-            <div className="rounded-xl p-3 space-y-2 bg-green-50 dark:bg-green-950/20" data-testid="metric-معدل الإكمال-mobile">
+            <div className="rounded-xl p-3 space-y-2 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800" data-testid="metric-معدل الإكمال-mobile">
               <div className="flex items-center justify-between">
-                <div className="text-green-500">
+                <div className="text-green-600 dark:text-green-400">
                   <Percent className="h-5 w-5" />
                 </div>
                 <TrendingUp className="h-3 w-3 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-lg font-bold">{insights.metrics.completionRate}%</p>
+                <p className="text-lg font-bold text-foreground">{insights.metrics.completionRate}%</p>
                 <p className="text-xs text-muted-foreground">معدل الإكمال</p>
               </div>
             </div>
             
-            <div className="rounded-xl p-3 space-y-2 bg-pink-50 dark:bg-pink-950/20" data-testid="metric-الإعجابات-mobile">
+            <div className="rounded-xl p-3 space-y-2 bg-pink-50 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-800" data-testid="metric-الإعجابات-mobile">
               <div className="flex items-center justify-between">
-                <div className="text-pink-500">
+                <div className="text-pink-600 dark:text-pink-400">
                   <Heart className="h-5 w-5" />
                 </div>
                 <TrendingUp className="h-3 w-3 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-lg font-bold">{insights.metrics.likes}</p>
+                <p className="text-lg font-bold text-foreground">{insights.metrics.likes}</p>
                 <p className="text-xs text-muted-foreground">الإعجابات</p>
               </div>
             </div>
             
-            <div className="rounded-xl p-3 space-y-2 bg-purple-50 dark:bg-purple-950/20" data-testid="metric-التعليقات-mobile">
+            <div className="rounded-xl p-3 space-y-2 bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800" data-testid="metric-التعليقات-mobile">
               <div className="flex items-center justify-between">
-                <div className="text-purple-500">
+                <div className="text-purple-600 dark:text-purple-400">
                   <MessageSquare className="h-5 w-5" />
                 </div>
                 <TrendingUp className="h-3 w-3 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-lg font-bold">{insights.metrics.comments}</p>
+                <p className="text-lg font-bold text-foreground">{insights.metrics.comments}</p>
                 <p className="text-xs text-muted-foreground">التعليقات</p>
               </div>
             </div>
