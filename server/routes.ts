@@ -13140,6 +13140,24 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     }
   });
 
+  // POST /api/personalization/continue-reading/:articleId/dismiss - Dismiss article from continue reading
+  app.post("/api/personalization/continue-reading/:articleId/dismiss", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { articleId } = req.params;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      await storage.dismissContinueReading(userId, articleId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("[Personalization] Error dismissing article:", error);
+      res.status(500).json({ message: "Failed to dismiss article" });
+    }
+  });
+
   // GET /api/personalization/top-interests - Get user top interest categories
   app.get("/api/personalization/top-interests", isAuthenticated, async (req: any, res) => {
     try {

@@ -70,6 +70,7 @@ import {
   urReactions,
   urReadingHistory,
   urSmartBlocks,
+  dismissedContinueReading,
   articleSeoHistory,
   dataStorySources,
   dataStoryAnalyses,
@@ -665,6 +666,7 @@ export interface IStorage {
   getPersonalizedFeed(userId: string, limit?: number): Promise<ArticleWithDetails[]>;
   getPersonalizedRecommendations(userId: string, limit?: number): Promise<ArticleWithDetails[]>;
   getContinueReading(userId: string, limit?: number): Promise<Array<ArticleWithDetails & { progress: number; lastReadAt: Date }>>;
+  dismissContinueReading(userId: string, articleId: string): Promise<void>;
   
   // Muqtarab Angles operations
   getSectionBySlug(slug: string): Promise<Section | undefined>;
@@ -4972,8 +4974,10 @@ export class DatabaseStorage implements IStorage {
       LEFT JOIN categories c ON c.id = a.category_id
       LEFT JOIN users u ON u.id = a.author_id
       LEFT JOIN users r ON r.id = a.reporter_id
+      LEFT JOIN dismissed_continue_reading dcr ON dcr.article_id = ap.article_id AND dcr.user_id = ${userId}
       WHERE a.status = 'published'
         AND ap.max_progress < 75
+        AND dcr.id IS NULL
       ORDER BY ap.last_read_at DESC
       LIMIT ${limit}
     `;
@@ -5124,6 +5128,13 @@ export class DatabaseStorage implements IStorage {
       progress: Math.round(Number(row.progress) || 0),
       lastReadAt: row.last_read_at,
     })) as Array<ArticleWithDetails & { progress: number; lastReadAt: Date }>;
+  }
+
+  async dismissContinueReading(userId: string, articleId: string): Promise<void> {
+    await db.insert(dismissedContinueReading).values({
+      userId,
+      articleId,
+    }).onConflictDoNothing();
   }
 
   async getHeroArticles(): Promise<ArticleWithDetails[]> {

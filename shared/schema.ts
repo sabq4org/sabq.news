@@ -860,6 +860,17 @@ export const readingHistory = pgTable("reading_history", {
   index("idx_reading_history_engagement").on(table.userId, table.engagementScore),
 ]);
 
+// Dismissed articles from continue reading section
+export const dismissedContinueReading = pgTable("dismissed_continue_reading", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }).notNull(),
+  dismissedAt: timestamp("dismissed_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_dismissed_continue_reading_user").on(table.userId),
+  uniqueIndex("idx_dismissed_continue_reading_unique").on(table.userId, table.articleId),
+]);
+
 // Comments with status management
 export const comments = pgTable("comments", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -2488,6 +2499,8 @@ export type InsertBookmark = z.infer<typeof insertBookmarkSchema>;
 
 export type ReadingHistory = typeof readingHistory.$inferSelect;
 export type InsertReadingHistory = z.infer<typeof insertReadingHistorySchema>;
+
+export type DismissedContinueReading = typeof dismissedContinueReading.$inferSelect;
 
 export type UserPreference = typeof userPreferences.$inferSelect;
 export type InsertUserPreference = z.infer<typeof insertUserPreferenceSchema>;
