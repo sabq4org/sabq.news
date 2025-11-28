@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Edit, Trash2, Send, Star, Bell, Plus, Archive, Trash, GripVertical, Sparkles, Newspaper, Clock, FilePenLine, Brain } from "lucide-react";
+import { Edit, Trash2, Send, Star, Bell, Plus, Archive, Trash, GripVertical, Sparkles, Newspaper, Clock, FilePenLine, Brain, PenLine, MessageCircle, Mail } from "lucide-react";
 import { ViewsCount } from "@/components/ViewsCount";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { MobileOptimizedKpiCard } from "@/components/MobileOptimizedKpiCard";
@@ -71,6 +71,7 @@ type Article = {
   createdAt: string;
   updatedAt: string;
   isAiGeneratedThumbnail?: boolean;
+  source?: string;
   category?: {
     id: string;
     nameAr: string;
@@ -535,6 +536,30 @@ export default function ArticlesManagement() {
     return badges[type as keyof typeof badges] || <Badge>{type}</Badge>;
   };
 
+  const getSourceBadge = (source?: string) => {
+    const badges = {
+      manual: (
+        <Badge variant="outline" className="gap-1 bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800" data-testid="badge-source-manual">
+          <PenLine className="h-3 w-3" />
+          المحرر
+        </Badge>
+      ),
+      whatsapp: (
+        <Badge variant="outline" className="gap-1 bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800" data-testid="badge-source-whatsapp">
+          <MessageCircle className="h-3 w-3" />
+          واتساب
+        </Badge>
+      ),
+      email: (
+        <Badge variant="outline" className="gap-1 bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800" data-testid="badge-source-email">
+          <Mail className="h-3 w-3" />
+          البريد الذكي
+        </Badge>
+      ),
+    };
+    return badges[(source || 'manual') as keyof typeof badges] || badges.manual;
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-4 md:space-y-6 p-3 md:p-0">
@@ -752,6 +777,7 @@ export default function ArticlesManagement() {
                         </th>
                         <th className="text-right py-3 px-4 font-medium">العنوان</th>
                         <th className="text-right py-3 px-4 font-medium">النوع</th>
+                        <th className="text-right py-3 px-4 font-medium">المصدر</th>
                         <th className="text-right py-3 px-4 font-medium">الكاتب</th>
                         <th className="text-right py-3 px-4 font-medium">التصنيف</th>
                         <th className="text-right py-3 px-4 font-medium">عاجل</th>
@@ -778,6 +804,9 @@ export default function ArticlesManagement() {
                             </td>
                             <td className="py-3 px-4">
                               {getTypeBadge(article.articleType || "news")}
+                            </td>
+                            <td className="py-3 px-4">
+                              {getSourceBadge(article.source)}
                             </td>
                             <td className="py-3 px-4">
                               <div className="flex items-center gap-2">
@@ -872,6 +901,7 @@ export default function ArticlesManagement() {
                       <div className="flex items-center gap-2 flex-wrap">
                         {getStatusBadge(article.status)}
                         {getTypeBadge(article.articleType || "news")}
+                        {getSourceBadge(article.source)}
                       </div>
                     </div>
                   </div>
