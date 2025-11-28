@@ -667,6 +667,7 @@ export interface IStorage {
   getPersonalizedRecommendations(userId: string, limit?: number): Promise<ArticleWithDetails[]>;
   getContinueReading(userId: string, limit?: number): Promise<Array<ArticleWithDetails & { progress: number; lastReadAt: Date }>>;
   dismissContinueReading(userId: string, articleId: string): Promise<void>;
+  clearAllContinueReading(userId: string): Promise<void>;
   
   // Muqtarab Angles operations
   getSectionBySlug(slug: string): Promise<Section | undefined>;
@@ -5135,6 +5136,23 @@ export class DatabaseStorage implements IStorage {
       userId,
       articleId,
     }).onConflictDoNothing();
+  }
+
+  async clearAllContinueReading(userId: string): Promise<void> {
+    // Get all articles the user has in their continue reading (unfinished articles)
+    const continueReadingArticles = await this.getContinueReading(userId, 100);
+    
+    if (continueReadingArticles.length === 0) return;
+    
+    // Insert all articles as dismissed
+    const valuesToInsert = continueReadingArticles.map(article => ({
+      userId,
+      articleId: article.id,
+    }));
+    
+    await db.insert(dismissedContinueReading)
+      .values(valuesToInsert)
+      .onConflictDoNothing();
   }
 
   async getHeroArticles(): Promise<ArticleWithDetails[]> {

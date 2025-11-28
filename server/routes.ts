@@ -13140,6 +13140,23 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     }
   });
 
+  // POST /api/personalization/continue-reading/clear-all - Clear all continue reading articles
+  app.post("/api/personalization/continue-reading/clear-all", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      await storage.clearAllContinueReading(userId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("[Personalization] Error clearing continue reading:", error);
+      res.status(500).json({ message: "Failed to clear continue reading" });
+    }
+  });
+
   // POST /api/personalization/continue-reading/:articleId/dismiss - Dismiss article from continue reading
   app.post("/api/personalization/continue-reading/:articleId/dismiss", isAuthenticated, async (req: any, res) => {
     try {

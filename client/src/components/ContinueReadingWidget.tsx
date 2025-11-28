@@ -3,8 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { BookOpen, Clock, ArrowLeft, X } from "lucide-react";
+import { BookOpen, Clock, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
@@ -33,30 +32,30 @@ export function ContinueReadingWidget() {
     enabled: !!user,
   });
 
-  const dismissMutation = useMutation({
-    mutationFn: async (articleId: string) => {
-      await apiRequest("POST", `/api/personalization/continue-reading/${articleId}/dismiss`);
+  const clearAllMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("/api/personalization/continue-reading/clear-all", { method: "POST" });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/personalization/continue-reading"] });
       toast({
-        title: "تم إخفاء المقال",
-        description: "لن يظهر هذا المقال في قائمة المتابعة بعد الآن",
+        title: "تم المسح",
+        description: "تم مسح جميع المقالات من قائمة المتابعة",
       });
     },
     onError: () => {
       toast({
         title: "حدث خطأ",
-        description: "تعذر إخفاء المقال، يرجى المحاولة مرة أخرى",
+        description: "تعذر مسح المقالات، يرجى المحاولة مرة أخرى",
         variant: "destructive",
       });
     },
   });
 
-  const handleDismiss = (e: React.MouseEvent, articleId: string) => {
+  const handleClearAll = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    dismissMutation.mutate(articleId);
+    clearAllMutation.mutate();
   };
 
   if (!user) {
@@ -122,6 +121,14 @@ export function ContinueReadingWidget() {
             <BookOpen className="h-4 w-4 md:h-5 md:w-5 text-primary" />
             <h2 className="text-lg md:text-xl font-bold">تابع القراءة</h2>
           </div>
+          <button
+            onClick={handleClearAll}
+            disabled={clearAllMutation.isPending}
+            className="text-xs text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
+            data-testid="button-clear-all-continue-reading"
+          >
+            {clearAllMutation.isPending ? "جاري المسح..." : "مسح الكل"}
+          </button>
         </div>
 
         {/* Mobile: Compact horizontal cards */}
@@ -129,38 +136,29 @@ export function ContinueReadingWidget() {
           {articles.slice(0, 3).map((article) => {
             const imageSource = article.thumbnailUrl || article.imageUrl;
             return (
-              <div key={article.id} className="relative">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-1 left-1 z-10 h-6 w-6 bg-black/40 hover:bg-black/60 text-white rounded-full"
-                  onClick={(e) => handleDismiss(e, article.id)}
-                  data-testid={`button-dismiss-article-${article.id}`}
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-                <Link
-                  href={`/article/${article.slug}`}
-                  data-testid={`link-continue-article-${article.id}`}
-                >
-                  <Card className="group hover-elevate transition-all duration-200 overflow-hidden bg-white dark:bg-card border border-slate-200 dark:border-border/50 shadow-sm">
-                    <CardContent className="p-0">
-                      <div className="flex gap-3 p-2">
-                        {/* Compact thumbnail */}
-                        {imageSource && (
-                          <div className="relative w-20 h-16 flex-shrink-0 rounded-md overflow-hidden">
-                            <img
-                              src={imageSource}
-                              alt={article.title}
-                              className="w-full h-full object-cover"
-                            />
-                            {/* Progress overlay */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                            <span className="absolute bottom-0.5 right-0.5 text-[10px] font-medium text-white bg-primary/90 px-1 rounded">
-                              {article.progress}%
-                            </span>
-                          </div>
-                        )}
+              <Link
+                key={article.id}
+                href={`/article/${article.slug}`}
+                data-testid={`link-continue-article-${article.id}`}
+              >
+                <Card className="group hover-elevate transition-all duration-200 overflow-hidden bg-white dark:bg-card border border-slate-200 dark:border-border/50 shadow-sm">
+                  <CardContent className="p-0">
+                    <div className="flex gap-3 p-2">
+                      {/* Compact thumbnail */}
+                      {imageSource && (
+                        <div className="relative w-20 h-16 flex-shrink-0 rounded-md overflow-hidden">
+                          <img
+                            src={imageSource}
+                            alt={article.title}
+                            className="w-full h-full object-cover"
+                          />
+                          {/* Progress overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                          <span className="absolute bottom-0.5 right-0.5 text-[10px] font-medium text-white bg-primary/90 px-1 rounded">
+                            {article.progress}%
+                          </span>
+                        </div>
+                      )}
                       {/* Content */}
                       <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
                         <h3 className="font-medium text-xs line-clamp-2 text-slate-800 dark:text-foreground group-hover:text-primary transition-colors leading-tight">
@@ -191,7 +189,6 @@ export function ContinueReadingWidget() {
                   </CardContent>
                 </Card>
               </Link>
-              </div>
             );
           })}
         </div>
@@ -201,39 +198,30 @@ export function ContinueReadingWidget() {
           {articles.slice(0, 3).map((article) => {
             const imageSource = article.thumbnailUrl || article.imageUrl;
             return (
-              <div key={article.id} className="relative">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-2 left-2 z-10 h-7 w-7 bg-black/40 hover:bg-black/60 text-white rounded-full"
-                  onClick={(e) => handleDismiss(e, article.id)}
-                  data-testid={`button-dismiss-article-desktop-${article.id}`}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-                <Link
-                  href={`/article/${article.slug}`}
-                  data-testid={`link-continue-article-desktop-${article.id}`}
-                >
-                  <Card className="group hover-elevate transition-all duration-200 h-full overflow-hidden bg-white dark:bg-card border border-slate-200 dark:border-border/50 shadow-sm">
-                    <CardContent className="p-0">
-                      {imageSource && (
-                        <div className="relative h-36 overflow-hidden">
-                          <img
-                            src={imageSource}
-                            alt={article.title}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                          <Badge
-                            variant="secondary"
-                            className="absolute bottom-2 right-2 bg-primary text-primary-foreground text-xs font-medium shadow-sm"
-                            data-testid={`badge-progress-${article.id}`}
-                          >
-                            {article.progress}% مقروء
-                          </Badge>
-                        </div>
-                      )}
+              <Link
+                key={article.id}
+                href={`/article/${article.slug}`}
+                data-testid={`link-continue-article-desktop-${article.id}`}
+              >
+                <Card className="group hover-elevate transition-all duration-200 h-full overflow-hidden bg-white dark:bg-card border border-slate-200 dark:border-border/50 shadow-sm">
+                  <CardContent className="p-0">
+                    {imageSource && (
+                      <div className="relative h-36 overflow-hidden">
+                        <img
+                          src={imageSource}
+                          alt={article.title}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                        <Badge
+                          variant="secondary"
+                          className="absolute bottom-2 right-2 bg-primary text-primary-foreground text-xs font-medium shadow-sm"
+                          data-testid={`badge-progress-${article.id}`}
+                        >
+                          {article.progress}% مقروء
+                        </Badge>
+                      </div>
+                    )}
                     <div className="p-4 bg-white dark:bg-card">
                       <h3 className="font-semibold text-sm line-clamp-2 mb-3 text-slate-800 dark:text-foreground group-hover:text-primary transition-colors">
                         {article.title}
@@ -261,10 +249,9 @@ export function ContinueReadingWidget() {
                         </div>
                       </div>
                     </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              </div>
+                  </CardContent>
+                </Card>
+              </Link>
             );
           })}
         </div>
