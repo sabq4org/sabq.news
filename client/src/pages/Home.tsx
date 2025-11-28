@@ -12,6 +12,7 @@ import { FollowedKeywordsBlock } from "@/components/FollowedKeywordsBlock";
 import { SmartSummaryBlock } from "@/components/SmartSummaryBlock";
 import { PersonalizedFeed } from "@/components/PersonalizedFeed";
 import { ContinueReadingWidget } from "@/components/ContinueReadingWidget";
+import { ForYouSection } from "@/components/ForYouSection";
 import { DeepDiveSection } from "@/components/DeepDiveSection";
 import { TrendingTopics } from "@/components/TrendingTopics";
 import { MirqabHomeSection } from "@/components/MirqabHomeSection";
@@ -440,6 +441,9 @@ export default function Home() {
 
           {/* Continue Reading Widget - Personalized unfinished articles */}
           <ContinueReadingWidget />
+
+          {/* For You Section - AI-powered personalized recommendations */}
+          <ForYouSection />
           {/* Ad Banner Slot - Below Featured News */}
           <div className="mb-8">
             <AdSlot slotId="header-banner" className="w-full" />
