@@ -13,6 +13,8 @@ import { startMessageAggregatorJob } from './services/whatsappMessageAggregator'
 import ifoxAiManagementRoutes from './routes/ifox/ai-management';
 import autoImageRoutes from './routes/autoImageRoutes';
 import { ObjectStorageService, ObjectNotFoundError, objectStorageClient } from "./objectStorage";
+import imageOptimizationService, { optimizeImage, getOptimizedImage, generateSrcSet, getBestFormat, supportsWebP, IMAGE_SIZES } from "./services/imageOptimizationService";
+import sharp from "sharp";
 import { registerInfographicAiRoutes } from "./routes/infographicAi";
 import { getObjectAclPolicy, setObjectAclPolicy } from "./objectAcl";
 import { summarizeArticle, generateTitle, chatWithAssistant, analyzeCredibility, generateDailyActivityInsights, analyzeSEO, generateSmartContent, rewriteAndEnhanceContent } from "./openai";
@@ -12110,20 +12112,117 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     }
   });
 
+  // Image optimization API endpoint
+  app.get("/api/images/optimize", async (req, res) => {
+    try {
+      const path = req.query.path as string;
+      const width = req.query.w ? parseInt(req.query.w as string) : undefined;
+      const height = req.query.h ? parseInt(req.query.h as string) : undefined;
+      const quality = req.query.q ? parseInt(req.query.q as string) : 80;
+      const format = (req.query.f as string) || getBestFormat(req.headers.accept);
+      
+      if (!path) {
+        return res.status(400).json({ error: "Path is required" });
+      }
+      
+      const result = await getOptimizedImage(path, {
+        width,
+        height,
+        quality,
+        format: format as 'webp' | 'avif' | 'jpeg' | 'png'
+      });
+      
+      if (!result) {
+        return res.status(404).json({ error: "Image not found" });
+      }
+      
+      const cacheMaxAge = 31536000;
+      res.set({
+        'Content-Type': result.contentType,
+        'Content-Length': result.size,
+        'Cache-Control': `public, max-age=${cacheMaxAge}, immutable`,
+        'Vary': 'Accept',
+        'X-Image-Width': result.width,
+        'X-Image-Height': result.height
+      });
+      
+      res.send(result.buffer);
+    } catch (error) {
+      console.error("[Image Optimization API] Error:", error);
+      res.status(500).json({ error: "Image optimization failed" });
+    }
+  });
+
+  // Generate srcset for responsive images
+  app.get("/api/images/srcset", async (req, res) => {
+    try {
+      const path = req.query.path as string;
+      if (!path) {
+        return res.status(400).json({ error: "Path is required" });
+      }
+      
+      const srcset = generateSrcSet(path);
+      res.json({ srcset, sizes: IMAGE_SIZES });
+    } catch (error) {
+      console.error("[Image Srcset API] Error:", error);
+      res.status(500).json({ error: "Failed to generate srcset" });
+    }
+  });
+
   app.get("/public-objects/:filePath(*)", async (req, res) => {
     const filePath = req.params.filePath;
     const objectStorageService = new ObjectStorageService();
+    
+    const width = req.query.w ? parseInt(req.query.w as string) : undefined;
+    const height = req.query.h ? parseInt(req.query.h as string) : undefined;
+    const quality = req.query.q ? parseInt(req.query.q as string) : undefined;
+    const requestedFormat = req.query.f as string | undefined;
+    
+    const isImagePath = /\.(png|jpg|jpeg|gif|webp|avif)$/i.test(filePath);
+    const shouldOptimize = isImagePath && (width || height || requestedFormat || supportsWebP(req.headers.accept));
+    
     try {
       const file = await objectStorageService.searchPublicObject(filePath);
       if (!file) {
         return res.status(404).json({ error: "File not found" });
       }
+      
+      if (shouldOptimize) {
+        try {
+          const [originalBuffer] = await file.download();
+          const format = requestedFormat as 'webp' | 'avif' | 'jpeg' | 'png' || getBestFormat(req.headers.accept);
+          
+          const result = await optimizeImage(originalBuffer, {
+            width,
+            height,
+            quality: quality || 80,
+            format
+          });
+          
+          const cacheMaxAge = 31536000;
+          res.set({
+            'Content-Type': result.contentType,
+            'Content-Length': result.size,
+            'Cache-Control': `public, max-age=${cacheMaxAge}, immutable`,
+            'Vary': 'Accept',
+            'X-Optimized': 'true',
+            'X-Original-Size': originalBuffer.length,
+            'X-Optimized-Size': result.size
+          });
+          
+          return res.send(result.buffer);
+        } catch (optError) {
+          console.error("[Public Objects] Optimization failed, serving original:", optError);
+        }
+      }
+      
       objectStorageService.downloadObject(file, res);
     } catch (error) {
       console.error("Error searching for public object:", error);
       return res.status(500).json({ error: "Internal server error" });
     }
   });
+
 
 
   app.post("/api/behavior/log", async (req: any, res) => {
