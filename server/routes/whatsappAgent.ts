@@ -3,7 +3,7 @@ import { storage } from "../storage";
 import { analyzeAndEditWithSabqStyle, detectLanguage, normalizeLanguageCode, generateImageAltText } from "../ai/contentAnalyzer";
 import { objectStorageClient } from "../objectStorage";
 import { nanoid } from "nanoid";
-import { twilioClient, sendWhatsAppMessage, extractTokenFromMessage, removeTokenFromMessage, validateTwilioSignature } from "../services/whatsapp";
+import { twilioClient, sendWhatsAppMessage, sendWhatsAppMessageWithDetails, extractTokenFromMessage, removeTokenFromMessage, validateTwilioSignature, updateLastInboundTime, isWithin24HourWindow } from "../services/whatsapp";
 import { requireAuth, requireRole } from "../rbac";
 import { insertWhatsappTokenSchema, mediaFiles, articleMediaAssets } from "@shared/schema";
 import crypto from "crypto";
@@ -502,6 +502,10 @@ router.post("/webhook", async (req: Request, res: Response) => {
     console.log("[WhatsApp Agent] - NumMedia:", numMedia);
 
     const phoneNumber = from.replace('whatsapp:', '');
+    
+    // 📥 Track inbound message time for 24-hour window enforcement
+    updateLastInboundTime(phoneNumber);
+    console.log(`[WhatsApp Agent] ✅ Updated 24h window tracker for ${phoneNumber.substring(0, 8)}...`);
     
     // ✅ CREATE ONE LOG AT THE BEGINNING
     webhookLog = await storage.createWhatsappWebhookLog({
@@ -1357,16 +1361,29 @@ router.post("/webhook", async (req: Request, res: Response) => {
     console.log(`[WhatsApp Agent]   - Status: ${articleStatus}`);
 
     try {
-      console.log(`[WhatsApp Agent] 🔄 Calling sendWhatsAppMessage...`);
-      const result = await sendWhatsAppMessage({
+      // Check 24-hour window before sending
+      const windowStatus = isWithin24HourWindow(phoneNumber);
+      console.log(`[WhatsApp Agent] ⏰ 24h window status: ${windowStatus ? 'OPEN' : 'CLOSED'}`);
+      
+      console.log(`[WhatsApp Agent] 🔄 Calling sendWhatsAppMessageWithDetails...`);
+      const result = await sendWhatsAppMessageWithDetails({
         to: phoneNumber,
         body: replyMessage,
       });
       
-      if (result) {
-        console.log(`[WhatsApp Agent] ✅ REPLY SENT SUCCESSFULLY to ${phoneNumber}`);
+      if (result.success) {
+        console.log(`[WhatsApp Agent] ✅ REPLY SENT SUCCESSFULLY`);
+        console.log(`[WhatsApp Agent]   - SID: ${result.sid}`);
+        console.log(`[WhatsApp Agent]   - Status: ${result.status}`);
       } else {
-        console.error(`[WhatsApp Agent] ❌ sendWhatsAppMessage returned false - Twilio not configured or failed`);
+        console.error(`[WhatsApp Agent] ❌ REPLY FAILED`);
+        console.error(`[WhatsApp Agent]   - Error: ${result.error}`);
+        console.error(`[WhatsApp Agent]   - Error Code: ${result.errorCode || 'none'}`);
+        console.error(`[WhatsApp Agent]   - Requires Template: ${result.requiresTemplate ? 'YES' : 'no'}`);
+        
+        if (result.requiresTemplate) {
+          console.error(`[WhatsApp Agent] 📋 MESSAGE REQUIRES APPROVED TEMPLATE - Outside 24h window`);
+        }
       }
     } catch (error) {
       console.error(`[WhatsApp Agent] ❌ EXCEPTION while sending reply:`, error instanceof Error ? error.message : error);
