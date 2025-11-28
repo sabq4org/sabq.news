@@ -14354,6 +14354,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteWhatsappToken(id: string): Promise<void> {
+    // First, nullify references in webhook logs to prevent foreign key constraint errors
+    await db
+      .update(whatsappWebhookLogs)
+      .set({ tokenId: null })
+      .where(eq(whatsappWebhookLogs.tokenId, id));
+    
+    // Delete pending messages for this token
+    await db
+      .delete(pendingWhatsappMessages)
+      .where(eq(pendingWhatsappMessages.tokenId, id));
+    
+    // Now delete the token
     await db
       .delete(whatsappTokens)
       .where(eq(whatsappTokens.id, id));

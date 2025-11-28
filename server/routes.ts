@@ -6539,6 +6539,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Delete articles permanently
+      // Nullify foreign key references in tables without cascade delete
+      // This prevents foreign key constraint errors during deletion
+      await db.update(whatsappWebhookLogs)
+        .set({ articleId: null })
+        .where(inArray(whatsappWebhookLogs.articleId, articleIds));
+      
+      await db.update(emailWebhookLogs)
+        .set({ articleId: null })
+        .where(inArray(emailWebhookLogs.articleId, articleIds));
+
       await db.delete(articles).where(inArray(articles.id, articleIds));
 
       // Invalidate caches when articles are deleted
