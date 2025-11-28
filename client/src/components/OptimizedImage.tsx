@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { ImageOff } from "lucide-react";
 
+export type ImageSize = 'thumbnail' | 'small' | 'medium' | 'large' | 'original';
+
 interface OptimizedImageProps {
   src: string;
   alt: string;
@@ -17,7 +19,19 @@ interface OptimizedImageProps {
   fetchPriority?: "high" | "low" | "auto";
   onLoad?: () => void;
   onError?: () => void;
+  width?: number;
+  height?: number;
+  quality?: number;
+  preferSize?: ImageSize;
 }
+
+const IMAGE_WIDTHS: Record<ImageSize, number> = {
+  thumbnail: 150,
+  small: 400,
+  medium: 800,
+  large: 1200,
+  original: 0
+};
 
 // Generate CSS gradient placeholder based on dominant color or fallback
 // This is lightweight and doesn't require fetching any additional resources
@@ -40,16 +54,71 @@ function generateGradientPlaceholder(src: string): string {
   return `linear-gradient(135deg, hsl(${hue} ${saturation}% ${lightness}%) 0%, hsl(${hue} ${saturation}% ${lightness - 5}%) 100%)`;
 }
 
-// Convert image URL to WebP if supported
-function getWebpUrl(src: string): string | null {
-  if (!src) return null;
-  // Already WebP
-  if (src.endsWith('.webp')) return null;
-  // Try WebP version
-  if (src.includes('/public-objects/')) {
-    return src.replace(/\.(png|jpg|jpeg)$/i, '.webp');
+// Build optimized image URL with query parameters for server-side optimization
+function buildOptimizedUrl(src: string, options?: { 
+  width?: number; 
+  height?: number; 
+  quality?: number;
+  format?: 'webp' | 'avif' | 'jpeg' | 'png';
+}): string {
+  if (!src) return src;
+  
+  // Only optimize images from public-objects (our storage)
+  if (!src.includes('/public-objects/')) return src;
+  
+  // Already has optimization params
+  if (src.includes('?w=') || src.includes('&w=')) return src;
+  
+  const params: string[] = [];
+  if (options?.width) params.push(`w=${options.width}`);
+  if (options?.height) params.push(`h=${options.height}`);
+  if (options?.quality) params.push(`q=${options.quality}`);
+  if (options?.format) params.push(`f=${options.format}`);
+  
+  if (params.length === 0) return src;
+  
+  const separator = src.includes('?') ? '&' : '?';
+  return `${src}${separator}${params.join('&')}`;
+}
+
+// Generate srcSet for responsive images
+function generateResponsiveSrcSet(src: string, preferredFormat: 'webp' | 'jpeg' = 'webp'): string {
+  if (!src || !src.includes('/public-objects/')) return '';
+  
+  const widths = [400, 800, 1200, 1600];
+  return widths
+    .map(w => `${buildOptimizedUrl(src, { width: w, format: preferredFormat })} ${w}w`)
+    .join(', ');
+}
+
+// Convert image URL to WebP using server-side optimization
+function getOptimizedUrl(src: string, options?: {
+  width?: number;
+  height?: number;
+  quality?: number;
+  preferSize?: ImageSize;
+}): string {
+  if (!src) return src;
+  
+  // Only optimize public-objects images
+  if (!src.includes('/public-objects/')) return src;
+  
+  // Check if this is already an optimized image format
+  const isOptimizedFormat = /\.(webp|avif)$/i.test(src);
+  
+  // Calculate width based on preferred size
+  let width = options?.width;
+  if (!width && options?.preferSize && options.preferSize !== 'original') {
+    width = IMAGE_WIDTHS[options.preferSize];
   }
-  return null;
+  
+  // Build the optimized URL with WebP format
+  return buildOptimizedUrl(src, {
+    width,
+    height: options?.height,
+    quality: options?.quality || 80,
+    format: isOptimizedFormat ? undefined : 'webp'
+  });
 }
 
 export function OptimizedImage({
@@ -68,17 +137,30 @@ export function OptimizedImage({
   fetchPriority = "auto",
   onLoad,
   onError,
+  width,
+  height,
+  quality,
+  preferSize,
 }: OptimizedImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [isInView, setIsInView] = useState(priority);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Auto-detect WebP and generate gradient placeholder
-  const autoWebpSrc = useMemo(() => webpSrc || getWebpUrl(src), [src, webpSrc]);
+  // Auto-generate optimized URL with WebP conversion
+  const optimizedSrc = useMemo(() => {
+    if (webpSrc) return webpSrc;
+    return getOptimizedUrl(src, { width, height, quality, preferSize });
+  }, [src, webpSrc, width, height, quality, preferSize]);
+  
+  // Auto-generate responsive srcSet if not provided
+  const autoSrcSet = useMemo(() => {
+    if (srcSet) return srcSet;
+    return generateResponsiveSrcSet(src);
+  }, [src, srcSet]);
+  
   // Use provided blurDataUrl (base64) or generate lightweight CSS gradient
   const gradientPlaceholder = useMemo(() => generateGradientPlaceholder(src), [src]);
-  // Only use actual blur data URL if provided, otherwise use CSS gradient
   const hasBlurDataUrl = !!blurDataUrl;
 
   useEffect(() => {
@@ -120,12 +202,12 @@ export function OptimizedImage({
 
   // Preload high-priority images
   useEffect(() => {
-    if (priority && src) {
+    if (priority && optimizedSrc) {
       const link = document.createElement('link');
       link.rel = 'preload';
       link.as = 'image';
-      link.href = autoWebpSrc || src;
-      if (autoWebpSrc) {
+      link.href = optimizedSrc;
+      if (optimizedSrc.includes('f=webp') || optimizedSrc.endsWith('.webp')) {
         link.type = 'image/webp';
       }
       document.head.appendChild(link);
@@ -134,7 +216,7 @@ export function OptimizedImage({
         document.head.removeChild(link);
       };
     }
-  }, [priority, src, autoWebpSrc]);
+  }, [priority, optimizedSrc]);
 
   const handleLoad = () => {
     setIsLoaded(true);
@@ -204,15 +286,15 @@ export function OptimizedImage({
       
       {/* Main image with progressive loading */}
       {isInView && (
-        autoWebpSrc ? (
+        autoSrcSet ? (
           <picture className="contents">
             <source 
-              srcSet={srcSet || autoWebpSrc} 
+              srcSet={autoSrcSet} 
               type="image/webp"
               sizes={sizes}
             />
             <img
-              src={src}
+              src={optimizedSrc || src}
               alt={alt}
               className={`w-full h-full object-cover transition-opacity duration-300 ${
                 isLoaded ? "opacity-100" : "opacity-0"
@@ -228,7 +310,7 @@ export function OptimizedImage({
           </picture>
         ) : (
           <img
-            src={src}
+            src={optimizedSrc || src}
             alt={alt}
             className={`w-full h-full object-cover transition-opacity duration-300 ${
               isLoaded ? "opacity-100" : "opacity-0"
@@ -239,7 +321,6 @@ export function OptimizedImage({
             onLoad={handleLoad}
             onError={handleError}
             decoding="async"
-            srcSet={srcSet}
             sizes={sizes}
           />
         )

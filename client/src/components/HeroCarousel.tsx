@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Volume2, TrendingUp, Bell, Zap, Star, Flame, Brain } from "lucide-react";
 import { ViewsCount } from "./ViewsCount";
+import { OptimizedImage } from "./OptimizedImage";
 import type { ArticleWithDetails } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -81,12 +82,14 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                   {/* Image */}
                   {(article.thumbnailUrl ?? article.imageUrl) && (
                     <div className="relative aspect-[16/9] rounded-t-lg overflow-hidden">
-                      <img
+                      <OptimizedImage
                         src={(article.thumbnailUrl ?? article.imageUrl) || ""}
                         alt={article.title}
                         className="w-full h-full object-cover rounded-t-lg"
-                        style={{ objectPosition: getObjectPosition(article) }}
-                        loading="eager"
+                        objectPosition={getObjectPosition(article)}
+                        priority={true}
+                        preferSize="medium"
+                        aspectRatio="16/9"
                       />
                     </div>
                   )}
@@ -183,12 +186,13 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
                     {/* Image - 50% of width */}
                     <div className="w-1/2 h-full relative overflow-hidden">
                       {(article.thumbnailUrl ?? article.imageUrl) ? (
-                        <img
+                        <OptimizedImage
                           src={(article.thumbnailUrl ?? article.imageUrl) || ""}
                           alt={article.title}
                           className="w-full h-full object-cover"
-                          style={{ objectPosition: getObjectPosition(article) }}
-                          loading="eager"
+                          objectPosition={getObjectPosition(article)}
+                          priority={true}
+                          preferSize="large"
                         />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
@@ -302,12 +306,13 @@ export function HeroCarousel({ articles }: HeroCarouselProps) {
               data-testid={`button-carousel-thumbnail-${index}`}
             >
               {(article.thumbnailUrl ?? article.imageUrl) ? (
-                <img
+                <OptimizedImage
                   src={(article.thumbnailUrl ?? article.imageUrl) || ""}
                   alt={article.title}
                   className="w-full h-full object-cover"
-                  style={{ objectPosition: getObjectPosition(article) }}
-                  loading="lazy"
+                  objectPosition={getObjectPosition(article)}
+                  priority={false}
+                  preferSize="thumbnail"
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20" />

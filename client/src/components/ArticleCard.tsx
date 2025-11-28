@@ -90,6 +90,7 @@ export function ArticleCard({
                 className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                 objectPosition={getObjectPosition()}
                 priority={true}
+                preferSize="large"
                 fallbackGradient="from-primary/20 via-accent/20 to-primary/10"
               />
             ) : (
@@ -222,6 +223,7 @@ export function ArticleCard({
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     objectPosition={getObjectPosition()}
                     priority={false}
+                    preferSize="small"
                     fallbackGradient="from-primary/10 to-accent/10"
                   />
                 ) : (
@@ -343,6 +345,7 @@ export function ArticleCard({
                 className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                 objectPosition={getObjectPosition()}
                 priority={false}
+                preferSize="medium"
                 fallbackGradient="from-primary/10 to-accent/10"
               />
             ) : (
