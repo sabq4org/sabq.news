@@ -342,11 +342,21 @@ export function Header({ user, onMenuClick }: HeaderProps) {
 
       {/* Mobile menu sheet */}
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-        <SheetContent side="right" className="w-[280px]">
-          <SheetHeader>
-            <SheetTitle className="text-right">القائمة</SheetTitle>
+        <SheetContent side="right" className="w-[280px] flex flex-col">
+          <SheetHeader className="flex-shrink-0">
+            <div className="flex items-center justify-between">
+              <SheetTitle className="text-right">القائمة</SheetTitle>
+              <Link href="/" onClick={() => setMobileMenuOpen(false)}>
+                <img 
+                  src={currentLogo} 
+                  alt="سبق - SABQ" 
+                  className="h-10 w-auto object-contain"
+                  data-testid="img-mobile-menu-logo"
+                />
+              </Link>
+            </div>
           </SheetHeader>
-          <div className="mt-6 space-y-1">
+          <div className="mt-6 space-y-1 flex-1 overflow-y-auto">
             {/* Main Sections */}
             <Link href="/">
               <span
