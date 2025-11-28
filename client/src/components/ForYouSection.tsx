@@ -95,7 +95,10 @@ export function ForYouSection() {
     enabled: !!user,
   });
 
-  const recommendations = recommendationsData?.recommendations || [];
+  const rawRecommendations = recommendationsData?.recommendations || [];
+  const recommendations = rawRecommendations.filter(rec => 
+    rec?.article?.id && rec?.article?.title && rec?.article?.slug
+  );
   const topInterests = interestsData?.interests || [];
 
   const handleRefresh = useCallback(async () => {

@@ -25,7 +25,8 @@ AI-generated images are automatically optimized through the following pipeline:
 
 ### Feature Specifications
 -   **Authentication & Authorization:** Full Role-Based Access Control (RBAC) with 8 roles and hybrid authentication.
--   **AI-Powered Recommendations:** Personalized article recommendations.
+-   **AI-Powered Recommendations:** Personalized article recommendations with smart behavior-based content delivery.
+-   **Reader Personalization System:** Smart content recommendations based on reading behavior. Components include ContinueReadingWidget (shows unfinished articles with progress indicators), ForYouSection (AI-powered recommendations with reason text like "Because you follow Sports"). Uses existing infrastructure: userAffinities, userEvents, readingHistory, contentVectors, similarityEngine, and recommendationService. API endpoints: `/api/personalization/continue-reading`, `/api/personalization/top-interests`, `/api/recommendations/personalized`.
 -   **Content Management:** Lifecycle management for articles, news, users, and categories, with an advanced WYSIWYG editor and Smart Media Library.
 -   **Analytics Dashboards:** Trilingual AI Analytics Dashboard and a professional dashboard for KPIs.
 -   **Advanced Reader Behavior Analytics:** Comprehensive tracking of reading sessions, section-level engagement heatmaps, navigation paths between pages, traffic source attribution (direct/social/referrer), peak hours and daily distribution analysis, real-time active user metrics, device and browser analytics, and article engagement scoring system. Database tables: `reading_sessions`, `section_analytics`, `navigation_paths`, `traffic_sources`, `hourly_engagement_rollups`, `real_time_metrics`, `article_engagement_scores`.
