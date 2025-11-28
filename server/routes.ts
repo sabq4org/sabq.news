@@ -13936,6 +13936,8 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     }
   });
 
+  // 2. GET /api/tags/:id - Get specific tag with article count
+  app.get("/api/tags/:id", async (req, res) => {
     try {
       const { id } = req.params;
 
