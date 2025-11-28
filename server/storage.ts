@@ -664,6 +664,7 @@ export interface IStorage {
   getRecommendations(userId: string): Promise<ArticleWithDetails[]>;
   getPersonalizedFeed(userId: string, limit?: number): Promise<ArticleWithDetails[]>;
   getPersonalizedRecommendations(userId: string, limit?: number): Promise<ArticleWithDetails[]>;
+  getContinueReading(userId: string, limit?: number): Promise<Array<ArticleWithDetails & { progress: number; lastReadAt: Date }>>;
   
   // Muqtarab Angles operations
   getSectionBySlug(slug: string): Promise<Section | undefined>;
@@ -4852,6 +4853,50 @@ export class DatabaseStorage implements IStorage {
         createdAt: row.reporter_created_at,
       } : undefined,
     }));
+  }
+
+  async getContinueReading(userId: string, limit: number = 5): Promise<Array<ArticleWithDetails & { progress: number; lastReadAt: Date }>> {
+    const reporterAlias = aliasedTable(users, 'reporter');
+    
+    const results = await db
+      .select({
+        article: articles,
+        category: categories,
+        author: users,
+        reporter: reporterAlias,
+        scrollDepth: readingHistory.scrollDepth,
+        completionRate: readingHistory.completionRate,
+        lastReadAt: readingHistory.readAt,
+      })
+      .from(readingHistory)
+      .innerJoin(articles, eq(readingHistory.articleId, articles.id))
+      .leftJoin(categories, eq(articles.categoryId, categories.id))
+      .leftJoin(users, eq(articles.authorId, users.id))
+      .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
+      .where(
+        and(
+          eq(readingHistory.userId, userId),
+          eq(articles.status, 'published'),
+          sql`COALESCE(${readingHistory.completionRate}, ${readingHistory.scrollDepth}, 0) < 75`,
+          sql`${readingHistory.readAt} > NOW() - INTERVAL '14 days'`
+        )
+      )
+      .orderBy(desc(readingHistory.readAt))
+      .limit(limit);
+
+    return results.map((row) => ({
+      ...row.article,
+      category: row.category || undefined,
+      author: row.author ? {
+        ...row.author,
+        passwordHash: null,
+      } : row.reporter ? {
+        ...row.reporter,
+        passwordHash: null,
+      } : undefined,
+      progress: Math.max(row.scrollDepth || 0, row.completionRate || 0),
+      lastReadAt: row.lastReadAt,
+    })) as Array<ArticleWithDetails & { progress: number; lastReadAt: Date }>;
   }
 
   async getHeroArticles(): Promise<ArticleWithDetails[]> {

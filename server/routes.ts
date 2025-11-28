@@ -12997,6 +12997,57 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     }
   });
 
+  // GET /api/personalization/continue-reading - Get unfinished articles for user
+  app.get("/api/personalization/continue-reading", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.json({ articles: [] });
+      }
+
+      const limit = Math.min(parseInt(req.query.limit as string) || 5, 10);
+      const articles = await storage.getContinueReading(userId, limit);
+
+      res.json({ 
+        articles: articles.map(article => ({
+          ...article,
+          reasonText: `${article.progress}% مقروء`,
+          reasonType: "continue_reading"
+        }))
+      });
+    } catch (error: any) {
+      console.error("[Personalization] Error getting continue reading:", error);
+      res.status(500).json({ message: "Failed to get continue reading articles" });
+    }
+  });
+
+  // GET /api/personalization/top-interests - Get user top interest categories
+  app.get("/api/personalization/top-interests", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.json({ interests: [] });
+      }
+
+      const { userAffinities } = await import("@shared/schema");
+      const affinities = await db
+        .select({
+          tag: userAffinities.tag,
+          tagType: userAffinities.tagType,
+          score: userAffinities.score,
+        })
+        .from(userAffinities)
+        .where(eq(userAffinities.userId, userId))
+        .orderBy(desc(userAffinities.score))
+        .limit(10);
+
+      res.json({ interests: affinities });
+    } catch (error: any) {
+      console.error("[Personalization] Error getting top interests:", error);
+      res.status(500).json({ message: "Failed to get interests" });
+    }
+  });
+
   // POST /api/recommendations/:id/displayed - Mark recommendation as displayed
   app.post("/api/recommendations/:id/displayed", isAuthenticated, async (req: any, res) => {
     try {
