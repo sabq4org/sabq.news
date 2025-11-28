@@ -102,8 +102,8 @@ export function AIInsightsBlock() {
   const insightsData = [
     {
       icon: Flame,
-      iconColor: "text-orange-500",
-      bgColor: "bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/20 dark:to-orange-900/10",
+      iconColor: "text-orange-600 dark:text-orange-400",
+      bgColor: "bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800",
       chartColor: "#f97316",
       title: "الأكثر تداولاً",
       subtitle: `${insights.mostViewed.count.toLocaleString('en-US')} قراءة`,
@@ -113,8 +113,8 @@ export function AIInsightsBlock() {
     },
     {
       icon: MessageSquare,
-      iconColor: "text-blue-500",
-      bgColor: "bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/10",
+      iconColor: "text-blue-600 dark:text-blue-400",
+      bgColor: "bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800",
       chartColor: "#3b82f6",
       title: "الأكثر تعليقاً",
       subtitle: `${(insights.mostCommented.count ?? 0).toLocaleString('en-US')} تعليق`,
@@ -124,8 +124,8 @@ export function AIInsightsBlock() {
     },
     {
       icon: Zap,
-      iconColor: "text-yellow-500",
-      bgColor: "bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/20 dark:to-yellow-900/10",
+      iconColor: "text-yellow-600 dark:text-yellow-400",
+      bgColor: "bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800",
       chartColor: "#eab308",
       title: "يثير الجدل",
       subtitle: insights.mostControversial.aiAnalysis,
@@ -135,8 +135,8 @@ export function AIInsightsBlock() {
     },
     {
       icon: Heart,
-      iconColor: "text-pink-500",
-      bgColor: "bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-950/20 dark:to-pink-900/10",
+      iconColor: "text-pink-600 dark:text-pink-400",
+      bgColor: "bg-pink-50 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-800",
       chartColor: "#ec4899",
       title: "الأكثر إعجاباً",
       subtitle: `${insights.mostPositive.positiveRate} تفاعل إيجابي`,
@@ -146,9 +146,9 @@ export function AIInsightsBlock() {
     },
     {
       icon: Brain,
-      iconColor: "text-ai-gradient",
-      bgColor: "bg-ai-gradient-soft ai-glow",
-      chartColor: "hsl(var(--ai-primary))",
+      iconColor: "text-purple-600 dark:text-purple-400",
+      bgColor: "bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800",
+      chartColor: "#a855f7",
       title: "اختيار الذكاء الاصطناعي",
       subtitle: insights.aiPick.forecast,
       trend: "AI Forecast",
@@ -188,7 +188,7 @@ export function AIInsightsBlock() {
               className={`flex-shrink-0 snap-start ${insight.article ? "cursor-pointer" : "cursor-default pointer-events-none"}`}
             >
               <div
-                className={`${insight.bgColor} border border-gray-200 dark:border-gray-800 rounded-xl p-2.5 flex flex-col w-[160px] h-[140px] ${
+                className={`${insight.bgColor} rounded-xl p-2.5 flex flex-col w-[160px] h-[140px] ${
                   insight.article ? "" : "opacity-60"
                 }`}
                 data-testid={`insight-card-${insight.testId}`}
@@ -198,7 +198,7 @@ export function AIInsightsBlock() {
                   <div className="flex items-center justify-center w-8 h-8 flex-shrink-0">
                     <IconComponent className={`h-5 w-5 ${insight.iconColor}`} />
                   </div>
-                  <h3 className="font-bold text-xs leading-tight flex-1" data-testid={`insight-title-${insight.testId}`}>
+                  <h3 className="font-bold text-xs leading-tight flex-1 text-foreground" data-testid={`insight-title-${insight.testId}`}>
                     {insight.title}
                   </h3>
                 </div>
@@ -211,7 +211,7 @@ export function AIInsightsBlock() {
                 {/* Trend with MiniChart */}
                 <div className="flex items-center gap-2 mb-2" data-testid={`insight-trend-${insight.testId}`}>
                   <MiniChart trend={insight.trend} color={insight.chartColor} />
-                  <div className="flex items-center gap-1 text-foreground/70 dark:text-foreground/80 text-[10px] font-medium">
+                  <div className="flex items-center gap-1 text-foreground/80 text-[10px] font-medium">
                     <TrendingUp className="h-2.5 w-2.5" />
                     <span>{insight.trend}</span>
                   </div>
@@ -219,7 +219,7 @@ export function AIInsightsBlock() {
 
                 {/* Article Title */}
                 {insight.article && (
-                  <p className="mt-auto pt-2 text-[10px] text-foreground/80 line-clamp-2 border-t border-gray-200 dark:border-gray-700" data-testid={`insight-article-${insight.testId}`}>
+                  <p className="mt-auto pt-2 text-[10px] text-foreground/80 line-clamp-2 border-t border-current/10" data-testid={`insight-article-${insight.testId}`}>
                     {insight.article.title}
                   </p>
                 )}
@@ -242,7 +242,7 @@ export function AIInsightsBlock() {
               className={insight.article ? "cursor-pointer" : "cursor-default pointer-events-none"}
             >
               <div
-                className={`${insight.bgColor} border border-gray-200 dark:border-gray-800 rounded-xl p-3 group flex flex-col min-h-[160px] ${
+                className={`${insight.bgColor} rounded-xl p-3 group flex flex-col min-h-[160px] ${
                   insight.article ? "" : "opacity-60"
                 }`}
                 data-testid={`insight-card-${insight.testId}`}
@@ -253,7 +253,7 @@ export function AIInsightsBlock() {
                     <IconComponent className={`h-6 w-6 ${insight.iconColor}`} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-base leading-tight" data-testid={`insight-title-${insight.testId}`}>
+                    <h3 className="font-bold text-base leading-tight text-foreground" data-testid={`insight-title-${insight.testId}`}>
                       {insight.title}
                     </h3>
                   </div>
@@ -267,7 +267,7 @@ export function AIInsightsBlock() {
                 {/* Trend with MiniChart */}
                 <div className="flex items-center gap-2 mb-2" data-testid={`insight-trend-${insight.testId}`}>
                   <MiniChart trend={insight.trend} color={insight.chartColor} />
-                  <div className="flex items-center gap-1 text-foreground/70 dark:text-foreground/80 text-xs font-medium">
+                  <div className="flex items-center gap-1 text-foreground/80 text-xs font-medium">
                     <TrendingUp className="h-3 w-3" />
                     <span className="text-xs">{insight.trend}</span>
                   </div>
@@ -275,7 +275,7 @@ export function AIInsightsBlock() {
 
                 {/* Article Title - Always visible */}
                 {insight.article && (
-                  <p className="mt-auto pt-2 text-xs text-foreground/80 line-clamp-2 border-t border-gray-200 dark:border-gray-700" data-testid={`insight-article-${insight.testId}`}>
+                  <p className="mt-auto pt-2 text-xs text-foreground/80 line-clamp-2 border-t border-current/10" data-testid={`insight-article-${insight.testId}`}>
                     {insight.article.title}
                   </p>
                 )}
