@@ -81,44 +81,24 @@ function buildOptimizedUrl(src: string, options?: {
   return `${src}${separator}${params.join('&')}`;
 }
 
-// Generate srcSet for responsive images
+// Generate srcSet for responsive images - DISABLED for performance
+// Each srcSet entry triggers a server-side Sharp operation, causing slow page loads
 function generateResponsiveSrcSet(src: string, preferredFormat: 'webp' | 'jpeg' = 'webp'): string {
-  if (!src || !src.includes('/public-objects/')) return '';
-  
-  const widths = [400, 800, 1200, 1600];
-  return widths
-    .map(w => `${buildOptimizedUrl(src, { width: w, format: preferredFormat })} ${w}w`)
-    .join(', ');
+  // Return empty to prevent multiple image optimization requests per image
+  return '';
 }
 
-// Convert image URL to WebP using server-side optimization
+// Convert image URL - DISABLED automatic WebP conversion for performance
+// Server-side Sharp operations are expensive, only use when explicitly needed
 function getOptimizedUrl(src: string, options?: {
   width?: number;
   height?: number;
   quality?: number;
   preferSize?: ImageSize;
 }): string {
-  if (!src) return src;
-  
-  // Only optimize public-objects images
-  if (!src.includes('/public-objects/')) return src;
-  
-  // Check if this is already an optimized image format
-  const isOptimizedFormat = /\.(webp|avif)$/i.test(src);
-  
-  // Calculate width based on preferred size
-  let width = options?.width;
-  if (!width && options?.preferSize && options.preferSize !== 'original') {
-    width = IMAGE_WIDTHS[options.preferSize];
-  }
-  
-  // Build the optimized URL with WebP format
-  return buildOptimizedUrl(src, {
-    width,
-    height: options?.height,
-    quality: options?.quality || 80,
-    format: isOptimizedFormat ? undefined : 'webp'
-  });
+  // Return original src without any server-side optimization params
+  // This prevents expensive Sharp operations on every image load
+  return src || '';
 }
 
 export function OptimizedImage({

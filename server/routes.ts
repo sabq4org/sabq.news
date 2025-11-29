@@ -12179,7 +12179,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     const requestedFormat = req.query.f as string | undefined;
     
     const isImagePath = /\.(png|jpg|jpeg|gif|webp|avif)$/i.test(filePath);
-    const shouldOptimize = isImagePath && (width || height || requestedFormat || supportsWebP(req.headers.accept));
+    const shouldOptimize = isImagePath && (width || height || requestedFormat);
     
     try {
       const file = await objectStorageService.searchPublicObject(filePath);
