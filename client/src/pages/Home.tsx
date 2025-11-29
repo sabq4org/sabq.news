@@ -486,7 +486,8 @@ export default function Home() {
             <div className="scroll-fade-in">
               <PersonalizedFeed 
                 articles={homepage.forYou}
-                title="جميع الأخبار"
+                title={user ? "أخبارك الذكية" : "جميع الأخبار"}
+                subtitle={user ? "محتوى مُختار بذكاء بناءً على اهتماماتك" : undefined}
                 showReason={false}
               />
             </div>

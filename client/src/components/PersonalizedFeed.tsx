@@ -24,6 +24,7 @@ const isNewArticle = (publishedAt: Date | string | null | undefined) => {
 interface PersonalizedFeedProps {
   articles: ArticleWithDetails[];
   title?: string;
+  subtitle?: string;
   showReason?: boolean;
 }
 
@@ -34,7 +35,7 @@ interface Recommendation {
   score: number;
 }
 
-export function PersonalizedFeed({ articles: initialArticles, title = "جميع الأخبار", showReason = false }: PersonalizedFeedProps) {
+export function PersonalizedFeed({ articles: initialArticles, title = "جميع الأخبار", subtitle, showReason = false }: PersonalizedFeedProps) {
   const { user } = useAuth();
   const [articles, setArticles] = useState(initialArticles);
   const [isLoading, setIsLoading] = useState(false);
@@ -171,14 +172,18 @@ export function PersonalizedFeed({ articles: initialArticles, title = "جميع 
   return (
     <section className="space-y-4" dir="rtl">
       <div className="flex items-center gap-2">
-        <Newspaper className="h-6 w-6 text-primary" />
+        {user ? (
+          <Sparkles className="h-6 w-6 text-primary" />
+        ) : (
+          <Newspaper className="h-6 w-6 text-primary" />
+        )}
         <h2 className="text-2xl md:text-3xl font-bold" data-testid="heading-personalized-feed">
           {title}
         </h2>
       </div>
       
       <p className="text-muted-foreground">
-        نشر كل الأخبار المضافة مرتبة من الأحدث إلى الأقدم
+        {subtitle || "نشر كل الأخبار المضافة مرتبة من الأحدث إلى الأقدم"}
       </p>
 
       {/* Mobile View: Vertical List (like RecommendationsWidget) */}
