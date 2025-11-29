@@ -79,11 +79,11 @@ export function Header({ user, onMenuClick }: HeaderProps) {
     { name: "التصنيفات", href: "/categories" },
     { name: "المساعد الذكي", href: "/chatbot" },
     { name: "عمق", href: "/omq" },
-    { name: "المرقاب", href: "/mirqab" },
     { name: "مقالات", href: "/opinion" },
     { name: "مُقترب", href: "/muqtarab" },
     { name: "لحظة بلحظة", href: "/moment-by-moment" },
     { name: "SaudiSense", href: "https://saudisense.com", external: true },
+    { name: "Riyadh X", href: "https://riyadhx.replit.app", external: true },
   ];
 
   return (
@@ -400,15 +400,6 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                 عمق
               </span>
             </Link>
-            <Link href="/mirqab">
-              <span
-                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover-elevate active-elevate-2 cursor-pointer"
-                onClick={() => setMobileMenuOpen(false)}
-                data-testid="link-mobile-mirqab"
-              >
-                المرقاب
-              </span>
-            </Link>
             <Link href="/chatbot">
               <span
                 className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover-elevate active-elevate-2 cursor-pointer"
@@ -437,6 +428,17 @@ export function Header({ user, onMenuClick }: HeaderProps) {
             >
               <ExternalLink className="h-4 w-4" aria-hidden="true" />
               SaudiSense
+            </a>
+            <a
+              href="https://riyadhx.replit.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover-elevate active-elevate-2 cursor-pointer"
+              onClick={() => setMobileMenuOpen(false)}
+              data-testid="link-mobile-riyadhx"
+            >
+              <ExternalLink className="h-4 w-4" aria-hidden="true" />
+              Riyadh X
             </a>
             {user && (
               <Link href="/discover-users">
