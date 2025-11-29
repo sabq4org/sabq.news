@@ -1,4 +1,4 @@
-import { Menu, User, LogOut, LayoutDashboard, Bell, Newspaper, Users, MessageSquare, Brain, Sparkles } from "lucide-react";
+import { Menu, User, LogOut, LayoutDashboard, Bell, Newspaper, Users, MessageSquare, Brain, Sparkles, ExternalLink } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
@@ -74,7 +74,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
     return 'س';
   };
 
-  const mainSections = [
+  const mainSections: Array<{ name: string; href: string; external?: boolean }> = [
     { name: "الأخبار", href: "/news" },
     { name: "التصنيفات", href: "/categories" },
     { name: "المساعد الذكي", href: "/chatbot" },
@@ -83,6 +83,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
     { name: "مقالات", href: "/opinion" },
     { name: "مُقترب", href: "/muqtarab" },
     { name: "لحظة بلحظة", href: "/moment-by-moment" },
+    { name: "SaudiSense", href: "https://saudisense.replit.app", external: true },
   ];
 
   return (
@@ -118,15 +119,29 @@ export function Header({ user, onMenuClick }: HeaderProps) {
           {/* Main Navigation - Center (Desktop only) */}
           <nav id="main-nav" role="navigation" aria-label="القائمة الرئيسية" tabIndex={-1} className="hidden md:flex items-center gap-6 flex-1 justify-center">
             {mainSections.map((section) => (
-              <Link key={section.name} href={section.href}>
-                <span 
-                  className="text-sm font-medium text-foreground hover:text-primary transition-colors whitespace-nowrap cursor-pointer" 
+              section.external ? (
+                <a 
+                  key={section.name} 
+                  href={section.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-medium text-foreground hover:text-primary transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1" 
                   data-testid={`link-section-${section.name}`}
-                  aria-current={location === section.href ? "page" : undefined}
                 >
                   {section.name}
-                </span>
-              </Link>
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              ) : (
+                <Link key={section.name} href={section.href}>
+                  <span 
+                    className="text-sm font-medium text-foreground hover:text-primary transition-colors whitespace-nowrap cursor-pointer" 
+                    data-testid={`link-section-${section.name}`}
+                    aria-current={location === section.href ? "page" : undefined}
+                  >
+                    {section.name}
+                  </span>
+                </Link>
+              )
             ))}
             {user && (
               <Link href="/discover-users">
@@ -412,6 +427,17 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                 مُقترب
               </span>
             </Link>
+            <a
+              href="https://saudisense.replit.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover-elevate active-elevate-2 cursor-pointer"
+              onClick={() => setMobileMenuOpen(false)}
+              data-testid="link-mobile-saudisense"
+            >
+              <ExternalLink className="h-4 w-4" aria-hidden="true" />
+              SaudiSense
+            </a>
             {user && (
               <Link href="/discover-users">
                 <span
