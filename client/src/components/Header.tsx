@@ -83,7 +83,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
     { name: "مقالات", href: "/opinion" },
     { name: "مُقترب", href: "/muqtarab" },
     { name: "لحظة بلحظة", href: "/moment-by-moment" },
-    { name: "SaudiSense", href: "https://saudisense.replit.app", external: true },
+    { name: "SaudiSense", href: "https://saudisense.com", external: true },
   ];
 
   return (
@@ -428,7 +428,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
               </span>
             </Link>
             <a
-              href="https://saudisense.replit.app"
+              href="https://saudisense.com"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover-elevate active-elevate-2 cursor-pointer"
