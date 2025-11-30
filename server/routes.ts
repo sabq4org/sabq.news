@@ -4347,6 +4347,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get users list (admin only, supports role filtering)
+  // Get suggested users for discovery/follow (for logged-in users)
+  app.get("/api/users/suggested", requireAuth, async (req: any, res) => {
+    try {
+      const currentUserId = req.user?.id;
+      if (!currentUserId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Get staff users (writers, reporters, editors, etc.) who are not the current user
+      const staffRoles = ['reporter', 'writer', 'editor', 'opinion_author', 'content_creator', 'chief_editor'];
+      
+      const allUsers = await db.select({
+        id: users.id,
+        username: users.username,
+        fullName: users.fullName,
+        bio: users.bio,
+        profilePicture: users.profilePicture,
+        role: users.role,
+      })
+      .from(users)
+      .where(
+        and(
+          ne(users.id, currentUserId),
+          inArray(users.role, staffRoles),
+          eq(users.status, 'active')
+        )
+      )
+      .limit(50);
+
+      // Get following status and stats for each user
+      const usersWithStats = await Promise.all(
+        allUsers.map(async (user) => {
+          // Check if current user follows this user
+          const isFollowing = await storage.isFollowing(currentUserId, user.id);
+          
+          // Get follower count
+          const followStats = await storage.getFollowStats(user.id);
+          
+          // Get article count
+          const articleCount = await db.select({ count: sql<number>`count(*)` })
+            .from(articles)
+            .where(
+              and(
+                eq(articles.authorId, user.id),
+                eq(articles.status, 'published')
+              )
+            );
+
+          return {
+            id: user.id,
+            username: user.username || user.id.slice(0, 8),
+            fullName: user.fullName || 'مستخدم',
+            bio: user.bio,
+            profilePicture: user.profilePicture,
+            role: user.role || 'reader',
+            followersCount: followStats.followersCount,
+            articlesCount: Number(articleCount[0]?.count || 0),
+            isFollowing,
+          };
+        })
+      );
+
+      // Sort: users with more articles and followers first, not-followed users first
+      usersWithStats.sort((a, b) => {
+        // Prioritize users not yet followed
+        if (a.isFollowing !== b.isFollowing) {
+          return a.isFollowing ? 1 : -1;
+        }
+        // Then by articles count
+        return (b.articlesCount + b.followersCount) - (a.articlesCount + a.followersCount);
+      });
+
+      res.json({ users: usersWithStats.slice(0, 20) });
+    } catch (error) {
+      console.error("Error fetching suggested users:", error);
+      res.status(500).json({ message: "Failed to fetch suggested users" });
+    }
+  });
+
   app.get("/api/users", requireAuth, requirePermission('admin.manage_settings'), async (req, res) => {
     try {
       const { role } = req.query;
