@@ -26,7 +26,12 @@ export function BreakingSwitch({ articleId, initialValue }: BreakingSwitchProps)
         method: "POST",
       });
 
+      // Invalidate all relevant caches for instant update across the platform
       queryClient.removeQueries({ queryKey: ["/api/admin/articles"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/homepage"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/live/breaking"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/blocks"] });
+      
       await queryClient.refetchQueries({ queryKey: ["/api/admin/articles"] });
       
       toast({

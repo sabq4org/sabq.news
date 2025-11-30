@@ -6152,6 +6152,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`⏸️ [UPDATE ARTICLE] No notification sent - Status unchanged or not published`);
       }
 
+      // Invalidate cache and broadcast to all connected clients for instant update
+      memoryCache.invalidatePatterns(["^homepage:", "^breaking:", "^blocks:", "^live:"]);
+      console.log(`[Breaking News] Cache invalidated and SSE broadcast sent for article ${articleId}`);
+
       res.json(updatedArticle);
     } catch (error) {
       console.error("Error updating article:", error);
@@ -6240,6 +6244,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Don't fail the publish operation if notification fails
       }
 
+      // Invalidate cache and broadcast to all connected clients for instant update
+      memoryCache.invalidatePatterns(["^homepage:", "^breaking:", "^blocks:", "^live:"]);
+      console.log(`[Breaking News] Cache invalidated and SSE broadcast sent for article ${articleId}`);
+
       res.json(updatedArticle);
     } catch (error) {
       console.error("Error publishing article:", error);
@@ -6291,6 +6299,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
+      // Invalidate cache and broadcast to all connected clients for instant update
+      memoryCache.invalidatePatterns(["^homepage:", "^breaking:", "^blocks:", "^live:"]);
+      console.log(`[Breaking News] Cache invalidated and SSE broadcast sent for article ${articleId}`);
+
       res.json(updatedArticle);
     } catch (error) {
       console.error("Error featuring article:", error);
@@ -6335,6 +6347,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userAgent: req.get("user-agent"),
         },
       });
+
+      // Invalidate cache and broadcast to all connected clients for instant update
+      memoryCache.invalidatePatterns(["^homepage:", "^breaking:", "^blocks:", "^live:"]);
+      console.log(`[Breaking News] Cache invalidated and SSE broadcast sent for article ${articleId}`);
 
       res.json(updatedArticle);
     } catch (error) {
@@ -6381,6 +6397,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
+      // Invalidate cache and broadcast to all connected clients for instant update
+      memoryCache.invalidatePatterns(["^homepage:", "^breaking:", "^blocks:", "^live:"]);
+      console.log(`[Breaking News] Cache invalidated and SSE broadcast sent for article ${articleId}`);
+
       res.json(updatedArticle);
     } catch (error) {
       console.error("Error restoring article:", error);
@@ -6418,6 +6438,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userAgent: req.get("user-agent"),
         },
       });
+
+      // Invalidate cache and broadcast to all connected clients for instant update
+      memoryCache.invalidatePatterns(["^homepage:", "^breaking:", "^blocks:", "^live:"]);
+      console.log(`[Breaking News] Cache invalidated and SSE broadcast sent for article ${articleId}`);
 
       res.json(updatedArticle);
     } catch (error) {
@@ -10047,6 +10071,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
+      // Invalidate cache and broadcast to all connected clients for instant update
+      memoryCache.invalidatePatterns(["^homepage:", "^breaking:", "^blocks:", "^live:"]);
+      console.log(`[Breaking News] Cache invalidated and SSE broadcast sent for article ${articleId}`);
+
       res.json(updatedArticle);
     } catch (error) {
       console.error("Error updating English article:", error);
@@ -10150,6 +10178,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
+      // Invalidate cache and broadcast to all connected clients for instant update
+      memoryCache.invalidatePatterns(["^homepage:", "^breaking:", "^blocks:", "^live:"]);
+      console.log(`[Breaking News] Cache invalidated and SSE broadcast sent for article ${articleId}`);
+
       res.json(updatedArticle);
     } catch (error) {
       console.error("Error toggling English breaking news:", error);
@@ -10199,6 +10231,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userAgent: req.get("user-agent"),
         },
       });
+
+      // Invalidate cache and broadcast to all connected clients for instant update
+      memoryCache.invalidatePatterns(["^homepage:", "^breaking:", "^blocks:", "^live:"]);
+      console.log(`[Breaking News] Cache invalidated and SSE broadcast sent for article ${articleId}`);
 
       res.json(updatedArticle);
     } catch (error) {
@@ -10250,6 +10286,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userAgent: req.get("user-agent"),
         },
       });
+
+      // Invalidate cache and broadcast to all connected clients for instant update
+      memoryCache.invalidatePatterns(["^homepage:", "^breaking:", "^blocks:", "^live:"]);
+      console.log(`[Breaking News] Cache invalidated and SSE broadcast sent for article ${articleId}`);
 
       res.json(updatedArticle);
     } catch (error) {
@@ -21596,6 +21636,10 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         },
       });
 
+      // Invalidate cache and broadcast to all connected clients for instant update
+      memoryCache.invalidatePatterns(["^homepage:", "^breaking:", "^blocks:", "^live:"]);
+      console.log(`[Breaking News] Cache invalidated and SSE broadcast sent for article ${articleId}`);
+
       res.json(updatedArticle);
     } catch (error) {
       console.error("Error updating opinion article:", error);
@@ -21656,6 +21700,10 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         },
       });
 
+      // Invalidate cache and broadcast to all connected clients for instant update
+      memoryCache.invalidatePatterns(["^homepage:", "^breaking:", "^blocks:", "^live:"]);
+      console.log(`[Breaking News] Cache invalidated and SSE broadcast sent for article ${articleId}`);
+
       res.json(updatedArticle);
     } catch (error) {
       console.error("Error submitting opinion for review:", error);
@@ -21713,6 +21761,10 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
           userAgent: req.get("user-agent"),
         },
       });
+
+      // Invalidate cache and broadcast to all connected clients for instant update
+      memoryCache.invalidatePatterns(["^homepage:", "^breaking:", "^blocks:", "^live:"]);
+      console.log(`[Breaking News] Cache invalidated and SSE broadcast sent for article ${articleId}`);
 
       res.json(updatedArticle);
     } catch (error) {
@@ -21776,6 +21828,10 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
           userAgent: req.get("user-agent"),
         },
       });
+
+      // Invalidate cache and broadcast to all connected clients for instant update
+      memoryCache.invalidatePatterns(["^homepage:", "^breaking:", "^blocks:", "^live:"]);
+      console.log(`[Breaking News] Cache invalidated and SSE broadcast sent for article ${articleId}`);
 
       res.json(updatedArticle);
     } catch (error) {
@@ -21851,6 +21907,10 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       } catch (notificationError) {
         console.error("Error creating notification:", notificationError);
       }
+
+      // Invalidate cache and broadcast to all connected clients for instant update
+      memoryCache.invalidatePatterns(["^homepage:", "^breaking:", "^blocks:", "^live:"]);
+      console.log(`[Breaking News] Cache invalidated and SSE broadcast sent for article ${articleId}`);
 
       res.json(updatedArticle);
     } catch (error) {
@@ -29054,7 +29114,11 @@ Allow: /
           newValue: updateData as any,
         });
         
-        res.json(updatedArticle);
+        // Invalidate cache and broadcast to all connected clients for instant update
+      memoryCache.invalidatePatterns(["^homepage:", "^breaking:", "^blocks:", "^live:"]);
+      console.log(`[Breaking News] Cache invalidated and SSE broadcast sent for article ${articleId}`);
+
+      res.json(updatedArticle);
       } catch (error: any) {
         console.error("Error updating article:", error);
         
