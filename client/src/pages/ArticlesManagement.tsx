@@ -468,6 +468,11 @@ export default function ArticlesManagement() {
       return { previousArticles: previousArticles ? [...previousArticles] : undefined, previousLocalArticles, queryKey: data.queryKey };
     },
     onSuccess: () => {
+      // Invalidate homepage and related caches for instant update
+      queryClient.invalidateQueries({ queryKey: ["/api/homepage"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/live/breaking"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/blocks"] });
+      
       toast({
         title: "تم التحديث",
         description: "تم تحديث ترتيب المقالات بنجاح",

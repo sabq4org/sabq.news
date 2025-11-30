@@ -6700,6 +6700,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       await storage.updateArticlesOrder(articleOrders);
 
+      // Invalidate cache and broadcast SSE for instant update on homepage
+      memoryCache.invalidatePatterns(["^homepage:", "^breaking:", "^blocks:", "^live:", "^categories:"]);
+      console.log(`[Article Reorder] Cache invalidated and SSE broadcast sent for ${articleOrders.length} articles`);
+
       // Log activity
       await logActivity({
         userId,
