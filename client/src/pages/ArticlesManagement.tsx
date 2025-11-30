@@ -92,7 +92,7 @@ type Category = {
   nameEn: string;
 };
 
-function SortableRow({ article, children }: { article: Article; children: React.ReactNode }) {
+function SortableRow({ article, children, isSaving }: { article: Article; children: React.ReactNode; isSaving?: boolean }) {
   const {
     attributes,
     listeners,
@@ -106,17 +106,26 @@ function SortableRow({ article, children }: { article: Article; children: React.
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 999 : 'auto',
+    position: isDragging ? 'relative' as const : undefined,
   };
 
   return (
     <tr
       ref={setNodeRef}
       style={style}
-      className="border-b border-border hover:bg-muted/30"
+      className={`border-b border-border hover:bg-muted/30 ${isDragging ? 'bg-primary/10 shadow-lg' : ''} ${isSaving ? 'opacity-70' : ''}`}
       data-testid={`row-article-${article.id}`}
     >
-      <td className="hidden md:table-cell py-3 px-2 text-center cursor-grab active:cursor-grabbing" {...attributes} {...listeners}>
-        <GripVertical className="h-4 w-4 mx-auto text-muted-foreground" data-testid={`drag-handle-${article.id}`} />
+      <td 
+        className="hidden md:table-cell py-3 px-2 text-center cursor-grab active:cursor-grabbing touch-none select-none" 
+        {...attributes} 
+        {...listeners}
+      >
+        <GripVertical 
+          className={`h-4 w-4 mx-auto ${isDragging ? 'text-primary' : 'text-muted-foreground'} ${isSaving ? 'animate-pulse' : ''}`} 
+          data-testid={`drag-handle-${article.id}`} 
+        />
       </td>
       {children}
     </tr>
@@ -432,31 +441,58 @@ export default function ArticlesManagement() {
     },
   });
 
-  // Update articles order mutation
+  // Update articles order mutation with optimistic updates
   const updateOrderMutation = useMutation({
-    mutationFn: async (articleOrders: Array<{ id: string; displayOrder: number }>) => {
+    mutationFn: async (data: { 
+      articleOrders: Array<{ id: string; displayOrder: number }>;
+      newOrderedArticles: Article[];
+      queryKey: (string | undefined)[];
+    }) => {
       return await apiRequest("/api/admin/articles/update-order", {
         method: "POST",
-        body: JSON.stringify({ articleOrders }),
+        body: JSON.stringify({ articleOrders: data.articleOrders }),
         headers: { "Content-Type": "application/json" },
       });
     },
-    onSuccess: async () => {
-      queryClient.removeQueries({ queryKey: ["/api/admin/articles"] });
-      await queryClient.refetchQueries({ queryKey: ["/api/admin/articles"] });
+    onMutate: async (data) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["/api/admin/articles"] });
+      
+      // Store the previous state for rollback (deep clone)
+      const previousArticles = queryClient.getQueryData<Article[]>(data.queryKey);
+      const previousLocalArticles = [...localArticles];
+      
+      // Optimistically update the cache with cloned array
+      queryClient.setQueryData(data.queryKey, [...data.newOrderedArticles]);
+      
+      return { previousArticles: previousArticles ? [...previousArticles] : undefined, previousLocalArticles, queryKey: data.queryKey };
+    },
+    onSuccess: () => {
       toast({
         title: "تم التحديث",
         description: "تم تحديث ترتيب المقالات بنجاح",
       });
     },
-    onError: (error: any) => {
+    onError: (error: any, _variables, context) => {
+      // Rollback to the previous state with fresh copies
+      if (context?.previousArticles && context?.queryKey) {
+        queryClient.setQueryData(context.queryKey, [...context.previousArticles]);
+      }
+      if (context?.previousLocalArticles) {
+        setLocalArticles([...context.previousLocalArticles]);
+      }
       toast({
-        title: "خطأ",
-        description: error.message || "فشل تحديث الترتيب",
+        title: "خطأ في حفظ الترتيب",
+        description: error.message || "فشل تحديث الترتيب. تم استعادة الترتيب السابق.",
         variant: "destructive",
       });
-      setLocalArticles(articles);
     },
+    onSettled: () => {
+      // Refetch to ensure consistency with server
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/articles"] });
+    },
+    retry: 2,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
   });
 
   // Selection handlers
@@ -505,15 +541,30 @@ export default function ArticlesManagement() {
     const oldIndex = localArticles.findIndex((article) => article.id === active.id);
     const newIndex = localArticles.findIndex((article) => article.id === over.id);
 
-    const newArticles = arrayMove(localArticles, oldIndex, newIndex);
+    if (oldIndex === -1 || newIndex === -1) {
+      return;
+    }
+
+    // Create a new array with the reordered items
+    const newArticles = arrayMove([...localArticles], oldIndex, newIndex);
     setLocalArticles(newArticles);
 
+    // Generate unique descending displayOrder values using high-precision timestamp
+    // Each article gets a unique value: baseTimestamp * 1000 - (index * 1000) ensures no collisions
+    const baseTimestamp = Date.now();
     const articleOrders = newArticles.map((article, index) => ({
       id: article.id,
-      displayOrder: newArticles.length - index,
+      displayOrder: Math.floor((baseTimestamp - index * 1000) / 1000),
     }));
 
-    updateOrderMutation.mutate(articleOrders);
+    // Build the current query key at call time to avoid stale closures
+    const currentQueryKey = ["/api/admin/articles", searchTerm, activeStatus, typeFilter, categoryFilter];
+
+    updateOrderMutation.mutate({
+      articleOrders,
+      newOrderedArticles: newArticles,
+      queryKey: currentQueryKey,
+    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -791,7 +842,7 @@ export default function ArticlesManagement() {
                         strategy={verticalListSortingStrategy}
                       >
                         {localArticles.map((article) => (
-                          <SortableRow key={article.id} article={article}>
+                          <SortableRow key={article.id} article={article} isSaving={updateOrderMutation.isPending}>
                             <td className="py-3 px-4 text-center">
                               <Checkbox
                                 checked={selectedArticles.has(article.id)}
