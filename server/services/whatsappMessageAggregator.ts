@@ -155,7 +155,7 @@ async function processAggregatedMessage(pending: PendingWhatsappMessage): Promis
       articleType: "news",
       newsType: "regular",
       hideFromHomepage: false,
-      displayOrder: 0,
+      displayOrder: Date.now(),
     } as any);
     
     console.log(`[WhatsApp Aggregator] Article created: ${article.id}`);

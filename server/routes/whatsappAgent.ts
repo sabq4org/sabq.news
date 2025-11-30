@@ -1235,7 +1235,7 @@ router.post("/webhook", async (req: Request, res: Response) => {
       articleType: "news", // Ensures article appears in homepage queries
       newsType: "regular", // Default news type (not breaking/featured)
       hideFromHomepage: false, // Article must be visible on homepage
-      displayOrder: 0, // Default display order
+      displayOrder: Date.now(), // New articles appear at top
     } as any);
 
     console.log(`[WhatsApp Agent] ✅ Article created: ${article.id}, status: ${articleStatus}`);
