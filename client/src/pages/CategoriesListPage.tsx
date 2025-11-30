@@ -1,29 +1,17 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Newspaper,
-  Eye,
-  Heart,
-  Bookmark,
   FileText,
-  FolderOpen,
   Search,
   LayoutGrid,
   List,
-  ArrowUpDown,
 } from "lucide-react";
 import { Link } from "wouter";
 import type { Category } from "@shared/schema";
@@ -36,12 +24,10 @@ interface CategoryWithStats extends Category {
 }
 
 type ViewMode = "grid" | "list";
-type SortMode = "newest" | "articles" | "views";
 
 export default function CategoriesListPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
-  const [sortMode, setSortMode] = useState<SortMode>("newest");
 
   const { data: user } = useQuery<{ id: string; name?: string; email?: string; role?: string }>({
     queryKey: ["/api/auth/user"],
@@ -57,9 +43,8 @@ export default function CategoriesListPage() {
     },
   });
 
-  // Filter and sort categories
-  const filteredAndSortedCategories = useMemo(() => {
-    let filtered = categories
+  const filteredCategories = useMemo(() => {
+    return categories
       .filter((cat) => cat.status === "active" && cat.type === "core")
       .filter((cat) => {
         if (!searchQuery) return true;
@@ -69,40 +54,14 @@ export default function CategoriesListPage() {
           cat.nameEn?.toLowerCase().includes(query) ||
           cat.description?.toLowerCase().includes(query)
         );
-      });
+      })
+      .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+  }, [categories, searchQuery]);
 
-    // Sort based on selected mode
-    switch (sortMode) {
-      case "articles":
-        filtered.sort((a, b) => (b.articleCount || 0) - (a.articleCount || 0));
-        break;
-      case "views":
-        filtered.sort((a, b) => (b.totalViews || 0) - (a.totalViews || 0));
-        break;
-      case "newest":
-      default:
-        filtered.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
-        break;
-    }
-
-    return filtered;
-  }, [categories, searchQuery, sortMode]);
-
-  // Calculate overall statistics
-  const statistics = useMemo(() => {
-    const activeCategories = categories.filter(
-      (cat) => cat.status === "active" && cat.type === "core"
-    );
-
-    return {
-      totalCategories: activeCategories.length,
-      totalArticles: activeCategories.reduce((sum, cat) => sum + (cat.articleCount || 0), 0),
-      totalViews: activeCategories.reduce((sum, cat) => sum + (cat.totalViews || 0), 0),
-      totalEngagement: activeCategories.reduce(
-        (sum, cat) => sum + (cat.totalLikes || 0) + (cat.totalBookmarks || 0),
-        0
-      ),
-    };
+  const totalArticles = useMemo(() => {
+    return categories
+      .filter((cat) => cat.status === "active" && cat.type === "core")
+      .reduce((sum, cat) => sum + (cat.articleCount || 0), 0);
   }, [categories]);
 
   return (
@@ -111,94 +70,17 @@ export default function CategoriesListPage() {
 
       <main className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
-        <div className="mb-8">
+        <div className="mb-8 text-center">
           <h1 className="text-3xl md:text-4xl font-bold mb-2" data-testid="heading-categories">
             التصنيفات
           </h1>
           <p className="text-muted-foreground">
-            استكشف جميع تصنيفات الأخبار
+            استكشف {filteredCategories.length} تصنيف يحتوي على {totalArticles.toLocaleString()} خبر
           </p>
         </div>
 
-        {/* Statistics Summary */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {[1, 2, 3, 4].map((i) => (
-              <Card key={i}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-4 w-4 rounded" />
-                </CardHeader>
-                <CardContent>
-                  <Skeleton className="h-8 w-16 mb-2" />
-                  <Skeleton className="h-3 w-20" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {/* Total Categories */}
-            <Card className="hover-elevate" data-testid="stat-total-categories">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  إجمالي التصنيفات
-                </CardTitle>
-                <FolderOpen className="h-4 w-4 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{statistics.totalCategories}</div>
-                <p className="text-xs text-muted-foreground mt-1">تصنيف نشط</p>
-              </CardContent>
-            </Card>
-
-            {/* Total Articles */}
-            <Card className="hover-elevate" data-testid="stat-total-articles">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  إجمالي المقالات
-                </CardTitle>
-                <FileText className="h-4 w-4 text-purple-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{statistics.totalArticles.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground mt-1">عبر جميع التصنيفات</p>
-              </CardContent>
-            </Card>
-
-            {/* Total Views */}
-            <Card className="hover-elevate" data-testid="stat-total-views">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  إجمالي المشاهدات
-                </CardTitle>
-                <Eye className="h-4 w-4 text-blue-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{statistics.totalViews.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground mt-1">مشاهدة كلية</p>
-              </CardContent>
-            </Card>
-
-            {/* Total Engagement */}
-            <Card className="hover-elevate" data-testid="stat-total-engagement">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  إجمالي التفاعل
-                </CardTitle>
-                <Heart className="h-4 w-4 text-red-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{statistics.totalEngagement.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground mt-1">إعجاب وحفظ</p>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Search and Filter Bar */}
+        {/* Search and View Toggle */}
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
-          {/* Search Input */}
           <div className="relative flex-1">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -211,7 +93,6 @@ export default function CategoriesListPage() {
             />
           </div>
 
-          {/* View Mode Toggle */}
           <div className="flex gap-2">
             <Button
               variant={viewMode === "grid" ? "default" : "outline"}
@@ -230,148 +111,136 @@ export default function CategoriesListPage() {
               <List className="h-4 w-4" />
             </Button>
           </div>
-
-          {/* Sort Dropdown */}
-          <Select value={sortMode} onValueChange={(value: SortMode) => setSortMode(value)}>
-            <SelectTrigger className="w-full sm:w-48" data-testid="select-sort">
-              <ArrowUpDown className="h-4 w-4 ml-2" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="newest" data-testid="option-sort-newest">الأحدث</SelectItem>
-              <SelectItem value="articles" data-testid="option-sort-articles">الأكثر مقالات</SelectItem>
-              <SelectItem value="views" data-testid="option-sort-views">الأكثر مشاهدة</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
         {/* Categories Grid/List */}
         {isLoading ? (
           <div className={viewMode === "grid" 
-            ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
             : "space-y-4"
           }>
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-              <Card key={i}>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Skeleton className="h-12 w-12 rounded-lg" />
-                    <Skeleton className="h-6 w-32" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[1, 2, 3, 4].map((j) => (
-                      <Skeleton key={j} className="h-10" />
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              <Skeleton key={i} className="h-48 rounded-xl" />
             ))}
           </div>
-        ) : filteredAndSortedCategories.length === 0 ? (
+        ) : filteredCategories.length === 0 ? (
           <div className="text-center py-20">
             <Newspaper className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
             <p className="text-muted-foreground text-lg">
               {searchQuery ? "لم يتم العثور على تصنيفات مطابقة" : "لا توجد تصنيفات متاحة حالياً"}
             </p>
           </div>
-        ) : (
-          <div className={viewMode === "grid"
-            ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-            : "space-y-4"
-          }>
-            {filteredAndSortedCategories.map((category) => (
+        ) : viewMode === "grid" ? (
+          /* Grid View - Visual Cards with Images */
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {filteredCategories.map((category) => (
               <Link key={category.id} href={`/category/${category.slug}`}>
                 <Card
-                  className="hover-elevate active-elevate-2 cursor-pointer h-full group"
+                  className="group relative overflow-hidden rounded-xl cursor-pointer h-48 hover-elevate active-elevate-2"
                   data-testid={`card-category-${category.id}`}
                 >
-                  <CardContent className="p-6">
-                    {/* Category Header */}
-                    <div className="flex items-center gap-3 mb-4">
-                      {/* Icon */}
-                      <div
-                        className="h-12 w-12 rounded-lg flex items-center justify-center text-2xl"
-                        style={{
-                          background: category.color
-                            ? `${category.color}20`
-                            : 'hsl(var(--primary) / 0.2)',
-                        }}
-                      >
-                        {category.icon ? (
-                          <span style={{ color: category.color || 'hsl(var(--primary))' }}>
-                            {category.icon}
-                          </span>
-                        ) : (
-                          <Newspaper
-                            className="h-6 w-6"
-                            style={{ color: category.color || 'hsl(var(--primary))' }}
-                          />
-                        )}
-                      </div>
-
-                      {/* Category Name */}
-                      <div className="flex-1 min-w-0">
-                        <h3
-                          className="text-lg font-bold text-foreground group-hover:text-primary transition-colors truncate"
-                          data-testid={`text-category-name-${category.id}`}
+                  {/* Background Image or Gradient */}
+                  {category.heroImageUrl ? (
+                    <img
+                      src={category.heroImageUrl}
+                      alt={category.nameAr}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                  ) : (
+                    <div 
+                      className="absolute inset-0"
+                      style={{
+                        background: category.color 
+                          ? `linear-gradient(135deg, ${category.color}, ${category.color}88)`
+                          : 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.6))'
+                      }}
+                    />
+                  )}
+                  
+                  {/* Dark Overlay for text readability */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                  
+                  {/* Content */}
+                  <div className="absolute inset-0 p-4 flex flex-col justify-end">
+                    {/* Icon */}
+                    {category.icon && (
+                      <span className="text-3xl mb-2 drop-shadow-lg">
+                        {category.icon}
+                      </span>
+                    )}
+                    
+                    {/* Category Name */}
+                    <h3 
+                      className="text-lg font-bold text-white mb-1 drop-shadow-lg"
+                      data-testid={`text-category-name-${category.id}`}
+                    >
+                      {category.nameAr}
+                    </h3>
+                    
+                    {/* Article Count Badge */}
+                    <Badge 
+                      variant="secondary" 
+                      className="w-fit bg-white/20 backdrop-blur-sm text-white border-0 text-xs"
+                    >
+                      <FileText className="h-3 w-3 ml-1" />
+                      {(category.articleCount || 0).toLocaleString()} خبر
+                    </Badge>
+                  </div>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          /* List View - Compact Horizontal Cards */
+          <div className="space-y-3">
+            {filteredCategories.map((category) => (
+              <Link key={category.id} href={`/category/${category.slug}`}>
+                <Card
+                  className="group overflow-hidden cursor-pointer hover-elevate active-elevate-2"
+                  data-testid={`card-category-${category.id}`}
+                >
+                  <div className="flex items-center gap-4 p-4">
+                    {/* Image or Icon */}
+                    <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+                      {category.heroImageUrl ? (
+                        <img
+                          src={category.heroImageUrl}
+                          alt={category.nameAr}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                        />
+                      ) : (
+                        <div 
+                          className="w-full h-full flex items-center justify-center text-3xl"
+                          style={{
+                            background: category.color 
+                              ? `linear-gradient(135deg, ${category.color}, ${category.color}88)`
+                              : 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.6))'
+                          }}
                         >
-                          {category.nameAr}
-                        </h3>
-                        {category.nameEn && (
-                          <p className="text-xs text-muted-foreground truncate">
-                            {category.nameEn}
-                          </p>
-                        )}
-                      </div>
+                          {category.icon || <Newspaper className="h-8 w-8 text-white" />}
+                        </div>
+                      )}
                     </div>
-
-                    {/* Compact Stats Grid */}
-                    <div className="grid grid-cols-2 gap-2">
-                      {/* Articles */}
-                      <div className="flex items-center gap-2 p-2 rounded-lg bg-primary/5">
-                        <FileText className="h-4 w-4 text-primary flex-shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-sm font-bold truncate" data-testid={`stat-articles-${category.id}`}>
-                            {(category.articleCount || 0).toLocaleString()}
-                          </p>
-                          <p className="text-xs text-muted-foreground">مقالات</p>
-                        </div>
-                      </div>
-
-                      {/* Views */}
-                      <div className="flex items-center gap-2 p-2 rounded-lg bg-blue-500/5">
-                        <Eye className="h-4 w-4 text-blue-600 flex-shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-sm font-bold truncate" data-testid={`stat-views-${category.id}`}>
-                            {(category.totalViews || 0).toLocaleString()}
-                          </p>
-                          <p className="text-xs text-muted-foreground">مشاهدات</p>
-                        </div>
-                      </div>
-
-                      {/* Likes */}
-                      <div className="flex items-center gap-2 p-2 rounded-lg bg-red-500/5">
-                        <Heart className="h-4 w-4 text-red-600 flex-shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-sm font-bold truncate" data-testid={`stat-likes-${category.id}`}>
-                            {(category.totalLikes || 0).toLocaleString()}
-                          </p>
-                          <p className="text-xs text-muted-foreground">إعجابات</p>
-                        </div>
-                      </div>
-
-                      {/* Bookmarks */}
-                      <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-500/5">
-                        <Bookmark className="h-4 w-4 text-amber-600 flex-shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-sm font-bold truncate" data-testid={`stat-bookmarks-${category.id}`}>
-                            {(category.totalBookmarks || 0).toLocaleString()}
-                          </p>
-                          <p className="text-xs text-muted-foreground">حفظ</p>
-                        </div>
-                      </div>
+                    
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <h3 
+                        className="text-lg font-bold text-foreground group-hover:text-primary transition-colors"
+                        data-testid={`text-category-name-${category.id}`}
+                      >
+                        {category.nameAr}
+                      </h3>
+                      {category.nameEn && (
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {category.nameEn}
+                        </p>
+                      )}
+                      <Badge variant="secondary" className="text-xs">
+                        <FileText className="h-3 w-3 ml-1" />
+                        {(category.articleCount || 0).toLocaleString()} خبر
+                      </Badge>
                     </div>
-                  </CardContent>
+                  </div>
                 </Card>
               </Link>
             ))}
