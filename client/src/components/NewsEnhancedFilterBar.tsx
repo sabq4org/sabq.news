@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import type { Category } from "@shared/schema";
 
 type TimeRange = 'today' | 'week' | 'month' | 'all';
-type SortOption = 'newest' | 'oldest' | 'most-viewed' | 'most-commented';
+type SortOption = 'default' | 'newest' | 'oldest' | 'most-viewed' | 'most-commented';
 type ViewMode = 'grid' | 'list' | 'compact';
 
 interface EnhancedFilterBarProps {
@@ -65,6 +65,7 @@ export function NewsEnhancedFilterBar({
             <SelectValue placeholder="ترتيب حسب" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="default">الترتيب الافتراضي</SelectItem>
             <SelectItem value="newest">الأحدث</SelectItem>
             <SelectItem value="oldest">الأقدم</SelectItem>
             <SelectItem value="most-viewed">الأكثر مشاهدة</SelectItem>

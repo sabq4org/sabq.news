@@ -3040,7 +3040,7 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(users, eq(articles.authorId, users.id))
       .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
       .where(conditions.length > 0 ? and(...conditions) : undefined)
-      .orderBy(desc(articles.publishedAt), desc(articles.createdAt));
+      .orderBy(desc(articles.displayOrder), desc(articles.publishedAt), desc(articles.createdAt));
 
     return results.map((r) => ({
       ...r.article,
@@ -5871,7 +5871,7 @@ export class DatabaseStorage implements IStorage {
           eq(articles.aiGenerated, false)
         )
       ))
-      .orderBy(desc(articles.publishedAt), desc(articles.createdAt))
+      .orderBy(desc(articles.displayOrder), desc(articles.publishedAt), desc(articles.createdAt))
       .limit(limit);
 
     return results.map((r) => ({
@@ -7866,7 +7866,7 @@ export class DatabaseStorage implements IStorage {
           )
         )
       )
-      .orderBy(desc(articles.publishedAt), desc(articles.createdAt));
+      .orderBy(desc(articles.displayOrder), desc(articles.publishedAt), desc(articles.createdAt));
 
     if (limit) {
       query = query.limit(limit) as any;

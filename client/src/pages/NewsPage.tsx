@@ -31,7 +31,7 @@ export default function NewsPage() {
   const [mood, setMood] = useState<Mood>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortOption, setSortOption] = useState<'newest' | 'oldest' | 'most-viewed' | 'most-commented'>('newest');
+  const [sortOption, setSortOption] = useState<'default' | 'newest' | 'oldest' | 'most-viewed' | 'most-commented'>('default');
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'compact'>('grid');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [infiniteScrollEnabled, setInfiniteScrollEnabled] = useState(false);
@@ -139,6 +139,9 @@ export default function NewsPage() {
     const sorted = [...filteredArticles];
     
     switch (sortOption) {
+      case 'default':
+        // Keep server order (displayOrder first, then publishedAt)
+        return sorted;
       case 'newest':
         return sorted.sort((a, b) => {
           const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
@@ -306,7 +309,7 @@ export default function NewsPage() {
                 setTimeRange('all');
                 setMood('all');
                 setSelectedCategory('all');
-                setSortOption('newest');
+                setSortOption('default');
                 handleFilterChange();
               }}
               data-testid="button-clear-filters"
