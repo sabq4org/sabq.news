@@ -3293,7 +3293,7 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(users, eq(articles.authorId, users.id))
       .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
       .where(and(...featuredConditions))
-      .orderBy(desc(articles.publishedAt))
+      .orderBy(desc(articles.displayOrder), desc(articles.publishedAt))
       .limit(1);
 
     // If no explicitly featured article, fall back to most viewed
@@ -3352,7 +3352,7 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(users, eq(articles.authorId, users.id))
       .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
       .where(and(...conditions))
-      .orderBy(desc(articles.publishedAt))
+      .orderBy(desc(articles.displayOrder), desc(articles.publishedAt))
       .limit(5);
 
     return results.map((r) => ({
@@ -4298,7 +4298,7 @@ export class DatabaseStorage implements IStorage {
           )
         )
       )
-      .orderBy(desc(articles.publishedAt))
+      .orderBy(desc(articles.displayOrder), desc(articles.publishedAt))
       .limit(6);
 
     return results.map((r) => ({
@@ -5559,7 +5559,7 @@ export class DatabaseStorage implements IStorage {
           )
         )
       )
-      .orderBy(desc(articles.publishedAt))
+      .orderBy(desc(articles.displayOrder), desc(articles.publishedAt))
       .limit(limit)
       .offset(offset);
 
@@ -9240,7 +9240,7 @@ export class DatabaseStorage implements IStorage {
           gte(articles.publishedAt, windowDate)
         )
       )
-      .orderBy(desc(articles.publishedAt))
+      .orderBy(desc(articles.displayOrder), desc(articles.publishedAt))
       .execute();
 
     // Get total stats
@@ -10212,7 +10212,7 @@ export class DatabaseStorage implements IStorage {
       .from(articles)
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .where(and(...conditions))
-      .orderBy(desc(articles.publishedAt))
+      .orderBy(desc(articles.displayOrder), desc(articles.publishedAt))
       .limit(limit);
 
     console.log(`✓ [Storage] Query returned ${results.length} results`);
