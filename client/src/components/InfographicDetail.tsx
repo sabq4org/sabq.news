@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { format } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { 
@@ -16,7 +16,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Maximize2,
-  BarChart3
+  BarChart3,
+  User,
+  Tag
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +27,7 @@ import { Dialog, DialogContent, DialogClose, DialogTitle, DialogDescription } fr
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
@@ -68,8 +71,6 @@ export function InfographicDetail({
   const [copied, setCopied] = useState(false);
   const [imageZoom, setImageZoom] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
-  const [showActions, setShowActions] = useState(true);
-  const lastScrollY = useRef(0);
   const carouselRef = useRef<HTMLDivElement>(null);
   
   const { data: relatedInfographics, isLoading: loadingRelated } = useQuery<RelatedInfographic[]>({
@@ -85,21 +86,6 @@ export function InfographicDetail({
   const authorName = author?.firstName && author?.lastName 
     ? `${author.firstName} ${author.lastName}`
     : author?.email || 'سبق';
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
-        setShowActions(false);
-      } else {
-        setShowActions(true);
-      }
-      lastScrollY.current = currentScrollY;
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const handleShare = async () => {
     const shareUrl = shortLink 
@@ -170,217 +156,233 @@ export function InfographicDetail({
   const imageUrl = getCacheBustedImageUrl(article.imageUrl, article.updatedAt);
 
   return (
-    <article className="min-h-screen bg-background pb-24 lg:pb-8">
-      {/* Full-Bleed Hero Section */}
-      <div className="relative w-full bg-gradient-to-b from-black/80 via-black/40 to-transparent">
-        {/* Hero Image Container */}
-        <div 
-          className="relative w-full cursor-zoom-in group"
-          onClick={() => setImageZoom(true)}
-        >
-          {/* Background blur layer */}
-          <div 
-            className="absolute inset-0 blur-3xl opacity-30 scale-110"
-            style={{ 
-              backgroundImage: `url(${imageUrl})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center'
-            }}
-          />
+    <article className="min-h-screen bg-background pb-8">
+      {/* Main Content Container */}
+      <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
+        
+        {/* Two Column Layout on Desktop */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
           
-          {/* Main Image */}
-          <div className="relative max-w-5xl mx-auto px-0 sm:px-4 lg:px-8">
-            <OptimizedImage 
-              src={imageUrl} 
-              alt={article.title}
-              className="w-full h-auto max-h-[85vh] object-contain mx-auto rounded-none sm:rounded-xl shadow-2xl"
-              data-testid="image-infographic-main"
-              priority={true}
-              preferSize="large"
-            />
-            
-            {/* AI Badge */}
-            {(article.isAiGeneratedThumbnail || article.isAiGeneratedImage) && (
-              <Badge 
-                className="absolute top-4 right-4 gap-1.5 bg-purple-600/90 text-white border-0 backdrop-blur-sm px-3 py-1.5"
-                data-testid={`badge-article-ai-image-${article.id}`}
+          {/* Right Column - Image (Desktop: 7 cols) */}
+          <div className="lg:col-span-7 order-1">
+            <Card className="overflow-hidden border-0 shadow-lg">
+              {/* Image Container */}
+              <div 
+                className="relative cursor-zoom-in group bg-gradient-to-br from-muted/50 to-muted"
+                onClick={() => setImageZoom(true)}
               >
-                <Brain className="h-3.5 w-3.5" />
-                صورة ذكية
-              </Badge>
-            )}
-            
-            {/* Zoom Indicator */}
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-              <div className="bg-black/70 backdrop-blur-sm text-white rounded-full p-4 shadow-xl transform group-hover:scale-110 transition-transform">
-                <Maximize2 className="h-7 w-7" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Content Section */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Title & Meta Section */}
-        <div className="py-6 sm:py-8">
-          {/* Category Badge */}
-          {article.category && (
-            <Link href={`/category/${article.category.slug}`}>
-              <Badge 
-                variant="secondary" 
-                className="mb-4 hover-elevate cursor-pointer text-sm px-3 py-1"
-                data-testid="badge-infographic-category"
-              >
-                {article.category.icon} {article.category.nameAr}
-              </Badge>
-            </Link>
-          )}
-          
-          {/* Title */}
-          <h1 
-            className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight mb-5"
-            data-testid="text-infographic-title"
-          >
-            {article.title}
-          </h1>
-          
-          {/* Meta Info Row */}
-          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-            {publishedDate && (
-              <div className="flex items-center gap-1.5 bg-muted/50 rounded-full px-3 py-1.5">
-                <Calendar className="h-4 w-4" />
-                <span>{publishedDate}</span>
-              </div>
-            )}
-            <div className="flex items-center gap-1.5 bg-muted/50 rounded-full px-3 py-1.5">
-              <Eye className="h-4 w-4" />
-              <span>{(article.views || 0).toLocaleString('ar-SA')} مشاهدة</span>
-            </div>
-            {(article.reactionsCount || 0) > 0 && (
-              <div className="flex items-center gap-1.5 bg-muted/50 rounded-full px-3 py-1.5">
-                <Heart className="h-4 w-4" />
-                <span>{article.reactionsCount}</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Desktop Action Bar - Sticky */}
-        <div className="hidden lg:flex items-center justify-between gap-4 py-4 border-y border-border/50 sticky top-0 bg-background/95 backdrop-blur-sm z-40">
-          <div className="flex items-center gap-3">
-            <Button
-              variant={hasReacted ? "default" : "outline"}
-              size="default"
-              onClick={onReact}
-              className="gap-2 min-w-[100px]"
-              data-testid="button-infographic-react"
-            >
-              <Heart className={`h-4 w-4 ${hasReacted ? 'fill-current' : ''}`} />
-              {hasReacted ? 'أعجبني' : 'إعجاب'}
-            </Button>
-            
-            <Button
-              variant={isBookmarked ? "default" : "outline"}
-              size="default"
-              onClick={onBookmark}
-              className="gap-2 min-w-[100px]"
-              data-testid="button-infographic-bookmark"
-            >
-              <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
-              {isBookmarked ? 'محفوظ' : 'حفظ'}
-            </Button>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="default"
-              onClick={handleDownload}
-              className="gap-2"
-              data-testid="button-download-infographic"
-            >
-              <Download className="h-4 w-4" />
-              تحميل
-            </Button>
-            
-            <Button
-              variant="outline"
-              size="default"
-              onClick={handleShare}
-              className="gap-2 min-w-[100px]"
-              data-testid="button-infographic-share"
-            >
-              {copied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
-              {copied ? 'تم النسخ' : 'مشاركة'}
-            </Button>
-          </div>
-        </div>
-
-        {/* Summary/Excerpt Section */}
-        {(article.aiSummary || article.excerpt) && (
-          <div className="py-6 sm:py-8">
-            <div className="bg-gradient-to-br from-primary/5 via-transparent to-primary/5 rounded-2xl p-5 sm:p-6 border border-primary/10">
-              <p className="text-lg sm:text-xl leading-relaxed text-foreground/90">
-                {article.aiSummary || article.excerpt}
-              </p>
-            </div>
-          </div>
-        )}
-        
-        {/* Content Section */}
-        {sanitizedContent && (
-          <div className="py-6 sm:py-8">
-            <div 
-              className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-p:leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: sanitizedContent }} 
-            />
-          </div>
-        )}
-        
-        {/* Keywords Section */}
-        {article.seo?.keywords && article.seo.keywords.length > 0 && (
-          <div className="py-6 border-t border-border/50">
-            <p className="text-sm font-semibold text-muted-foreground mb-4">الكلمات المفتاحية</p>
-            <div className="flex flex-wrap gap-2">
-              {article.seo.keywords.map((keyword, index) => (
-                <Badge 
-                  key={index} 
-                  variant="secondary"
-                  className="text-sm px-3 py-1 hover-elevate cursor-default"
-                  data-testid={`badge-keyword-${index}`}
-                >
-                  {keyword}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
-        
-        {/* Author Section */}
-        {author && (
-          <div className="py-6 border-t border-border/50">
-            <Link href={`/profile/${author.id}`}>
-              <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover-elevate cursor-pointer transition-all">
-                <Avatar className="h-14 w-14 border-2 border-primary/20">
-                  <AvatarImage src={author.profileImageUrl || ""} alt={authorName} />
-                  <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">
-                    {authorName.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <p className="font-bold text-lg">{authorName}</p>
-                  <p className="text-sm text-muted-foreground">المحرر</p>
+                <OptimizedImage 
+                  src={imageUrl} 
+                  alt={article.title}
+                  className="w-full h-auto object-contain"
+                  data-testid="image-infographic-main"
+                  priority={true}
+                  preferSize="large"
+                />
+                
+                {/* AI Badge */}
+                {(article.isAiGeneratedThumbnail || article.isAiGeneratedImage) && (
+                  <Badge 
+                    className="absolute top-3 right-3 gap-1.5 bg-purple-600/90 text-white border-0 backdrop-blur-sm"
+                    data-testid={`badge-article-ai-image-${article.id}`}
+                  >
+                    <Brain className="h-3 w-3" />
+                    صورة ذكية
+                  </Badge>
+                )}
+                
+                {/* Zoom Overlay */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
+                  <div className="bg-black/60 backdrop-blur-sm text-white rounded-full p-3">
+                    <Maximize2 className="h-6 w-6" />
+                  </div>
                 </div>
-                <ChevronLeft className="h-5 w-5 text-muted-foreground" />
               </div>
-            </Link>
+              
+              {/* Image Action Bar */}
+              <CardContent className="p-3 bg-muted/30 border-t">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setImageZoom(true)}
+                      className="gap-1.5 text-muted-foreground"
+                      data-testid="button-zoom-image"
+                    >
+                      <Maximize2 className="h-4 w-4" />
+                      <span className="hidden sm:inline">تكبير</span>
+                    </Button>
+                  </div>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleDownload}
+                    className="gap-1.5"
+                    data-testid="button-download-infographic"
+                  >
+                    <Download className="h-4 w-4" />
+                    تحميل
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        )}
-
-        {/* Related Infographics Carousel */}
+          
+          {/* Left Column - Content (Desktop: 5 cols) */}
+          <div className="lg:col-span-5 order-2 space-y-5">
+            
+            {/* Category Badge */}
+            {article.category && (
+              <Link href={`/category/${article.category.slug}`}>
+                <Badge 
+                  variant="secondary" 
+                  className="hover-elevate cursor-pointer text-sm gap-1.5"
+                  data-testid="badge-infographic-category"
+                >
+                  <Tag className="h-3 w-3" />
+                  {article.category.icon} {article.category.nameAr}
+                </Badge>
+              </Link>
+            )}
+            
+            {/* Title */}
+            <h1 
+              className="text-xl sm:text-2xl lg:text-3xl font-bold leading-tight"
+              data-testid="text-infographic-title"
+            >
+              {article.title}
+            </h1>
+            
+            {/* Meta Info Card */}
+            <Card className="border-muted">
+              <CardContent className="p-4 space-y-4">
+                {/* Author */}
+                {author && (
+                  <Link href={`/profile/${author.id}`}>
+                    <div className="flex items-center gap-3 hover-elevate rounded-lg p-2 -m-2 cursor-pointer">
+                      <Avatar className="h-10 w-10 border border-primary/20">
+                        <AvatarImage src={author.profileImageUrl || ""} alt={authorName} />
+                        <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                          {authorName.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm truncate">{authorName}</p>
+                        <p className="text-xs text-muted-foreground">المحرر</p>
+                      </div>
+                      <ChevronLeft className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    </div>
+                  </Link>
+                )}
+                
+                <Separator />
+                
+                {/* Stats Row */}
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-4">
+                    {publishedDate && (
+                      <div className="flex items-center gap-1.5 text-muted-foreground">
+                        <Calendar className="h-4 w-4" />
+                        <span>{publishedDate}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                      <Eye className="h-4 w-4" />
+                      <span>{(article.views || 0).toLocaleString('ar-SA')}</span>
+                    </div>
+                    {(article.reactionsCount || 0) > 0 && (
+                      <div className="flex items-center gap-1.5 text-muted-foreground">
+                        <Heart className="h-4 w-4" />
+                        <span>{article.reactionsCount}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant={hasReacted ? "default" : "outline"}
+                size="default"
+                onClick={onReact}
+                className="flex-1 gap-2"
+                data-testid="button-infographic-react"
+              >
+                <Heart className={`h-4 w-4 ${hasReacted ? 'fill-current' : ''}`} />
+                {hasReacted ? 'أعجبني' : 'إعجاب'}
+              </Button>
+              
+              <Button
+                variant={isBookmarked ? "default" : "outline"}
+                size="default"
+                onClick={onBookmark}
+                className="flex-1 gap-2"
+                data-testid="button-infographic-bookmark"
+              >
+                <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
+                {isBookmarked ? 'محفوظ' : 'حفظ'}
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="default"
+                onClick={handleShare}
+                className="flex-1 gap-2"
+                data-testid="button-infographic-share"
+              >
+                {copied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
+                {copied ? 'تم النسخ' : 'مشاركة'}
+              </Button>
+            </div>
+            
+            {/* Summary/Excerpt */}
+            {(article.aiSummary || article.excerpt) && (
+              <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="p-4">
+                  <p className="text-base leading-relaxed text-foreground/90">
+                    {article.aiSummary || article.excerpt}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+            
+            {/* Content */}
+            {sanitizedContent && (
+              <div 
+                className="prose prose-base dark:prose-invert max-w-none prose-headings:font-bold prose-p:leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: sanitizedContent }} 
+              />
+            )}
+            
+            {/* Keywords */}
+            {article.seo?.keywords && article.seo.keywords.length > 0 && (
+              <div className="pt-4 border-t border-border/50">
+                <p className="text-xs font-semibold text-muted-foreground mb-3">الكلمات المفتاحية</p>
+                <div className="flex flex-wrap gap-2">
+                  {article.seo.keywords.map((keyword, index) => (
+                    <Badge 
+                      key={index} 
+                      variant="secondary"
+                      className="text-xs"
+                      data-testid={`badge-keyword-${index}`}
+                    >
+                      {keyword}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Related Infographics - Full Width */}
         {relatedInfographics && relatedInfographics.length > 0 && (
-          <div className="py-8 border-t border-border/50">
+          <div className="mt-10 pt-8 border-t border-border/50">
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-xl font-bold">إنفوجرافيك ذات صلة</h3>
               <div className="flex items-center gap-2">
@@ -414,7 +416,7 @@ export function InfographicDetail({
                 <Link
                   key={infographic.id}
                   href={`/article/${infographic.slug}`}
-                  className="flex-shrink-0 w-[260px] snap-start"
+                  className="flex-shrink-0 w-[240px] sm:w-[280px] snap-start"
                   data-testid={`link-related-infographic-${index}`}
                 >
                   <Card className="overflow-hidden hover-elevate h-full border-muted">
@@ -450,11 +452,11 @@ export function InfographicDetail({
         )}
 
         {loadingRelated && (
-          <div className="py-8 border-t border-border/50">
+          <div className="mt-10 pt-8 border-t border-border/50">
             <Skeleton className="h-7 w-40 mb-5" />
             <div className="flex gap-4 overflow-hidden">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex-shrink-0 w-[260px]">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex-shrink-0 w-[240px] sm:w-[280px]">
                   <Skeleton className="aspect-[4/3] w-full rounded-xl" />
                   <Skeleton className="h-4 w-full mt-3" />
                   <Skeleton className="h-4 w-2/3 mt-2" />
@@ -463,60 +465,6 @@ export function InfographicDetail({
             </div>
           </div>
         )}
-      </div>
-
-      {/* Mobile Sticky Action Bar */}
-      <div 
-        className={`lg:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-lg border-t border-border/50 px-4 py-3 z-50 transition-transform duration-300 ${
-          showActions ? 'translate-y-0' : 'translate-y-full'
-        }`}
-        data-testid="mobile-action-bar"
-      >
-        <div className="flex items-center justify-around gap-2 max-w-lg mx-auto">
-          <Button
-            variant={hasReacted ? "default" : "ghost"}
-            size="lg"
-            onClick={onReact}
-            className="flex-1 gap-2 h-12"
-            data-testid="button-mobile-react"
-          >
-            <Heart className={`h-5 w-5 ${hasReacted ? 'fill-current' : ''}`} />
-            <span className="text-sm">{hasReacted ? 'أعجبني' : 'إعجاب'}</span>
-          </Button>
-          
-          <Button
-            variant={isBookmarked ? "default" : "ghost"}
-            size="lg"
-            onClick={onBookmark}
-            className="flex-1 gap-2 h-12"
-            data-testid="button-mobile-bookmark"
-          >
-            <Bookmark className={`h-5 w-5 ${isBookmarked ? 'fill-current' : ''}`} />
-            <span className="text-sm">{isBookmarked ? 'محفوظ' : 'حفظ'}</span>
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="lg"
-            onClick={handleDownload}
-            className="flex-1 gap-2 h-12"
-            data-testid="button-mobile-download"
-          >
-            <Download className="h-5 w-5" />
-            <span className="text-sm">تحميل</span>
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="lg"
-            onClick={handleShare}
-            className="flex-1 gap-2 h-12"
-            data-testid="button-mobile-share"
-          >
-            {copied ? <Check className="h-5 w-5" /> : <Share2 className="h-5 w-5" />}
-            <span className="text-sm">{copied ? 'تم' : 'مشاركة'}</span>
-          </Button>
-        </div>
       </div>
       
       {/* Enhanced Lightbox Dialog */}
