@@ -4,7 +4,7 @@
 
 import { Router, Request, Response } from "express";
 import { isAuthenticated } from "../auth";
-import { requireRole } from "../rbac";
+import { requireRole, requirePermission } from "../rbac";
 import {
   autoGenerateImage,
   shouldAutoGenerateImage,
@@ -17,8 +17,9 @@ const router = Router();
 /**
  * POST /api/auto-image/generate
  * Manually trigger auto image generation for an article
+ * Requires: visual_ai.generate_image permission
  */
-router.post("/generate", isAuthenticated, async (req: Request, res: Response) => {
+router.post("/generate", requirePermission("visual_ai.generate_image"), async (req: Request, res: Response) => {
   try {
     const userId = (req.user as any)?.id;
     const {

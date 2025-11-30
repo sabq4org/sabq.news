@@ -377,7 +377,7 @@ router.get('/newsletters/:id', rbacRequireAuth, async (req, res) => {
 });
 
 // Create new newsletter
-router.post('/newsletters', requirePermission("articles.create"), async (req, res) => {
+router.post('/newsletters', requirePermission("audio_newsletters.create"), async (req, res) => {
   try {
     const validatedData = createNewsletterSchema.parse(req.body);
     
@@ -495,7 +495,7 @@ router.delete('/newsletters/:id', requirePermission("articles.create"), async (r
 });
 
 // Generate or regenerate audio for newsletter
-router.post('/newsletters/generate-audio', requirePermission("articles.create"), async (req, res) => {
+router.post('/newsletters/generate-audio', requirePermission("audio_newsletters.create"), async (req, res) => {
   try {
     const validatedData = generateAudioSchema.parse(req.body);
     
@@ -622,7 +622,7 @@ router.post('/newsletters/:id/listen', async (req, res) => {
 });
 
 // Get newsletter analytics
-router.get('/newsletters/:id/analytics', requirePermission("analytics.view"), async (req, res) => {
+router.get('/newsletters/:id/analytics', requirePermission("audio_newsletters.view"), async (req, res) => {
   try {
     const analytics = await audioNewsletterService.getNewsletterAnalytics(req.params.id);
     res.json(analytics);

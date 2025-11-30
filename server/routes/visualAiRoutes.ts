@@ -27,6 +27,7 @@ import {
 } from "../services/socialMediaCardsService";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { isAuthenticated } from "../auth";
+import { requirePermission } from "../rbac";
 import { z } from "zod";
 
 const router = Router();
@@ -175,8 +176,9 @@ router.get("/analysis/article/:articleId", isAuthenticated, async (req: Request,
 /**
  * POST /api/visual-ai/generate-news-image
  * Generate a smart news image based on article content
+ * Requires: visual_ai.generate_image permission
  */
-router.post("/generate-news-image", isAuthenticated, async (req: Request, res: Response) => {
+router.post("/generate-news-image", requirePermission("visual_ai.generate_image"), async (req: Request, res: Response) => {
   try {
     const userId = (req.user as any)?.id;
     const {

@@ -23,7 +23,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Shield, Users, Key, Lock } from "lucide-react";
+import { 
+  Shield, Users, Key, Lock, 
+  FileText, FolderOpen, MessageSquare, UserCog, Settings, 
+  Calendar, Telescope, Image, Bot, Mic, Microscope, 
+  MessageCircle, Mail, ImageIcon, BarChart2, LayoutGrid, 
+  Briefcase, Pin 
+} from "lucide-react";
 import type { RoleWithPermissions, Permission } from "@shared/schema";
 
 export default function RolesManagement() {
@@ -110,6 +116,15 @@ export default function RolesManagement() {
     return acc;
   }, {} as Record<string, Permission[]>);
 
+  // ترتيب الوحدات وأسماؤها العربية
+  const moduleOrder = [
+    "articles", "categories", "infographics", "muqtarab", "omq",
+    "visual_ai", "ifox", "audio_newsletters", "story_cards",
+    "media_library", "whatsapp_agent", "email_agent",
+    "analytics", "publisher_sales",
+    "users", "staff", "comments", "calendar", "mirqab", "system"
+  ];
+  
   const moduleNames: Record<string, string> = {
     articles: "المقالات",
     categories: "التصنيفات",
@@ -117,7 +132,59 @@ export default function RolesManagement() {
     comments: "التعليقات",
     staff: "الكادر",
     system: "النظام",
+    calendar: "التقويم التحريري",
+    mirqab: "المرقاب",
+    visual_ai: "توليد الصور بالذكاء الاصطناعي",
+    ifox: "iFox - توليد المحتوى",
+    audio_newsletters: "النشرات الصوتية",
+    omq: "التحليل العميق",
+    whatsapp_agent: "وكيل الواتساب",
+    email_agent: "وكيل البريد",
+    media_library: "مكتبة الوسائط",
+    infographics: "الإنفوجرافيك",
+    analytics: "التحليلات",
+    story_cards: "بطاقات القصص",
+    publisher_sales: "نظام الناشرين",
+    muqtarab: "مُقترب",
   };
+
+  // أيقونات الوحدات - استخدام مكونات Lucide
+  const ModuleIcon = ({ module }: { module: string }) => {
+    const iconProps = { className: "w-5 h-5 text-primary" };
+    switch (module) {
+      case "articles": return <FileText {...iconProps} />;
+      case "categories": return <FolderOpen {...iconProps} />;
+      case "users": return <Users {...iconProps} />;
+      case "comments": return <MessageSquare {...iconProps} />;
+      case "staff": return <UserCog {...iconProps} />;
+      case "system": return <Settings {...iconProps} />;
+      case "calendar": return <Calendar {...iconProps} />;
+      case "mirqab": return <Telescope {...iconProps} />;
+      case "visual_ai": return <Image {...iconProps} />;
+      case "ifox": return <Bot {...iconProps} />;
+      case "audio_newsletters": return <Mic {...iconProps} />;
+      case "omq": return <Microscope {...iconProps} />;
+      case "whatsapp_agent": return <MessageCircle {...iconProps} />;
+      case "email_agent": return <Mail {...iconProps} />;
+      case "media_library": return <ImageIcon {...iconProps} />;
+      case "infographics": return <BarChart2 {...iconProps} />;
+      case "analytics": return <BarChart2 {...iconProps} />;
+      case "story_cards": return <LayoutGrid {...iconProps} />;
+      case "publisher_sales": return <Briefcase {...iconProps} />;
+      case "muqtarab": return <Pin {...iconProps} />;
+      default: return <Shield {...iconProps} />;
+    }
+  };
+
+  // ترتيب الصلاحيات حسب الوحدات
+  const sortedModules = Object.keys(permissionsByModule).sort((a, b) => {
+    const indexA = moduleOrder.indexOf(a);
+    const indexB = moduleOrder.indexOf(b);
+    if (indexA === -1 && indexB === -1) return a.localeCompare(b);
+    if (indexA === -1) return 1;
+    if (indexB === -1) return -1;
+    return indexA - indexB;
+  });
 
   return (
     <DashboardLayout>
@@ -212,38 +279,53 @@ export default function RolesManagement() {
               </div>
             ) : (
               <div className="space-y-6">
-                {Object.entries(permissionsByModule).map(([module, perms]) => (
-                  <div key={module} className="space-y-3" data-testid={`module-${module}`}>
-                    <h3 className="font-semibold text-lg flex items-center gap-2" data-testid={`module-title-${module}`}>
-                      <Shield className="w-5 h-5 text-primary" />
-                      {moduleNames[module] || module}
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pr-6">
-                      {perms.map((perm) => (
-                        <div key={perm.id} className="flex items-start gap-3" data-testid={`permission-${perm.id}`}>
-                          <Checkbox
-                            id={perm.id}
-                            checked={selectedPermissions.has(perm.id)}
-                            onCheckedChange={() => togglePermission(perm.id)}
-                            data-testid={`checkbox-${perm.id}`}
-                          />
-                          <div className="flex-1">
-                            <Label 
-                              htmlFor={perm.id} 
-                              className="cursor-pointer font-medium"
-                              data-testid={`label-${perm.id}`}
-                            >
-                              {perm.labelAr}
-                            </Label>
-                            <p className="text-xs text-muted-foreground" data-testid={`code-${perm.id}`}>
-                              {perm.code}
-                            </p>
+                {sortedModules.map((module) => {
+                  const perms = permissionsByModule[module];
+                  if (!perms || perms.length === 0) return null;
+                  return (
+                    <div key={module} className="space-y-3 border rounded-lg p-4 bg-muted/30" data-testid={`module-${module}`}>
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-lg flex items-center gap-2" data-testid={`module-title-${module}`}>
+                          <ModuleIcon module={module} />
+                          {moduleNames[module] || module}
+                        </h3>
+                        <Badge variant="secondary" data-testid={`badge-count-${module}`}>
+                          {perms.filter(p => selectedPermissions.has(p.id)).length} / {perms.length}
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pr-2">
+                        {perms.map((perm) => (
+                          <div 
+                            key={perm.id} 
+                            className={`flex items-start gap-3 p-2 rounded-md transition-colors ${
+                              selectedPermissions.has(perm.id) ? 'bg-primary/10' : 'hover:bg-muted/50'
+                            }`}
+                            data-testid={`permission-${perm.id}`}
+                          >
+                            <Checkbox
+                              id={perm.id}
+                              checked={selectedPermissions.has(perm.id)}
+                              onCheckedChange={() => togglePermission(perm.id)}
+                              data-testid={`checkbox-${perm.id}`}
+                            />
+                            <div className="flex-1">
+                              <Label 
+                                htmlFor={perm.id} 
+                                className="cursor-pointer font-medium"
+                                data-testid={`label-${perm.id}`}
+                              >
+                                {perm.labelAr}
+                              </Label>
+                              <p className="text-xs text-muted-foreground" data-testid={`code-${perm.id}`}>
+                                {perm.code}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
 
                 <div className="flex justify-end gap-3 pt-4 border-t">
                   <Button
