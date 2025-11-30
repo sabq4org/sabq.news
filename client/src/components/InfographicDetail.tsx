@@ -257,9 +257,9 @@ export function InfographicDetail({
             {/* Meta Info Card */}
             <Card className="border-muted">
               <CardContent className="p-4 space-y-4">
-                {/* Author */}
+                {/* Author - use staff.slug for reporter page */}
                 {author && (
-                  <Link href={`/profile/${author.id}`}>
+                  <Link href={article.staff?.slug ? `/reporter/${article.staff.slug}` : `/profile/${author.id}`}>
                     <div className="flex items-center gap-3 hover-elevate rounded-lg p-2 -m-2 cursor-pointer">
                       <Avatar className="h-10 w-10 border border-primary/20">
                         <AvatarImage src={author.profileImageUrl || ""} alt={authorName} />
@@ -359,20 +359,24 @@ export function InfographicDetail({
               />
             )}
             
-            {/* Keywords */}
+            {/* Keywords - clickable links to keyword search */}
             {article.seo?.keywords && article.seo.keywords.length > 0 && (
               <div className="pt-4 border-t border-border/50">
                 <p className="text-xs font-semibold text-muted-foreground mb-3">الكلمات المفتاحية</p>
                 <div className="flex flex-wrap gap-2">
                   {article.seo.keywords.map((keyword, index) => (
-                    <Badge 
-                      key={index} 
-                      variant="secondary"
-                      className="text-xs"
-                      data-testid={`badge-keyword-${index}`}
+                    <Link 
+                      key={index}
+                      href={`/keyword/${encodeURIComponent(keyword)}`}
                     >
-                      {keyword}
-                    </Badge>
+                      <Badge 
+                        variant="secondary"
+                        className="text-xs hover-elevate cursor-pointer"
+                        data-testid={`badge-keyword-${index}`}
+                      >
+                        {keyword}
+                      </Badge>
+                    </Link>
                   ))}
                 </div>
               </div>
