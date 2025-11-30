@@ -1,5 +1,5 @@
 import { sql, relations } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, boolean, integer, jsonb, index, real, primaryKey, uniqueIndex, serial, date } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, boolean, integer, bigint, jsonb, index, real, primaryKey, uniqueIndex, serial, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -762,7 +762,7 @@ export const articles = pgTable("articles", {
   aiGenerated: boolean("ai_generated").default(false),
   isFeatured: boolean("is_featured").default(false).notNull(),
   views: integer("views").default(0).notNull(),
-  displayOrder: integer("display_order").default(0).notNull(),
+  displayOrder: bigint("display_order", { mode: "number" }).default(0).notNull(),
   seo: jsonb("seo").$type<{
     metaTitle?: string;
     metaDescription?: string;
