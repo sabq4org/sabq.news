@@ -21,11 +21,11 @@ export function NewsStatsCards() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 mb-8">
         {[1, 2, 3, 4].map((i) => (
           <Card key={i}>
-            <CardContent className="p-3 sm:p-4 md:p-6">
-              <Skeleton className="h-16 sm:h-20 md:h-24 w-full" />
+            <CardContent className="p-2 sm:p-3">
+              <Skeleton className="h-12 sm:h-14 w-full" />
             </CardContent>
           </Card>
         ))}
@@ -36,7 +36,7 @@ export function NewsStatsCards() {
   if (!stats) return null;
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mb-8" data-testid="news-stats-cards">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 mb-8" data-testid="news-stats-cards">
       <MobileOptimizedKpiCard
         label="إجمالي الأخبار"
         value={(stats.totalNews ?? 0).toLocaleString('en-US')}
@@ -44,6 +44,7 @@ export function NewsStatsCards() {
         iconColor="text-primary"
         iconBgColor="bg-primary/10"
         testId="stat-total-news"
+        className="compact"
       />
       
       <MobileOptimizedKpiCard
@@ -53,6 +54,7 @@ export function NewsStatsCards() {
         iconColor="text-green-600 dark:text-green-500"
         iconBgColor="bg-green-500/10"
         testId="stat-today-news"
+        className="compact"
       />
       
       <MobileOptimizedKpiCard
@@ -62,6 +64,7 @@ export function NewsStatsCards() {
         iconColor="text-blue-600 dark:text-blue-500"
         iconBgColor="bg-blue-500/10"
         testId="stat-top-viewed"
+        className="compact"
       />
       
       <MobileOptimizedKpiCard
@@ -71,6 +74,7 @@ export function NewsStatsCards() {
         iconColor="text-orange-600 dark:text-orange-500"
         iconBgColor="bg-orange-500/10"
         testId="stat-avg-views"
+        className="compact"
       />
     </div>
   );
