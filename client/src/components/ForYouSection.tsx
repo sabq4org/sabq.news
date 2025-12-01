@@ -119,10 +119,10 @@ export function ForYouSection() {
             <h2 className="text-xl md:text-2xl font-bold">مقترحات لك</h2>
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
             <Card key={i} className="overflow-hidden">
-              <Skeleton className="h-40 w-full" />
+              <Skeleton className="aspect-[16/9] w-full" />
               <CardContent className="p-4 space-y-2">
                 <Skeleton className="h-4 w-20" />
                 <Skeleton className="h-5 w-full" />
@@ -176,8 +176,8 @@ export function ForYouSection() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {recommendations.slice(0, 6).map((rec) => {
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {recommendations.slice(0, 8).map((rec) => {
           const article = rec.article;
           const timeAgo = article.publishedAt
             ? formatDistanceToNow(new Date(article.publishedAt), {
@@ -193,7 +193,7 @@ export function ForYouSection() {
                 data-testid={`card-recommendation-${article.id}`}
               >
                 {(article.imageUrl || article.thumbnailUrl) && (
-                  <div className="relative h-40 overflow-hidden">
+                  <div className="relative aspect-[16/9] overflow-hidden">
                     <img
                       src={article.thumbnailUrl ?? article.imageUrl ?? ''}
                       alt={article.title}
