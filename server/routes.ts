@@ -27520,7 +27520,7 @@ Allow: /
         parentTaskId: normalizedParentTaskId,
         search: search as string,
         limit: limitNum,
-        hasMore,
+
         offset,
       };
       
@@ -27542,6 +27542,7 @@ Allow: /
       
       const result = await storage.getTasks(filters);
       
+      const hasMore = result.total > offset + limitNum;
       res.json({
         tasks: result.tasks,
         total: result.total,
