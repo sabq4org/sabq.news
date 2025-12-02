@@ -11351,7 +11351,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.id;
       const user = await storage.getUser(userId);
 
-      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+      const moderatorRoles = ["admin", "superadmin", "editor", "chief_editor", "moderator", "comments_moderator"];
+      if (!user || !moderatorRoles.includes(user.role)) {
         return res.status(403).json({ message: "Forbidden" });
       }
 
@@ -11369,7 +11370,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.id;
       const user = await storage.getUser(userId);
 
-      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+      const moderatorRoles2 = ["admin", "superadmin", "editor", "chief_editor", "moderator", "comments_moderator"];
+      if (!user || !moderatorRoles2.includes(user.role)) {
         return res.status(403).json({ message: "Forbidden" });
       }
 
@@ -11388,7 +11390,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.id;
       const user = await storage.getUser(userId);
 
-      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+      const moderatorRoles3 = ["admin", "superadmin", "editor", "chief_editor", "moderator", "comments_moderator"];
+      if (!user || !moderatorRoles3.includes(user.role)) {
         return res.status(403).json({ message: "Forbidden" });
       }
 
