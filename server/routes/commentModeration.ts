@@ -408,7 +408,7 @@ router.get("/member/:memberId/comments", requireModeratorAuth, async (req: Reque
   }
 });
 
-// Bulk action on member's comments (for moderators)
+// Bulk action on member's comments (for moderators) - Specific IDs
 const bulkActionSchema = z.object({
   action: z.enum(['approve', 'reject']),
   commentIds: z.array(z.string()).min(1, "يجب تحديد تعليق واحد على الأقل"),
@@ -450,6 +450,79 @@ router.post("/member/:memberId/bulk-action", requireModeratorAuth, async (req: R
     });
   } catch (error) {
     console.error("[Moderation API] Bulk action error:", error);
+    res.status(500).json({ error: "حدث خطأ أثناء تنفيذ الإجراء الجماعي" });
+  }
+});
+
+// Bulk action on ALL member's comments by filter (for moderators)
+const bulkActionByFilterSchema = z.object({
+  action: z.enum(['approve', 'reject']),
+  filter: z.enum(['pending', 'flagged']),
+  reason: z.string().optional(),
+});
+
+router.post("/member/:memberId/bulk-action-by-filter", requireModeratorAuth, async (req: Request, res: Response) => {
+  try {
+    const { memberId } = req.params;
+    const moderatorId = (req as any).user?.id;
+    
+    // Validate request
+    const parsed = bulkActionByFilterSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ 
+        error: parsed.error.errors[0].message,
+        field: parsed.error.errors[0].path[0]
+      });
+    }
+    
+    const { action, filter, reason } = parsed.data;
+    const newStatus = action === 'approve' ? 'approved' : 'rejected';
+    
+    // Get all member's comments matching the filter
+    const allComments = await storage.getMemberCommentHistory(memberId, {
+      status: filter === 'pending' ? 'pending' : undefined,
+      classification: filter === 'flagged' ? undefined : undefined,
+      limit: 1000,
+    });
+    
+    // Filter by classification if needed
+    let commentIds = allComments.comments.map(c => c.id);
+    if (filter === 'flagged') {
+      commentIds = allComments.comments
+        .filter(c => c.aiClassification && ['flagged', 'spam', 'harmful'].includes(c.aiClassification))
+        .map(c => c.id);
+    } else if (filter === 'pending') {
+      commentIds = allComments.comments
+        .filter(c => c.status === 'pending')
+        .map(c => c.id);
+    }
+    
+    if (commentIds.length === 0) {
+      return res.json({ 
+        success: true, 
+        message: "لا توجد تعليقات مطابقة",
+        results: { success: 0, failed: 0 }
+      });
+    }
+    
+    // Process each comment
+    const results = { success: 0, failed: 0 };
+    for (const commentId of commentIds) {
+      try {
+        await storage.updateCommentStatus(commentId, newStatus);
+        results.success++;
+      } catch {
+        results.failed++;
+      }
+    }
+    
+    res.json({ 
+      success: true, 
+      message: `تم تنفيذ الإجراء على ${results.success} تعليق`,
+      results
+    });
+  } catch (error) {
+    console.error("[Moderation API] Bulk action by filter error:", error);
     res.status(500).json({ error: "حدث خطأ أثناء تنفيذ الإجراء الجماعي" });
   }
 });

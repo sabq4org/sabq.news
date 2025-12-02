@@ -422,25 +422,25 @@ export default function AIModerationDashboard() {
     },
   });
 
-  // Bulk action mutation for member profile
-  const bulkActionMutation = useMutation({
-    mutationFn: async ({ memberId, action, commentIds, reason }: { 
+  // Bulk action mutation for member profile (using filter-based endpoint)
+  const bulkActionByFilterMutation = useMutation({
+    mutationFn: async ({ memberId, action, filter, reason }: { 
       memberId: string; 
       action: 'approve' | 'reject'; 
-      commentIds: string[]; 
+      filter: 'pending' | 'flagged'; 
       reason?: string 
     }) => {
-      return await apiRequest(`/api/moderation/member/${memberId}/bulk-action`, {
+      return await apiRequest(`/api/moderation/member/${memberId}/bulk-action-by-filter`, {
         method: "POST",
-        body: JSON.stringify({ action, commentIds, reason }),
+        body: JSON.stringify({ action, filter, reason }),
       });
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (data: any, variables) => {
       toast({
         title: variables.action === 'approve' ? "تم الاعتماد" : "تم الرفض",
-        description: variables.action === 'approve' 
-          ? "تم اعتماد التعليقات المحددة بنجاح" 
-          : "تم رفض التعليقات المحددة بنجاح",
+        description: data.message || (variables.action === 'approve' 
+          ? "تم اعتماد جميع التعليقات المعلقة بنجاح" 
+          : "تم رفض التعليقات المشكوك فيها بنجاح"),
       });
       queryClient.invalidateQueries({ queryKey: ["/api/moderation"] });
       queryClient.invalidateQueries({ queryKey: ["/api/moderation/member", selectedMemberId] });
@@ -524,42 +524,39 @@ export default function AIModerationDashboard() {
     setMemberProfileOpen(true);
   };
 
-  // Handle bulk actions from member profile
+  // Handle bulk actions from member profile (works on ALL member's comments, not just current page)
   const handleBulkApprove = () => {
-    if (!selectedMemberId || !memberCommentsData?.comments) return;
-    const pendingCommentIds = memberCommentsData.comments
-      .filter(c => c.status === 'pending')
-      .map(c => c.id);
-    if (pendingCommentIds.length === 0) {
+    if (!selectedMemberId || !memberProfile?.stats.pendingComments) {
       toast({
         title: "لا توجد تعليقات معلقة",
         description: "لا توجد تعليقات معلقة لاعتمادها",
       });
       return;
     }
-    bulkActionMutation.mutate({
+    bulkActionByFilterMutation.mutate({
       memberId: selectedMemberId,
       action: 'approve',
-      commentIds: pendingCommentIds,
+      filter: 'pending',
     });
   };
 
   const handleBulkReject = () => {
-    if (!selectedMemberId || !memberCommentsData?.comments) return;
-    const flaggedCommentIds = memberCommentsData.comments
-      .filter(c => c.aiClassification && ['flagged', 'spam', 'harmful'].includes(c.aiClassification))
-      .map(c => c.id);
-    if (flaggedCommentIds.length === 0) {
+    if (!selectedMemberId) return;
+    // Check if there are any flagged/spam/harmful comments based on AI analysis
+    const hasFlaggedComments = memberProfile?.aiAnalysis.topClassifications?.some(
+      cls => ['flagged', 'spam', 'harmful'].includes(cls.classification)
+    );
+    if (!hasFlaggedComments) {
       toast({
         title: "لا توجد تعليقات مشكوك فيها",
         description: "لا توجد تعليقات مشكوك فيها لرفضها",
       });
       return;
     }
-    bulkActionMutation.mutate({
+    bulkActionByFilterMutation.mutate({
       memberId: selectedMemberId,
       action: 'reject',
-      commentIds: flaggedCommentIds,
+      filter: 'flagged',
       reason: "تم الرفض الجماعي بناءً على تحليل الذكاء الاصطناعي",
     });
   };
