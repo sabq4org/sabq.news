@@ -432,11 +432,19 @@ router.post("/member/:memberId/bulk-action", requireModeratorAuth, async (req: R
     const { action, commentIds, reason } = parsed.data;
     const newStatus = action === 'approve' ? 'approved' : 'rejected';
     
-    // Process each comment
+    // Process each comment with full audit data
     const results = { success: 0, failed: 0 };
+    const now = new Date();
     for (const commentId of commentIds) {
       try {
-        await storage.updateCommentStatus(commentId, newStatus);
+        await storage.updateCommentStatus(commentId, {
+          status: newStatus,
+          moderatedBy: moderatorId,
+          moderatedAt: now,
+          moderationReason: reason || (action === 'approve' 
+            ? 'تم الاعتماد الجماعي' 
+            : 'تم الرفض الجماعي'),
+        });
         results.success++;
       } catch {
         results.failed++;
@@ -505,11 +513,19 @@ router.post("/member/:memberId/bulk-action-by-filter", requireModeratorAuth, asy
       });
     }
     
-    // Process each comment
+    // Process each comment with full audit data
     const results = { success: 0, failed: 0 };
+    const now = new Date();
     for (const commentId of commentIds) {
       try {
-        await storage.updateCommentStatus(commentId, newStatus);
+        await storage.updateCommentStatus(commentId, {
+          status: newStatus,
+          moderatedBy: moderatorId,
+          moderatedAt: now,
+          moderationReason: reason || (action === 'approve' 
+            ? 'تم الاعتماد الجماعي' 
+            : 'تم الرفض الجماعي'),
+        });
         results.success++;
       } catch {
         results.failed++;
