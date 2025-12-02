@@ -871,51 +871,6 @@ export const dismissedContinueReading = pgTable("dismissed_continue_reading", {
   uniqueIndex("idx_dismissed_continue_reading_unique").on(table.userId, table.articleId),
 ]);
 
-// Comments with status management
-export const comments = pgTable("comments", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }).notNull(),
-  userId: varchar("user_id").references(() => users.id).notNull(),
-  content: text("content").notNull(),
-  status: text("status").default("pending").notNull(), // pending, approved, rejected, flagged
-  parentId: varchar("parent_id"),
-  moderatedBy: varchar("moderated_by").references(() => users.id),
-  moderatedAt: timestamp("moderated_at"),
-  moderationReason: text("moderation_reason"),
-  // Sentiment analysis fields
-  currentSentiment: text("current_sentiment"), // positive, neutral, negative (denormalized for performance)
-  currentSentimentConfidence: real("current_sentiment_confidence"), // 0-1
-  sentimentAnalyzedAt: timestamp("sentiment_analyzed_at"),
-  // AI Moderation fields - نظام الرقابة الذكية
-  aiModerationScore: integer("ai_moderation_score"), // 0-100
-  aiClassification: text("ai_classification"), // safe, review, reject
-  aiDetectedIssues: jsonb("ai_detected_issues").$type<string[]>(), // toxicity, hate_speech, spam, etc.
-  aiModerationReason: text("ai_moderation_reason"), // شرح سبب التصنيف
-  aiAnalyzedAt: timestamp("ai_analyzed_at"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-}, (table) => [
-  index("idx_comments_article_status").on(table.articleId, table.status),
-  index("idx_comments_user").on(table.userId),
-  index("idx_comments_status").on(table.status),
-  index("idx_comments_ai_classification").on(table.aiClassification),
-]);
-
-// Comment sentiment analysis (tracks sentiment history)
-export const commentSentiments = pgTable("comment_sentiments", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  commentId: varchar("comment_id").references(() => comments.id, { onDelete: "cascade" }).notNull(),
-  sentiment: text("sentiment").notNull(), // positive, neutral, negative
-  confidence: real("confidence").notNull(), // 0-1 scale
-  provider: text("provider").notNull(), // openai, anthropic, gemini
-  model: text("model").notNull(), // specific model used
-  language: text("language").notNull(), // ar, en, ur
-  rawMetadata: jsonb("raw_metadata"), // full AI response for debugging
-  analyzedAt: timestamp("analyzed_at").defaultNow().notNull(),
-}, (table) => [
-  index("idx_sentiment_comment").on(table.commentId),
-  index("idx_sentiment_sentiment").on(table.sentiment),
-  index("idx_sentiment_analyzed").on(table.analyzedAt),
-]);
 
 // Article SEO generation history (unified for all languages)
 export const articleSeoHistory = pgTable("article_seo_history", {
@@ -1080,7 +1035,6 @@ export const sentimentScores = pgTable("sentiment_scores", {
     neutral?: number;
   }>(),
   articleId: varchar("article_id").references(() => articles.id, { onDelete: "set null" }),
-  commentId: varchar("comment_id").references(() => comments.id),
   source: text("source").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -1970,20 +1924,6 @@ export const insertRssFeedSchema = createInsertSchema(rssFeeds).omit({
   createdAt: true,
   lastFetchedAt: true,
 });
-export const insertCommentSchema = createInsertSchema(comments).omit({ 
-  id: true, 
-  createdAt: true,
-  moderatedBy: true,
-  moderatedAt: true,
-  moderationReason: true,
-});
-// Comment sentiments schemas
-export const insertCommentSentimentSchema = createInsertSchema(commentSentiments).omit({
-  id: true,
-  analyzedAt: true,
-}).extend({
-  rawMetadata: rawMetadataSchema,
-});
 export const insertReactionSchema = createInsertSchema(reactions).omit({ id: true, createdAt: true });
 export const insertBookmarkSchema = createInsertSchema(bookmarks).omit({ id: true, createdAt: true });
 
@@ -2428,10 +2368,6 @@ export const adminArticleFiltersSchema = z.object({
   featured: z.boolean().optional(),
 });
 
-export const updateCommentStatusSchema = z.object({
-  status: z.enum(["pending", "approved", "rejected", "flagged"]),
-  moderationReason: z.string().optional(),
-});
 
 export const updateRolePermissionsSchema = z.object({
   permissionIds: z.array(z.string().uuid("معرف الصلاحية غير صحيح")),
@@ -2485,11 +2421,7 @@ export type AdminArticleFilters = z.infer<typeof adminArticleFiltersSchema>;
 export type RssFeed = typeof rssFeeds.$inferSelect;
 export type InsertRssFeed = z.infer<typeof insertRssFeedSchema>;
 
-export type Comment = typeof comments.$inferSelect;
-export type InsertComment = z.infer<typeof insertCommentSchema>;
 
-export type InsertCommentSentiment = z.infer<typeof insertCommentSentimentSchema>;
-export type CommentSentiment = typeof commentSentiments.$inferSelect;
 
 export type Reaction = typeof reactions.$inferSelect;
 export type InsertReaction = z.infer<typeof insertReactionSchema>;
@@ -2595,7 +2527,6 @@ export type UpdateUserRecommendationPrefs = z.infer<typeof updateUserRecommendat
 export type RecommendationMetrics = typeof recommendationMetrics.$inferSelect;
 export type InsertRecommendationMetrics = z.infer<typeof insertRecommendationMetricsSchema>;
 
-export type UpdateCommentStatus = z.infer<typeof updateCommentStatusSchema>;
 export type UpdateRolePermissions = z.infer<typeof updateRolePermissionsSchema>;
 
 // Extended types with joins for frontend
@@ -2618,11 +2549,6 @@ export type ArticleWithDetails = Article & {
   storyTitle?: string;
 };
 
-export type CommentWithUser = Comment & {
-  user: User;
-  replies?: CommentWithUser[];
-  moderator?: User;
-};
 
 export type RoleWithPermissions = Role & {
   permissions: Permission[];
@@ -4769,22 +4695,6 @@ export const enArticles = pgTable("en_articles", {
 ]);
 
 // English Comments
-export const enComments = pgTable("en_comments", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  articleId: varchar("article_id").references(() => enArticles.id, { onDelete: "cascade" }).notNull(),
-  userId: varchar("user_id").references(() => users.id).notNull(),
-  content: text("content").notNull(),
-  status: text("status").default("pending").notNull(), // pending, approved, rejected, flagged
-  parentId: varchar("parent_id"),
-  moderatedBy: varchar("moderated_by").references(() => users.id),
-  moderatedAt: timestamp("moderated_at"),
-  moderationReason: text("moderation_reason"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-}, (table) => [
-  index("idx_en_comments_article_status").on(table.articleId, table.status),
-  index("idx_en_comments_user").on(table.userId),
-  index("idx_en_comments_status").on(table.status),
-]);
 
 // English Reactions
 export const enReactions = pgTable("en_reactions", {
@@ -4847,12 +4757,6 @@ export const insertEnArticleSchema = createInsertSchema(enArticles).omit({
   slug: z.string().min(1, "Slug is required"),
 });
 
-export const insertEnCommentSchema = createInsertSchema(enComments).omit({
-  id: true,
-  createdAt: true,
-}).extend({
-  content: z.string().min(1, "Comment content is required"),
-});
 
 // ============================================
 // ENGLISH VERSION - SELECT TYPES
@@ -4864,8 +4768,6 @@ export type InsertEnCategory = z.infer<typeof insertEnCategorySchema>;
 export type EnArticle = typeof enArticles.$inferSelect;
 export type InsertEnArticle = z.infer<typeof insertEnArticleSchema>;
 
-export type EnComment = typeof enComments.$inferSelect;
-export type InsertEnComment = z.infer<typeof insertEnCommentSchema>;
 
 export type EnReaction = typeof enReactions.$inferSelect;
 export type EnBookmark = typeof enBookmarks.$inferSelect;
@@ -4881,10 +4783,6 @@ export type EnArticleWithDetails = EnArticle & {
   hasReacted?: boolean;
 };
 
-export type EnCommentWithUser = EnComment & {
-  user: User;
-  replies?: EnCommentWithUser[];
-};
 
 // ============================================
 // URDU VERSION - DATABASE TABLES
@@ -4974,21 +4872,6 @@ export const urArticles = pgTable("ur_articles", {
 ]);
 
 // Urdu Comments
-export const urComments = pgTable("ur_comments", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  articleId: varchar("article_id").references(() => urArticles.id, { onDelete: "cascade" }).notNull(),
-  userId: varchar("user_id").references(() => users.id).notNull(),
-  content: text("content").notNull(),
-  status: text("status").default("pending").notNull(), // pending, approved, rejected, flagged
-  parentId: varchar("parent_id"),
-  moderatedBy: varchar("moderated_by").references(() => users.id),
-  moderatedAt: timestamp("moderated_at"),
-  moderationReason: text("moderation_reason"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-}, (table) => [
-  index("idx_ur_comments_article_status").on(table.articleId, table.status),
-  index("idx_ur_comments_user").on(table.userId),
-]);
 
 // Urdu Reactions
 export const urReactions = pgTable("ur_reactions", {
@@ -5051,12 +4934,6 @@ export const insertUrArticleSchema = createInsertSchema(urArticles).omit({
   slug: z.string().min(1, "Slug is required"),
 });
 
-export const insertUrCommentSchema = createInsertSchema(urComments).omit({
-  id: true,
-  createdAt: true,
-}).extend({
-  content: z.string().min(1, "Comment content is required"),
-});
 
 export const insertUrReactionSchema = createInsertSchema(urReactions).omit({
   id: true,
@@ -5083,8 +4960,6 @@ export type InsertUrCategory = z.infer<typeof insertUrCategorySchema>;
 export type UrArticle = typeof urArticles.$inferSelect;
 export type InsertUrArticle = z.infer<typeof insertUrArticleSchema>;
 
-export type UrComment = typeof urComments.$inferSelect;
-export type InsertUrComment = z.infer<typeof insertUrCommentSchema>;
 
 export type UrReaction = typeof urReactions.$inferSelect;
 export type InsertUrReaction = z.infer<typeof insertUrReactionSchema>;
@@ -5105,10 +4980,6 @@ export type UrArticleWithDetails = UrArticle & {
   hasReacted?: boolean;
 };
 
-export type UrCommentWithUser = UrComment & {
-  user: User;
-  replies?: UrCommentWithUser[];
-};
 
 // Urdu Smart Blocks
 export const urSmartBlocks = pgTable("ur_smart_blocks", {
@@ -6550,17 +6421,6 @@ export const subtasks = pgTable("subtasks", {
 ]);
 
 // Task comments table
-export const taskComments = pgTable("task_comments", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  taskId: varchar("task_id").references(() => tasks.id, { onDelete: "cascade" }).notNull(),
-  userId: varchar("user_id").references(() => users.id).notNull(),
-  content: text("content").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-}, (table) => [
-  index("task_comments_task_idx").on(table.taskId),
-  index("task_comments_user_idx").on(table.userId),
-]);
 
 // Task attachments table
 export const taskAttachments = pgTable("task_attachments", {
@@ -6631,16 +6491,6 @@ export const subtasksRelations = relations(subtasks, ({ one }) => ({
   }),
 }));
 
-export const taskCommentsRelations = relations(taskComments, ({ one }) => ({
-  task: one(tasks, {
-    fields: [taskComments.taskId],
-    references: [tasks.id],
-  }),
-  user: one(users, {
-    fields: [taskComments.userId],
-    references: [users.id],
-  }),
-}));
 
 export const taskAttachmentsRelations = relations(taskAttachments, ({ one }) => ({
   task: one(tasks, {
@@ -6703,15 +6553,6 @@ export const insertSubtaskSchema = createInsertSchema(subtasks).omit({
   description: z.string().optional(),
 });
 
-export const insertTaskCommentSchema = createInsertSchema(taskComments).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-}).extend({
-  taskId: z.string().uuid("معرف المهمة غير صالح"),
-  userId: z.string().uuid("معرف المستخدم غير صالح"),
-  content: z.string().min(1, "التعليق مطلوب"),
-});
 
 export const insertTaskAttachmentSchema = createInsertSchema(taskAttachments).omit({
   id: true,
@@ -6732,8 +6573,6 @@ export type Task = typeof tasks.$inferSelect & {
 export type InsertTask = z.infer<typeof insertTaskSchema>;
 export type Subtask = typeof subtasks.$inferSelect;
 export type InsertSubtask = z.infer<typeof insertSubtaskSchema>;
-export type TaskComment = typeof taskComments.$inferSelect;
-export type InsertTaskComment = z.infer<typeof insertTaskCommentSchema>;
 export type TaskAttachment = typeof taskAttachments.$inferSelect;
 export type InsertTaskAttachment = z.infer<typeof insertTaskAttachmentSchema>;
 export type TaskActivityLogEntry = typeof taskActivityLog.$inferSelect;

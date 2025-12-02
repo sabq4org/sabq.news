@@ -652,7 +652,7 @@ export async function analyzeTrends(
   try {
     // استيراد db هنا لتجنب مشاكل الاستيراد الدائري
     const { db } = await import("./db");
-    const { articles, comments } = await import("@shared/schema");
+    const { articles } = await import("@shared/schema");
     const { desc, gte } = await import("drizzle-orm");
 
     // 1. حساب الفترة الزمنية
@@ -669,8 +669,8 @@ export async function analyzeTrends(
 
     console.log(`📅 [Trends] Time range: ${from.toISOString()} to ${now.toISOString()}`);
 
-    // 2. جلب المقالات والتعليقات من قاعدة البيانات
-    console.log(`🔍 [Trends] Fetching articles and comments...`);
+    // 2. جلب المقالات من قاعدة البيانات
+    console.log(`🔍 [Trends] Fetching articles...`);
     
     const recentArticles = await db
       .select()
@@ -679,14 +679,7 @@ export async function analyzeTrends(
       .orderBy(desc(articles.publishedAt))
       .limit(limit);
 
-    const recentComments = await db
-      .select()
-      .from(comments)
-      .where(gte(comments.createdAt, from))
-      .orderBy(desc(comments.createdAt))
-      .limit(limit * 2);
-
-    console.log(`✅ [Trends] Found ${recentArticles.length} articles and ${recentComments.length} comments`);
+    console.log(`✅ [Trends] Found ${recentArticles.length} articles`);
 
     if (recentArticles.length === 0) {
       console.log(`⚠️ [Trends] No articles found in the specified timeframe`);
@@ -711,13 +704,9 @@ export async function analyzeTrends(
       .map((a) => `العنوان: ${a.title}\nالمحتوى: ${a.content?.substring(0, 500)}...`)
       .join("\n\n");
 
-    const commentsText = recentComments
-      .map((c) => c.content)
-      .join("\n");
+    const combinedText = articlesText;
 
-    const combinedText = `${articlesText}\n\n${commentsText}`;
-
-    console.log(`📝 [Trends] Prepared ${articlesText.length + commentsText.length} characters for analysis`);
+    console.log(`📝 [Trends] Prepared ${articlesText.length} characters for analysis`);
 
     // 3. تحليل بـ Claude Sonnet 4-5 - الموضوعات والمشاعر
     console.log(`🤖 [Claude] Starting topics and sentiment analysis...`);
@@ -730,11 +719,10 @@ export async function analyzeTrends(
           role: "user",
           content: `أنت خبير في تحليل البيانات والاتجاهات الصحفية.
 
-المهمة: تحليل المقالات والتعليقات التالية واستخراج الموضوعات الرائجة.
+المهمة: تحليل المقالات التالية واستخراج الموضوعات الرائجة.
 
 البيانات:
 المقالات: ${articlesText.substring(0, 8000)}
-التعليقات: ${commentsText.substring(0, 2000)}
 
 قم بـ:
 1. استخراج أهم الموضوعات الرائجة (5-10 موضوعات)

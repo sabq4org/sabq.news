@@ -2,7 +2,6 @@ import { useParams } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { MobileOptimizedKpiCard } from "@/components/MobileOptimizedKpiCard";
-import { CommentSection } from "@/components/CommentSection";
 import { RecommendationsWidget } from "@/components/RecommendationsWidget";
 import { AIRecommendationsBlock } from "@/components/AIRecommendationsBlock";
 import { RelatedOpinionsSection } from "@/components/RelatedOpinionsSection";
@@ -48,7 +47,7 @@ import {
 import { Link, useLocation } from "wouter";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
-import type { ArticleWithDetails, CommentWithUser } from "@shared/schema";
+import type { ArticleWithDetails } from "@shared/schema";
 import { useEffect, useState, useRef } from "react";
 import DOMPurify from "isomorphic-dompurify";
 
@@ -73,10 +72,6 @@ export default function ArticleDetail() {
 
   const { data: article, isLoading } = useQuery<ArticleWithDetails>({
     queryKey: ["/api/articles", slug],
-  });
-
-  const { data: comments = [] } = useQuery<CommentWithUser[]>({
-    queryKey: ["/api/articles", slug, "comments"],
   });
 
   const { data: relatedArticles = [] } = useQuery<ArticleWithDetails[]>({
@@ -627,50 +622,12 @@ export default function ArticleDetail() {
     },
   });
 
-  const commentMutation = useMutation({
-    mutationFn: async (data: { content: string; parentId?: string }) => {
-      return await apiRequest(`/api/articles/${slug}/comments`, {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
-    },
-    onSuccess: () => {
-      if (article) {
-        logBehavior("comment_create", { articleId: article.id });
-      }
-      queryClient.invalidateQueries({ queryKey: ["/api/articles", slug, "comments"] });
-      toast({
-        title: "شكراً لمشاركتك",
-        description: "يتم تحليل تعليقك الآن بواسطة الذكاء الاصطناعي للتأكد من التزامه بمعايير المجتمع. سيُنشر تلقائياً إذا كان آمناً.",
-      });
-    },
-    onError: (error: Error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "تسجيل دخول مطلوب",
-          description: "يجب تسجيل الدخول لإضافة تعليق",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "خطأ",
-          description: error.message || "فشل في إضافة التعليق",
-          variant: "destructive",
-        });
-      }
-    },
-  });
-
   const handleReact = async () => {
     reactMutation.mutate();
   };
 
   const handleBookmark = async () => {
     bookmarkMutation.mutate();
-  };
-
-  const handleComment = async (content: string, parentId?: string) => {
-    commentMutation.mutate({ content, parentId });
   };
 
   // Handle audio playback using ElevenLabs
@@ -860,16 +817,6 @@ export default function ArticleDetail() {
           shortLink={shortLink}
         />
         
-        {/* Comments Section */}
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-          <Separator className="mb-8" />
-          <CommentSection
-            articleId={article.id}
-            comments={comments}
-            currentUser={user}
-            onSubmitComment={handleComment}
-          />
-        </div>
       </div>
     );
   }
@@ -1314,13 +1261,6 @@ export default function ArticleDetail() {
               </>
             )}
 
-            {/* Comments */}
-            <CommentSection
-              articleId={article.id}
-              comments={comments}
-              currentUser={user}
-              onSubmitComment={handleComment}
-            />
           </article>
 
           {/* Sidebar */}

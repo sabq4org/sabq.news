@@ -3,7 +3,6 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { NavigationBar } from "@/components/NavigationBar";
 import { Footer } from "@/components/Footer";
-import { CommentSection } from "@/components/CommentSection";
 import { RecommendationsWidget } from "@/components/RecommendationsWidget";
 import { AIRecommendationsBlock } from "@/components/AIRecommendationsBlock";
 import { RelatedOpinionsSection } from "@/components/RelatedOpinionsSection";
@@ -37,7 +36,7 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { arSA } from "date-fns/locale";
-import type { ArticleWithDetails, CommentWithUser } from "@shared/schema";
+import type { ArticleWithDetails } from "@shared/schema";
 import { useEffect } from "react";
 import DOMPurify from "isomorphic-dompurify";
 
@@ -61,11 +60,6 @@ export default function OpinionDetailPage() {
 
   const { data: article, isLoading } = useQuery<ArticleWithDetails>({
     queryKey: ["/api/opinion", slug],
-    enabled: !!slug,
-  });
-
-  const { data: comments = [] } = useQuery<CommentWithUser[]>({
-    queryKey: ["/api/opinion", slug, "comments"],
     enabled: !!slug,
   });
 
@@ -207,41 +201,6 @@ export default function OpinionDetailPage() {
     },
   });
 
-  const commentMutation = useMutation({
-    mutationFn: async (data: { content: string; parentId?: string }) => {
-      if (!article) return;
-      return await apiRequest(`/api/articles/${article.id}/comments`, {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
-    },
-    onSuccess: () => {
-      if (article) {
-        logBehavior("comment_create", { articleId: article.id });
-      }
-      queryClient.invalidateQueries({ queryKey: ["/api/opinion", slug, "comments"] });
-      toast({
-        title: "شكراً لمشاركتك",
-        description: "يتم تحليل تعليقك الآن بواسطة الذكاء الاصطناعي للتأكد من التزامه بمعايير المجتمع. سيُنشر تلقائياً إذا كان آمناً.",
-      });
-    },
-    onError: (error: Error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "تسجيل دخول مطلوب",
-          description: "يجب تسجيل الدخول لإضافة تعليق",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "خطأ",
-          description: error.message || "فشل في إضافة التعليق",
-          variant: "destructive",
-        });
-      }
-    },
-  });
-
   const handleReact = async () => {
     reactMutation.mutate();
   };
@@ -262,10 +221,6 @@ export default function OpinionDetailPage() {
         console.log("Share failed:", err);
       }
     }
-  };
-
-  const handleComment = async (content: string, parentId?: string) => {
-    commentMutation.mutate({ content, parentId });
   };
 
   // Extract text for audio summary
@@ -647,15 +602,6 @@ export default function OpinionDetailPage() {
                 </Button>
               </div>
 
-              <Separator />
-
-              {/* Comments */}
-              <CommentSection
-                articleId={article.id}
-                comments={comments}
-                currentUser={user}
-                onSubmitComment={handleComment}
-              />
             </article>
 
             {/* Sidebar */}

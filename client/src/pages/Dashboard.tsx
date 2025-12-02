@@ -61,12 +61,6 @@ interface AdminDashboardStats {
     newThisWeek: number;
     activeToday: number;
   };
-  comments: {
-    total: number;
-    pending: number;
-    approved: number;
-    rejected: number;
-  };
   categories: {
     total: number;
   };
@@ -119,17 +113,6 @@ interface AdminDashboardStats {
     views: number;
     createdAt: string;
     author?: {
-      firstName?: string;
-      lastName?: string;
-      email: string;
-    };
-  }>;
-  recentComments: Array<{
-    id: string;
-    content: string;
-    status: string;
-    createdAt: string;
-    user?: {
       firstName?: string;
       lastName?: string;
       email: string;
@@ -827,63 +810,6 @@ function Dashboard() {
               ) : (
                 <p className="text-center text-muted-foreground py-8" data-testid="text-no-recent-articles">
                   لا توجد مقالات حديثة
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Recent Comments */}
-          <Card data-testid="card-recent-comments">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>أحدث التعليقات</CardTitle>
-                <CardDescription>آخر 5 تعليقات</CardDescription>
-              </div>
-              <Button asChild variant="ghost" size="sm" data-testid="button-view-all-comments">
-                <Link href="/dashboard/comments">عرض الكل</Link>
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-16 w-full" />
-                  ))}
-                </div>
-              ) : stats?.recentComments && stats.recentComments.length > 0 ? (
-                <div className="space-y-4">
-                  {stats.recentComments.map((comment) => (
-                    <div
-                      key={comment.id}
-                      className="flex items-start justify-between p-3 border rounded-lg hover-elevate transition-all"
-                      data-testid={`recent-comment-${comment.id}`}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="text-sm truncate" data-testid={`text-comment-content-${comment.id}`}>
-                            {comment.content.substring(0, 80)}...
-                          </p>
-                          {getStatusBadge(comment.status)}
-                        </div>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                          <span>
-                            {comment.user?.firstName || comment.user?.email || "مستخدم"}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {formatDistanceToNow(new Date(comment.createdAt), {
-                              addSuffix: true,
-                              locale: arSA,
-                            })}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-center text-muted-foreground py-8" data-testid="text-no-recent-comments">
-                  لا توجد تعليقات حديثة
                 </p>
               )}
             </CardContent>
