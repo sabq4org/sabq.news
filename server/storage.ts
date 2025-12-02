@@ -7003,7 +7003,8 @@ export class DatabaseStorage implements IStorage {
     const moderatorRoles = ['admin', 'superadmin', 'editor', 'chief_editor', 'moderator', 'system_admin', 'comments_moderator'];
     const onlineThreshold = new Date(Date.now() - minutesThreshold * 60 * 1000);
     
-    const moderators = await db
+    // Query 1: Get users with moderator roles from legacy users.role field
+    const legacyModerators = await db
       .select({
         id: users.id,
         email: users.email,
@@ -7020,8 +7021,59 @@ export class DatabaseStorage implements IStorage {
           inArray(users.role, moderatorRoles),
           eq(users.status, 'active')
         )
-      )
-      .orderBy(desc(users.lastActivityAt));
+      );
+    
+    // Query 2: Get users with moderator roles from RBAC user_roles table
+    const rbacModerators = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        profileImageUrl: users.profileImageUrl,
+        role: roles.name,
+        jobTitle: users.jobTitle,
+        lastActivityAt: users.lastActivityAt,
+      })
+      .from(users)
+      .innerJoin(userRoles, eq(users.id, userRoles.userId))
+      .innerJoin(roles, eq(userRoles.roleId, roles.id))
+      .where(
+        and(
+          inArray(roles.name, moderatorRoles),
+          eq(users.status, 'active')
+        )
+      );
+    
+    // Combine and deduplicate by user ID, preferring RBAC role when available
+    const moderatorMap = new Map<string, {
+      id: string;
+      email: string;
+      firstName: string | null;
+      lastName: string | null;
+      profileImageUrl: string | null;
+      role: string;
+      jobTitle: string | null;
+      lastActivityAt: Date | null;
+    }>();
+    
+    // First add legacy moderators
+    for (const mod of legacyModerators) {
+      moderatorMap.set(mod.id, mod);
+    }
+    
+    // Then add/override with RBAC moderators (preferred)
+    for (const mod of rbacModerators) {
+      moderatorMap.set(mod.id, mod);
+    }
+    
+    // Convert to array and sort by lastActivityAt descending
+    const moderators = Array.from(moderatorMap.values()).sort((a, b) => {
+      if (!a.lastActivityAt && !b.lastActivityAt) return 0;
+      if (!a.lastActivityAt) return 1;
+      if (!b.lastActivityAt) return -1;
+      return b.lastActivityAt.getTime() - a.lastActivityAt.getTime();
+    });
     
     return moderators.map(mod => ({
       ...mod,
