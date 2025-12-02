@@ -2378,7 +2378,10 @@ export class DatabaseStorage implements IStorage {
   async updateUserActivity(userId: string): Promise<void> {
     await db
       .update(users)
-      .set({ lastActivityAt: new Date() })
+      .set({ 
+        lastActivityAt: new Date(),
+        loggedOutAt: null // Clear logout timestamp when user is active
+      })
       .where(eq(users.id, userId));
   }
 
@@ -7548,6 +7551,7 @@ export class DatabaseStorage implements IStorage {
         role: users.role,
         jobTitle: users.jobTitle,
         lastActivityAt: users.lastActivityAt,
+        loggedOutAt: users.loggedOutAt,
       })
       .from(users)
       .where(
@@ -7568,6 +7572,7 @@ export class DatabaseStorage implements IStorage {
         role: roles.name,
         jobTitle: users.jobTitle,
         lastActivityAt: users.lastActivityAt,
+        loggedOutAt: users.loggedOutAt,
       })
       .from(users)
       .innerJoin(userRoles, eq(users.id, userRoles.userId))
@@ -7589,6 +7594,7 @@ export class DatabaseStorage implements IStorage {
       role: string;
       jobTitle: string | null;
       lastActivityAt: Date | null;
+      loggedOutAt: Date | null;
     }>();
     
     // First add legacy moderators
@@ -7609,19 +7615,32 @@ export class DatabaseStorage implements IStorage {
       return b.lastActivityAt.getTime() - a.lastActivityAt.getTime();
     });
     
-    return moderators.map(mod => ({
-      ...mod,
-      isOnline: mod.lastActivityAt ? mod.lastActivityAt >= onlineThreshold : false,
-    }));
+    // Determine online status:
+    // - User is online if lastActivityAt is recent AND (loggedOutAt is null OR lastActivityAt > loggedOutAt)
+    return moderators.map(mod => {
+      const hasRecentActivity = mod.lastActivityAt ? mod.lastActivityAt >= onlineThreshold : false;
+      const notLoggedOut = !mod.loggedOutAt || (mod.lastActivityAt ? mod.lastActivityAt > mod.loggedOutAt : false);
+      return {
+        id: mod.id,
+        email: mod.email,
+        firstName: mod.firstName,
+        lastName: mod.lastName,
+        profileImageUrl: mod.profileImageUrl,
+        role: mod.role,
+        jobTitle: mod.jobTitle,
+        lastActivityAt: mod.lastActivityAt,
+        isOnline: Boolean(hasRecentActivity && notLoggedOut),
+      };
+    });
   }
 
-  // Set moderator offline (clear lastActivityAt to mark user as logged out immediately)
+  // Set moderator offline (set loggedOutAt to mark user as logged out immediately)
   async setModeratorOffline(userId: string): Promise<void> {
     try {
-      // Set lastActivityAt to null to immediately mark the user as offline
+      // Set loggedOutAt to current time - keeps lastActivityAt for "آخر نشاط" display
       await db
         .update(users)
-        .set({ lastActivityAt: null })
+        .set({ loggedOutAt: new Date() })
         .where(eq(users.id, userId));
       
       console.log(`[Online Status] User ${userId} marked as offline (logout)`);
