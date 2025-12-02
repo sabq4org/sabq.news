@@ -848,7 +848,7 @@ function Dashboard() {
                 <CardDescription>آخر 5 تعليقات</CardDescription>
               </div>
               <Button asChild variant="ghost" size="sm" data-testid="button-view-all-comments">
-                <Link href="/dashboard/comments">عرض الكل</Link>
+                <Link href="/dashboard/ai-moderation">الرقابة الذكية</Link>
               </Button>
             </CardHeader>
             <CardContent>

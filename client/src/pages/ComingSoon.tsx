@@ -9,7 +9,6 @@ export default function ComingSoon() {
 
   const pageNames: Record<string, string> = {
     "/dashboard/articles/new": "مقال جديد",
-    "/dashboard/comments": "إدارة التعليقات",
     "/dashboard/ai/summaries": "الملخصات الصوتية",
     "/dashboard/ai/deep": "التحليل العميق",
     "/dashboard/ai/headlines": "العناوين الذكية",

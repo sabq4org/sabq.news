@@ -126,14 +126,6 @@ export const navConfig: NavItem[] = [
         roles: ["admin", "editor"],
       },
       {
-        id: "comments",
-        labelKey: "nav.comments",
-        labelAr: "التعليقات",
-        path: "/dashboard/comments",
-        icon: MessageSquare,
-        roles: ["admin", "editor", "reviewer", "comments_moderator"],
-      },
-      {
         id: "ai_moderation",
         labelKey: "nav.ai_moderation",
         labelAr: "الرقابة الذكية",

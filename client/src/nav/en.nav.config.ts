@@ -64,15 +64,6 @@ export const englishNavConfig: NavItem[] = [
         icon: FolderOpen,
         roles: ["admin", "editor"],
       },
-      {
-        id: "comments",
-        labelKey: "nav.comments",
-        labelAr: "التعليقات",
-        labelEn: "Comments",
-        path: "/en/dashboard/comments",
-        icon: MessageSquare,
-        roles: ["admin", "editor", "reviewer"],
-      },
     ],
   },
 

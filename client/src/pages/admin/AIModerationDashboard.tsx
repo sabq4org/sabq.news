@@ -317,7 +317,7 @@ export default function AIModerationDashboard() {
 
   const approveMutation = useMutation({
     mutationFn: async (commentId: string) => {
-      return await apiRequest(`/api/dashboard/comments/${commentId}/approve`, {
+      return await apiRequest(`/api/moderation/approve/${commentId}`, {
         method: "POST",
       });
     },
@@ -327,7 +327,6 @@ export default function AIModerationDashboard() {
         description: "تم اعتماد التعليق بنجاح",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/moderation"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/comments"] });
       refetch();
     },
     onError: () => {
@@ -341,7 +340,7 @@ export default function AIModerationDashboard() {
 
   const rejectMutation = useMutation({
     mutationFn: async (commentId: string) => {
-      return await apiRequest(`/api/dashboard/comments/${commentId}/reject`, {
+      return await apiRequest(`/api/moderation/reject/${commentId}`, {
         method: "POST",
         body: JSON.stringify({ reason: "AI Moderation: تم الرفض بناءً على تحليل الذكاء الاصطناعي" }),
       });
@@ -352,7 +351,6 @@ export default function AIModerationDashboard() {
         description: "تم رفض التعليق بنجاح",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/moderation"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/comments"] });
       refetch();
     },
     onError: () => {
@@ -382,7 +380,6 @@ export default function AIModerationDashboard() {
       setEditContent("");
       setEditReason("");
       queryClient.invalidateQueries({ queryKey: ["/api/moderation"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/comments"] });
       refetch();
     },
     onError: (error: Error) => {
@@ -411,7 +408,6 @@ export default function AIModerationDashboard() {
       setDeletingComment(null);
       setDeleteReason("");
       queryClient.invalidateQueries({ queryKey: ["/api/moderation"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/comments"] });
       refetch();
     },
     onError: (error: Error) => {
@@ -445,7 +441,6 @@ export default function AIModerationDashboard() {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/moderation"] });
       queryClient.invalidateQueries({ queryKey: ["/api/moderation/member", selectedMemberId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/comments"] });
       refetch();
     },
     onError: (error: Error) => {

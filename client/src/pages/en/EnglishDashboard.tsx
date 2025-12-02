@@ -488,7 +488,7 @@ function Dashboard() {
             testId="card-recent-comments"
             actions={
               <Button asChild variant="ghost" size="sm" data-testid="button-view-all-comments">
-                <Link href="/dashboard/comments">View All</Link>
+                <Link href="/dashboard/ai-moderation">AI Moderation</Link>
               </Button>
             }
             renderItem={(item) => (

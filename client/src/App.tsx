@@ -68,7 +68,6 @@ import UserNotifications from "@/pages/UserNotifications";
 import UserRecommendationSettings from "@/pages/UserRecommendationSettings";
 import RecommendationAnalytics from "@/pages/RecommendationAnalytics";
 import SentimentAnalytics from "@/pages/dashboard/SentimentAnalytics";
-import DashboardComments from "@/pages/DashboardComments";
 import AIModerationDashboard from "@/pages/admin/AIModerationDashboard";
 import MyFollows from "@/pages/MyFollows";
 import MyKeywords from "@/pages/MyKeywords";
@@ -143,7 +142,6 @@ import EnglishNewsPage from "@/pages/en/EnglishNewsPage";
 import EnglishCategoriesPage from "@/pages/en/EnglishCategoriesPage";
 import EnglishCategoriesListPage from "@/pages/en/EnglishCategoriesListPage";
 import EnglishCategoryPage from "@/pages/en/EnglishCategoryPage";
-import EnglishCommentsPage from "@/pages/en/EnglishCommentsPage";
 import EnglishUsersPage from "@/pages/en/EnglishUsersPage";
 import EnglishArticlesPage from "@/pages/en/EnglishArticlesPage";
 import EnglishProfile from "@/pages/en/EnglishProfile";
@@ -161,7 +159,6 @@ import UrduDashboard from "@/pages/ur/dashboard/Dashboard";
 import UrduArticlesPage from "@/pages/ur/dashboard/ArticlesPage";
 import UrduArticleEditor from "@/pages/ur/dashboard/ArticleEditor";
 import UrduCategoriesPage from "@/pages/ur/dashboard/CategoriesPage";
-import UrduCommentsPage from "@/pages/ur/dashboard/CommentsPage";
 import UrduSmartBlocksPage from "@/pages/ur/dashboard/UrduSmartBlocksPage";
 import UrduQuadCategoriesPage from "@/pages/ur/dashboard/UrduQuadCategoriesPage";
 import AdvertiserDashboard from "@/pages/dashboard/AdvertiserDashboard";
@@ -242,7 +239,6 @@ function Router() {
         <Route path="/en/dashboard/articles/:id/edit" component={EnglishArticleEditor} />
         <Route path="/en/dashboard/articles" component={EnglishArticlesPage} />
         <Route path="/en/dashboard/categories" component={EnglishCategoriesPage} />
-        <Route path="/en/dashboard/comments" component={EnglishCommentsPage} />
         <Route path="/en/dashboard/smart-blocks" component={EnglishSmartBlocksPage} />
         <Route path="/en/dashboard/quad-categories" component={EnglishQuadCategoriesBlockSettings} />
         <Route path="/en/dashboard/users" component={EnglishUsersPage} />
@@ -262,7 +258,6 @@ function Router() {
         <Route path="/ur/dashboard/articles/:id/edit" component={UrduArticleEditor} />
         <Route path="/ur/dashboard/articles" component={UrduArticlesPage} />
         <Route path="/ur/dashboard/categories" component={UrduCategoriesPage} />
-        <Route path="/ur/dashboard/comments" component={UrduCommentsPage} />
         <Route path="/ur/dashboard/smart-blocks" component={UrduSmartBlocksPage} />
         <Route path="/ur/dashboard/quad-categories" component={UrduQuadCategoriesPage} />
         <Route path="/ur/dashboard" component={UrduDashboard} />
@@ -482,7 +477,6 @@ function Router() {
       {/* Coming Soon Pages - Routes defined in nav.config.ts but not implemented yet */}
       <Route path="/dashboard/tags" component={TagsManagement} />
       <Route path="/dashboard/smart-links" component={SmartLinksManagement} />
-      <Route path="/dashboard/comments" component={DashboardComments} />
       <Route path="/dashboard/ai-moderation" component={AIModerationDashboard} />
       <Route path="/dashboard/data-stories" component={DataStoryGenerator} />
       <Route path="/dashboard/smart-journalist" component={SmartJournalist} />
