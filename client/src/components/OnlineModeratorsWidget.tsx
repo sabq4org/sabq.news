@@ -11,8 +11,6 @@ import {
 import { Users, Circle } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
-import { useEffect, useState } from "react";
-
 interface OnlineModerator {
   id: string;
   email: string;
@@ -37,20 +35,11 @@ const roleLabels: Record<string, string> = {
 };
 
 export function OnlineModeratorsWidget() {
-  const [currentTime, setCurrentTime] = useState(new Date());
-
   const { data: moderators, isLoading } = useQuery<OnlineModerator[]>({
     queryKey: ["/api/admin/online-moderators"],
     refetchInterval: 30000,
     staleTime: 15000,
   });
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000);
-    return () => clearInterval(interval);
-  }, []);
 
   const onlineModerators = moderators?.filter(m => m.isOnline) || [];
   const offlineModerators = moderators?.filter(m => !m.isOnline).slice(0, 5) || [];
