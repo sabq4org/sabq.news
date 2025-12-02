@@ -5739,8 +5739,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (manageRolesPerm.length > 0) {
         const manageRolesPermId = manageRolesPerm[0].id;
 
-        // Check if this update would remove system.manage_roles from ALL non-system roles
-        if (!parsed.data.permissionIds.includes(manageRolesPermId)) {
+        // Check if this role CURRENTLY has system.manage_roles
+        const currentRoleHasManageRoles = await db
+          .select()
+          .from(rolePermissions)
+          .where(
+            and(
+              eq(rolePermissions.roleId, roleId),
+              eq(rolePermissions.permissionId, manageRolesPermId)
+            )
+          )
+          .limit(1);
+
+        // Only check if we're REMOVING the permission (role currently has it but new set doesn't include it)
+        if (currentRoleHasManageRoles.length > 0 && !parsed.data.permissionIds.includes(manageRolesPermId)) {
           // This update wants to remove system.manage_roles from this role
           // Check if any OTHER non-system role still has this permission
           const otherRolesWithManagePerms = await db
