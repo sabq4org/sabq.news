@@ -9224,6 +9224,39 @@ export const flaggedCommentsLog = pgTable("flagged_comments_log", {
   index("idx_flagged_comments_action").on(table.action),
 ]);
 
+// جدول سجل تعديلات التعليقات - Comment Edit History
+export const commentEditHistory = pgTable("comment_edit_history", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  commentId: varchar("comment_id").references(() => comments.id, { onDelete: "cascade" }).notNull(),
+  previousContent: text("previous_content").notNull(),
+  newContent: text("new_content").notNull(),
+  editedBy: varchar("edited_by").references(() => users.id).notNull(),
+  editReason: text("edit_reason"),
+  editType: text("edit_type").default("content").notNull(), // content, status, moderation
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_comment_edit_history_comment").on(table.commentId),
+  index("idx_comment_edit_history_edited_by").on(table.editedBy),
+]);
+
+// جدول سجل حذف التعليقات - Comment Deletion Log
+export const commentDeletionLog = pgTable("comment_deletion_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  commentId: varchar("comment_id").notNull(),
+  articleId: varchar("article_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  content: text("content").notNull(),
+  status: text("status").notNull(),
+  deletedBy: varchar("deleted_by").references(() => users.id).notNull(),
+  deletionReason: text("deletion_reason"),
+  aiClassification: text("ai_classification"),
+  aiModerationScore: integer("ai_moderation_score"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_comment_deletion_log_article").on(table.articleId),
+  index("idx_comment_deletion_log_deleted_by").on(table.deletedBy),
+]);
+
 // Insert schemas for Comments Management
 export const insertSuspiciousWordSchema = createInsertSchema(suspiciousWords).omit({
   id: true,
@@ -9242,9 +9275,26 @@ export const insertFlaggedCommentLogSchema = createInsertSchema(flaggedCommentsL
   createdAt: true,
 });
 
+// Insert schemas for Comment Edit History
+export const insertCommentEditHistorySchema = createInsertSchema(commentEditHistory).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertCommentDeletionLogSchema = createInsertSchema(commentDeletionLog).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Select types for Comments Management
 export type SuspiciousWord = typeof suspiciousWords.$inferSelect;
 export type InsertSuspiciousWord = z.infer<typeof insertSuspiciousWordSchema>;
 
 export type FlaggedCommentLog = typeof flaggedCommentsLog.$inferSelect;
 export type InsertFlaggedCommentLog = z.infer<typeof insertFlaggedCommentLogSchema>;
+
+export type CommentEditHistory = typeof commentEditHistory.$inferSelect;
+export type InsertCommentEditHistory = z.infer<typeof insertCommentEditHistorySchema>;
+
+export type CommentDeletionLog = typeof commentDeletionLog.$inferSelect;
+export type InsertCommentDeletionLog = z.infer<typeof insertCommentDeletionLogSchema>;
