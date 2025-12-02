@@ -28,6 +28,7 @@ const roleLabels: Record<string, string> = {
   moderator: "مشرف",
   system_admin: "مدير تقني",
   reporter: "مراسل",
+  comments_moderator: "مشرف التعليقات",
 };
 
 const roleColors: Record<string, string> = {
@@ -38,6 +39,7 @@ const roleColors: Record<string, string> = {
   moderator: "bg-green-500/10 text-green-600 dark:text-green-400",
   system_admin: "bg-slate-500/10 text-slate-600 dark:text-slate-400",
   reporter: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400",
+  comments_moderator: "bg-teal-500/10 text-teal-600 dark:text-teal-400",
 };
 
 export function OnlineModeratorsWidget() {

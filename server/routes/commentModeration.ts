@@ -149,7 +149,7 @@ router.get("/comments", async (req: Request, res: Response) => {
 });
 
 // Re-analyze a comment
-router.post("/reanalyze/:commentId", async (req: Request, res: Response) => {
+router.post("/reanalyze/:commentId", requireModeratorAuth, async (req: Request, res: Response) => {
   try {
     const { commentId } = req.params;
     
@@ -176,7 +176,7 @@ router.post("/reanalyze/:commentId", async (req: Request, res: Response) => {
 });
 
 // Approve a comment
-router.post("/approve/:commentId", async (req: Request, res: Response) => {
+router.post("/approve/:commentId", requireModeratorAuth, async (req: Request, res: Response) => {
   try {
     const { commentId } = req.params;
     const userId = (req as any).user?.id;
@@ -195,7 +195,7 @@ router.post("/approve/:commentId", async (req: Request, res: Response) => {
 });
 
 // Reject a comment
-router.post("/reject/:commentId", async (req: Request, res: Response) => {
+router.post("/reject/:commentId", requireModeratorAuth, async (req: Request, res: Response) => {
   try {
     const { commentId } = req.params;
     const { reason } = req.body;
@@ -216,7 +216,7 @@ router.post("/reject/:commentId", async (req: Request, res: Response) => {
 });
 
 // Bulk actions
-router.post("/bulk", async (req: Request, res: Response) => {
+router.post("/bulk", requireModeratorAuth, async (req: Request, res: Response) => {
   try {
     const { commentIds, action, reason } = req.body;
     const userId = (req as any).user?.id;
@@ -253,7 +253,7 @@ const editCommentSchema = z.object({
   reason: z.string().max(500, "السبب طويل جداً").optional(),
 });
 
-router.put("/edit/:commentId", async (req: Request, res: Response) => {
+router.put("/edit/:commentId", requireModeratorAuth, async (req: Request, res: Response) => {
   try {
     const { commentId } = req.params;
     
@@ -300,7 +300,7 @@ const deleteCommentSchema = z.object({
   reason: z.string().max(500, "السبب طويل جداً").optional(),
 });
 
-router.delete("/delete/:commentId", async (req: Request, res: Response) => {
+router.delete("/delete/:commentId", requireModeratorAuth, async (req: Request, res: Response) => {
   try {
     const { commentId } = req.params;
     

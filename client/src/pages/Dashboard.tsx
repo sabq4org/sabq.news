@@ -288,15 +288,17 @@ function Dashboard() {
         {/* Urgent Reminder Banner */}
         <UrgentReminderBanner />
 
-        {/* Quick Actions Section - Staff Only */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
-          <div className="lg:col-span-3">
-            <QuickActionsSection />
+        {/* Quick Actions Section - Staff Only (hidden for comments_moderator) */}
+        {user?.role !== 'comments_moderator' && (
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
+            <div className="lg:col-span-3">
+              <QuickActionsSection />
+            </div>
+            <div className="lg:col-span-1">
+              <OnlineModeratorsWidget />
+            </div>
           </div>
-          <div className="lg:col-span-1">
-            <OnlineModeratorsWidget />
-          </div>
-        </div>
+        )}
 
         {/* Main Stats Cards - 2 columns on mobile for better space utilization */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6">
