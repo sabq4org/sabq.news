@@ -4210,6 +4210,199 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
+  // Member Profile for Moderation Dashboard
+  async getMemberModerationProfile(memberId: string): Promise<{
+    user: {
+      id: string;
+      firstName?: string;
+      lastName?: string;
+      email: string;
+      profileImage?: string;
+      createdAt: string;
+    };
+    stats: {
+      totalComments: number;
+      approvedComments: number;
+      rejectedComments: number;
+      pendingComments: number;
+      flaggedComments: number;
+      avgModerationScore: number;
+      firstCommentDate?: string;
+      lastCommentDate?: string;
+      memberSince: string;
+      daysSinceJoined: number;
+    };
+    aiAnalysis: {
+      overallBehavior: 'excellent' | 'good' | 'moderate' | 'concerning' | 'high_risk';
+      behaviorScore: number;
+      topClassifications: { classification: string; count: number }[];
+    };
+  } | null> {
+    // Get user information
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, memberId));
+    
+    if (!user) return null;
+    
+    // Get comment statistics
+    const memberComments = await db
+      .select()
+      .from(comments)
+      .where(eq(comments.userId, memberId));
+    
+    const totalComments = memberComments.length;
+    const approvedComments = memberComments.filter(c => c.status === 'approved').length;
+    const rejectedComments = memberComments.filter(c => c.status === 'rejected').length;
+    const pendingComments = memberComments.filter(c => c.status === 'pending').length;
+    const flaggedComments = memberComments.filter(c => c.aiClassification === 'flagged' || c.aiClassification === 'harmful').length;
+    
+    // Calculate average moderation score
+    const scoresSum = memberComments.reduce((sum, c) => sum + (c.aiModerationScore || 0), 0);
+    const avgModerationScore = totalComments > 0 ? Math.round(scoresSum / totalComments) : 0;
+    
+    // Get first and last comment dates
+    const sortedByDate = [...memberComments].sort((a, b) => 
+      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+    const firstCommentDate = sortedByDate[0]?.createdAt.toISOString();
+    const lastCommentDate = sortedByDate[sortedByDate.length - 1]?.createdAt.toISOString();
+    
+    // Calculate days since joined
+    const daysSinceJoined = Math.floor(
+      (Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24)
+    );
+    
+    // Calculate AI classifications breakdown
+    const classificationCounts: Record<string, number> = {};
+    memberComments.forEach(c => {
+      const classification = c.aiClassification || 'unknown';
+      classificationCounts[classification] = (classificationCounts[classification] || 0) + 1;
+    });
+    
+    const topClassifications = Object.entries(classificationCounts)
+      .map(([classification, count]) => ({ classification, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+    
+    // Determine overall behavior rating
+    let behaviorScore = 100;
+    if (totalComments > 0) {
+      const rejectionRate = rejectedComments / totalComments;
+      const flagRate = flaggedComments / totalComments;
+      behaviorScore = Math.max(0, Math.round(100 - (rejectionRate * 50) - (flagRate * 30) - ((100 - avgModerationScore) * 0.2)));
+    }
+    
+    let overallBehavior: 'excellent' | 'good' | 'moderate' | 'concerning' | 'high_risk';
+    if (behaviorScore >= 90) overallBehavior = 'excellent';
+    else if (behaviorScore >= 75) overallBehavior = 'good';
+    else if (behaviorScore >= 50) overallBehavior = 'moderate';
+    else if (behaviorScore >= 25) overallBehavior = 'concerning';
+    else overallBehavior = 'high_risk';
+    
+    return {
+      user: {
+        id: user.id,
+        firstName: user.firstName || undefined,
+        lastName: user.lastName || undefined,
+        email: user.email,
+        profileImage: user.profileImageUrl || undefined,
+        createdAt: user.createdAt.toISOString(),
+      },
+      stats: {
+        totalComments,
+        approvedComments,
+        rejectedComments,
+        pendingComments,
+        flaggedComments,
+        avgModerationScore,
+        firstCommentDate,
+        lastCommentDate,
+        memberSince: user.createdAt.toISOString(),
+        daysSinceJoined,
+      },
+      aiAnalysis: {
+        overallBehavior,
+        behaviorScore,
+        topClassifications,
+      },
+    };
+  }
+
+  async getMemberCommentHistory(
+    memberId: string,
+    options?: {
+      status?: string;
+      classification?: string;
+      sortBy?: 'date' | 'score';
+      sortOrder?: 'asc' | 'desc';
+      limit?: number;
+      offset?: number;
+    }
+  ): Promise<{
+    comments: Array<{
+      id: string;
+      content: string;
+      status: string;
+      aiClassification?: string;
+      aiModerationScore?: number;
+      createdAt: string;
+      article: { id: string; title: string; slug: string } | null;
+    }>;
+    total: number;
+  }> {
+    const { status, classification, sortBy = 'date', sortOrder = 'desc', limit = 20, offset = 0 } = options || {};
+    
+    // Build conditions
+    const conditions = [eq(comments.userId, memberId)];
+    if (status) conditions.push(eq(comments.status, status));
+    if (classification) conditions.push(eq(comments.aiClassification, classification));
+    
+    // Get total count
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(comments)
+      .where(and(...conditions));
+    
+    // Get paginated comments with article info
+    const orderColumn = sortBy === 'score' ? comments.aiModerationScore : comments.createdAt;
+    const orderDirection = sortOrder === 'asc' ? asc : desc;
+    
+    const results = await db
+      .select({
+        comment: comments,
+        article: {
+          id: articles.id,
+          title: articles.title,
+          slug: articles.slug,
+        },
+      })
+      .from(comments)
+      .leftJoin(articles, eq(comments.articleId, articles.id))
+      .where(and(...conditions))
+      .orderBy(orderDirection(orderColumn))
+      .limit(limit)
+      .offset(offset);
+    
+    return {
+      comments: results.map(r => ({
+        id: r.comment.id,
+        content: r.comment.content,
+        status: r.comment.status,
+        aiClassification: r.comment.aiClassification || undefined,
+        aiModerationScore: r.comment.aiModerationScore || undefined,
+        createdAt: r.comment.createdAt.toISOString(),
+        article: r.article?.id ? {
+          id: r.article.id,
+          title: r.article.title,
+          slug: r.article.slug,
+        } : null,
+      })),
+      total: Number(count),
+    };
+  }
+
   // Reaction operations
   async toggleReaction(articleId: string, userId: string): Promise<{ hasReacted: boolean }> {
     const [existing] = await db

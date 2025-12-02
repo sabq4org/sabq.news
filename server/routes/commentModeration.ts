@@ -356,4 +356,107 @@ router.get("/details/:commentId", async (req: Request, res: Response) => {
   }
 });
 
+// Get member profile with statistics (for moderators)
+router.get("/member/:memberId", async (req: Request, res: Response) => {
+  try {
+    const { memberId } = req.params;
+    
+    // Check authentication
+    const userId = (req as any).user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: "يجب تسجيل الدخول للقيام بهذا الإجراء" });
+    }
+    
+    const profile = await storage.getMemberModerationProfile(memberId);
+    
+    if (!profile) {
+      return res.status(404).json({ error: "العضو غير موجود" });
+    }
+    
+    res.json(profile);
+  } catch (error) {
+    console.error("[Moderation API] Member profile error:", error);
+    res.status(500).json({ error: "حدث خطأ أثناء جلب ملف العضو" });
+  }
+});
+
+// Get member comment history with filtering (for moderators)
+router.get("/member/:memberId/comments", async (req: Request, res: Response) => {
+  try {
+    const { memberId } = req.params;
+    const { status, classification, sortBy, sortOrder, limit, offset } = req.query;
+    
+    // Check authentication
+    const userId = (req as any).user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: "يجب تسجيل الدخول للقيام بهذا الإجراء" });
+    }
+    
+    const result = await storage.getMemberCommentHistory(memberId, {
+      status: status as string,
+      classification: classification as string,
+      sortBy: sortBy as 'date' | 'score',
+      sortOrder: sortOrder as 'asc' | 'desc',
+      limit: limit ? parseInt(limit as string) : undefined,
+      offset: offset ? parseInt(offset as string) : undefined,
+    });
+    
+    res.json(result);
+  } catch (error) {
+    console.error("[Moderation API] Member comments error:", error);
+    res.status(500).json({ error: "حدث خطأ أثناء جلب تعليقات العضو" });
+  }
+});
+
+// Bulk action on member's comments (for moderators)
+const bulkActionSchema = z.object({
+  action: z.enum(['approve', 'reject']),
+  commentIds: z.array(z.string()).min(1, "يجب تحديد تعليق واحد على الأقل"),
+  reason: z.string().optional(),
+});
+
+router.post("/member/:memberId/bulk-action", async (req: Request, res: Response) => {
+  try {
+    const { memberId } = req.params;
+    
+    // Check authentication
+    const userId = (req as any).user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: "يجب تسجيل الدخول للقيام بهذا الإجراء" });
+    }
+    
+    // Validate request
+    const parsed = bulkActionSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ 
+        error: parsed.error.errors[0].message,
+        field: parsed.error.errors[0].path[0]
+      });
+    }
+    
+    const { action, commentIds, reason } = parsed.data;
+    const newStatus = action === 'approve' ? 'approved' : 'rejected';
+    
+    // Process each comment
+    const results = { success: 0, failed: 0 };
+    for (const commentId of commentIds) {
+      try {
+        await storage.updateCommentStatus(commentId, newStatus);
+        results.success++;
+      } catch {
+        results.failed++;
+      }
+    }
+    
+    res.json({ 
+      success: true, 
+      message: `تم تنفيذ الإجراء على ${results.success} تعليق`,
+      results
+    });
+  } catch (error) {
+    console.error("[Moderation API] Bulk action error:", error);
+    res.status(500).json({ error: "حدث خطأ أثناء تنفيذ الإجراء الجماعي" });
+  }
+});
+
 export default router;
