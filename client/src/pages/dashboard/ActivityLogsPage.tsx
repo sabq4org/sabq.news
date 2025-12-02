@@ -119,7 +119,7 @@ export default function ActivityLogsPage() {
         const user = info.getValue();
         if (!user) {
           return (
-            <div className="flex items-center gap-3 text-right" dir="rtl">
+            <div className="flex items-center gap-3">
               <Avatar className="h-8 w-8 shrink-0">
                 <AvatarFallback>?</AvatarFallback>
               </Avatar>
@@ -130,12 +130,12 @@ export default function ActivityLogsPage() {
         const userName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email;
         const initials = `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}` || user.email[0];
         return (
-          <div className="flex items-center gap-3 text-right" dir="rtl">
+          <div className="flex items-center gap-3">
             <Avatar className="h-8 w-8 shrink-0">
               <AvatarImage src={user.profileImageUrl || undefined} />
               <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
-            <div className="text-right">
+            <div>
               <p className="text-sm font-medium">{userName}</p>
               <p className="text-xs text-muted-foreground" dir="ltr">{user.email}</p>
             </div>
@@ -149,7 +149,7 @@ export default function ActivityLogsPage() {
         const actionPresentation = getActionPresentation(info.getValue());
         const ActionIcon = actionPresentation.icon;
         return (
-          <div className="flex items-center gap-2" dir="rtl">
+          <div className="flex items-center gap-2">
             <div className={`p-1.5 rounded-full ${actionPresentation.bgColor} ${actionPresentation.textColor}`}>
               <ActionIcon className="h-3.5 w-3.5" />
             </div>
@@ -163,7 +163,7 @@ export default function ActivityLogsPage() {
     columnHelper.accessor('entityType', {
       header: 'نوع الكيان',
       cell: (info) => (
-        <span className="text-sm" dir="rtl">{getEntityTypeLabel(info.getValue())}</span>
+        <span className="text-sm">{getEntityTypeLabel(info.getValue())}</span>
       ),
     }),
     columnHelper.accessor('entityId', {
@@ -175,7 +175,7 @@ export default function ActivityLogsPage() {
     columnHelper.accessor('createdAt', {
       header: 'الوقت',
       cell: (info) => (
-        <span className="text-sm text-muted-foreground" dir="rtl">
+        <span className="text-sm text-muted-foreground">
           {format(new Date(info.getValue()), 'PPp', { locale: ar })}
         </span>
       ),
@@ -235,20 +235,20 @@ export default function ActivityLogsPage() {
 
   return (
     <DashboardLayout>
-      <div className="container mx-auto p-6 space-y-6" data-testid="activity-logs-page">
+      <div className="container mx-auto p-6 space-y-6" dir="rtl" data-testid="activity-logs-page">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600">
-              <ListChecks className="h-6 w-6 text-white" />
-            </div>
-            <div>
+          <div className="flex items-center justify-end gap-3 mb-2">
+            <div className="text-right">
               <h1 className="text-3xl font-bold">سجلات النشاط</h1>
               <p className="text-muted-foreground">تتبع جميع العمليات والتغييرات في النظام</p>
+            </div>
+            <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600">
+              <ListChecks className="h-6 w-6 text-white" />
             </div>
           </div>
         </motion.div>
@@ -265,10 +265,10 @@ export default function ActivityLogsPage() {
           transition={{ duration: 0.4, delay: 0.2 }}
         >
           <Card data-testid="filters-card">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+            <CardHeader className="text-right">
+              <CardTitle className="flex items-center justify-end gap-2">
+                <span>الفلاتر</span>
                 <Filter className="h-5 w-5" />
-                الفلاتر
               </CardTitle>
               <CardDescription>تصفية السجلات حسب المعايير</CardDescription>
             </CardHeader>
@@ -339,7 +339,7 @@ export default function ActivityLogsPage() {
           transition={{ duration: 0.4, delay: 0.3 }}
         >
           <Card data-testid="logs-table-card">
-            <CardHeader>
+            <CardHeader className="text-right">
               <CardTitle>السجلات</CardTitle>
               <CardDescription>
                 {logsData ? `عرض ${logsData.logs.length} من ${logsData.total} سجل` : 'جاري التحميل...'}
@@ -360,13 +360,13 @@ export default function ActivityLogsPage() {
                 </div>
               ) : (
                 <>
-                  <div className="rounded-md border">
+                  <div className="rounded-md border" dir="rtl">
                     <Table data-testid="logs-table">
                       <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
                           <TableRow key={headerGroup.id}>
                             {headerGroup.headers.map((header) => (
-                              <TableHead key={header.id}>
+                              <TableHead key={header.id} className="text-right">
                                 {flexRender(header.column.columnDef.header, header.getContext())}
                               </TableHead>
                             ))}
@@ -393,21 +393,11 @@ export default function ActivityLogsPage() {
                   </div>
 
                   {/* Pagination */}
-                  <div className="flex items-center justify-between mt-4">
+                  <div className="flex items-center justify-between mt-4" dir="rtl">
                     <p className="text-sm text-muted-foreground">
                       صفحة {page} من {logsData.totalPages}
                     </p>
                     <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        disabled={page === 1}
-                        data-testid="button-prev-page"
-                      >
-                        <ChevronRight className="h-4 w-4" />
-                        السابق
-                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
@@ -417,6 +407,16 @@ export default function ActivityLogsPage() {
                       >
                         التالي
                         <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                        data-testid="button-prev-page"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                        السابق
                       </Button>
                     </div>
                   </div>

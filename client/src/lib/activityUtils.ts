@@ -328,7 +328,7 @@ export const entityTypeLabels: Record<string, string> = {
 
 export function getEntityTypeLabel(entityType: string): string {
   const normalized = entityType.toLowerCase().replace(/-/g, "_");
-  return entityTypeLabels[normalized] || entityType;
+  return entityTypeLabels[normalized] || "كيان غير معروف";
 }
 
 export function getActionIcon(action: string) {
