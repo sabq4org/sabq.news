@@ -34,6 +34,7 @@ import { motion } from "framer-motion";
 import ActivityLogsInsights from "@/components/ActivityLogsInsights";
 import ActivityLogDrawer from "@/components/ActivityLogDrawer";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { getActionPresentation, getEntityTypeLabel } from "@/lib/activityUtils";
 
 interface ActivityLog {
   id: string;
@@ -55,14 +56,6 @@ interface ActivityLog {
 }
 
 const columnHelper = createColumnHelper<ActivityLog>();
-
-function getActionBadgeVariant(action: string): "default" | "secondary" | "destructive" | "outline" {
-  const actionLower = action.toLowerCase();
-  if (actionLower.includes('create') || actionLower.includes('success')) return "default";
-  if (actionLower.includes('update') || actionLower.includes('modify')) return "secondary";
-  if (actionLower.includes('delete') || actionLower.includes('ban') || actionLower.includes('fail')) return "destructive";
-  return "outline";
-}
 
 export default function ActivityLogsPage() {
   const [page, setPage] = useState(1);
@@ -126,8 +119,8 @@ export default function ActivityLogsPage() {
         const user = info.getValue();
         if (!user) {
           return (
-            <div className="flex items-center gap-2">
-              <Avatar className="h-8 w-8">
+            <div className="flex items-center gap-3 text-right" dir="rtl">
+              <Avatar className="h-8 w-8 shrink-0">
                 <AvatarFallback>?</AvatarFallback>
               </Avatar>
               <span className="text-sm text-muted-foreground">مستخدم محذوف</span>
@@ -137,14 +130,14 @@ export default function ActivityLogsPage() {
         const userName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email;
         const initials = `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}` || user.email[0];
         return (
-          <div className="flex items-center gap-2">
-            <Avatar className="h-8 w-8">
+          <div className="flex items-center gap-3 text-right" dir="rtl">
+            <Avatar className="h-8 w-8 shrink-0">
               <AvatarImage src={user.profileImageUrl || undefined} />
               <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
-            <div>
+            <div className="text-right">
               <p className="text-sm font-medium">{userName}</p>
-              <p className="text-xs text-muted-foreground">{user.email}</p>
+              <p className="text-xs text-muted-foreground" dir="ltr">{user.email}</p>
             </div>
           </div>
         );
@@ -152,26 +145,37 @@ export default function ActivityLogsPage() {
     }),
     columnHelper.accessor('action', {
       header: 'العملية',
-      cell: (info) => (
-        <Badge variant={getActionBadgeVariant(info.getValue())} data-testid={`badge-action-${info.row.id}`}>
-          {info.getValue()}
-        </Badge>
-      ),
+      cell: (info) => {
+        const actionPresentation = getActionPresentation(info.getValue());
+        const ActionIcon = actionPresentation.icon;
+        return (
+          <div className="flex items-center gap-2" dir="rtl">
+            <div className={`p-1.5 rounded-full ${actionPresentation.bgColor} ${actionPresentation.textColor}`}>
+              <ActionIcon className="h-3.5 w-3.5" />
+            </div>
+            <Badge variant={actionPresentation.badgeVariant} data-testid={`badge-action-${info.row.id}`}>
+              {actionPresentation.label}
+            </Badge>
+          </div>
+        );
+      },
     }),
     columnHelper.accessor('entityType', {
       header: 'نوع الكيان',
-      cell: (info) => <span className="text-sm">{info.getValue()}</span>,
+      cell: (info) => (
+        <span className="text-sm" dir="rtl">{getEntityTypeLabel(info.getValue())}</span>
+      ),
     }),
     columnHelper.accessor('entityId', {
       header: 'المعرّف',
       cell: (info) => (
-        <code className="text-xs bg-muted px-2 py-1 rounded">{info.getValue().substring(0, 8)}...</code>
+        <code className="text-xs bg-muted px-2 py-1 rounded" dir="ltr">{info.getValue().substring(0, 8)}...</code>
       ),
     }),
     columnHelper.accessor('createdAt', {
       header: 'الوقت',
       cell: (info) => (
-        <span className="text-sm text-muted-foreground">
+        <span className="text-sm text-muted-foreground" dir="rtl">
           {format(new Date(info.getValue()), 'PPp', { locale: ar })}
         </span>
       ),
