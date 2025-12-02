@@ -25,6 +25,7 @@ export interface NavItem {
   path?: string;
   icon?: LucideIcon;
   roles: UserRole[];
+  permissions?: string[]; // Required permissions (any of these grants access)
   featureFlags?: string[];
   badge?: NavBadge;
   children?: NavItem[];
@@ -34,6 +35,7 @@ export interface NavItem {
 
 export interface NavContext {
   role: UserRole;
+  permissions?: string[]; // User's permissions for permission-based filtering
   flags: Record<string, boolean>;
   pathname: string;
 }

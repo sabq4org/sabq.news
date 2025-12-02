@@ -15,6 +15,7 @@ import type { NavItem } from "./types";
 /**
  * Urdu Navigation Configuration
  * Simplified to show only implemented pages
+ * All items have permissions for custom RBAC role support
  */
 export const urduNavConfig: NavItem[] = [
   {
@@ -26,6 +27,7 @@ export const urduNavConfig: NavItem[] = [
     path: "/ur/dashboard",
     icon: LayoutDashboard,
     roles: ["admin", "editor", "author", "reviewer", "analyst", "reporter"],
+    permissions: ["dashboard.view"],
     meta: { exact: true },
   },
 
@@ -48,6 +50,7 @@ export const urduNavConfig: NavItem[] = [
         path: "/ur/dashboard/articles",
         icon: FileText,
         roles: ["admin", "editor", "author", "reviewer"],
+        permissions: ["articles.view"],
       },
       {
         id: "new_article",
@@ -58,6 +61,7 @@ export const urduNavConfig: NavItem[] = [
         path: "/ur/dashboard/articles/new",
         icon: PlusCircle,
         roles: ["admin", "editor", "author"],
+        permissions: ["articles.create"],
       },
       {
         id: "categories",
@@ -68,6 +72,7 @@ export const urduNavConfig: NavItem[] = [
         path: "/ur/dashboard/categories",
         icon: FolderOpen,
         roles: ["admin", "editor"],
+        permissions: ["categories.view", "categories.manage"],
       },
     ],
   },
@@ -91,6 +96,7 @@ export const urduNavConfig: NavItem[] = [
         path: "/ur/dashboard/smart-blocks",
         icon: Blocks,
         roles: ["admin", "editor"],
+        permissions: ["blocks.view", "blocks.manage"],
       },
       {
         id: "quad_categories",
@@ -101,6 +107,7 @@ export const urduNavConfig: NavItem[] = [
         path: "/ur/dashboard/quad-categories",
         icon: LayoutGrid,
         roles: ["admin", "editor"],
+        permissions: ["blocks.view", "blocks.manage"],
       },
     ],
   },
@@ -124,6 +131,7 @@ export const urduNavConfig: NavItem[] = [
         path: "/ur/dashboard/users",
         icon: UserCircle,
         roles: ["admin"],
+        permissions: ["users.view", "users.manage"],
       },
     ],
   },

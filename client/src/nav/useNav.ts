@@ -4,42 +4,110 @@ import type { NavItem, NavContext, NavState, UserRole } from "./types";
 import { navConfig } from "./nav.config";
 
 /**
+ * Check if feature flags pass for an item
+ */
+function checkFeatureFlags(item: NavItem, flags: Record<string, boolean>): boolean {
+  if (item.featureFlags && item.featureFlags.length > 0) {
+    return item.featureFlags.every((flag) => flags[flag] === true);
+  }
+  return true;
+}
+
+/**
+ * Check if an item passes access checks (feature flags, permissions, or roles)
+ */
+function itemPassesAccessCheck(
+  item: NavItem,
+  role: UserRole,
+  flags: Record<string, boolean>,
+  userPermissions?: string[]
+): boolean {
+  // Check feature flags first (must always pass)
+  if (!checkFeatureFlags(item, flags)) {
+    return false;
+  }
+
+  // If item has permissions defined, check permissions (permission-first)
+  if (item.permissions && item.permissions.length > 0) {
+    return userPermissions?.some(p => item.permissions!.includes(p)) ?? false;
+  }
+
+  // No permissions defined - use role-based check
+  return item.roles.includes(role);
+}
+
+/**
  * فلترة عناصر القائمة بناءً على الدور والصلاحيات والمسار
  * Filter navigation items based on role, permissions, and path
+ * 
+ * Access logic (permission-first with secure parent handling):
+ * 1. Feature flags must be satisfied for ALL items (including containers)
+ * 2. If item has permissions array - check permissions (permission-first)
+ * 3. If item has NO permissions array - use role-based check
+ * 4. Pure containers (no path) with passing feature flags show if ANY child passes
+ * 5. Items WITH paths MUST pass their own access check - they have navigable routes
+ * 6. When parent fails but children pass, children are promoted to parent level
  */
 function filterNavTree(
   items: NavItem[],
   role: UserRole,
-  flags: Record<string, boolean>
+  flags: Record<string, boolean>,
+  userPermissions?: string[]
 ): NavItem[] {
-  return items
-    .filter((item) => {
-      // Check role access
-      if (!item.roles.includes(role)) {
-        return false;
-      }
-
-      // Check feature flags
-      if (item.featureFlags && item.featureFlags.length > 0) {
-        const hasAllFlags = item.featureFlags.every((flag) => flags[flag] === true);
-        if (!hasAllFlags) {
-          return false;
+  const result: NavItem[] = [];
+  
+  for (const item of items) {
+    // Feature flags ALWAYS apply - even for containers
+    // This is a hard gate that cannot be bypassed
+    if (!checkFeatureFlags(item, flags)) {
+      continue; // Skip this item entirely if feature flags fail
+    }
+    
+    // First, recursively process children
+    if (item.children && item.children.length > 0) {
+      const filteredChildren = filterNavTree(item.children, role, flags, userPermissions);
+      
+      // If children passed, handle parent visibility
+      if (filteredChildren.length > 0) {
+        // Pure container (no path) - safe to show if children are accessible
+        // Feature flags already checked above
+        if (!item.path) {
+          result.push({
+            ...item,
+            children: filteredChildren,
+          });
+          continue;
         }
+        
+        // Parent WITH path - must pass its own access check for security
+        if (itemPassesAccessCheck(item, role, flags, userPermissions)) {
+          result.push({
+            ...item,
+            children: filteredChildren,
+          });
+        } else {
+          // Parent failed but children passed - promote children to parent level
+          // This ensures permissioned children remain visible without exposing parent route
+          result.push(...filteredChildren);
+        }
+        continue;
       }
-
-      return true;
-    })
-    .map((item) => {
-      // Recursively filter children
-      if (item.children && item.children.length > 0) {
-        const filteredChildren = filterNavTree(item.children, role, flags);
-        return {
-          ...item,
-          children: filteredChildren,
-        };
+      
+      // No children passed - check if parent itself passes and has a direct path
+      if (item.path && itemPassesAccessCheck(item, role, flags, userPermissions)) {
+        result.push({ ...item, children: [] });
       }
-      return item;
-    });
+      // Otherwise, parent with no accessible children - skip
+      continue;
+    }
+    
+    // Leaf item - apply direct access check
+    if (itemPassesAccessCheck(item, role, flags, userPermissions)) {
+      result.push(item);
+    }
+  }
+  
+  return result;
 }
 
 /**
@@ -126,9 +194,10 @@ export function useNav(context: NavContext): NavState {
     const role = context.role;
     const flags = context.flags;
     const currentPath = context.pathname;
+    const userPermissions = context.permissions;
 
-    // Filter tree
-    const treeFiltered = filterNavTree(navConfig, role, flags);
+    // Filter tree - now includes permission-based filtering
+    const treeFiltered = filterNavTree(navConfig, role, flags, userPermissions);
 
     // Find active item
     const activeItem = findActiveItem(treeFiltered, currentPath);
@@ -145,7 +214,7 @@ export function useNav(context: NavContext): NavState {
       parents,
       flat,
     };
-  }, [context.role, context.flags, context.pathname]);
+  }, [context.role, context.flags, context.pathname, context.permissions]);
 
   return navState;
 }

@@ -15,6 +15,7 @@ import type { NavItem } from "./types";
 /**
  * English Navigation Configuration
  * Simplified to show only implemented pages
+ * All items have permissions for custom RBAC role support
  */
 export const englishNavConfig: NavItem[] = [
   {
@@ -25,6 +26,7 @@ export const englishNavConfig: NavItem[] = [
     path: "/en/dashboard",
     icon: LayoutDashboard,
     roles: ["admin", "editor", "author", "reviewer", "analyst", "reporter"],
+    permissions: ["dashboard.view"],
     meta: { exact: true },
   },
 
@@ -45,6 +47,7 @@ export const englishNavConfig: NavItem[] = [
         path: "/en/dashboard/articles",
         icon: FileText,
         roles: ["admin", "editor", "author", "reviewer"],
+        permissions: ["articles.view"],
       },
       {
         id: "new_article",
@@ -54,6 +57,7 @@ export const englishNavConfig: NavItem[] = [
         path: "/en/dashboard/articles/new",
         icon: PlusCircle,
         roles: ["admin", "editor", "author"],
+        permissions: ["articles.create"],
       },
       {
         id: "categories",
@@ -63,6 +67,7 @@ export const englishNavConfig: NavItem[] = [
         path: "/en/dashboard/categories",
         icon: FolderOpen,
         roles: ["admin", "editor"],
+        permissions: ["categories.view", "categories.manage"],
       },
     ],
   },
@@ -84,6 +89,7 @@ export const englishNavConfig: NavItem[] = [
         path: "/en/dashboard/smart-blocks",
         icon: Blocks,
         roles: ["admin", "editor"],
+        permissions: ["blocks.view", "blocks.manage"],
       },
       {
         id: "quad_categories",
@@ -93,6 +99,7 @@ export const englishNavConfig: NavItem[] = [
         path: "/en/dashboard/quad-categories",
         icon: LayoutGrid,
         roles: ["admin", "editor"],
+        permissions: ["blocks.view", "blocks.manage"],
       },
     ],
   },
@@ -114,6 +121,7 @@ export const englishNavConfig: NavItem[] = [
         path: "/en/dashboard/users",
         icon: UserCircle,
         roles: ["admin"],
+        permissions: ["users.view", "users.manage"],
       },
     ],
   },

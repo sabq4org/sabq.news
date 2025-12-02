@@ -66,36 +66,57 @@ export function isStaff(user: User | null | undefined): boolean {
 }
 
 // Role hierarchy for redirection priority (higher index = higher priority)
+// Includes both predefined roles and common custom roles
 const ROLE_HIERARCHY = [
   'reader',             // 0 - lowest priority
   'content_creator',    // 1
-  'comments_moderator', // 2 - مشرف التعليقات
-  'moderator',          // 3
-  'opinion_author',     // 4
-  'reporter',           // 5
-  'editor',             // 6
-  'admin',              // 7
-  'super_admin',        // 8 - highest priority
+  'writer',             // 2 - custom role
+  'comments_moderator', // 3 - مشرف التعليقات
+  'moderator',          // 4
+  'opinion_author',     // 5
+  'reporter',           // 6
+  'content_manager',    // 7 - مدير محتوى (custom role with article permissions)
+  'publisher',          // 8 - custom role
+  'editor',             // 9
+  'chief_editor',       // 10 - رئيس التحرير
+  'admin',              // 11
+  'system_admin',       // 12
+  'superadmin',         // 13
+  'super_admin',        // 14 - highest priority
 ];
 
 // Get the highest role based on hierarchy
+// Unknown roles are returned as-is but don't override known higher roles
 export function getHighestRole(user: User | null | undefined): string {
   if (!user) return 'reader';
   
   const userRoles = user.roles || [user.role].filter(Boolean);
-  let highestRole = 'reader';
-  let highestPriority = -1;
+  let highestKnownRole = 'reader';
+  let highestKnownPriority = -1;
+  let unknownRole: string | null = null;
 
   for (const role of userRoles) {
     if (!role) continue;
     const priority = ROLE_HIERARCHY.indexOf(role);
-    if (priority > highestPriority) {
-      highestPriority = priority;
-      highestRole = role;
+    if (priority > highestKnownPriority) {
+      highestKnownPriority = priority;
+      highestKnownRole = role;
+    } else if (priority === -1 && role !== 'reader') {
+      // Track unknown role but don't give it priority over known roles
+      unknownRole = role;
     }
   }
 
-  return highestRole;
+  // If we found a known role with priority > reader, use it
+  // Otherwise, use unknown role if exists (for RBAC custom roles)
+  // Finally, fall back to reader
+  if (highestKnownPriority > 0) {
+    return highestKnownRole;
+  }
+  if (unknownRole) {
+    return unknownRole;
+  }
+  return highestKnownRole; // 'reader' if nothing else found
 }
 
 // Get default redirect path based on user's highest role

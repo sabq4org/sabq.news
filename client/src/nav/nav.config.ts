@@ -64,6 +64,7 @@ export const navConfig: NavItem[] = [
     path: "/dashboard",
     icon: LayoutDashboard,
     roles: ["admin", "editor", "author", "reviewer", "analyst", "reporter"],
+    permissions: ["dashboard.view"], // All dashboard users with this permission can access
     meta: { exact: true },
   },
 
@@ -75,6 +76,7 @@ export const navConfig: NavItem[] = [
     path: "/dashboard/tasks",
     icon: ListTodo,
     roles: ["admin", "editor", "author", "reviewer", "analyst", "reporter"],
+    permissions: ["tasks.view", "tasks.manage"],
   },
 
   // ===== المحتوى / Content =====
@@ -84,6 +86,7 @@ export const navConfig: NavItem[] = [
     labelAr: "المحتوى",
     icon: Newspaper,
     roles: ["admin", "editor", "author", "reviewer", "comments_moderator"],
+    // No parent permissions - each child validates independently and parent shows if any child is accessible
     children: [
       {
         id: "articles",
@@ -92,6 +95,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/articles",
         icon: FileText,
         roles: ["admin", "editor", "author", "reviewer"],
+        permissions: ["articles.view"], // Users with articles.view permission can access
       },
       {
         id: "new_article",
@@ -100,6 +104,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/articles/new",
         icon: PlusCircle,
         roles: ["admin", "editor", "author"],
+        permissions: ["articles.create"], // Users with articles.create permission can access
       },
       {
         id: "categories",
@@ -108,6 +113,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/categories",
         icon: FolderOpen,
         roles: ["admin", "editor"],
+        permissions: ["categories.view", "categories.manage"],
       },
       {
         id: "tags",
@@ -116,6 +122,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/tags",
         icon: Tag,
         roles: ["admin", "editor"],
+        permissions: ["tags.view", "tags.manage"],
       },
       {
         id: "smart_links",
@@ -124,6 +131,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/smart-links",
         icon: Link,
         roles: ["admin", "editor"],
+        permissions: ["smart_links.view", "smart_links.manage"],
       },
       {
         id: "ai_moderation",
@@ -132,6 +140,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/ai-moderation",
         icon: ShieldCheck,
         roles: ["admin", "comments_moderator"],
+        permissions: ["moderation.view", "moderation.manage", "comments.moderate"],
       },
       {
         id: "muqtarab",
@@ -140,6 +149,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/muqtarab",
         icon: Boxes,
         roles: ["admin", "editor"],
+        permissions: ["muqtarab.view", "muqtarab.manage"],
       },
       {
         id: "mirqab",
@@ -148,6 +158,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/mirqab",
         icon: Telescope,
         roles: ["admin", "editor"],
+        permissions: ["mirqab.view", "mirqab.manage"],
       },
       {
         id: "audio_newsletters",
@@ -156,6 +167,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/audio-newsletters",
         icon: Podcast,
         roles: ["admin", "editor"],
+        permissions: ["audio.view", "audio.manage", "newsletters.view"],
       },
       {
         id: "audio_briefs",
@@ -164,6 +176,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/audio-briefs",
         icon: AudioLines,
         roles: ["admin", "editor"],
+        permissions: ["audio.view", "audio.manage"],
       },
       {
         id: "calendar",
@@ -172,6 +185,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/calendar",
         icon: Calendar,
         roles: ["admin", "editor"],
+        permissions: ["calendar.view", "calendar.manage"],
       },
       {
         id: "media_library",
@@ -180,6 +194,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/media-library",
         icon: ImageIcon,
         roles: ["admin", "editor", "author"],
+        permissions: ["media.view", "media.manage", "media.upload"],
       },
     ],
   },
@@ -199,6 +214,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/ads/campaigns",
         icon: Megaphone,
         roles: ["admin", "advertiser"],
+        permissions: ["ads.view", "ads.manage"],
       },
       {
         id: "ad_creatives",
@@ -207,6 +223,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/ads/creatives",
         icon: ImageIcon,
         roles: ["admin", "advertiser"],
+        permissions: ["ads.view", "ads.manage"],
       },
       {
         id: "inventory_slots",
@@ -215,6 +232,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/ads/inventory-slots",
         icon: MapPin,
         roles: ["admin", "advertiser"],
+        permissions: ["ads.view", "ads.manage"],
       },
       {
         id: "ad_account",
@@ -223,6 +241,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/ads/account",
         icon: User,
         roles: ["admin", "advertiser"],
+        permissions: ["ads.view", "ads.account"],
       },
     ],
   },
@@ -242,6 +261,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/ai/deep-analysis-list",
         icon: LayoutGrid,
         roles: ["admin", "editor", "analyst"],
+        permissions: ["analysis.view", "analysis.manage"],
       },
       {
         id: "deep_analysis_create",
@@ -250,6 +270,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/ai/deep",
         icon: Brain,
         roles: ["admin", "analyst"],
+        permissions: ["analysis.create", "analysis.manage"],
       },
       {
         id: "deep_analysis_public",
@@ -258,6 +279,7 @@ export const navConfig: NavItem[] = [
         path: "/omq",
         icon: Globe,
         roles: ["admin", "editor", "analyst"],
+        permissions: ["analysis.view"],
       },
       {
         id: "deep_analysis_stats",
@@ -266,6 +288,7 @@ export const navConfig: NavItem[] = [
         path: "/omq/stats",
         icon: BarChart,
         roles: ["admin", "analyst"],
+        permissions: ["analysis.view", "analytics.view"],
       },
     ],
   },
@@ -286,6 +309,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/ai/summaries",
         icon: AudioLines,
         roles: ["admin", "editor"],
+        permissions: ["ai.view", "ai.manage"],
       },
       {
         id: "ai_headlines",
@@ -294,6 +318,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/ai/headlines",
         icon: Type,
         roles: ["admin", "editor"],
+        permissions: ["ai.view", "ai.manage"],
       },
     ],
   },
@@ -313,6 +338,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/smart-journalist",
         icon: Brain,
         roles: ["admin", "editor"],
+        permissions: ["ai.view", "ai.manage", "tools.view"],
       },
       {
         id: "ai_tools",
@@ -321,6 +347,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/ai-tools",
         icon: Sparkles,
         roles: ["admin", "editor"],
+        permissions: ["ai.view", "ai.manage", "tools.view"],
       },
       {
         id: "data_story_generator",
@@ -329,6 +356,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/data-stories",
         icon: BarChart,
         roles: ["admin", "editor"],
+        permissions: ["ai.view", "tools.view"],
       },
     ],
   },
@@ -348,6 +376,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/users",
         icon: UserCircle,
         roles: ["admin"],
+        permissions: ["users.view", "users.manage"],
       },
       {
         id: "roles",
@@ -356,6 +385,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/roles",
         icon: ShieldCheck,
         roles: ["admin"],
+        permissions: ["roles.view", "roles.manage"],
       },
       {
         id: "permissions",
@@ -364,6 +394,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/permissions",
         icon: KeyRound,
         roles: ["admin"],
+        permissions: ["permissions.view", "permissions.manage"],
       },
     ],
   },
@@ -383,6 +414,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/admin/publishers",
         icon: Building2,
         roles: ["admin"],
+        permissions: ["publishers.view", "publishers.manage"],
       },
       {
         id: "publishers_articles",
@@ -391,6 +423,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/admin/publisher-articles",
         icon: FileCheck,
         roles: ["admin"],
+        permissions: ["publishers.view", "articles.review"],
       },
       {
         id: "publishers_analytics",
@@ -399,6 +432,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/admin/publisher-analytics",
         icon: BarChart,
         roles: ["admin"],
+        permissions: ["publishers.view", "analytics.view"],
       },
     ],
   },
@@ -419,6 +453,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/themes",
         icon: Palette,
         roles: ["admin", "editor"],
+        permissions: ["appearance.view", "appearance.manage"],
       },
       {
         id: "templates",
@@ -427,6 +462,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/templates",
         icon: SquareStack,
         roles: ["admin", "editor"],
+        permissions: ["appearance.view", "templates.manage"],
       },
     ],
   },
@@ -446,6 +482,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/analytics",
         icon: Activity,
         roles: ["admin", "analyst"],
+        permissions: ["analytics.view"],
       },
       {
         id: "trending",
@@ -454,6 +491,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/analytics/trending",
         icon: Flame,
         roles: ["admin", "analyst"],
+        permissions: ["analytics.view"],
       },
       {
         id: "behavior",
@@ -462,6 +500,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/analytics/behavior",
         icon: MousePointer,
         roles: ["admin", "analyst"],
+        permissions: ["analytics.view", "analytics.behavior"],
       },
       {
         id: "abTests",
@@ -470,6 +509,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/analytics/ab-tests",
         icon: FlaskConical,
         roles: ["admin", "editor", "analyst"],
+        permissions: ["analytics.view", "analytics.experiments"],
       },
       {
         id: "recommendation-analytics",
@@ -478,6 +518,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/analytics/recommendations",
         icon: Lightbulb,
         roles: ["admin", "analyst"],
+        permissions: ["analytics.view"],
       },
       {
         id: "sentiment-analytics",
@@ -486,6 +527,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/sentiment-analytics",
         icon: Brain,
         roles: ["admin", "analyst"],
+        permissions: ["analytics.view", "analytics.sentiment"],
       },
     ],
   },
@@ -505,6 +547,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/smart-blocks",
         icon: Grid3x3,
         roles: ["admin"],
+        permissions: ["blocks.view", "blocks.manage"],
       },
       {
         id: "quad_categories_block",
@@ -513,6 +556,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/blocks/quad-categories",
         icon: SquareStack,
         roles: ["admin"],
+        permissions: ["blocks.view", "blocks.manage"],
       },
     ],
   },
@@ -532,6 +576,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/rss-feeds",
         icon: Rss,
         roles: ["admin"],
+        permissions: ["settings.view", "rss.manage"],
       },
       {
         id: "integrations",
@@ -540,6 +585,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/integrations",
         icon: Plug,
         roles: ["admin"],
+        permissions: ["settings.view", "integrations.manage"],
       },
       {
         id: "storage",
@@ -548,6 +594,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/storage",
         icon: Cloud,
         roles: ["admin"],
+        permissions: ["settings.view", "storage.manage"],
       },
       {
         id: "audits",
@@ -556,6 +603,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/audit-logs",
         icon: ListChecks,
         roles: ["admin"],
+        permissions: ["settings.view", "audit.view"],
       },
       {
         id: "announcements",
@@ -564,6 +612,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/announcements",
         icon: Megaphone,
         roles: ["admin"],
+        permissions: ["settings.view", "announcements.manage"],
       },
       {
         id: "system_settings",
@@ -572,6 +621,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/system-settings",
         icon: Settings,
         roles: ["admin"],
+        permissions: ["settings.view", "settings.manage"],
       },
       {
         id: "auto_image_settings",
@@ -580,6 +630,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/auto-image-settings",
         icon: Wand2,
         roles: ["admin"],
+        permissions: ["settings.view", "ai.manage"],
       },
       {
         id: "communications",
@@ -588,6 +639,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/communications",
         icon: Mail,
         roles: ["admin"],
+        permissions: ["settings.view", "communications.manage"],
       },
     ],
   },
@@ -600,6 +652,7 @@ export const navConfig: NavItem[] = [
     path: "/dashboard/profile",
     icon: User,
     roles: ["admin", "editor", "author", "reviewer", "analyst", "comments_moderator"],
+    permissions: ["profile.view"], // All authenticated users can view their profile
     divider: true,
   },
 
@@ -610,5 +663,6 @@ export const navConfig: NavItem[] = [
     path: "/dashboard/notifications",
     icon: Bell,
     roles: ["admin", "editor", "author", "reviewer", "analyst", "comments_moderator"],
+    permissions: ["notifications.view"], // All authenticated users can view notifications
   },
 ];

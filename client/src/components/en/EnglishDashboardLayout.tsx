@@ -1,6 +1,6 @@
 import { ReactNode, useState, useEffect, useMemo } from "react";
 import { Link, useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, getHighestRole } from "@/hooks/useAuth";
 import { LogOut, ChevronDown } from "lucide-react";
 import {
   Sidebar,
@@ -66,10 +66,43 @@ export function EnglishDashboardLayout({ children }: DashboardLayoutProps) {
   }, [collapsedGroups]);
 
   // ALWAYS call hooks in same order - use fallback values during loading
-  // Map system_admin to admin for nav filtering
-  let rawRole = user?.role || "admin";
-  if (rawRole === "system_admin") rawRole = "admin";
-  const role = rawRole as UserRole;
+  // Use getHighestRole for RBAC support and map to UserRole
+  const highestRole = getHighestRole(user);
+  
+  // Comprehensive role mapping for navigation compatibility
+  // Unknown roles default to 'guest' but permissions still work via permission-first logic
+  const roleMapping: Record<string, UserRole> = {
+    // Admin-level roles
+    'system_admin': 'admin',
+    'superadmin': 'admin', 
+    'super_admin': 'admin',
+    'admin': 'admin',
+    // Editor-level roles
+    'content_manager': 'editor',
+    'chief_editor': 'editor',
+    'senior_editor': 'editor',
+    'publisher': 'editor',
+    'editor': 'editor',
+    // Author-level roles  
+    'writer': 'author',
+    'content_creator': 'author',
+    'author': 'author',
+    'agency': 'author',
+    // Other predefined roles
+    'reporter': 'reporter',
+    'opinion_author': 'opinion_author',
+    'moderator': 'reviewer',
+    'comments_moderator': 'comments_moderator',
+    'analyst': 'analyst',
+    'advertiser': 'advertiser',
+    'reviewer': 'reviewer',
+    'reader': 'guest',
+  };
+  
+  // Map to known role or default to 'guest' for unknown RBAC roles
+  // 'guest' provides minimal navigation access - actual access controlled by permissions
+  const mappedRole = roleMapping[highestRole];
+  const role: UserRole = mappedRole || 'guest';
   
   // Memoize flags to prevent unnecessary re-renders  
   const flags = useMemo(() => ({
@@ -81,7 +114,8 @@ export function EnglishDashboardLayout({ children }: DashboardLayoutProps) {
   const { treeFiltered, activeItem } = useEnglishNav({ 
     role, 
     flags,
-    pathname: location
+    pathname: location,
+    permissions: user?.permissions || [], // Pass user permissions for RBAC navigation
   });
 
   const toggleGroup = (groupId: string) => {
