@@ -9969,8 +9969,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.id;
       const user = await storage.getUser(userId);
 
-      // Require admin or editor role
-      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+      if (!user) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      // Require admin or editor role - check both legacy and RBAC roles
+      const allowedRoles = ['admin', 'superadmin', 'editor', 'chief_editor', 'system_admin'];
+      const hasLegacyRole = allowedRoles.includes(user.role);
+      
+      // Also check RBAC roles
+      let hasRbacRole = false;
+      try {
+        const userRoles = await storage.getUserRoles(userId);
+        hasRbacRole = userRoles.some(r => allowedRoles.includes(r.name));
+      } catch (e) {
+        // Ignore RBAC check errors
+      }
+
+      if (!hasLegacyRole && !hasRbacRole) {
         return res.status(403).json({ message: "Forbidden" });
       }
 
@@ -9988,9 +10004,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.id;
       const user = await storage.getUser(userId);
 
-      // Require staff role to view online moderators
+      if (!user) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      // Require staff role to view online moderators - check both legacy and RBAC roles
       const staffRoles = ['admin', 'superadmin', 'editor', 'chief_editor', 'moderator', 'system_admin', 'reporter', 'comments_moderator'];
-      if (!user || !staffRoles.includes(user.role)) {
+      const hasLegacyRole = staffRoles.includes(user.role);
+      
+      // Also check RBAC roles
+      let hasRbacRole = false;
+      try {
+        const userRoles = await storage.getUserRoles(userId);
+        hasRbacRole = userRoles.some(r => staffRoles.includes(r.name));
+      } catch (e) {
+        // Ignore RBAC check errors
+      }
+
+      if (!hasLegacyRole && !hasRbacRole) {
         return res.status(403).json({ message: "Forbidden" });
       }
 

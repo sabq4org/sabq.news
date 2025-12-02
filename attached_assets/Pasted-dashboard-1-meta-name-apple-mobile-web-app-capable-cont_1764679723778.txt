@@ -1,0 +1,107 @@
+dashboard:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+index-DUQZ_eEv.js:7903 📡 Connecting to notification stream...
+api/admin/online-moderators:1  Failed to load resource: the server responded with a status of 403 ()
+index-DUQZ_eEv.js:7903 📡 SSE connection established
+api/admin/dashboard/stats:1  Failed to load resource: the server responded with a status of 403 ()
+api/admin/online-moderators:1  Failed to load resource: the server responded with a status of 403 ()
+api/admin/online-moderators:1  Failed to load resource: the server responded with a status of 403 ()
+api/admin/online-moderators:1  Failed to load resource: the server responded with a status of 403 ()
+api/admin/online-moderators:1  Failed to load resource: the server responded with a status of 403 ()
+api/admin/online-moderators:1  Failed to load resource: the server responded with a status of 403 ()
+index-DUQZ_eEv.js:9332 App state changed. Is active? false
+index-DUQZ_eEv.js:7903 📡 SSE connection error: Event
+f.onerror @ index-DUQZ_eEv.js:7903
+index-DUQZ_eEv.js:7903 📡 Scheduling reconnection in 5 seconds...
+index-DUQZ_eEv.js:7903 📡 Connecting to notification stream...
+api/notifications/stream:1  Failed to load resource: the server responded with a status of 500 ()
+index-DUQZ_eEv.js:7903 📡 SSE connection error: Event
+f.onerror @ index-DUQZ_eEv.js:7903
+index-DUQZ_eEv.js:7903 📡 Scheduling reconnection in 5 seconds...
+index-DUQZ_eEv.js:7903 📡 Connecting to notification stream...
+api/notifications/stream:1  Failed to load resource: the server responded with a status of 500 ()
+index-DUQZ_eEv.js:7903 📡 SSE connection error: Event
+f.onerror @ index-DUQZ_eEv.js:7903
+index-DUQZ_eEv.js:7903 📡 Scheduling reconnection in 5 seconds...
+index-DUQZ_eEv.js:7903 📡 Connecting to notification stream...
+index-DUQZ_eEv.js:7903 📡 SSE connection established
+index-DUQZ_eEv.js:7903 📡 SSE connection error: Event
+f.onerror @ index-DUQZ_eEv.js:7903
+index-DUQZ_eEv.js:7903 📡 Scheduling reconnection in 5 seconds...
+index-DUQZ_eEv.js:7903 📡 Connecting to notification stream...
+api/notifications/stream:1  Failed to load resource: the server responded with a status of 500 ()
+index-DUQZ_eEv.js:7903 📡 SSE connection error: Event
+f.onerror @ index-DUQZ_eEv.js:7903
+index-DUQZ_eEv.js:7903 📡 Scheduling reconnection in 5 seconds...
+index-DUQZ_eEv.js:7903 📡 Connecting to notification stream...
+api/notifications/stream:1  Failed to load resource: the server responded with a status of 500 ()
+index-DUQZ_eEv.js:7903 📡 SSE connection error: Event
+f.onerror @ index-DUQZ_eEv.js:7903
+index-DUQZ_eEv.js:7903 📡 Scheduling reconnection in 5 seconds...
+index-DUQZ_eEv.js:7903 📡 Connecting to notification stream...
+api/notifications/stream:1  Failed to load resource: the server responded with a status of 500 ()
+index-DUQZ_eEv.js:7903 📡 SSE connection error: Event
+f.onerror @ index-DUQZ_eEv.js:7903
+index-DUQZ_eEv.js:7903 📡 Scheduling reconnection in 5 seconds...
+index-DUQZ_eEv.js:7903 📡 Connecting to notification stream...
+index-DUQZ_eEv.js:7903 📡 SSE connection established
+index-DUQZ_eEv.js:7903 📡 SSE connection error: Event
+f.onerror @ index-DUQZ_eEv.js:7903
+index-DUQZ_eEv.js:7903 📡 Scheduling reconnection in 5 seconds...
+index-DUQZ_eEv.js:7903 📡 Connecting to notification stream...
+api/notifications/stream:1  Failed to load resource: the server responded with a status of 500 ()
+index-DUQZ_eEv.js:7903 📡 SSE connection error: Event
+f.onerror @ index-DUQZ_eEv.js:7903
+index-DUQZ_eEv.js:7903 📡 Scheduling reconnection in 5 seconds...
+index-DUQZ_eEv.js:7903 📡 Connecting to notification stream...
+index-DUQZ_eEv.js:7903 📡 SSE connection established
+index-DUQZ_eEv.js:7903 📡 SSE connection error: Event
+f.onerror @ index-DUQZ_eEv.js:7903
+index-DUQZ_eEv.js:7903 📡 Scheduling reconnection in 5 seconds...
+index-DUQZ_eEv.js:7903 📡 Connecting to notification stream...
+api/notifications/stream:1  Failed to load resource: the server responded with a status of 500 ()
+index-DUQZ_eEv.js:7903 📡 SSE connection error: Event
+f.onerror @ index-DUQZ_eEv.js:7903
+index-DUQZ_eEv.js:7903 📡 Scheduling reconnection in 5 seconds...
+index-DUQZ_eEv.js:7903 📡 Connecting to notification stream...
+api/notifications/stream:1  Failed to load resource: the server responded with a status of 500 ()
+index-DUQZ_eEv.js:7903 📡 SSE connection error: Event
+f.onerror @ index-DUQZ_eEv.js:7903
+index-DUQZ_eEv.js:7903 📡 Scheduling reconnection in 5 seconds...
+index-DUQZ_eEv.js:7903 📡 Connecting to notification stream...
+index-DUQZ_eEv.js:7903 📡 SSE connection established
+index-DUQZ_eEv.js:9332 App state changed. Is active? true
+api/admin/online-moderators:1  Failed to load resource: the server responded with a status of 403 ()
+dashboard:1 Refused to apply style from 'https://sabq.news/assets/index-DpvfwL-o.css' because its MIME type ('text/html') is not a supported stylesheet MIME type, and strict MIME checking is enabled.
+index-DUQZ_eEv.js:48  GET https://sabq.news/api/admin/online-moderators 403 (Forbidden)
+(anonymous) @ index-DUQZ_eEv.js:48
+i @ index-DUQZ_eEv.js:48
+p @ index-DUQZ_eEv.js:48
+start @ index-DUQZ_eEv.js:48
+fetch @ index-DUQZ_eEv.js:48
+AM @ index-DUQZ_eEv.js:48
+(anonymous) @ index-DUQZ_eEv.js:48
+index-DUQZ_eEv.js:48  GET https://sabq.news/api/admin/online-moderators 403 (Forbidden)
+(anonymous) @ index-DUQZ_eEv.js:48
+i @ index-DUQZ_eEv.js:48
+p @ index-DUQZ_eEv.js:48
+start @ index-DUQZ_eEv.js:48
+fetch @ index-DUQZ_eEv.js:48
+AM @ index-DUQZ_eEv.js:48
+(anonymous) @ index-DUQZ_eEv.js:48
+setInterval
+Gue @ index-DUQZ_eEv.js:48
+Yue @ index-DUQZ_eEv.js:48
+onQueryUpdate @ index-DUQZ_eEv.js:48
+(anonymous) @ index-DUQZ_eEv.js:48
+(anonymous) @ index-DUQZ_eEv.js:48
+batch @ index-DUQZ_eEv.js:48
+zp @ index-DUQZ_eEv.js:48
+l @ index-DUQZ_eEv.js:48
+m @ index-DUQZ_eEv.js:48
+(anonymous) @ index-DUQZ_eEv.js:48
+Promise.catch
+p @ index-DUQZ_eEv.js:48
+start @ index-DUQZ_eEv.js:48
+fetch @ index-DUQZ_eEv.js:48
+AM @ index-DUQZ_eEv.js:48
+(anonymous) @ index-DUQZ_eEv.js:48
