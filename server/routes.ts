@@ -8,6 +8,7 @@ import { registerDataStoryRoutes } from './data-story-routes';
 import journalistAgentRoutes from './journalist-agent-routes';
 import emailAgentRoutes from './routes/emailAgent';
 import whatsappAgentRoutes from './routes/whatsappAgent';
+import commentModerationRoutes from './routes/commentModeration';
 import { startMessageAggregatorJob } from './services/whatsappMessageAggregator';
 import ifoxAiManagementRoutes from './routes/ifox/ai-management';
 import autoImageRoutes from './routes/autoImageRoutes';
@@ -95,6 +96,8 @@ import {
   userRoles, 
   articles, 
   categories, 
+  comments,
+  commentSentiments,
   rssFeeds,
   systemSettings,
   themes,
@@ -148,11 +151,13 @@ import {
   articleSmartLinks,
   enArticles,
   enCategories,
+  enComments,
   enReactions,
   enBookmarks,
   enSmartBlocks,
   urArticles,
   urCategories,
+  urComments,
   urReactions,
   urBookmarks,
   urSmartBlocks,
@@ -171,6 +176,8 @@ import {
   publishers,
   publisherCredits,
   publisherCreditLogs,
+  suspiciousWords,
+  flaggedCommentsLog,
 } from "@shared/schema";
 import {
   insertArticleSchema,
@@ -178,6 +185,7 @@ import {
   insertIFoxArticleSchema,
   updateIFoxArticleSchema,
   insertCategorySchema,
+  insertCommentSchema,
   insertRssFeedSchema,
   updateUserSchema,
   adminUpdateUserSchema,
@@ -207,6 +215,7 @@ import {
   insertExperimentExposureSchema,
   insertTaskSchema,
   insertSubtaskSchema,
+  insertTaskCommentSchema,
   insertPublisherSchema,
   updatePublisherSchema,
   insertPublisherCreditSchema,
@@ -249,9 +258,11 @@ import {
   insertArticleSmartLinkSchema,
   insertEnCategorySchema,
   insertEnArticleSchema,
+  insertEnCommentSchema,
   insertEnSmartBlockSchema,
   insertUrCategorySchema,
   insertUrArticleSchema,
+  insertUrCommentSchema,
   insertUrSmartBlockSchema,
   insertMediaFolderSchema,
   insertMediaFileSchema,
@@ -272,6 +283,8 @@ import {
   type InsertTask,
   type Subtask,
   type InsertSubtask,
+  type TaskComment,
+  type InsertTaskComment,
   type TaskAttachment,
   type InsertTaskAttachment,
 } from "@shared/schema";
@@ -3650,6 +3663,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const [commentsCount] = await db.select({
           count: sql<number>`count(*)::int`
         })
+          .from(comments)
           .leftJoin(articles, eq(comments.articleId, articles.id))
           .where(categoryConditions);
 
@@ -4771,7 +4785,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (parsed.data.firstNameEn !== undefined) updateData.firstNameEn = parsed.data.firstNameEn || null;
       if (parsed.data.lastNameEn !== undefined) updateData.lastNameEn = parsed.data.lastNameEn || null;
       if (parsed.data.phoneNumber !== undefined) updateData.phoneNumber = parsed.data.phoneNumber || null;
-      if (parsed.data.profileImageUrl !== undefined) updateData.profileImageUrl = parsed.data.profileImageUrl;
+      if (parsed.data.profileImageUrl !== undefined) updateData.profileImageUrl = parsed.data.profileImageUrl || null;
       if (parsed.data.status !== undefined) updateData.status = parsed.data.status;
       if (parsed.data.emailVerified !== undefined) updateData.emailVerified = parsed.data.emailVerified;
       if (parsed.data.phoneVerified !== undefined) updateData.phoneVerified = parsed.data.phoneVerified;
@@ -7740,6 +7754,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             articleId: comments.articleId,
             count: sql<number>`count(*)::int`,
           })
+          .from(comments)
           .where(
             and(
               inArray(comments.articleId, articleIds),
@@ -7830,6 +7845,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             articleId: comments.articleId,
             count: sql<number>`count(*)::int`,
           })
+          .from(comments)
           .where(
             and(
               inArray(comments.articleId, articleIds),
@@ -7924,6 +7940,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // 3. Comments today
       const commentsToday = await db
         .select()
+        .from(comments)
         .where(and(
           eq(comments.userId, userId),
           gte(comments.createdAt, startOfDay)
@@ -8257,6 +8274,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const commentsResult = await db
         .select({ count: sql<number>`count(*)::int` })
+        .from(comments)
+        .where(inArray(comments.articleId, articleIds));
       
       res.json({
         totalArticles: myArticles.length,
@@ -8315,6 +8334,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           commentCount: sql<number>`count(${comments.id})::int`,
         })
         .from(articles)
+        .leftJoin(comments, eq(comments.articleId, articles.id))
         .where(
           and(
             eq(articles.status, "published"),
@@ -8340,6 +8360,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ratio: sql<number>`CASE WHEN ${articles.views} > 0 THEN count(${comments.id})::float / ${articles.views}::float ELSE 0 END`,
         })
         .from(articles)
+        .leftJoin(comments, eq(comments.articleId, articles.id))
         .where(
           and(
             eq(articles.status, "published"),
@@ -8400,6 +8421,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           engagementScore: sql<number>`${articles.views} + (count(DISTINCT ${comments.id}) * 5) + (count(DISTINCT ${reactions.id}) * 3)`,
         })
         .from(articles)
+        .leftJoin(comments, eq(comments.articleId, articles.id))
         .leftJoin(reactions, eq(reactions.articleId, articles.id))
         .where(
           and(
@@ -8763,6 +8785,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         count: sql<number>`count(*)::int`
       }).from(bookmarks);
 
+      const [totalComments] = await db.select({
+        count: sql<number>`count(*)::int`
+      }).from(comments);
+
+      const totalInteractions = (totalReactions?.count || 0) + 
+                                (totalBookmarks?.count || 0) + 
+                                (totalComments?.count || 0);
 
       // Generate simple AI insights (can be enhanced with real AI later)
       const insights = {
@@ -8853,6 +8882,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/articles/:slug/comments", async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const userRole = req.user?.role;
+      const article = await storage.getArticleBySlug(req.params.slug, userId, userRole);
+      if (!article) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      // For admins and editors, show all comments (including pending)
+      // For regular users, show only approved comments
+      const showPending = userRole === 'admin' || userRole === 'editor';
+      const comments = await storage.getCommentsByArticle(article.id, showPending);
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
 
   app.get("/api/articles/:slug/related", async (req: any, res) => {
     try {
@@ -9133,6 +9181,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get comments count
       const commentsCount = await db
         .select({ count: sql<number>`COUNT(*)` })
+        .from(comments)
         .where(and(
           eq(comments.articleId, article.id),
           eq(comments.status, "approved")
@@ -9141,11 +9190,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const avgReadTime = readingStats[0]?.avgDuration || 0;
       const totalReads = Number(readingStats[0]?.totalReads || 0);
       const totalReactions = Number(reactionsCount[0]?.count || 0);
+      const totalComments = Number(commentsCount[0]?.count || 0);
       const totalViews = article.views || 0;
 
       // Calculate engagement rate: (reactions + comments) / views
       const engagementRate = totalViews > 0 
-        ? (totalReactions / totalViews) 
+        ? ((totalReactions + totalComments) / totalViews) 
         : 0;
 
       // Estimate reading completion based on avg read time
@@ -9381,6 +9431,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/articles/:slug/comments", isAuthenticated, checkUserStatus(), async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const userRole = req.user.role;
+      const article = await storage.getArticleBySlug(req.params.slug, userId, userRole);
+
+      if (!article) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      const parsed = insertCommentSchema.safeParse({
+        ...req.body,
+        articleId: article.id,
+        userId,
+      });
+
+      if (!parsed.success) {
+        return res.status(400).json({ message: "Invalid comment data" });
+      }
+
+      const comment = await storage.createComment(parsed.data);
+
+      // إضافة نقطة ولاء للتعليق
+      try {
+        await storage.recordLoyaltyPoints({
+          userId,
+          action: "COMMENT",
+          points: 1,
+          source: article.id,
+          metadata: { articleId: article.id, commentId: comment.id }
+        });
+      } catch (error) {
+        console.error("Error recording loyalty points:", error);
+      }
+
+
+      // AI Moderation - تحليل التعليق بالذكاء الاصطناعي (background task)
+      const commentId = comment.id;
+      const commentContent = comment.content;
+      (async () => {
+        try {
+          const { moderateComment, getStatusFromClassification } = await import("./ai/commentModeration");
+          const moderationResult = await moderateComment(commentContent);
+          
+          // Update moderation data
+          await storage.updateCommentModeration(commentId, {
+            aiModerationScore: moderationResult.score,
+            aiClassification: moderationResult.classification,
+            aiDetectedIssues: moderationResult.detected,
+            aiModerationReason: moderationResult.reason,
+            aiAnalyzedAt: new Date(),
+          });
+          
+          // Update comment status based on AI classification
+          const newStatus = getStatusFromClassification(moderationResult.classification);
+          if (newStatus !== "pending") {
+            await storage.updateCommentStatus(commentId, {
+              status: newStatus,
+              moderatedAt: new Date(),
+              moderationReason: moderationResult.classification === "safe" 
+                ? "تم الاعتماد تلقائياً بواسطة الذكاء الاصطناعي"
+                : `تم الرفض تلقائياً - ${moderationResult.reason}`,
+            });
+          }
+          
+          console.log(`[AI Moderation] Comment ${commentId} analyzed: ${moderationResult.classification} (${moderationResult.score}%) -> status: ${newStatus}`);
+        } catch (error) {
+          console.error("[AI Moderation] Error analyzing comment:", error);
+        }
+      })();
+
+
+      // Track user event for daily summary analytics
+      try {
+        await trackUserEvent({
+          userId,
+          articleId: article.id,
+          eventType: 'comment',
+        });
+      } catch (error) {
+        console.error("Error tracking comment event:", error);
+      }
+
+      res.json(comment);
+    } catch (error) {
+      console.error("Error creating comment:", error);
+      res.status(500).json({ message: "Failed to create comment" });
+    }
+  });
 
   // Edit + Smart Content Generation Endpoint (rewrites content in Sabq style then generates all fields)
   app.post("/api/articles/edit-and-generate", isAuthenticated, requireAnyPermission('articles.create', 'articles.edit_any', 'articles.edit_own'), async (req: any, res) => {
@@ -10582,6 +10721,229 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================================
+  // ENGLISH COMMENTS ROUTES
+  // ============================================================
+
+  // Get all English comments with filtering
+  app.get("/api/en/dashboard/comments", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+
+      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const { status, articleId } = req.query;
+
+      let query = db
+        .select({
+          comment: enComments,
+          article: {
+            id: enArticles.id,
+            title: enArticles.title,
+          },
+          user: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+          },
+        })
+        .from(enComments)
+        .leftJoin(enArticles, eq(enComments.articleId, enArticles.id))
+        .leftJoin(users, eq(enComments.userId, users.id))
+        .$dynamic();
+
+      if (status) {
+        query = query.where(eq(enComments.status, status));
+      }
+
+      if (articleId) {
+        query = query.where(eq(enComments.articleId, articleId));
+      }
+
+      query = query.orderBy(desc(enComments.createdAt));
+
+      const results = await query;
+
+      const formattedComments = results.map((row) => ({
+        ...row.comment,
+        article: row.article,
+        user: row.user,
+      }));
+
+      res.json(formattedComments);
+    } catch (error) {
+      console.error("Error fetching English comments:", error);
+      res.status(500).json({ message: "Failed to fetch English comments" });
+    }
+  });
+
+  // Approve English comment
+  app.patch("/api/en/dashboard/comments/:id/approve", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+
+      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const commentId = req.params.id;
+
+      const [comment] = await db
+        .select()
+        .from(enComments)
+        .where(eq(enComments.id, commentId))
+        .limit(1);
+
+      if (!comment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+
+      const [approved] = await db
+        .update(enComments)
+        .set({
+          status: "approved",
+          moderatedBy: userId,
+          moderatedAt: new Date(),
+        })
+        .where(eq(enComments.id, commentId))
+        .returning();
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "approved",
+        entityType: "en_comment",
+        entityId: commentId,
+        oldValue: comment,
+        newValue: approved,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json({ message: "English comment approved", comment: approved });
+    } catch (error) {
+      console.error("Error approving English comment:", error);
+      res.status(500).json({ message: "Failed to approve English comment" });
+    }
+  });
+
+  // Reject English comment
+  app.patch("/api/en/dashboard/comments/:id/reject", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+
+      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const commentId = req.params.id;
+      const { reason } = req.body;
+
+      const [comment] = await db
+        .select()
+        .from(enComments)
+        .where(eq(enComments.id, commentId))
+        .limit(1);
+
+      if (!comment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+
+      const [rejected] = await db
+        .update(enComments)
+        .set({
+          status: "rejected",
+          moderatedBy: userId,
+          moderatedAt: new Date(),
+          moderationReason: reason || null,
+        })
+        .where(eq(enComments.id, commentId))
+        .returning();
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "rejected",
+        entityType: "en_comment",
+        entityId: commentId,
+        oldValue: comment,
+        newValue: rejected,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+          reason,
+        },
+      });
+
+      res.json({ message: "English comment rejected", comment: rejected });
+    } catch (error) {
+      console.error("Error rejecting English comment:", error);
+      res.status(500).json({ message: "Failed to reject English comment" });
+    }
+  });
+
+  // Restore English comment
+  app.patch("/api/en/dashboard/comments/:id/restore", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+
+      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const commentId = req.params.id;
+
+      const [comment] = await db
+        .select()
+        .from(enComments)
+        .where(eq(enComments.id, commentId))
+        .limit(1);
+
+      if (!comment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+
+      const [restored] = await db
+        .update(enComments)
+        .set({
+          status: "pending",
+          moderatedBy: null,
+          moderatedAt: null,
+          moderationReason: null,
+        })
+        .where(eq(enComments.id, commentId))
+        .returning();
+
+      // Log activity
+      await logActivity({
+        userId,
+        action: "restored",
+        entityType: "en_comment",
+        entityId: commentId,
+        oldValue: comment,
+        newValue: restored,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json({ message: "English comment restored", comment: restored });
+    } catch (error) {
+      console.error("Error restoring English comment:", error);
+      res.status(500).json({ message: "Failed to restore English comment" });
+    }
+  });
+
+  // ============================================================
   // ARABIC DASHBOARD ARTICLES ROUTES (LEGACY)
   // ============================================================
 
@@ -10891,11 +11253,577 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // COMMENT MODERATION ROUTES (Editors & Admins)
   // ============================================================
 
+  app.get("/api/dashboard/comments", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+
+      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const { status, articleId } = req.query;
+      const filters: { status?: string; articleId?: string } = {};
+      
+      if (status) {
+        filters.status = status as string;
+      }
+      
+      if (articleId) {
+        filters.articleId = articleId as string;
+      }
+
+      const comments = await storage.getAllComments(filters);
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
 
   // Reporter Comments - عرض التعليقات على مقالات المراسل فقط
+  app.get("/api/reporter/comments", requireAuth, async (req: any, res) => {
+    try {
+      const user = req.user;
+      
+      // التحقق من أن المستخدم مراسل
+      if (user.role !== 'reporter') {
+        return res.status(403).json({ error: "هذا الـ endpoint خاص بالمراسلين فقط" });
+      }
+      
+      // جلب مقالات المراسل
+      const myArticles = await db
+        .select({ id: articles.id })
+        .from(articles)
+        .where(eq(articles.authorId, user.id));
+      
+      const articleIds = myArticles.map(a => a.id);
+      
+      if (articleIds.length === 0) {
+        return res.json([]);
+      }
+      
+      // جلب التعليقات على مقالات المراسل
+      const { status } = req.query;
+      
+      // Build where conditions
+      const whereConditions = [inArray(comments.articleId, articleIds)];
+      
+      if (status) {
+        whereConditions.push(eq(comments.status, status as string));
+      }
+      
+      const myComments = await db
+        .select()
+        .from(comments)
+        .where(and(...whereConditions))
+        .orderBy(desc(comments.createdAt));
+      
+      res.json(myComments);
+    } catch (error) {
+      console.error("Error fetching reporter comments:", error);
+      res.status(500).json({ message: "فشل في جلب التعليقات" });
+    }
+  });
 
+  app.post("/api/dashboard/comments/:id/approve", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
 
+      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
 
+      const commentId = req.params.id;
+      const approved = await storage.approveComment(commentId, userId);
+      res.json({ message: "Comment approved", comment: approved });
+    } catch (error) {
+      console.error("Error approving comment:", error);
+      res.status(500).json({ message: "Failed to approve comment" });
+    }
+  });
+
+  app.post("/api/dashboard/comments/:id/reject", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+
+      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const commentId = req.params.id;
+      const { reason } = req.body;
+      const rejected = await storage.rejectComment(commentId, userId, reason);
+      res.json({ message: "Comment rejected", comment: rejected });
+    } catch (error) {
+      console.error("Error rejecting comment:", error);
+      res.status(500).json({ message: "Failed to reject comment" });
+    }
+  });
+
+  app.post("/api/dashboard/comments/:id/restore", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+
+      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const commentId = req.params.id;
+      const restored = await storage.restoreComment(commentId);
+      res.json({ message: "Comment restored", comment: restored });
+    } catch (error) {
+      console.error("Error restoring comment:", error);
+      res.status(500).json({ message: "Failed to restore comment" });
+    }
+  });
+
+  // ============================================================
+  // نظام إدارة التعليقات المتقدم - Advanced Comments Management System
+  // ============================================================
+
+  // الحصول على جميع التعليقات مع معلومات المقالات
+  app.get("/api/admin/comments", requireAuth, requirePermission("comments.moderate"), async (req: any, res) => {
+    try {
+      const { status, page = 1, limit = 20, search } = req.query;
+      const offset = (parseInt(page) - 1) * parseInt(limit);
+
+      let query = db
+        .select({
+          id: comments.id,
+          articleId: comments.articleId,
+          userId: comments.userId,
+          content: comments.content,
+          status: comments.status,
+          parentId: comments.parentId,
+          moderatedBy: comments.moderatedBy,
+          moderatedAt: comments.moderatedAt,
+          moderationReason: comments.moderationReason,
+          currentSentiment: comments.currentSentiment,
+          aiClassification: comments.aiClassification,
+          aiDetectedIssues: comments.aiDetectedIssues,
+          aiModerationReason: comments.aiModerationReason,
+          createdAt: comments.createdAt,
+          articleTitle: articles.title,
+          articleSlug: articles.slug,
+          userName: users.firstName,
+          userLastName: users.lastName,
+          userEmail: users.email,
+        })
+        .from(comments)
+        .leftJoin(articles, eq(comments.articleId, articles.id))
+        .leftJoin(users, eq(comments.userId, users.id))
+        .orderBy(desc(comments.createdAt));
+
+      if (status && status !== "all") {
+        query = query.where(eq(comments.status, status));
+      }
+
+      if (search) {
+        query = query.where(ilike(comments.content, `%${search}%`));
+      }
+
+      const allComments = await query.limit(parseInt(limit)).offset(offset);
+
+      // Get total count
+      const [{ count }] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(comments)
+        .where(status && status !== "all" ? eq(comments.status, status) : sql`1=1`);
+
+      res.json({
+        comments: allComments,
+        total: Number(count),
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(Number(count) / parseInt(limit)),
+      });
+    } catch (error) {
+      console.error("Error fetching admin comments:", error);
+      res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
+
+  // تعديل تعليق
+  app.patch("/api/admin/comments/:id", requireAuth, requirePermission("comments.moderate"), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { content } = req.body;
+
+      if (!content || content.trim().length === 0) {
+        return res.status(400).json({ message: "محتوى التعليق مطلوب" });
+      }
+
+      const [updated] = await db
+        .update(comments)
+        .set({
+          content: content.trim(),
+          moderatedBy: req.user.id,
+          moderatedAt: new Date(),
+        })
+        .where(eq(comments.id, id))
+        .returning();
+
+      if (!updated) {
+        return res.status(404).json({ message: "التعليق غير موجود" });
+      }
+
+      res.json({ message: "تم تعديل التعليق بنجاح", comment: updated });
+    } catch (error) {
+      console.error("Error updating comment:", error);
+      res.status(500).json({ message: "فشل في تعديل التعليق" });
+    }
+  });
+
+  // حذف تعليق
+  app.delete("/api/admin/comments/:id", requireAuth, requirePermission("comments.moderate"), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+
+      const [deleted] = await db
+        .delete(comments)
+        .where(eq(comments.id, id))
+        .returning();
+
+      if (!deleted) {
+        return res.status(404).json({ message: "التعليق غير موجود" });
+      }
+
+      res.json({ message: "تم حذف التعليق بنجاح" });
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      res.status(500).json({ message: "فشل في حذف التعليق" });
+    }
+  });
+
+  // الموافقة على تعليق
+  app.patch("/api/admin/comments/:id/approve", requireAuth, requirePermission("comments.moderate"), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+
+      const [updated] = await db
+        .update(comments)
+        .set({
+          status: "approved",
+          moderatedBy: req.user.id,
+          moderatedAt: new Date(),
+        })
+        .where(eq(comments.id, id))
+        .returning();
+
+      if (!updated) {
+        return res.status(404).json({ message: "التعليق غير موجود" });
+      }
+
+      res.json({ message: "تمت الموافقة على التعليق", comment: updated });
+    } catch (error) {
+      console.error("Error approving comment:", error);
+      res.status(500).json({ message: "فشل في الموافقة على التعليق" });
+    }
+  });
+
+  // رفض تعليق
+  app.patch("/api/admin/comments/:id/reject", requireAuth, requirePermission("comments.moderate"), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { reason } = req.body;
+
+      const [updated] = await db
+        .update(comments)
+        .set({
+          status: "rejected",
+          moderatedBy: req.user.id,
+          moderatedAt: new Date(),
+          moderationReason: reason || null,
+        })
+        .where(eq(comments.id, id))
+        .returning();
+
+      if (!updated) {
+        return res.status(404).json({ message: "التعليق غير موجود" });
+      }
+
+      res.json({ message: "تم رفض التعليق", comment: updated });
+    } catch (error) {
+      console.error("Error rejecting comment:", error);
+      res.status(500).json({ message: "فشل في رفض التعليق" });
+    }
+  });
+
+  // ============================================================
+  // نظام الكلمات المشبوهة - Suspicious Words System
+  // ============================================================
+
+  // الحصول على قائمة الكلمات المشبوهة
+  app.get("/api/admin/suspicious-words", requireAuth, requirePermission("comments.moderate"), async (req: any, res) => {
+    try {
+      const { category, isActive, search } = req.query;
+
+      let query = db
+        .select()
+        .from(suspiciousWords)
+        .orderBy(desc(suspiciousWords.createdAt));
+
+      const conditions = [];
+      if (category) {
+        conditions.push(eq(suspiciousWords.category, category));
+      }
+      if (isActive !== undefined) {
+        conditions.push(eq(suspiciousWords.isActive, isActive === "true"));
+      }
+      if (search) {
+        conditions.push(ilike(suspiciousWords.word, `%${search}%`));
+      }
+
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+
+      const words = await query;
+      res.json(words);
+    } catch (error) {
+      console.error("Error fetching suspicious words:", error);
+      res.status(500).json({ message: "فشل في جلب الكلمات المشبوهة" });
+    }
+  });
+
+  // إضافة كلمة مشبوهة جديدة
+  app.post("/api/admin/suspicious-words", requireAuth, requirePermission("comments.moderate"), async (req: any, res) => {
+    try {
+      const parsed = insertSuspiciousWordSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: "بيانات غير صالحة", errors: parsed.error.errors });
+      }
+
+      // Check if word already exists
+      const existing = await db
+        .select()
+        .from(suspiciousWords)
+        .where(eq(suspiciousWords.word, parsed.data.word.trim()))
+        .limit(1);
+
+      if (existing.length > 0) {
+        return res.status(409).json({ message: "هذه الكلمة موجودة بالفعل" });
+      }
+
+      const [created] = await db
+        .insert(suspiciousWords)
+        .values({
+          ...parsed.data,
+          word: parsed.data.word.trim(),
+          addedBy: req.user.id,
+        })
+        .returning();
+
+      res.status(201).json({ message: "تمت إضافة الكلمة بنجاح", word: created });
+    } catch (error) {
+      console.error("Error adding suspicious word:", error);
+      res.status(500).json({ message: "فشل في إضافة الكلمة" });
+    }
+  });
+
+  // تعديل كلمة مشبوهة
+  app.patch("/api/admin/suspicious-words/:id", requireAuth, requirePermission("comments.moderate"), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { word, category, severity, isActive, matchType, notes } = req.body;
+
+      const updateData: any = { updatedAt: new Date() };
+      if (word !== undefined) updateData.word = word.trim();
+      if (category !== undefined) updateData.category = category;
+      if (severity !== undefined) updateData.severity = severity;
+      if (isActive !== undefined) updateData.isActive = isActive;
+      if (matchType !== undefined) updateData.matchType = matchType;
+      if (notes !== undefined) updateData.notes = notes;
+
+      const [updated] = await db
+        .update(suspiciousWords)
+        .set(updateData)
+        .where(eq(suspiciousWords.id, id))
+        .returning();
+
+      if (!updated) {
+        return res.status(404).json({ message: "الكلمة غير موجودة" });
+      }
+
+      res.json({ message: "تم تعديل الكلمة بنجاح", word: updated });
+    } catch (error) {
+      console.error("Error updating suspicious word:", error);
+      res.status(500).json({ message: "فشل في تعديل الكلمة" });
+    }
+  });
+
+  // حذف كلمة مشبوهة
+  app.delete("/api/admin/suspicious-words/:id", requireAuth, requirePermission("comments.moderate"), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+
+      const [deleted] = await db
+        .delete(suspiciousWords)
+        .where(eq(suspiciousWords.id, id))
+        .returning();
+
+      if (!deleted) {
+        return res.status(404).json({ message: "الكلمة غير موجودة" });
+      }
+
+      res.json({ message: "تم حذف الكلمة بنجاح" });
+    } catch (error) {
+      console.error("Error deleting suspicious word:", error);
+      res.status(500).json({ message: "فشل في حذف الكلمة" });
+    }
+  });
+
+  // إضافة كلمات متعددة دفعة واحدة
+  app.post("/api/admin/suspicious-words/bulk", requireAuth, requirePermission("comments.moderate"), async (req: any, res) => {
+    try {
+      const { words, category = "general", severity = "medium" } = req.body;
+
+      if (!Array.isArray(words) || words.length === 0) {
+        return res.status(400).json({ message: "يجب تقديم قائمة كلمات" });
+      }
+
+      const uniqueWords = [...new Set(words.map((w: string) => w.trim().toLowerCase()))].filter(w => w.length >= 2);
+
+      // Get existing words to avoid duplicates
+      const existingWords = await db
+        .select({ word: suspiciousWords.word })
+        .from(suspiciousWords)
+        .where(inArray(suspiciousWords.word, uniqueWords));
+
+      const existingSet = new Set(existingWords.map(e => e.word));
+      const newWords = uniqueWords.filter(w => !existingSet.has(w));
+
+      if (newWords.length === 0) {
+        return res.status(409).json({ message: "جميع الكلمات موجودة بالفعل" });
+      }
+
+      const inserted = await db
+        .insert(suspiciousWords)
+        .values(newWords.map(word => ({
+          word,
+          category,
+          severity,
+          addedBy: req.user.id,
+        })))
+        .returning();
+
+      res.status(201).json({
+        message: `تمت إضافة ${inserted.length} كلمة بنجاح`,
+        added: inserted.length,
+        skipped: uniqueWords.length - newWords.length,
+        words: inserted,
+      });
+    } catch (error) {
+      console.error("Error adding bulk suspicious words:", error);
+      res.status(500).json({ message: "فشل في إضافة الكلمات" });
+    }
+  });
+
+  // فحص نص للكلمات المشبوهة
+  app.post("/api/admin/suspicious-words/check", requireAuth, async (req: any, res) => {
+    try {
+      const { text } = req.body;
+
+      if (!text) {
+        return res.status(400).json({ message: "النص مطلوب" });
+      }
+
+      const activeWords = await db
+        .select()
+        .from(suspiciousWords)
+        .where(eq(suspiciousWords.isActive, true));
+
+      const foundWords: Array<{ word: string; category: string; severity: string }> = [];
+      const lowerText = text.toLowerCase();
+
+      for (const wordEntry of activeWords) {
+        let matched = false;
+        const lowerWord = wordEntry.word.toLowerCase();
+
+        switch (wordEntry.matchType) {
+          case "exact":
+            const exactRegex = new RegExp(`\\b${lowerWord}\\b`, "i");
+            matched = exactRegex.test(lowerText);
+            break;
+          case "contains":
+            matched = lowerText.includes(lowerWord);
+            break;
+          case "regex":
+            try {
+              const regex = new RegExp(wordEntry.word, "i");
+              matched = regex.test(text);
+            } catch (e) {
+              matched = lowerText.includes(lowerWord);
+            }
+            break;
+          default:
+            matched = lowerText.includes(lowerWord);
+        }
+
+        if (matched) {
+          foundWords.push({
+            word: wordEntry.word,
+            category: wordEntry.category,
+            severity: wordEntry.severity,
+          });
+        }
+      }
+
+      res.json({
+        hasSuspiciousWords: foundWords.length > 0,
+        foundWords,
+        highestSeverity: foundWords.length > 0
+          ? foundWords.reduce((max, w) => {
+              const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
+              return severityOrder[w.severity as keyof typeof severityOrder] > severityOrder[max.severity as keyof typeof severityOrder] ? w : max;
+            }, foundWords[0]).severity
+          : null,
+      });
+    } catch (error) {
+      console.error("Error checking suspicious words:", error);
+      res.status(500).json({ message: "فشل في فحص النص" });
+    }
+  });
+
+  // الحصول على إحصائيات التعليقات
+  app.get("/api/admin/comments/stats", requireAuth, requirePermission("comments.moderate"), async (req: any, res) => {
+    try {
+      const [stats] = await db
+        .select({
+          total: sql<number>`count(*)`,
+          pending: sql<number>`count(*) filter (where ${comments.status} = 'pending')`,
+          approved: sql<number>`count(*) filter (where ${comments.status} = 'approved')`,
+          rejected: sql<number>`count(*) filter (where ${comments.status} = 'rejected')`,
+          flagged: sql<number>`count(*) filter (where ${comments.status} = 'flagged')`,
+        })
+        .from(comments);
+
+      const [wordsCount] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(suspiciousWords)
+        .where(eq(suspiciousWords.isActive, true));
+
+      res.json({
+        comments: {
+          total: Number(stats.total),
+          pending: Number(stats.pending),
+          approved: Number(stats.approved),
+          rejected: Number(stats.rejected),
+          flagged: Number(stats.flagged),
+        },
+        suspiciousWords: {
+          active: Number(wordsCount.count),
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching comments stats:", error);
+      res.status(500).json({ message: "فشل في جلب الإحصائيات" });
+    }
+  });
 
   // ============================================================
   // AI ROUTES (Editors & Admins)
@@ -14929,10 +15857,243 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   // ============================================================
 
   // POST /api/comments/:id/analyze-sentiment - Analyze single comment
+  app.post("/api/comments/:id/analyze-sentiment", requireAuth, requireAnyPermission("comments.moderate", "system.admin"), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+
+      // Validate comment exists
+      const [comment] = await db
+        .select()
+        .from(comments)
+        .where(eq(comments.id, id))
+        .limit(1);
+
+      if (!comment) {
+        return res.status(404).json({ message: "التعليق غير موجود" });
+      }
+
+      // Detect language and analyze sentiment
+      const language = detectLanguage(comment.content);
+      const result = await analyzeSentiment(comment.content, language);
+
+      // Save sentiment analysis to comment_sentiments table
+      const [sentimentRecord] = await db
+        .insert(commentSentiments)
+        .values({
+          id: randomUUID(),
+          commentId: id,
+          sentiment: result.sentiment,
+          confidence: result.confidence,
+          provider: result.provider,
+          model: result.model,
+          language: language,
+          rawMetadata: result.rawMetadata,
+          analyzedAt: new Date(),
+        })
+        .returning();
+
+      // Update comment's current sentiment fields
+      await db
+        .update(comments)
+        .set({
+          currentSentiment: result.sentiment,
+          currentSentimentConfidence: result.confidence,
+          sentimentAnalyzedAt: new Date(),
+        })
+        .where(eq(comments.id, id));
+
+      // Log activity
+      await logActivity({
+        userId: req.user?.id,
+        action: "analyze_sentiment",
+        entityType: "comment",
+        entityId: id,
+        newValue: { sentiment: result.sentiment, confidence: result.confidence },
+      });
+
+      res.json({
+        success: true,
+        sentiment: result.sentiment,
+        confidence: result.confidence,
+        provider: result.provider,
+        model: result.model,
+      });
+    } catch (error) {
+      console.error("Error analyzing comment sentiment:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "فشل في تحليل مشاعر التعليق" 
+      });
+    }
+  });
 
   // POST /api/comments/analyze-batch - Analyze multiple comments
+  app.post("/api/comments/analyze-batch", requireAuth, requireAnyPermission("comments.moderate", "system.admin"), async (req: any, res) => {
+    try {
+      // Validate request body
+      const bodySchema = z.object({
+        commentIds: z.array(z.string()).min(1).max(100),
+      });
+
+      const { commentIds } = bodySchema.parse(req.body);
+
+      // Fetch all comments
+      const commentsToAnalyze = await db
+        .select()
+        .from(comments)
+        .where(inArray(comments.id, commentIds));
+
+      if (commentsToAnalyze.length === 0) {
+        return res.status(404).json({ message: "لم يتم العثور على تعليقات" });
+      }
+
+      // Process comments in parallel with concurrency limit of 3
+      const limit = pLimit(3);
+      const results = await Promise.allSettled(
+        commentsToAnalyze.map(comment =>
+          limit(async () => {
+            try {
+              // Detect language and analyze sentiment
+              const language = detectLanguage(comment.content);
+              const result = await analyzeSentiment(comment.content, language);
+
+              // Save sentiment analysis
+              await db.insert(commentSentiments).values({
+                id: randomUUID(),
+                commentId: comment.id,
+                sentiment: result.sentiment,
+                confidence: result.confidence,
+                provider: result.provider,
+                model: result.model,
+                language: language,
+                rawMetadata: result.rawMetadata,
+                analyzedAt: new Date(),
+              });
+
+              // Update comment's current sentiment
+              await db
+                .update(comments)
+                .set({
+                  currentSentiment: result.sentiment,
+                  currentSentimentConfidence: result.confidence,
+                  sentimentAnalyzedAt: new Date(),
+                })
+                .where(eq(comments.id, comment.id));
+
+              return {
+                commentId: comment.id,
+                success: true,
+                sentiment: result.sentiment,
+                confidence: result.confidence,
+                provider: result.provider,
+                model: result.model,
+              };
+            } catch (error: any) {
+              return {
+                commentId: comment.id,
+                success: false,
+                error: error.message || "فشل التحليل",
+              };
+            }
+          })
+        )
+      );
+
+      // Map results
+      const processedResults = results.map((result, index) => {
+        if (result.status === 'fulfilled') {
+          return result.value;
+        } else {
+          return {
+            commentId: commentsToAnalyze[index].id,
+            success: false,
+            error: result.reason?.message || "فشل التحليل",
+          };
+        }
+      });
+
+      // Log activity
+      await logActivity({
+        userId: req.user?.id,
+        action: "batch_analyze_sentiment",
+        entityType: "comment",
+        entityId: "batch",
+        newValue: { 
+          total: commentIds.length,
+          successful: processedResults.filter(r => r.success).length,
+          failed: processedResults.filter(r => !r.success).length,
+        },
+      });
+
+      res.json({
+        success: true,
+        results: processedResults,
+        summary: {
+          total: commentIds.length,
+          successful: processedResults.filter(r => r.success).length,
+          failed: processedResults.filter(r => !r.success).length,
+        },
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          success: false,
+          message: "بيانات الطلب غير صالحة",
+          errors: error.errors,
+        });
+      }
+
+      console.error("Error in batch sentiment analysis:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "فشل في تحليل المشاعر" 
+      });
+    }
+  });
 
   // GET /api/comments/:id/sentiment-history - Get sentiment analysis history
+  app.get("/api/comments/:id/sentiment-history", requireAuth, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+
+      // Validate comment exists
+      const [comment] = await db
+        .select()
+        .from(comments)
+        .where(eq(comments.id, id))
+        .limit(1);
+
+      if (!comment) {
+        return res.status(404).json({ message: "التعليق غير موجود" });
+      }
+
+      // Get sentiment history
+      const history = await db
+        .select({
+          id: commentSentiments.id,
+          sentiment: commentSentiments.sentiment,
+          confidence: commentSentiments.confidence,
+          provider: commentSentiments.provider,
+          model: commentSentiments.model,
+          language: commentSentiments.language,
+          analyzedAt: commentSentiments.analyzedAt,
+        })
+        .from(commentSentiments)
+        .where(eq(commentSentiments.commentId, id))
+        .orderBy(desc(commentSentiments.analyzedAt));
+
+      res.json({
+        commentId: id,
+        currentSentiment: comment.currentSentiment,
+        currentConfidence: comment.currentSentimentConfidence,
+        lastAnalyzedAt: comment.sentimentAnalyzedAt,
+        history: history,
+      });
+    } catch (error) {
+      console.error("Error getting sentiment history:", error);
+      res.status(500).json({ message: "فشل في جلب سجل تحليل المشاعر" });
+    }
+  });
 
   // GET /api/sentiment/analytics - Get sentiment analytics dashboard data
   app.get("/api/sentiment/analytics", requireAuth, requireRole("admin"), async (req: any, res) => {
@@ -14948,6 +16109,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
           sentiment: comments.currentSentiment,
           count: sql<number>`count(*)::int`,
         })
+        .from(comments)
         .where(
           and(
             isNotNull(comments.currentSentiment),
@@ -14963,6 +16125,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
           sentiment: comments.currentSentiment,
           count: sql<number>`count(*)::int`,
         })
+        .from(comments)
         .where(
           and(
             isNotNull(comments.currentSentiment),
@@ -14983,6 +16146,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
           totalComments: sql<number>`count(*)::int`,
           avgConfidence: sql<number>`avg(${comments.currentSentimentConfidence})::float`,
         })
+        .from(comments)
         .leftJoin(articles, eq(comments.articleId, articles.id))
         .where(
           and(
@@ -19159,6 +20323,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
             })
             .from(articles)
             .leftJoin(reactions, eq(reactions.articleId, articles.id))
+            .leftJoin(comments, eq(comments.articleId, articles.id))
             .where(and(
               eq(articles.categoryId, cat.id),
               eq(articles.status, "published"),
@@ -19478,9 +20643,11 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
             .select({
               totalViews: sql<number>`COALESCE(SUM(${enArticles.views}), 0)::int`,
               totalReactions: sql<number>`COALESCE(COUNT(DISTINCT ${enReactions.id}), 0)::int`,
+              totalComments: sql<number>`COALESCE(COUNT(DISTINCT ${enComments.id}), 0)::int`,
             })
             .from(enArticles)
             .leftJoin(enReactions, eq(enReactions.articleId, enArticles.id))
+            .leftJoin(enComments, eq(enComments.articleId, enArticles.id))
             .where(and(
               eq(enArticles.categoryId, cat.id),
               eq(enArticles.status, "published"),
@@ -20080,11 +21247,13 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         // Get LIFETIME total comments
         const [lifetimeComments] = await db
           .select({ count: sql<number>`COUNT(*)::int` })
+          .from(comments);
 
         // Get comments this month (for month-over-month comparison)
         // Date range: thisMonthStart (inclusive) to nextMonthStart (exclusive)
         const [thisMonthComments] = await db
           .select({ count: sql<number>`COUNT(*)::int` })
+          .from(comments)
           .where(and(
             gte(comments.createdAt, thisMonthStart),
             lt(comments.createdAt, nextMonthStart)
@@ -20093,6 +21262,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         // Get comments last month (for month-over-month comparison)
         const [lastMonthComments] = await db
           .select({ count: sql<number>`COUNT(*)::int` })
+          .from(comments)
           .where(and(
             gte(comments.createdAt, lastMonthStart),
             lte(comments.createdAt, lastMonthEnd)
@@ -20412,6 +21582,8 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
               if (activity.entityId) {
                 const [comment] = await db
                   .select({ content: comments.content })
+                  .from(comments)
+                  .where(eq(comments.id, activity.entityId))
                   .limit(1);
                 
                 if (comment) {
@@ -20581,6 +21753,25 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   });
 
   // Public: Get comments for an opinion article
+  app.get("/api/opinion/:slug/comments", async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const userRole = req.user?.role;
+      const article = await storage.getArticleBySlug(req.params.slug, userId, userRole);
+      if (!article || article.articleType !== 'opinion') {
+        return res.status(404).json({ message: "Opinion article not found" });
+      }
+
+      // For admins and editors, show all comments (including pending)
+      // For regular users, show only approved comments
+      const showPending = userRole === 'admin' || userRole === 'editor';
+      const comments = await storage.getCommentsByArticle(article.id, showPending);
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching opinion comments:", error);
+      res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
 
   // Public: Get related articles for an opinion article
   app.get("/api/opinion/:slug/related", async (req: any, res) => {
@@ -22602,6 +23793,8 @@ Allow: /
       const [commentsCount] = await db.select({
         count: sql<number>`count(*)::int`
       })
+        .from(enComments)
+        .leftJoin(enArticles, eq(enComments.articleId, enArticles.id))
         .where(and(
           eq(enArticles.categoryId, categoryId),
           eq(enArticles.status, "published")
@@ -22831,8 +24024,13 @@ Allow: /
         count: sql<number>`count(*)::int`
       }).from(enBookmarks);
 
+      const [totalComments] = await db.select({
+        count: sql<number>`count(*)::int`
+      }).from(enComments);
+
       const totalInteractions = (totalReactions?.count || 0) + 
-                                (totalBookmarks?.count || 0) 
+                                (totalBookmarks?.count || 0) + 
+                                (totalComments?.count || 0);
 
       // Generate AI insights
       const insights = {
@@ -22996,6 +24194,14 @@ Allow: /
         count: sql<number>`count(*)::int`
       }).from(urBookmarks);
 
+      const [totalComments] = await db.select({
+        count: sql<number>`count(*)::int`
+      }).from(urComments);
+
+      const totalInteractions = (totalReactions?.count || 0) + 
+                                (totalBookmarks?.count || 0) + 
+                                (totalComments?.count || 0);
+
       // Generate AI insights
       const insights = {
         dailySummary: "سبق سمارٹ قارئین کو تازہ ترین خبریں اور تجزیہ پیش کرتا رہتا ہے",
@@ -23086,6 +24292,8 @@ Allow: /
           .from(enReactions)
           .where(eq(enReactions.articleId, article.id)),
         db.select({ count: sql<number>`count(*)` })
+          .from(enComments)
+          .where(eq(enComments.articleId, article.id))
       ]);
 
       const isBookmarked = bookmarkResult.length > 0;
@@ -23176,14 +24384,24 @@ Allow: /
         .from(enReactions)
         .where(eq(enReactions.articleId, article.id));
 
+      // Get comments count (English comments table: en_comments)
+      const commentsCount = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(enComments)
+        .where(and(
+          eq(enComments.articleId, article.id),
+          eq(enComments.status, "approved")
+        ));
+
       const avgReadTime = readingStats[0]?.avgDuration || 0;
       const totalReads = Number(readingStats[0]?.totalReads || 0);
       const totalReactions = Number(reactionsCount[0]?.count || 0);
+      const totalComments = Number(commentsCount[0]?.count || 0);
       const totalViews = article.views || 0;
 
       // Calculate engagement rate: (reactions + comments) / views
       const engagementRate = totalViews > 0 
-        ? (totalReactions / totalViews) 
+        ? ((totalReactions + totalComments) / totalViews) 
         : 0;
 
       // Estimate reading completion based on avg read time
@@ -23463,8 +24681,55 @@ Allow: /
   });
 
   // GET English Comments for Article
+  app.get("/api/en/articles/:articleId/comments", async (req, res) => {
+    try {
+      const comments = await db
+        .select()
+        .from(enComments)
+        .where(
+          and(
+            eq(enComments.articleId, req.params.articleId),
+            eq(enComments.status, "approved")
+          )
+        )
+        .orderBy(desc(enComments.createdAt));
+      
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching EN comments:", error);
+      res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
 
   // POST English Comment
+  app.post("/api/en/articles/:articleId/comments", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const user = req.user as User;
+
+    try {
+      const validatedData = insertEnCommentSchema.parse({
+        ...req.body,
+        articleId: req.params.articleId,
+        userId: user.id,
+      });
+      
+      const newComment = await db
+        .insert(enComments)
+        .values(validatedData)
+        .returning();
+      
+      res.json(newComment[0]);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error creating EN comment:", error);
+      res.status(500).json({ message: "Failed to create comment" });
+    }
+  });
 
   // Toggle English Article Reaction (Like)
   app.post("/api/en/articles/:articleId/reaction", async (req, res) => {
@@ -24035,6 +25300,8 @@ Allow: /
           .from(urReactions)
           .where(eq(urReactions.articleId, article.id)),
         db.select({ count: sql<number>`count(*)` })
+          .from(urComments)
+          .where(eq(urComments.articleId, article.id))
       ]);
 
       const isBookmarked = bookmarkResult.length > 0;
@@ -24159,17 +25426,21 @@ Allow: /
       // Get comments count (Urdu comments table: ur_comments)
       const commentsCount = await db
         .select({ count: sql<number>`COUNT(*)` })
+        .from(urComments)
         .where(and(
+          eq(urComments.articleId, article.id),
+          eq(urComments.status, "approved")
         ));
 
       const avgReadTime = readingStats[0]?.avgDuration || 0;
       const totalReads = Number(readingStats[0]?.totalReads || 0);
       const totalReactions = Number(reactionsCount[0]?.count || 0);
+      const totalComments = Number(commentsCount[0]?.count || 0);
       const totalViews = article.views || 0;
 
       // Calculate engagement rate: (reactions + comments) / views
       const engagementRate = totalViews > 0 
-        ? (totalReactions / totalViews) 
+        ? ((totalReactions + totalComments) / totalViews) 
         : 0;
 
       // Estimate reading completion based on avg read time
@@ -25041,14 +26312,239 @@ Allow: /
   // ============================================================
 
   // Get Urdu article comments
+  app.get("/api/ur/article/:id/comments", async (req, res) => {
+    try {
+      const articleId = req.params.id;
+
+      const commentsData = await db
+        .select({
+          comment: urComments,
+          user: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            profileImageUrl: users.profileImageUrl,
+          },
+        })
+        .from(urComments)
+        .leftJoin(users, eq(urComments.userId, users.id))
+        .where(
+          and(
+            eq(urComments.articleId, articleId),
+            eq(urComments.status, "approved")
+          )
+        )
+        .orderBy(desc(urComments.createdAt));
+
+      const comments = commentsData.map((row) => ({
+        ...row.comment,
+        user: row.user,
+      }));
+
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching Urdu comments:", error);
+      res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
 
   // Create Urdu comment
+  app.post("/api/ur/article/:id/comments", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const articleId = req.params.id;
+
+      const parsed = insertUrCommentSchema.safeParse({
+        ...req.body,
+        articleId,
+        userId,
+      });
+
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "Invalid data",
+          errors: parsed.error.errors 
+        });
+      }
+
+      const [comment] = await db
+        .insert(urComments)
+        .values(parsed.data)
+        .returning();
+
+      res.json(comment);
+    } catch (error) {
+      console.error("Error creating Urdu comment:", error);
+      res.status(500).json({ message: "Failed to create comment" });
+    }
+  });
 
   // Get all Urdu comments (dashboard)
+  app.get("/api/ur/dashboard/comments", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+
+      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const { status, articleId } = req.query;
+
+      let query = db
+        .select({
+          comment: urComments,
+          article: {
+            id: urArticles.id,
+            title: urArticles.title,
+          },
+          user: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+          },
+        })
+        .from(urComments)
+        .leftJoin(urArticles, eq(urComments.articleId, urArticles.id))
+        .leftJoin(users, eq(urComments.userId, users.id))
+        .$dynamic();
+
+      if (status) {
+        query = query.where(eq(urComments.status, status));
+      }
+
+      if (articleId) {
+        query = query.where(eq(urComments.articleId, articleId));
+      }
+
+      query = query.orderBy(desc(urComments.createdAt));
+
+      const results = await query;
+
+      const formattedComments = results.map((row) => ({
+        ...row.comment,
+        article: row.article,
+        user: row.user,
+      }));
+
+      res.json(formattedComments);
+    } catch (error) {
+      console.error("Error fetching Urdu comments:", error);
+      res.status(500).json({ message: "Failed to fetch Urdu comments" });
+    }
+  });
 
   // Approve Urdu comment
+  app.patch("/api/ur/dashboard/comments/:id/approve", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+
+      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const commentId = req.params.id;
+
+      const [comment] = await db
+        .select()
+        .from(urComments)
+        .where(eq(urComments.id, commentId))
+        .limit(1);
+
+      if (!comment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+
+      const [approved] = await db
+        .update(urComments)
+        .set({
+          status: "approved",
+          moderatedBy: userId,
+          moderatedAt: new Date(),
+        })
+        .where(eq(urComments.id, commentId))
+        .returning();
+
+      await logActivity({
+        userId,
+        action: "approved",
+        entityType: "ur_comment",
+        entityId: commentId,
+        oldValue: comment,
+        newValue: approved,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+        },
+      });
+
+      res.json({ message: "Urdu comment approved", comment: approved });
+    } catch (error) {
+      console.error("Error approving Urdu comment:", error);
+      res.status(500).json({ message: "Failed to approve Urdu comment" });
+    }
+  });
 
   // Reject Urdu comment
+  app.patch("/api/ur/dashboard/comments/:id/reject", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+
+      if (!user || (user.role !== "editor" && user.role !== "admin")) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const commentId = req.params.id;
+      const { reason } = req.body;
+
+      const [comment] = await db
+        .select()
+        .from(urComments)
+        .where(eq(urComments.id, commentId))
+        .limit(1);
+
+      if (!comment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+
+      const [rejected] = await db
+        .update(urComments)
+        .set({
+          status: "rejected",
+          moderatedBy: userId,
+          moderatedAt: new Date(),
+          moderationReason: reason || null,
+        })
+        .where(eq(urComments.id, commentId))
+        .returning();
+
+      await logActivity({
+        userId,
+        action: "rejected",
+        entityType: "ur_comment",
+        entityId: commentId,
+        oldValue: comment,
+        newValue: rejected,
+        metadata: {
+          ip: req.ip,
+          userAgent: req.get("user-agent"),
+          reason,
+        },
+      });
+
+      res.json({ message: "Urdu comment rejected", comment: rejected });
+    } catch (error) {
+      console.error("Error rejecting Urdu comment:", error);
+      res.status(500).json({ message: "Failed to reject Urdu comment" });
+    }
+  });
 
   // ============================================================
   // URDU ENGAGEMENT ENDPOINTS
@@ -26915,10 +28411,99 @@ Allow: /
   });
 
   // GET /api/tasks/:id/comments - Get task comments
+  app.get("/api/tasks/:id/comments", taskLimiter, requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const comments = await storage.getTaskComments(id);
+      
+      res.json(comments);
+    } catch (error: any) {
+      console.error('Error fetching comments:', error);
+      res.status(500).json({ error: 'فشل في جلب التعليقات' });
+    }
+  });
 
   // POST /api/tasks/:id/comments - Create comment
+  app.post("/api/tasks/:id/comments", taskLimiter, requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = (req.user as any).id;
+      const userPermissions = await storage.getUserPermissions(userId);
+      
+      // Get parent task to check ownership
+      const parentTask = await storage.getTaskById(id);
+      if (!parentTask) {
+        return res.status(404).json({ error: 'المهمة غير موجودة' });
+      }
+      
+      // Check permissions
+      if (!userPermissions.includes('tasks.view_all')) {
+        if (parentTask.createdById !== userId && parentTask.assignedToId !== userId) {
+          return res.status(403).json({ error: 'غير مصرح لك بالتعليق على هذه المهمة' });
+        }
+      }
+      
+      const validatedData = insertTaskCommentSchema.parse({
+        ...req.body,
+        taskId: id,
+        userId,
+      });
+      
+      const comment = await storage.createTaskComment(validatedData);
+      
+      // Log activity
+      await storage.logTaskActivity({
+        taskId: id,
+        userId,
+        action: 'comment_added',
+        changes: { description: 'تم إضافة تعليق' },
+      });
+      
+      res.status(201).json(comment);
+    } catch (error: any) {
+      console.error('Error creating comment:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'بيانات غير صالحة' });
+      }
+      res.status(500).json({ error: 'فشل في إضافة التعليق' });
+    }
+  });
 
   // DELETE /api/task-comments/:id - Delete comment
+  app.delete("/api/task-comments/:id", taskLimiter, requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = (req.user as any).id;
+      const userPermissions = await storage.getUserPermissions(userId);
+      
+      // Get comment to find parent task
+      const comment = await storage.getTaskCommentById(id);
+      if (!comment) {
+        return res.status(404).json({ error: 'التعليق غير موجود' });
+      }
+      
+      // Get parent task to check ownership
+      const parentTask = await storage.getTaskById(comment.taskId);
+      if (!parentTask) {
+        return res.status(404).json({ error: 'المهمة الأصلية غير موجودة' });
+      }
+      
+      // Check permissions
+      if (!userPermissions.includes('tasks.edit_any')) {
+        if (parentTask.createdById !== userId && parentTask.assignedToId !== userId && comment.userId !== userId) {
+          return res.status(403).json({ error: 'غير مصرح لك بحذف هذا التعليق' });
+        }
+      }
+      
+      await storage.deleteTaskComment(id);
+      
+      res.json({ success: true, message: 'تم حذف التعليق بنجاح' });
+    } catch (error: any) {
+      console.error('Error deleting comment:', error);
+      res.status(500).json({ error: 'فشل في حذف التعليق' });
+    }
+  });
 
   // GET /api/tasks/:id/attachments - Get task attachments
   app.get("/api/tasks/:id/attachments", taskLimiter, requireAuth, async (req, res) => {
@@ -27051,6 +28636,66 @@ Allow: /
   // Mount the WhatsApp agent webhook routes
   app.use("/api/whatsapp", whatsappAgentRoutes);
   // ============================================================
+  app.use('/api/moderation', commentModerationRoutes);
+  // IFOX AI MANAGEMENT ROUTES
+  // ============================================================
+  
+  // Mount the iFox AI Management System routes
+  app.use("/api/ifox/ai-management", ifoxAiManagementRoutes);
+
+  // ============================================================
+  // AUTO IMAGE GENERATION ROUTES
+  // ============================================================
+
+  // Mount the auto image generation routes
+  app.use("/api/auto-image", autoImageRoutes);
+
+  // ============================================================
+  // ACCESSIBILITY TELEMETRY ROUTES
+  // ============================================================
+
+  // POST /api/accessibility/track - Track accessibility event
+  app.post("/api/accessibility/track", async (req, res) => {
+    try {
+      const { nanoid } = await import('nanoid');
+      
+      // Get userId from authenticated user (if logged in)
+      const userId = req.user ? (req.user as any).id : null;
+      
+      // Get sessionId from cookies or create new one
+      let sessionId = req.cookies?.['accessibility_session'];
+      if (!sessionId) {
+        sessionId = nanoid();
+        res.cookie('accessibility_session', sessionId, {
+          maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
+          httpOnly: true,
+          sameSite: 'lax',
+        });
+      }
+      
+      // Validate and insert event
+      const validated = insertAccessibilityEventSchema.parse({
+        ...req.body,
+        userId,
+        sessionId,
+      });
+      
+      const [event] = await db.insert(accessibilityEvents).values(validated).returning();
+      
+      res.json({ success: true, eventId: event.id });
+    } catch (error: any) {
+      console.error('Error tracking accessibility event:', error);
+      
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ 
+          error: 'بيانات غير صالحة',
+          details: error.errors 
+        });
+      }
+      
+      res.status(500).json({ error: 'فشل في تسجيل الحدث' });
+    }
+  });
 
   // GET /api/accessibility/stats - Get accessibility usage statistics
   app.get("/api/accessibility/stats", requireAuth, requirePermission('admin.manage_settings'), async (req, res) => {

@@ -1,0 +1,117 @@
+2025-12-02 08:21:31.42
+9b7d7c66
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-02 08:21:31.42
+9b7d7c66
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-02 08:21:31.44
+9b7d7c66
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+
+2025-12-02 08:21:31.45
+9b7d7c66
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-02 08:21:31.51
+9b7d7c66
+User
+5:21:31 AM [express] GET /api/announcements/active 304 in 258ms :: []
+2025-12-02 08:21:31.52
+9b7d7c66
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-02 08:21:31.52
+9b7d7c66
+User
+📡 User admin-sabq subscribed to notification stream
+2025-12-02 08:21:31.52
+9b7d7c66
+User
+📡 SSE connection opened for user: admin-sabq
+2025-12-02 08:21:31.52
+9b7d7c66
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-02 08:21:31.52
+9b7d7c66
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-02 08:21:31.54
+9b7d7c66
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-02 08:21:31.54
+9b7d7c66
+User
+📡 User admin-sabq subscribed to notification stream
+2025-12-02 08:21:31.54
+9b7d7c66
+User
+📡 SSE connection opened for user: admin-sabq
+2025-12-02 08:21:31.55
+9b7d7c66
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-12-02 08:21:31.62
+9b7d7c66
+User
+5:21:31 AM [express] GET /api/notifications 304 in 368ms :: {"notifications":[{"id":"dkl5gqIAJSUyUzm…
+2025-12-02 08:21:31.75
+9b7d7c66
+User
+5:21:31 AM [express] GET /api/admin/roles 200 in 508ms :: [{"id":"48f06abf-dac4-4130-ae3c-0be37c8c22…
+2025-12-02 08:21:34.80
+9b7d7c66
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-02 08:21:34.83
+9b7d7c66
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-02 08:21:34.85
+9b7d7c66
+User
+[RBAC] User admin-sabq has legacy admin role, granting all permissions
+2025-12-02 08:21:34.92
+9b7d7c66
+User
+5:21:34 AM [express] GET /api/permissions 200 in 139ms :: [{"id":"perm-ana-003","code":"analytics.ex…
+2025-12-02 08:21:56.44
+9b7d7c66
+User
+🔸 DeserializeUser called with id: EBjWTeR6LEdyX0iu1MH0-
+2025-12-02 08:21:56.47
+9b7d7c66
+User
+✅ DeserializeUser: User found: sasa@sabq.org
+2025-12-02 08:21:56.53
+9b7d7c66
+User
+🔸 DeserializeUser called with id: EBjWTeR6LEdyX0iu1MH0-
+2025-12-02 08:21:56.63
+9b7d7c66
+User
+✅ DeserializeUser: User found: sasa@sabq.org
+2025-12-02 08:21:56.70
+9b7d7c66
+User
+5:21:56 AM [express] GET /api/ads/slot/sidebar 204 in 326ms
+2025-12-02 08:21:56.72
+9b7d7c66
+User
+5:21:56 AM [express] GET /api/articles/%D8%A7%D9%84%D8%B3%D8%B9%D9%88%D8%AF%D9%8A%D8%A9-%D8%A7%D9%84…
+2025-12-02 08:22:00.03
+9b7d7c66
+User
+🔄 Checking for scheduled audio newsletters...
+2025-12-02 08:22:00.04
+9b7d7c66
+User
+[AI Task Executor] Checking for pending tasks...
+2025-12-02 08:22:00.04
+9b7d7c66
+User
+[ScheduledPublisher] Checking for scheduled articles...

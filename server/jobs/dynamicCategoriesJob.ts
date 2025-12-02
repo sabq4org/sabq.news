@@ -10,6 +10,7 @@ import {
   categories, 
   articleSmartCategories,
   reactions,
+  comments
 } from "@shared/schema";
 import { eq, and, desc, gte, sql, inArray } from "drizzle-orm";
 
@@ -66,15 +67,21 @@ async function updateNowCategory() {
         publishedAt: articles.publishedAt,
         views: articles.views,
         reactionCount: sql<number>`cast(count(distinct ${reactions.id}) as int)`,
+        commentCount: sql<number>`cast(count(distinct ${comments.id}) as int)`,
         engagementScore: sql<number>`
           cast(
             (${articles.views} * 1.0) + 
-            (count(distinct ${reactions.id}) * 10.0)
+            (count(distinct ${reactions.id}) * 10.0) + 
+            (count(distinct ${comments.id}) * 15.0)
           as int)
         `,
       })
       .from(articles)
       .leftJoin(reactions, eq(reactions.articleId, articles.id))
+      .leftJoin(comments, and(
+        eq(comments.articleId, articles.id),
+        eq(comments.status, "approved")
+      ))
       .where(and(
         eq(articles.status, "published"),
         gte(articles.publishedAt, twentyFourHoursAgo)
@@ -83,7 +90,8 @@ async function updateNowCategory() {
       .orderBy(desc(sql`
         cast(
           (${articles.views} * 1.0) + 
-          (count(distinct ${reactions.id}) * 10.0)
+          (count(distinct ${reactions.id}) * 10.0) + 
+          (count(distinct ${comments.id}) * 15.0)
         as int)
       `))
       .limit(20);

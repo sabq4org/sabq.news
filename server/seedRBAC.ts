@@ -33,6 +33,12 @@ export async function seedRBAC() {
     { code: "users.ban", label: "Ban Users", labelAr: "حظر المستخدمين", module: "users" },
     { code: "users.change_role", label: "Change User Roles", labelAr: "تغيير أدوار المستخدمين", module: "users" },
 
+    // Comments permissions
+    { code: "comments.view", label: "View Comments", labelAr: "عرض التعليقات", module: "comments" },
+    { code: "comments.approve", label: "Approve Comments", labelAr: "الموافقة على التعليقات", module: "comments" },
+    { code: "comments.reject", label: "Reject Comments", labelAr: "رفض التعليقات", module: "comments" },
+    { code: "comments.delete", label: "Delete Comments", labelAr: "حذف التعليقات", module: "comments" },
+    { code: "comments.restore", label: "Restore Comments", labelAr: "استعادة التعليقات", module: "comments" },
 
     // Staff permissions
     { code: "staff.view", label: "View Staff", labelAr: "عرض الكادر", module: "staff" },
@@ -123,6 +129,12 @@ export async function seedRBAC() {
       isSystem: false,
     },
     {
+      name: "comments_moderator",
+      nameAr: "مشرف تعليقات",
+      description: "Can moderate comments",
+      isSystem: false,
+    },
+    {
       name: "opinion_author",
       nameAr: "كاتب مقال رأي",
       description: "Can write and manage opinion articles",
@@ -156,6 +168,7 @@ export async function seedRBAC() {
       "articles.unpublish", "articles.delete", "articles.archive", "articles.feature",
       "categories.view", "categories.create", "categories.update", "categories.delete",
       "users.view", "users.update", "users.suspend", "users.change_role",
+      "comments.view", "comments.approve", "comments.reject", "comments.delete",
       "staff.view", "staff.create", "staff.update", "staff.delete",
       "system.view_logs", "system.manage_themes",
       "muqtarab.manage", "muqtarab.publish",
@@ -170,6 +183,7 @@ export async function seedRBAC() {
       "articles.unpublish", "articles.archive", "articles.feature",
       "categories.view", "categories.create", "categories.update", "categories.delete",
       "users.view",
+      "comments.view", "comments.approve", "comments.reject",
       "staff.view",
       "muqtarab.manage", "muqtarab.publish",
       "mirqab.view", "mirqab.create", "mirqab.edit", "mirqab.publish",
@@ -181,9 +195,15 @@ export async function seedRBAC() {
     reporter: [
       "articles.view", "articles.create", "articles.edit_own",
       "categories.view",
+      "comments.view",
       "shorts:view", "shorts:create", "shorts:edit",
       "calendar:view", "calendar:create",
       "tasks.view_own", "tasks.create", "tasks.edit_own",
+    ],
+    
+    comments_moderator: [
+      "comments.view", "comments.approve", "comments.reject", "comments.delete", "comments.restore",
+      "articles.view",
     ],
     
     opinion_author: [
