@@ -125,7 +125,7 @@ export function OnlineModeratorsWidget() {
             <p className="text-sm">لا يوجد مشرفون متصلون</p>
           </div>
         ) : (
-          <ScrollArea className="h-[280px]">
+          <ScrollArea className="h-[280px]" dir="rtl">
             <div className="space-y-3">
               {/* Online Moderators Section */}
               {onlineModerators.length > 0 && (
