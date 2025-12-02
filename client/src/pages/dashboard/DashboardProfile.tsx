@@ -64,14 +64,14 @@ import {
   Settings,
   Tag,
   AlertCircle,
-  CheckCircle,
-  Trash2,
+  Camera,
   RefreshCcw,
 } from "lucide-react";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import type { User as UserType } from "@shared/schema";
 import { format, formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
+import { getActionPresentation, getEntityTypeLabel } from "@/lib/activityUtils";
 
 const optionalStringWithMin = (minLength: number, errorMsg: string) =>
   z.preprocess(
@@ -136,53 +136,6 @@ const roleLabels: Record<string, string> = {
   publisher: "ناشر",
   superadmin: "المدير العام",
 };
-
-const actionLabels: Record<string, string> = {
-  create: "إنشاء",
-  update: "تعديل",
-  delete: "حذف",
-  publish: "نشر",
-  unpublish: "إلغاء النشر",
-  approve: "اعتماد",
-  reject: "رفض",
-  login: "تسجيل دخول",
-  logout: "تسجيل خروج",
-  view: "عرض",
-  export: "تصدير",
-  import: "استيراد",
-};
-
-const entityTypeLabels: Record<string, string> = {
-  article: "مقال",
-  comment: "تعليق",
-  user: "مستخدم",
-  category: "تصنيف",
-  media: "ملف وسائط",
-  settings: "إعدادات",
-  role: "دور",
-  permission: "صلاحية",
-  newsletter: "نشرة",
-  tag: "وسم",
-};
-
-function getActionIcon(action: string) {
-  const actionLower = action.toLowerCase();
-  if (actionLower.includes('create')) return <FileText className="h-4 w-4" />;
-  if (actionLower.includes('update') || actionLower.includes('edit')) return <Edit className="h-4 w-4" />;
-  if (actionLower.includes('delete')) return <Trash2 className="h-4 w-4" />;
-  if (actionLower.includes('publish')) return <CheckCircle className="h-4 w-4" />;
-  if (actionLower.includes('approve')) return <CheckCircle className="h-4 w-4" />;
-  if (actionLower.includes('reject')) return <X className="h-4 w-4" />;
-  return <Activity className="h-4 w-4" />;
-}
-
-function getActionBadgeVariant(action: string): "default" | "secondary" | "destructive" | "outline" {
-  const actionLower = action.toLowerCase();
-  if (actionLower.includes('create') || actionLower.includes('publish') || actionLower.includes('approve')) return "default";
-  if (actionLower.includes('update') || actionLower.includes('edit')) return "secondary";
-  if (actionLower.includes('delete') || actionLower.includes('reject')) return "destructive";
-  return "outline";
-}
 
 export default function DashboardProfile() {
   const { toast } = useToast();
@@ -405,11 +358,11 @@ export default function DashboardProfile() {
                         allowedFileTypes={[".jpg", ".jpeg", ".png", ".webp"]}
                         onGetUploadParameters={getUploadUrl}
                         onComplete={handleAvatarUploadComplete}
-                        variant="default"
+                        variant="outline"
                         size="icon"
-                        buttonClassName="h-9 w-9 rounded-full shadow-lg"
+                        buttonClassName="h-8 w-8 rounded-full bg-background/90 dark:bg-muted/60 border-muted-foreground/20 shadow-sm hover:bg-background dark:hover:bg-muted/80"
                       >
-                        <Upload className="h-4 w-4" />
+                        <Camera className="h-3.5 w-3.5 text-muted-foreground" />
                       </ObjectUploader>
                     </div>
                   </div>
@@ -791,63 +744,62 @@ export default function DashboardProfile() {
                   </div>
                 ) : (
                   <>
-                    <ScrollArea className="h-[500px]">
+                    <ScrollArea className="h-[500px]" dir="rtl">
                       <div className="space-y-3">
-                        {activityData?.logs.map((log, index) => (
-                          <motion.div
-                            key={log.id}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.05 }}
-                            className="flex items-start gap-4 p-4 rounded-lg bg-muted/30 hover-elevate"
-                            data-testid={`activity-item-${log.id}`}
-                          >
-                            <div
-                              className={`p-2 rounded-full ${
-                                getActionBadgeVariant(log.action) === "default"
-                                  ? "bg-primary/10 text-primary"
-                                  : getActionBadgeVariant(log.action) === "destructive"
-                                  ? "bg-destructive/10 text-destructive"
-                                  : "bg-muted text-muted-foreground"
-                              }`}
+                        {activityData?.logs.map((log, index) => {
+                          const actionPresentation = getActionPresentation(log.action);
+                          const ActionIcon = actionPresentation.icon;
+                          return (
+                            <motion.div
+                              key={log.id}
+                              initial={{ opacity: 0, x: 20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.05 }}
+                              className="flex flex-row-reverse items-start gap-4 p-4 rounded-lg bg-muted/30 hover-elevate text-right"
+                              dir="rtl"
+                              data-testid={`activity-item-${log.id}`}
                             >
-                              {getActionIcon(log.action)}
-                            </div>
-
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <Badge variant={getActionBadgeVariant(log.action)}>
-                                  {actionLabels[log.action.toLowerCase()] || log.action}
-                                </Badge>
-                                <Badge variant="outline">
-                                  {entityTypeLabels[log.entityType.toLowerCase()] || log.entityType}
-                                </Badge>
+                              <div
+                                className={`p-2.5 rounded-full shrink-0 ${actionPresentation.bgColor} ${actionPresentation.textColor}`}
+                              >
+                                <ActionIcon className="h-4 w-4" />
                               </div>
 
-                              <p className="text-sm text-muted-foreground mt-1">
-                                المعرف:{" "}
-                                <code className="text-xs bg-muted px-1 py-0.5 rounded">
-                                  {log.entityId.substring(0, 12)}...
-                                </code>
-                              </p>
+                              <div className="flex-1 min-w-0 text-right">
+                                <div className="flex items-center gap-2 flex-wrap justify-end">
+                                  <Badge variant={actionPresentation.badgeVariant}>
+                                    {actionPresentation.label}
+                                  </Badge>
+                                  <Badge variant="outline">
+                                    {getEntityTypeLabel(log.entityType)}
+                                  </Badge>
+                                </div>
 
-                              {log.metadata?.reason && (
-                                <p className="text-sm text-muted-foreground mt-1">
-                                  السبب: {log.metadata.reason}
+                                <p className="text-sm text-muted-foreground mt-1 text-right">
+                                  المعرف:{" "}
+                                  <code className="text-xs bg-muted px-1 py-0.5 rounded" dir="ltr">
+                                    {log.entityId.substring(0, 12)}...
+                                  </code>
                                 </p>
-                              )}
-                            </div>
 
-                            <div className="text-left shrink-0">
-                              <p className="text-sm text-muted-foreground">
-                                {format(new Date(log.createdAt), "d MMM", { locale: ar })}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {format(new Date(log.createdAt), "HH:mm")}
-                              </p>
-                            </div>
-                          </motion.div>
-                        ))}
+                                {log.metadata?.reason && (
+                                  <p className="text-sm text-muted-foreground mt-1 text-right">
+                                    السبب: {log.metadata.reason}
+                                  </p>
+                                )}
+                              </div>
+
+                              <div className="text-right shrink-0">
+                                <p className="text-sm text-muted-foreground">
+                                  {format(new Date(log.createdAt), "d MMM", { locale: ar })}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {format(new Date(log.createdAt), "HH:mm")}
+                                </p>
+                              </div>
+                            </motion.div>
+                          );
+                        })}
                       </div>
                     </ScrollArea>
 
