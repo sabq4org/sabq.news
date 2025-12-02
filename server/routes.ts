@@ -789,23 +789,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Logout (POST)
-  app.post("/api/logout", (req, res) => {
-    req.logout((err) => {
-      if (err) {
-        return res.status(500).json({ message: "خطأ في تسجيل الخروج" });
+  app.post("/api/logout", async (req: any, res) => {
+    const userId = req.user?.id;
+    
+    // Helper to promisify req.logout
+    const promisifiedLogout = (): Promise<void> => {
+      return new Promise((resolve, reject) => {
+        req.logout((err: any) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
+    };
+    
+    try {
+      // First, perform the logout
+      await promisifiedLogout();
+      
+      // Then mark user as offline (in finally-like pattern)
+      if (userId) {
+        try {
+          await storage.setModeratorOffline(userId);
+        } catch (offlineError) {
+          console.error("[Logout] Failed to mark user offline:", offlineError);
+          // Don't fail the logout if offline marking fails
+        }
       }
+      
       res.json({ message: "تم تسجيل الخروج بنجاح" });
-    });
+    } catch (error) {
+      console.error("Logout error:", error);
+      
+      // Still try to mark offline even if logout failed
+      if (userId) {
+        try {
+          await storage.setModeratorOffline(userId);
+        } catch (offlineError) {
+          console.error("[Logout] Failed to mark user offline:", offlineError);
+        }
+      }
+      
+      res.status(500).json({ message: "خطأ في تسجيل الخروج" });
+    }
   });
 
+
   // Logout (GET) - redirect to login after logout
-  app.get("/api/auth/logout", (req, res) => {
-    req.logout((err) => {
-      if (err) {
-        console.error("Logout error:", err);
+  app.get("/api/auth/logout", async (req: any, res) => {
+    const userId = req.user?.id;
+    
+    // Helper to promisify req.logout
+    const promisifiedLogout = (): Promise<void> => {
+      return new Promise((resolve, reject) => {
+        req.logout((err: any) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
+    };
+    
+    try {
+      // First, perform the logout
+      await promisifiedLogout();
+      
+      // Then mark user as offline
+      if (userId) {
+        try {
+          await storage.setModeratorOffline(userId);
+        } catch (offlineError) {
+          console.error("[Logout] Failed to mark user offline:", offlineError);
+          // Don't fail the logout if offline marking fails
+        }
       }
+      
       res.redirect("/login");
-    });
+    } catch (error) {
+      console.error("Logout error:", error);
+      
+      // Still try to mark offline even if logout failed
+      if (userId) {
+        try {
+          await storage.setModeratorOffline(userId);
+        } catch (offlineError) {
+          console.error("[Logout] Failed to mark user offline:", offlineError);
+        }
+      }
+      
+      res.redirect("/login");
+    }
   });
 
   // Get current user
