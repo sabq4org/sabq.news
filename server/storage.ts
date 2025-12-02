@@ -379,6 +379,12 @@ import {
   realTimeMetrics,
   articleEngagementScores,
   readerJourneyMilestones,
+  commentEditHistory,
+  commentDeletionLog,
+  type CommentEditHistory,
+  type InsertCommentEditHistory,
+  type CommentDeletionLog,
+  type InsertCommentDeletionLog,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -644,8 +650,20 @@ export interface IStorage {
       createdAt: string;
       user: { id: string; firstName?: string; lastName?: string; email: string };
       articleId: string;
+      articleTitle?: string;
+      articleSlug?: string;
     };
   }[]>;
+
+  // Comment Edit & Delete operations with audit logging
+  editCommentWithHistory(commentId: string, newContent: string, editedBy: string, editReason?: string): Promise<Comment>;
+  deleteCommentWithLog(commentId: string, deletedBy: string, deletionReason?: string): Promise<void>;
+  getCommentEditHistory(commentId: string): Promise<CommentEditHistory[]>;
+  getCommentWithArticle(commentId: string): Promise<{
+    comment: Comment;
+    article: { id: string; title: string; slug: string } | null;
+    user: { id: string; firstName?: string; lastName?: string; email: string } | null;
+  } | null>;
   
   // Reaction operations
   toggleReaction(articleId: string, userId: string): Promise<{ hasReacted: boolean }>;
@@ -4022,6 +4040,8 @@ export class DatabaseStorage implements IStorage {
       createdAt: string;
       user: { id: string; firstName?: string; lastName?: string; email: string };
       articleId: string;
+      articleTitle?: string;
+      articleSlug?: string;
     };
   }[]> {
     const conditions: SQL[] = [sql`${comments.aiClassification} IS NOT NULL`];
@@ -4042,9 +4062,15 @@ export class DatabaseStorage implements IStorage {
       .select({
         comment: comments,
         user: users,
+        article: {
+          id: articles.id,
+          title: articles.title,
+          slug: articles.slug,
+        },
       })
       .from(comments)
       .leftJoin(users, eq(comments.userId, users.id))
+      .leftJoin(articles, eq(comments.articleId, articles.id))
       .where(and(...conditions))
       .orderBy(desc(comments.aiAnalyzedAt))
       .limit(filters.limit);
@@ -4067,8 +4093,121 @@ export class DatabaseStorage implements IStorage {
           email: r.user?.email || '',
         },
         articleId: r.comment.articleId,
+        articleTitle: r.article?.title || undefined,
+        articleSlug: r.article?.slug || undefined,
       },
     }));
+  }
+
+  // Comment Edit & Delete operations with audit logging
+  async editCommentWithHistory(commentId: string, newContent: string, editedBy: string, editReason?: string): Promise<Comment> {
+    const [existingComment] = await db
+      .select()
+      .from(comments)
+      .where(eq(comments.id, commentId));
+    
+    if (!existingComment) {
+      throw new Error('التعليق غير موجود');
+    }
+    
+    // Log the edit history
+    await db.insert(commentEditHistory).values({
+      commentId,
+      previousContent: existingComment.content,
+      newContent,
+      editedBy,
+      editReason,
+      editType: 'content',
+    });
+    
+    // Update the comment
+    const [updated] = await db
+      .update(comments)
+      .set({ content: newContent })
+      .where(eq(comments.id, commentId))
+      .returning();
+    
+    return updated;
+  }
+
+  async deleteCommentWithLog(commentId: string, deletedBy: string, deletionReason?: string): Promise<void> {
+    const [existingComment] = await db
+      .select()
+      .from(comments)
+      .where(eq(comments.id, commentId));
+    
+    if (!existingComment) {
+      throw new Error('التعليق غير موجود');
+    }
+    
+    // Log the deletion
+    await db.insert(commentDeletionLog).values({
+      commentId,
+      articleId: existingComment.articleId,
+      userId: existingComment.userId,
+      content: existingComment.content,
+      status: existingComment.status,
+      deletedBy,
+      deletionReason,
+      aiClassification: existingComment.aiClassification || undefined,
+      aiModerationScore: existingComment.aiModerationScore || undefined,
+    });
+    
+    // Delete the comment
+    await db.delete(comments).where(eq(comments.id, commentId));
+  }
+
+  async getCommentEditHistory(commentId: string): Promise<CommentEditHistory[]> {
+    const history = await db
+      .select()
+      .from(commentEditHistory)
+      .where(eq(commentEditHistory.commentId, commentId))
+      .orderBy(desc(commentEditHistory.createdAt));
+    
+    return history;
+  }
+
+  async getCommentWithArticle(commentId: string): Promise<{
+    comment: Comment;
+    article: { id: string; title: string; slug: string } | null;
+    user: { id: string; firstName?: string; lastName?: string; email: string } | null;
+  } | null> {
+    const [result] = await db
+      .select({
+        comment: comments,
+        article: {
+          id: articles.id,
+          title: articles.title,
+          slug: articles.slug,
+        },
+        user: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          email: users.email,
+        },
+      })
+      .from(comments)
+      .leftJoin(articles, eq(comments.articleId, articles.id))
+      .leftJoin(users, eq(comments.userId, users.id))
+      .where(eq(comments.id, commentId));
+    
+    if (!result) return null;
+    
+    return {
+      comment: result.comment,
+      article: result.article?.id ? {
+        id: result.article.id,
+        title: result.article.title,
+        slug: result.article.slug,
+      } : null,
+      user: result.user?.id ? {
+        id: result.user.id,
+        firstName: result.user.firstName || undefined,
+        lastName: result.user.lastName || undefined,
+        email: result.user.email,
+      } : null,
+    };
   }
 
   // Reaction operations
