@@ -2434,7 +2434,7 @@ export const updateCommentStatusSchema = z.object({
 });
 
 export const updateRolePermissionsSchema = z.object({
-  permissionIds: z.array(z.string().uuid("معرف الصلاحية غير صحيح")),
+  permissionIds: z.array(z.string().min(1, "معرف الصلاحية غير صحيح")),
 });
 
 // Activity type for unified timeline
