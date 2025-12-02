@@ -785,7 +785,7 @@ function Dashboard() {
           {/* Recent Articles */}
           <Card data-testid="card-recent-articles">
             <CardHeader className="flex flex-row items-center justify-between">
-              <div>
+              <div className="text-left">
                 <CardTitle>أحدث المقالات</CardTitle>
                 <CardDescription>آخر 5 مقالات تم إنشاؤها</CardDescription>
               </div>
@@ -843,7 +843,7 @@ function Dashboard() {
           {/* Recent Comments */}
           <Card data-testid="card-recent-comments">
             <CardHeader className="flex flex-row items-center justify-between">
-              <div>
+              <div className="text-left">
                 <CardTitle>أحدث التعليقات</CardTitle>
                 <CardDescription>آخر 5 تعليقات</CardDescription>
               </div>
