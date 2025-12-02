@@ -275,6 +275,7 @@ import {
   insertShortLinkClickSchema,
   insertSocialFollowSchema,
   insertAccessibilityEventSchema,
+  insertRoleSchema,
   type EnArticleWithDetails,
   type UrArticleWithDetails,
   type User,
@@ -5528,39 +5529,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "اسم الدور باللغتين مطلوب" });
       }
 
+      // Normalize the name: lowercase, replace spaces with underscores, allow only alphanumeric and underscores
+      const normalizedName = name.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+
+      if (!normalizedName || normalizedName.length < 2) {
+        return res.status(400).json({ message: "اسم الدور يجب أن يحتوي على حرفين على الأقل" });
+      }
+
+      // Validate with Zod schema
+      const validationResult = insertRoleSchema.safeParse({
+        name: normalizedName,
+        nameAr: nameAr.trim(),
+        description: description?.trim() || null,
+        isSystem: false,
+      });
+
+      if (!validationResult.success) {
+        console.error("❌ [CREATE ROLE] Validation failed:", validationResult.error);
+        return res.status(400).json({ 
+          message: "بيانات غير صحيحة",
+          errors: validationResult.error.errors 
+        });
+      }
+
       // Check if role with same name already exists
       const existingRole = await db
         .select()
         .from(roles)
-        .where(eq(roles.name, name.toLowerCase().replace(/\s+/g, "_")))
+        .where(eq(roles.name, normalizedName))
         .limit(1);
 
       if (existingRole.length > 0) {
         return res.status(409).json({ message: "يوجد دور بنفس الاسم بالفعل" });
       }
 
-      // Generate slug from name
-      const slug = name.toLowerCase().replace(/\s+/g, "_");
-
       // Create new role
-      const [newRole] = await db.insert(roles).values({
-        name: slug,
-        nameAr: nameAr,
-        description: description || null,
-        isSystem: false,
-      }).returning();
+      const [newRole] = await db.insert(roles).values(validationResult.data).returning();
 
-      console.log("✅ [CREATE ROLE] Role created:", { name: slug, nameAr });
+      console.log("✅ [CREATE ROLE] Role created:", { name: normalizedName, nameAr });
 
       // Assign permissions if provided
-      if (permissionIds && permissionIds.length > 0) {
-        const permissionValues = permissionIds.map((permId: string) => ({
-          roleId: newRole.id,
-          permissionId: permId,
-        }));
+      if (permissionIds && Array.isArray(permissionIds) && permissionIds.length > 0) {
+        // Verify all permission IDs are valid
+        const validPermissions = await db
+          .select()
+          .from(permissions)
+          .where(inArray(permissions.id, permissionIds));
 
-        await db.insert(rolePermissions).values(permissionValues);
-        console.log("✅ [CREATE ROLE] Assigned permissions:", permissionIds.length);
+        // Check if all provided IDs are valid
+        if (validPermissions.length !== permissionIds.length) {
+          // Some permission IDs are invalid - rollback by deleting the created role
+          await db.delete(roles).where(eq(roles.id, newRole.id));
+          return res.status(400).json({ 
+            message: "بعض معرفات الصلاحيات غير صحيحة",
+            invalidCount: permissionIds.length - validPermissions.length
+          });
+        }
+
+        if (validPermissions.length > 0) {
+          const permissionValues = validPermissions.map((perm) => ({
+            roleId: newRole.id,
+            permissionId: perm.id,
+          }));
+
+          await db.insert(rolePermissions).values(permissionValues);
+          console.log("✅ [CREATE ROLE] Assigned permissions:", validPermissions.length);
+        }
       }
 
       // Get the role with permissions

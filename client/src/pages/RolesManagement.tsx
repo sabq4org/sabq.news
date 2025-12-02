@@ -5,6 +5,8 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -12,6 +14,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Table,
   TableBody,
@@ -24,7 +36,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { 
-  Shield, Users, Key, Lock, 
+  Shield, Users, Key, Lock, Plus, Trash2,
   FileText, FolderOpen, MessageSquare, UserCog, Settings, 
   Calendar, Telescope, Image, Bot, Mic, Microscope, 
   MessageCircle, Mail, ImageIcon, BarChart2, LayoutGrid, 
@@ -38,6 +50,11 @@ export default function RolesManagement() {
 
   const [editingRole, setEditingRole] = useState<RoleWithPermissions | null>(null);
   const [selectedPermissions, setSelectedPermissions] = useState<Set<string>>(new Set());
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [newRoleName, setNewRoleName] = useState("");
+  const [newRoleNameAr, setNewRoleNameAr] = useState("");
+  const [newRoleDescription, setNewRoleDescription] = useState("");
+  const [deletingRole, setDeletingRole] = useState<RoleWithPermissions | null>(null);
 
   // Fetch roles
   const { data: roles = [], isLoading: rolesLoading } = useQuery<RoleWithPermissions[]>({
@@ -79,6 +96,76 @@ export default function RolesManagement() {
       });
     },
   });
+
+  // Create role mutation
+  const createRoleMutation = useMutation({
+    mutationFn: async (data: { name: string; nameAr: string; description: string }) => {
+      return await apiRequest("/api/admin/roles", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/roles"] });
+      toast({
+        title: "تم إنشاء الدور",
+        description: "تم إنشاء الدور الجديد بنجاح",
+      });
+      setIsCreateDialogOpen(false);
+      setNewRoleName("");
+      setNewRoleNameAr("");
+      setNewRoleDescription("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل إنشاء الدور",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete role mutation
+  const deleteRoleMutation = useMutation({
+    mutationFn: async (roleId: string) => {
+      return await apiRequest(`/api/admin/roles/${roleId}`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/roles"] });
+      toast({
+        title: "تم الحذف",
+        description: "تم حذف الدور بنجاح",
+      });
+      setDeletingRole(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل حذف الدور",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle create role
+  const handleCreateRole = () => {
+    if (!newRoleName.trim() || !newRoleNameAr.trim()) {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال اسم الدور باللغتين",
+        variant: "destructive",
+      });
+      return;
+    }
+    createRoleMutation.mutate({
+      name: newRoleName,
+      nameAr: newRoleNameAr,
+      description: newRoleDescription,
+    });
+  };
 
   // Handle edit role permissions
   const handleEditPermissions = (role: RoleWithPermissions) => {
@@ -190,16 +277,25 @@ export default function RolesManagement() {
     <DashboardLayout>
       <div className="p-6 space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-3">
-          <Shield className="w-8 h-8 text-primary" data-testid="icon-shield" />
-          <div>
-            <h1 className="text-3xl font-bold" data-testid="heading-title">
-              إدارة الأدوار والصلاحيات
-            </h1>
-            <p className="text-muted-foreground" data-testid="text-description">
-              تحكم في صلاحيات كل دور في النظام
-            </p>
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-3">
+            <Shield className="w-8 h-8 text-primary" data-testid="icon-shield" />
+            <div>
+              <h1 className="text-3xl font-bold" data-testid="heading-title">
+                إدارة الأدوار والصلاحيات
+              </h1>
+              <p className="text-muted-foreground" data-testid="text-description">
+                تحكم في صلاحيات كل دور في النظام
+              </p>
+            </div>
           </div>
+          <Button 
+            onClick={() => setIsCreateDialogOpen(true)}
+            data-testid="button-create-role"
+          >
+            <Plus className="w-4 h-4 ml-2" />
+            إنشاء دور جديد
+          </Button>
         </div>
 
         {rolesLoading ? (
@@ -244,15 +340,27 @@ export default function RolesManagement() {
                       </div>
                     </TableCell>
                     <TableCell data-testid={`cell-actions-${role.id}`}>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEditPermissions(role)}
-                        disabled={role.isSystem}
-                        data-testid={`button-edit-${role.id}`}
-                      >
-                        {role.isSystem ? "محمي" : "تعديل الصلاحيات"}
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEditPermissions(role)}
+                          disabled={role.isSystem}
+                          data-testid={`button-edit-${role.id}`}
+                        >
+                          {role.isSystem ? "محمي" : "تعديل الصلاحيات"}
+                        </Button>
+                        {!role.isSystem && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => setDeletingRole(role)}
+                            data-testid={`button-delete-${role.id}`}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -260,6 +368,92 @@ export default function RolesManagement() {
             </Table>
           </div>
         )}
+
+        {/* Create Role Dialog */}
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogContent className="max-w-md" dir="rtl" data-testid="dialog-create-role">
+            <DialogHeader>
+              <DialogTitle data-testid="dialog-create-title">إنشاء دور جديد</DialogTitle>
+              <DialogDescription data-testid="dialog-create-description">
+                أدخل معلومات الدور الجديد
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="roleName" data-testid="label-role-name">الاسم (بالإنجليزية)</Label>
+                <Input
+                  id="roleName"
+                  placeholder="مثال: content_reviewer"
+                  value={newRoleName}
+                  onChange={(e) => setNewRoleName(e.target.value)}
+                  data-testid="input-role-name"
+                />
+                <p className="text-xs text-muted-foreground">سيتم تحويل الاسم إلى صيغة مناسبة تلقائياً</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="roleNameAr" data-testid="label-role-name-ar">الاسم (بالعربية)</Label>
+                <Input
+                  id="roleNameAr"
+                  placeholder="مثال: مراجع المحتوى"
+                  value={newRoleNameAr}
+                  onChange={(e) => setNewRoleNameAr(e.target.value)}
+                  data-testid="input-role-name-ar"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="roleDescription" data-testid="label-role-description">الوصف (اختياري)</Label>
+                <Textarea
+                  id="roleDescription"
+                  placeholder="وصف مختصر لهذا الدور..."
+                  value={newRoleDescription}
+                  onChange={(e) => setNewRoleDescription(e.target.value)}
+                  rows={3}
+                  data-testid="input-role-description"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setIsCreateDialogOpen(false)}
+                data-testid="button-cancel-create"
+              >
+                إلغاء
+              </Button>
+              <Button
+                onClick={handleCreateRole}
+                disabled={createRoleMutation.isPending}
+                data-testid="button-confirm-create"
+              >
+                {createRoleMutation.isPending ? "جارِ الإنشاء..." : "إنشاء الدور"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={!!deletingRole} onOpenChange={(open) => !open && setDeletingRole(null)}>
+          <AlertDialogContent dir="rtl" data-testid="dialog-delete-role">
+            <AlertDialogHeader>
+              <AlertDialogTitle data-testid="dialog-delete-title">تأكيد الحذف</AlertDialogTitle>
+              <AlertDialogDescription data-testid="dialog-delete-description">
+                هل أنت متأكد من حذف دور "{deletingRole?.nameAr}"؟
+                <br />
+                لا يمكن التراجع عن هذا الإجراء.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-row-reverse gap-2">
+              <AlertDialogCancel data-testid="button-cancel-delete">إلغاء</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => deletingRole && deleteRoleMutation.mutate(deletingRole.id)}
+                data-testid="button-confirm-delete"
+              >
+                {deleteRoleMutation.isPending ? "جارِ الحذف..." : "حذف"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Edit Permissions Dialog */}
         <Dialog open={!!editingRole} onOpenChange={(open) => !open && setEditingRole(null)}>
