@@ -755,8 +755,7 @@ export default function DashboardProfile() {
                               initial={{ opacity: 0, x: 20 }}
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ delay: index * 0.05 }}
-                              className="flex flex-row-reverse items-start gap-4 p-4 rounded-lg bg-muted/30 hover-elevate text-right"
-                              dir="rtl"
+                              className="flex items-start gap-4 p-4 rounded-lg bg-muted/30 hover-elevate"
                               data-testid={`activity-item-${log.id}`}
                             >
                               <div
@@ -765,8 +764,8 @@ export default function DashboardProfile() {
                                 <ActionIcon className="h-4 w-4" />
                               </div>
 
-                              <div className="flex-1 min-w-0 text-right">
-                                <div className="flex items-center gap-2 flex-wrap justify-end">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
                                   <Badge variant={actionPresentation.badgeVariant}>
                                     {actionPresentation.label}
                                   </Badge>
@@ -775,7 +774,7 @@ export default function DashboardProfile() {
                                   </Badge>
                                 </div>
 
-                                <p className="text-sm text-muted-foreground mt-1 text-right">
+                                <p className="text-sm text-muted-foreground mt-1">
                                   المعرف:{" "}
                                   <code className="text-xs bg-muted px-1 py-0.5 rounded" dir="ltr">
                                     {log.entityId.substring(0, 12)}...
@@ -783,13 +782,13 @@ export default function DashboardProfile() {
                                 </p>
 
                                 {log.metadata?.reason && (
-                                  <p className="text-sm text-muted-foreground mt-1 text-right">
+                                  <p className="text-sm text-muted-foreground mt-1">
                                     السبب: {log.metadata.reason}
                                   </p>
                                 )}
                               </div>
 
-                              <div className="text-right shrink-0">
+                              <div className="shrink-0">
                                 <p className="text-sm text-muted-foreground">
                                   {format(new Date(log.createdAt), "d MMM", { locale: ar })}
                                 </p>
@@ -814,22 +813,22 @@ export default function DashboardProfile() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setActivityPage((p) => Math.max(1, p - 1))}
-                            disabled={activityPage === 1}
-                            data-testid="button-prev-page"
-                          >
-                            <ChevronRight className="h-4 w-4" />
-                            السابق
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
                             onClick={() => setActivityPage((p) => p + 1)}
                             disabled={activityPage >= activityData.totalPages}
                             data-testid="button-next-page"
                           >
                             التالي
                             <ChevronLeft className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setActivityPage((p) => Math.max(1, p - 1))}
+                            disabled={activityPage === 1}
+                            data-testid="button-prev-page"
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                            السابق
                           </Button>
                         </div>
                       </div>
