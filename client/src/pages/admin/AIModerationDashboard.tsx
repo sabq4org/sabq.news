@@ -70,6 +70,8 @@ import {
   XCircle,
   ChevronLeft,
   Clock,
+  Users,
+  Circle,
 } from "lucide-react";
 import { formatDistanceToNow, format, differenceInDays } from "date-fns";
 import { arSA } from "date-fns/locale";
@@ -150,6 +152,18 @@ interface MemberProfile {
   };
   comments?: MemberComment[];
   totalPages?: number;
+}
+
+interface OnlineModerator {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  profileImageUrl: string | null;
+  role: string;
+  jobTitle: string | null;
+  lastActivityAt: string | null;
+  isOnline: boolean;
 }
 
 const behaviorColors: Record<string, { bg: string; text: string }> = {
@@ -266,6 +280,12 @@ export default function AIModerationDashboard() {
       return response.json();
     },
     enabled: !!selectedMemberId && memberProfileOpen,
+  });
+
+  // Online moderators query
+  const { data: onlineModerators = [], isLoading: moderatorsLoading } = useQuery<OnlineModerator[]>({
+    queryKey: ["/api/admin/online-moderators"],
+    refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   const analyzeAllMutation = useMutation({
@@ -708,6 +728,121 @@ export default function AIModerationDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Online Moderators Block */}
+        <Card data-testid="card-online-moderators">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              المشرفون المتصلون
+              {!moderatorsLoading && onlineModerators.length > 0 && (
+                <Badge variant="secondary" className="mr-2">
+                  {onlineModerators.filter(m => m.isOnline).length}
+                </Badge>
+              )}
+            </CardTitle>
+            <CardDescription>
+              المشرفون النشطون حالياً في النظام
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {moderatorsLoading ? (
+              <div className="flex items-center gap-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <div className="space-y-1">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : onlineModerators.length === 0 ? (
+              <div className="text-center py-6 text-muted-foreground">
+                <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>لا يوجد مشرفون متصلون حالياً</p>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-4">
+                {onlineModerators.map((moderator) => {
+                  const getInitials = () => {
+                    if (moderator.firstName && moderator.lastName) {
+                      return `${moderator.firstName[0]}${moderator.lastName[0]}`.toUpperCase();
+                    }
+                    if (moderator.firstName) {
+                      return moderator.firstName.slice(0, 2).toUpperCase();
+                    }
+                    if (moderator.email) {
+                      return moderator.email.slice(0, 2).toUpperCase();
+                    }
+                    return "??";
+                  };
+
+                  const getDisplayName = () => {
+                    if (moderator.firstName && moderator.lastName) {
+                      return `${moderator.firstName} ${moderator.lastName}`;
+                    }
+                    if (moderator.firstName) {
+                      return moderator.firstName;
+                    }
+                    if (moderator.email) {
+                      return moderator.email.split('@')[0];
+                    }
+                    return "مشرف";
+                  };
+
+                  return (
+                    <div
+                      key={moderator.id}
+                      className="flex items-center gap-3 p-3 rounded-lg border bg-card hover-elevate transition-all"
+                      data-testid={`moderator-${moderator.id}`}
+                    >
+                      <div className="relative">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={moderator.profileImageUrl || undefined} />
+                          <AvatarFallback className="bg-primary/10 text-primary">
+                            {getInitials()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span
+                          className={`absolute -bottom-0.5 -left-0.5 h-3.5 w-3.5 rounded-full border-2 border-background ${
+                            moderator.isOnline 
+                              ? 'bg-green-500 dark:bg-green-400' 
+                              : 'bg-gray-400 dark:bg-gray-500'
+                          }`}
+                          data-testid={`status-indicator-${moderator.id}`}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate" data-testid={`moderator-name-${moderator.id}`}>
+                          {getDisplayName()}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-xs px-1.5 py-0">
+                            {moderator.jobTitle || moderator.role}
+                          </Badge>
+                          {moderator.isOnline && moderator.lastActivityAt && (
+                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {formatDistanceToNow(new Date(moderator.lastActivityAt), {
+                                addSuffix: true,
+                                locale: arSA
+                              })}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {moderator.isOnline && (
+                        <Circle className="h-2 w-2 fill-green-500 dark:fill-green-400 text-green-500 dark:text-green-400 animate-pulse" />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {stats && stats.total > 0 && (
           <Card>
