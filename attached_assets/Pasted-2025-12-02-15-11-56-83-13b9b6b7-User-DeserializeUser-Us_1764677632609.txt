@@ -1,0 +1,128 @@
+2025-12-02 15:11:56.83
+13b9b6b7
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-02 15:11:56.86
+13b9b6b7
+User
+[RBAC] User admin-sabq has legacy superuser role (admin), granting all permissions
+2025-12-02 15:11:56.89
+13b9b6b7
+User
+12:11:56 PM [express] GET /api/announcements/active 304 in 255ms :: []
+2025-12-02 15:11:56.91
+13b9b6b7
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-02 15:11:56.91
+13b9b6b7
+User
+📡 SSE connection opened for user: admin-sabq
+2025-12-02 15:11:56.91
+13b9b6b7
+User
+📡 User admin-sabq subscribed to notification stream
+2025-12-02 15:11:56.91
+13b9b6b7
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-02 15:11:56.91
+13b9b6b7
+User
+📡 User admin-sabq subscribed to notification stream
+2025-12-02 15:11:56.91
+13b9b6b7
+User
+📡 SSE connection opened for user: admin-sabq
+2025-12-02 15:11:57.10
+13b9b6b7
+User
+12:11:57 PM [express] GET /api/admin/roles 200 in 463ms :: [{"id":"48f06abf-dac4-4130-ae3c-0be37c8c22…
+2025-12-02 15:11:59.72
+13b9b6b7
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-02 15:11:59.75
+13b9b6b7
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-02 15:11:59.77
+13b9b6b7
+User
+[RBAC] User admin-sabq has legacy superuser role (admin), granting all permissions
+2025-12-02 15:11:59.84
+13b9b6b7
+User
+12:11:59 PM [express] GET /api/permissions 304 in 136ms :: [{"id":"perm-ana-003","code":"analytics.ex…
+2025-12-02 15:12:00.04
+13b9b6b7
+User
+🔄 Checking for scheduled audio newsletters...
+2025-12-02 15:12:00.04
+13b9b6b7
+User
+[AI Task Executor] Checking for pending tasks...
+2025-12-02 15:12:00.04
+13b9b6b7
+User
+[NotificationWorker] Starting queue processing...
+2025-12-02 15:12:00.04
+13b9b6b7
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-12-02 15:12:00.07
+13b9b6b7
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-12-02 15:12:00.07
+13b9b6b7
+User
+Found 0 scheduled newsletters to process
+2025-12-02 15:12:00.07
+13b9b6b7
+User
+[NotificationWorker] Queue processing completed
+2025-12-02 15:12:00.07
+13b9b6b7
+User
+[NotificationWorker] Found 0 notifications to process
+2025-12-02 15:12:20.86
+13b9b6b7
+User
+[SSE] Client disconnected (total: 0)
+2025-12-02 15:12:22.96
+13b9b6b7
+User
+🔸 DeserializeUser called with id: g_kvIg8WYAP1qVM5JE0X2
+2025-12-02 15:12:22.99
+13b9b6b7
+User
+✅ DeserializeUser: User found: a@sabq.org
+2025-12-02 15:12:23.11
+13b9b6b7
+User
+12:12:23 PM [express] GET /api/admin/online-moderators 403 in 334ms :: {"message":"Forbidden"}
+2025-12-02 15:12:23.46
+13b9b6b7
+User
+🔸 DeserializeUser called with id: g_kvIg8WYAP1qVM5JE0X2
+2025-12-02 15:12:23.48
+13b9b6b7
+User
+✅ DeserializeUser: User found: a@sabq.org
+2025-12-02 15:12:23.53
+13b9b6b7
+User
+12:12:23 PM [express] POST /api/accessibility/track 200 in 95ms :: {"success":true,"eventId":"fb7dc2e…
+2025-12-02 15:12:40.54
+13b9b6b7
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-02 15:12:40.57
+13b9b6b7
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-02 15:12:40.59
+13b9b6b7
+User
+[RBAC] User admin-sabq has legacy superuser role (admin), granting all permissions
