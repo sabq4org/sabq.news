@@ -82,7 +82,7 @@ export function OnlineModeratorsWidget() {
 
   if (isLoading) {
     return (
-      <Card data-testid="card-online-moderators-loading">
+      <Card data-testid="card-online-moderators-loading" dir="rtl">
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">المشرفون المتصلون</CardTitle>
           <Users className="h-4 w-4 text-muted-foreground" />
@@ -93,8 +93,8 @@ export function OnlineModeratorsWidget() {
               <div key={i} className="flex items-center gap-3">
                 <Skeleton className="h-10 w-10 rounded-full" />
                 <div className="space-y-1.5 flex-1">
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-4 w-24 mr-auto" />
+                  <Skeleton className="h-3 w-16 mr-auto" />
                 </div>
               </div>
             ))}
@@ -129,7 +129,7 @@ export function OnlineModeratorsWidget() {
               {/* Online Moderators Section */}
               {onlineModerators.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground mb-2">المتصلون حالياً</p>
+                  <p className="text-xs font-medium text-muted-foreground mb-2 text-right">المتصلون حالياً</p>
                   {onlineModerators.map((mod) => (
                     <div
                       key={mod.id}
@@ -144,11 +144,11 @@ export function OnlineModeratorsWidget() {
                           </AvatarFallback>
                         </Avatar>
                         <Circle 
-                          className="absolute -bottom-0.5 -left-0.5 h-3.5 w-3.5 fill-green-500 text-green-500 bg-background rounded-full"
+                          className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 fill-green-500 text-green-500 bg-background rounded-full"
                           data-testid="indicator-online"
                         />
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0 text-right">
                         <p className="text-sm font-medium truncate" data-testid={`text-name-${mod.id}`}>
                           {getDisplayName(mod)}
                         </p>
@@ -156,7 +156,7 @@ export function OnlineModeratorsWidget() {
                           {mod.jobTitle || getRoleLabel(mod)}
                         </p>
                       </div>
-                      <Badge variant="outline" className="text-xs text-green-600 dark:text-green-400 border-green-200 dark:border-green-800 shrink-0">
+                      <Badge variant="outline" className="text-xs text-green-600 dark:text-green-400 border-green-200 dark:border-green-800 shrink-0 mr-auto">
                         متصل
                       </Badge>
                     </div>
@@ -167,8 +167,8 @@ export function OnlineModeratorsWidget() {
               {/* Offline Moderators Section */}
               {offlineModerators.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground">آخر نشاط</p>
-                  <div className="flex flex-wrap gap-2">
+                  <p className="text-xs font-medium text-muted-foreground text-right">آخر نشاط</p>
+                  <div className="flex flex-wrap gap-2 justify-end">
                     {offlineModerators.map((mod) => (
                       <Tooltip key={mod.id}>
                         <TooltipTrigger asChild>
@@ -179,7 +179,7 @@ export function OnlineModeratorsWidget() {
                             {getDisplayName(mod)}
                           </div>
                         </TooltipTrigger>
-                        <TooltipContent side="bottom" className="text-xs">
+                        <TooltipContent side="bottom" className="text-xs" dir="rtl">
                           <p>آخر ظهور: {formatLastActivity(mod.lastActivityAt)}</p>
                         </TooltipContent>
                       </Tooltip>
