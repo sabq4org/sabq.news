@@ -918,9 +918,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ? rolesArray 
         : [user.role || "reader"];
 
+      // Get user permissions from RBAC system
+      const userPermissionsResult = await db
+        .select({ code: permissions.code })
+        .from(userRoles)
+        .innerJoin(rolePermissions, eq(userRoles.roleId, rolePermissions.roleId))
+        .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
+        .where(eq(userRoles.userId, userId));
+      
+      // Extract unique permission codes
+      const permissionsArray = [...new Set(userPermissionsResult.map(p => p.code))];
+
       // SECURITY: Never send passwordHash to client
       const { passwordHash, twoFactorSecret, ...safeUser } = user;
-      res.json({ ...safeUser, role, roles: allRoles });
+      res.json({ ...safeUser, role, roles: allRoles, permissions: permissionsArray });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
