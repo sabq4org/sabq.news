@@ -63,8 +63,8 @@ export const navConfig: NavItem[] = [
     labelAr: "نظرة عامة",
     path: "/dashboard",
     icon: LayoutDashboard,
-    roles: ["admin", "editor", "author", "reviewer", "analyst", "reporter"],
-    permissions: ["dashboard.view"], // All dashboard users with this permission can access
+    roles: ["admin", "editor", "author", "reviewer", "analyst", "reporter", "comments_moderator", "guest"],
+    // No permissions - all authenticated users can access the dashboard overview
     meta: { exact: true },
   },
 
@@ -76,7 +76,7 @@ export const navConfig: NavItem[] = [
     path: "/dashboard/tasks",
     icon: ListTodo,
     roles: ["admin", "editor", "author", "reviewer", "analyst", "reporter"],
-    permissions: ["tasks.view", "tasks.manage"],
+    permissions: ["tasks.view_all", "tasks.view_own", "tasks.create"],
   },
 
   // ===== المحتوى / Content =====
@@ -113,7 +113,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/categories",
         icon: FolderOpen,
         roles: ["admin", "editor"],
-        permissions: ["categories.view", "categories.manage"],
+        permissions: ["categories.view", "categories.create", "categories.update"],
       },
       {
         id: "tags",
@@ -140,7 +140,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/ai-moderation",
         icon: ShieldCheck,
         roles: ["admin", "comments_moderator"],
-        permissions: ["moderation.view", "moderation.manage", "comments.moderate"],
+        permissions: ["comments.view", "comments.approve", "comments.reject", "comments.delete"],
       },
       {
         id: "muqtarab",
@@ -149,7 +149,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/muqtarab",
         icon: Boxes,
         roles: ["admin", "editor"],
-        permissions: ["muqtarab.view", "muqtarab.manage"],
+        permissions: ["muqtarab.manage", "muqtarab.publish"],
       },
       {
         id: "mirqab",
@@ -158,7 +158,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/mirqab",
         icon: Telescope,
         roles: ["admin", "editor"],
-        permissions: ["mirqab.view", "mirqab.manage"],
+        permissions: ["mirqab.view", "mirqab.create", "mirqab.edit", "mirqab.publish"],
       },
       {
         id: "audio_newsletters",
@@ -185,7 +185,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/calendar",
         icon: Calendar,
         roles: ["admin", "editor"],
-        permissions: ["calendar.view", "calendar.manage"],
+        permissions: ["calendar:view", "calendar:create", "calendar:edit"],
       },
       {
         id: "media_library",
@@ -603,7 +603,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/audit-logs",
         icon: ListChecks,
         roles: ["admin"],
-        permissions: ["settings.view", "audit.view"],
+        permissions: ["system.view_logs"],
       },
       {
         id: "announcements",
@@ -621,7 +621,7 @@ export const navConfig: NavItem[] = [
         path: "/dashboard/system-settings",
         icon: Settings,
         roles: ["admin"],
-        permissions: ["settings.view", "settings.manage"],
+        permissions: ["system.manage_settings"],
       },
       {
         id: "auto_image_settings",
@@ -651,8 +651,8 @@ export const navConfig: NavItem[] = [
     labelAr: "الملف الشخصي",
     path: "/dashboard/profile",
     icon: User,
-    roles: ["admin", "editor", "author", "reviewer", "analyst", "comments_moderator"],
-    permissions: ["profile.view"], // All authenticated users can view their profile
+    roles: ["admin", "editor", "author", "reviewer", "analyst", "comments_moderator", "reporter", "guest"],
+    // No permissions - all authenticated users can view their profile
     divider: true,
   },
 
@@ -662,7 +662,7 @@ export const navConfig: NavItem[] = [
     labelAr: "الإشعارات",
     path: "/dashboard/notifications",
     icon: Bell,
-    roles: ["admin", "editor", "author", "reviewer", "analyst", "comments_moderator"],
-    permissions: ["notifications.view"], // All authenticated users can view notifications
+    roles: ["admin", "editor", "author", "reviewer", "analyst", "comments_moderator", "reporter", "guest"],
+    // No permissions - all authenticated users can view notifications
   },
 ];
