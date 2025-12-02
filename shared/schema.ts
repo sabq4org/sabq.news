@@ -591,6 +591,7 @@ export const users = pgTable("users", {
   
   // Activity tracking
   lastActivityAt: timestamp("last_activity_at"),
+  loggedOutAt: timestamp("logged_out_at"), // When user explicitly logged out
   
   // Suspension fields
   suspendedUntil: timestamp("suspended_until"),
