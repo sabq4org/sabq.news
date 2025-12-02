@@ -5517,6 +5517,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error fetching roles:", error);
       res.status(500).json({ message: "Failed to fetch roles" });
     }
+
+  // Create new role
+  app.post("/api/admin/roles", requireAuth, requirePermission("system.manage_roles"), async (req: any, res) => {
+    try {
+      const { name, nameAr, description, permissionIds } = req.body;
+
+      // Validate required fields
+      if (!name || !nameAr) {
+        return res.status(400).json({ message: "اسم الدور باللغتين مطلوب" });
+      }
+
+      // Check if role with same name already exists
+      const existingRole = await db
+        .select()
+        .from(roles)
+        .where(eq(roles.name, name.toLowerCase().replace(/\s+/g, "_")))
+        .limit(1);
+
+      if (existingRole.length > 0) {
+        return res.status(409).json({ message: "يوجد دور بنفس الاسم بالفعل" });
+      }
+
+      // Generate slug from name
+      const slug = name.toLowerCase().replace(/\s+/g, "_");
+
+      // Create new role
+      const [newRole] = await db.insert(roles).values({
+        name: slug,
+        nameAr: nameAr,
+        description: description || null,
+        isSystem: false,
+      }).returning();
+
+      console.log("✅ [CREATE ROLE] Role created:", { name: slug, nameAr });
+
+      // Assign permissions if provided
+      if (permissionIds && permissionIds.length > 0) {
+        const permissionValues = permissionIds.map((permId: string) => ({
+          roleId: newRole.id,
+          permissionId: permId,
+        }));
+
+        await db.insert(rolePermissions).values(permissionValues);
+        console.log("✅ [CREATE ROLE] Assigned permissions:", permissionIds.length);
+      }
+
+      // Get the role with permissions
+      const rolePerms = await db
+        .select({ permission: permissions })
+        .from(rolePermissions)
+        .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
+        .where(eq(rolePermissions.roleId, newRole.id));
+
+      res.status(201).json({
+        ...newRole,
+        permissions: rolePerms.map(rp => rp.permission),
+        userCount: 0,
+      });
+    } catch (error) {
+      console.error("❌ [CREATE ROLE] Error creating role:", error);
+      res.status(500).json({ message: "فشل في إنشاء الدور" });
+    }
+  });
+
+  // Delete role
+  app.delete("/api/admin/roles/:id", requireAuth, requirePermission("system.manage_roles"), async (req: any, res) => {
+    try {
+      const roleId = req.params.id;
+
+      // Check if role exists
+      const role = await db.select().from(roles).where(eq(roles.id, roleId)).limit(1);
+      if (!role || role.length === 0) {
+        return res.status(404).json({ message: "الدور غير موجود" });
+      }
+
+      // Prevent deleting system roles
+      if (role[0].isSystem) {
+        return res.status(403).json({ message: "لا يمكن حذف أدوار النظام" });
+      }
+
+      // Check if any users have this role
+      const usersWithRole = await db
+        .select()
+        .from(userRoles)
+        .where(eq(userRoles.roleId, roleId));
+
+      if (usersWithRole.length > 0) {
+        return res.status(409).json({ 
+          message: `لا يمكن حذف الدور - هناك ${usersWithRole.length} مستخدم يستخدمه` 
+        });
+      }
+
+      // Delete role permissions first
+      await db.delete(rolePermissions).where(eq(rolePermissions.roleId, roleId));
+
+      // Delete the role
+      await db.delete(roles).where(eq(roles.id, roleId));
+
+      console.log("✅ [DELETE ROLE] Role deleted:", { roleId, name: role[0].name });
+
+      res.json({ message: "تم حذف الدور بنجاح" });
+    } catch (error) {
+      console.error("❌ [DELETE ROLE] Error deleting role:", error);
+      res.status(500).json({ message: "فشل في حذف الدور" });
+    }
+  });
   });
 
   // Get a single role with its permissions
