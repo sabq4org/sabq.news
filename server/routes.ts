@@ -4783,7 +4783,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (parsed.data.firstNameEn !== undefined) updateData.firstNameEn = parsed.data.firstNameEn || null;
       if (parsed.data.lastNameEn !== undefined) updateData.lastNameEn = parsed.data.lastNameEn || null;
       if (parsed.data.phoneNumber !== undefined) updateData.phoneNumber = parsed.data.phoneNumber || null;
-      if (parsed.data.profileImageUrl !== undefined) updateData.profileImageUrl = parsed.data.profileImageUrl || null;
+      if (parsed.data.profileImageUrl !== undefined) updateData.profileImageUrl = parsed.data.profileImageUrl;
       if (parsed.data.status !== undefined) updateData.status = parsed.data.status;
       if (parsed.data.emailVerified !== undefined) updateData.emailVerified = parsed.data.emailVerified;
       if (parsed.data.phoneVerified !== undefined) updateData.phoneVerified = parsed.data.phoneVerified;
