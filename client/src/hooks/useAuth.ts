@@ -8,10 +8,29 @@ export type User = {
   name?: string;
   role?: string; // Primary role (first role for backward compatibility)
   roles?: string[]; // All user roles from RBAC system
+  permissions?: string[]; // All user permissions from RBAC system
   firstName?: string;
   lastName?: string;
   isProfileComplete?: boolean;
 };
+
+// Check if user has a specific permission
+export function hasPermission(user: User | null | undefined, permission: string): boolean {
+  if (!user) return false;
+  return user.permissions?.includes(permission) ?? false;
+}
+
+// Check if user has any of the specified permissions
+export function hasAnyPermission(user: User | null | undefined, ...permissionsToCheck: string[]): boolean {
+  if (!user) return false;
+  return permissionsToCheck.some(p => user.permissions?.includes(p) ?? false);
+}
+
+// Check if user has all of the specified permissions  
+export function hasAllPermissions(user: User | null | undefined, ...permissionsToCheck: string[]): boolean {
+  if (!user) return false;
+  return permissionsToCheck.every(p => user.permissions?.includes(p) ?? false);
+}
 
 // Helper function to check if user has any of the specified roles
 // Accepts any user object with role/roles properties
