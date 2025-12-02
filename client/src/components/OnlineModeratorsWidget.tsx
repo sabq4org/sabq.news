@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Users, Circle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
@@ -95,7 +96,7 @@ export function OnlineModeratorsWidget() {
   }
 
   return (
-    <Card data-testid="card-online-moderators">
+    <Card data-testid="card-online-moderators" dir="rtl">
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">المشرفون المتصلون</CardTitle>
         <div className="flex items-center gap-2">
@@ -115,74 +116,68 @@ export function OnlineModeratorsWidget() {
           </div>
         ) : (
           <ScrollArea className="h-[280px]">
-            <div className="space-y-1">
-              {/* Online Moderators */}
-              {onlineModerators.map((mod) => (
-                <div
-                  key={mod.id}
-                  className="flex items-center gap-3 p-2 rounded-lg hover-elevate"
-                  data-testid={`moderator-online-${mod.id}`}
-                >
-                  <div className="relative">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={mod.profileImageUrl || undefined} alt={getDisplayName(mod)} />
-                      <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
-                        {getInitials(mod.firstName, mod.lastName, mod.email)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <Circle 
-                      className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 fill-green-500 text-green-500 bg-background rounded-full"
-                      data-testid="indicator-online"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate" data-testid={`text-name-${mod.id}`}>
-                      {getDisplayName(mod)}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {mod.jobTitle || roleLabels[mod.role] || mod.role}
-                    </p>
-                  </div>
-                  <Badge variant="outline" className="text-xs text-green-600 dark:text-green-400 border-green-200 dark:border-green-800 shrink-0">
-                    متصل
-                  </Badge>
+            <div className="space-y-3">
+              {/* Online Moderators Section */}
+              {onlineModerators.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">المتصلون حالياً</p>
+                  {onlineModerators.map((mod) => (
+                    <div
+                      key={mod.id}
+                      className="flex items-center gap-3 p-2 rounded-lg hover-elevate"
+                      data-testid={`moderator-online-${mod.id}`}
+                    >
+                      <div className="relative">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={mod.profileImageUrl || undefined} alt={getDisplayName(mod)} />
+                          <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
+                            {getInitials(mod.firstName, mod.lastName, mod.email)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <Circle 
+                          className="absolute -bottom-0.5 -left-0.5 h-3.5 w-3.5 fill-green-500 text-green-500 bg-background rounded-full"
+                          data-testid="indicator-online"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate" data-testid={`text-name-${mod.id}`}>
+                          {getDisplayName(mod)}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {mod.jobTitle || roleLabels[mod.role] || mod.role}
+                        </p>
+                      </div>
+                      <Badge variant="outline" className="text-xs text-green-600 dark:text-green-400 border-green-200 dark:border-green-800 shrink-0">
+                        متصل
+                      </Badge>
+                    </div>
+                  ))}
                 </div>
-              ))}
-
-              {/* Separator if both online and offline exist */}
-              {onlineModerators.length > 0 && offlineModerators.length > 0 && (
-                <div className="border-t my-2" />
               )}
 
-              {/* Offline Moderators */}
-              {offlineModerators.map((mod) => (
-                <div
-                  key={mod.id}
-                  className="flex items-center gap-3 p-2 rounded-lg opacity-60 hover:opacity-80 transition-opacity"
-                  data-testid={`moderator-offline-${mod.id}`}
-                >
-                  <div className="relative">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={mod.profileImageUrl || undefined} alt={getDisplayName(mod)} />
-                      <AvatarFallback className="bg-muted text-muted-foreground text-sm font-medium">
-                        {getInitials(mod.firstName, mod.lastName, mod.email)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <Circle 
-                      className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 fill-gray-400 text-gray-400 bg-background rounded-full"
-                      data-testid="indicator-offline"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate text-muted-foreground" data-testid={`text-name-${mod.id}`}>
-                      {getDisplayName(mod)}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {formatLastActivity(mod.lastActivityAt)}
-                    </p>
+              {/* Offline Moderators Section */}
+              {offlineModerators.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">آخر نشاط</p>
+                  <div className="flex flex-wrap gap-2">
+                    {offlineModerators.map((mod) => (
+                      <Tooltip key={mod.id}>
+                        <TooltipTrigger asChild>
+                          <div
+                            className="px-3 py-1.5 rounded-md bg-muted/50 text-muted-foreground text-sm cursor-default hover:bg-muted transition-colors"
+                            data-testid={`moderator-offline-${mod.id}`}
+                          >
+                            {getDisplayName(mod)}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="text-xs">
+                          <p>آخر ظهور: {formatLastActivity(mod.lastActivityAt)}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    ))}
                   </div>
                 </div>
-              ))}
+              )}
             </div>
           </ScrollArea>
         )}
