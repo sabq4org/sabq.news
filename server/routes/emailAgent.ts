@@ -903,7 +903,7 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       articleType: "news", // Ensures article appears in homepage queries
       newsType: "regular", // Default news type (not breaking/featured)
       hideFromHomepage: false, // Article must be visible on homepage
-      displayOrder: Date.now(), // New articles appear at top
+      displayOrder: Math.floor(Date.now() / 1000), // New articles appear at top (seconds for consistency)
       source: "email", // 📧 Mark as created via Smart Email Agent
     };
 
