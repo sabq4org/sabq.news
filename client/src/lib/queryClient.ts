@@ -50,6 +50,34 @@ async function throwIfResNotOk(res: Response) {
       }
     }
     
+    // Handle 409 Conflict - parse JSON and extract Arabic message
+    if (res.status === 409) {
+      try {
+        const data = JSON.parse(text);
+        if (data.message) {
+          throw new Error(data.message);
+        }
+      } catch (e) {
+        // If parsing fails, check if it's our custom error
+        if (e instanceof Error && e.message !== text) {
+          throw e; // Re-throw if it's our custom error
+        }
+      }
+    }
+    
+    // For other errors, try to parse JSON message
+    try {
+      const data = JSON.parse(text);
+      if (data.message) {
+        throw new Error(data.message);
+      }
+    } catch (e) {
+      // If parsing fails, check if it's our custom error
+      if (e instanceof Error && e.message !== text) {
+        throw e;
+      }
+    }
+    
     throw new Error(`${res.status}: ${text}`);
   }
 }
@@ -109,6 +137,30 @@ export async function apiRequest<T = any>(
             } catch (e) {
               // If parsing fails, continue to default error
             }
+          }
+          
+          // Handle 409 Conflict - parse JSON and extract Arabic message
+          if (xhr.status === 409) {
+            try {
+              const data = JSON.parse(xhr.responseText);
+              if (data.message) {
+                reject(new Error(data.message));
+                return;
+              }
+            } catch (e) {
+              // If parsing fails, continue to default error
+            }
+          }
+          
+          // For other errors, try to parse JSON message
+          try {
+            const data = JSON.parse(xhr.responseText);
+            if (data.message) {
+              reject(new Error(data.message));
+              return;
+            }
+          } catch (e) {
+            // If parsing fails, continue to default error
           }
           
           reject(new Error(`${xhr.status}: ${xhr.responseText || xhr.statusText}`));
