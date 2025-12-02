@@ -9973,15 +9973,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden" });
       }
 
-      // Require admin or editor role - check both legacy and RBAC roles
-      const allowedRoles = ['admin', 'superadmin', 'editor', 'chief_editor', 'system_admin'];
+      // Require staff role - check both legacy and RBAC roles
+      const allowedRoles = ['admin', 'superadmin', 'editor', 'chief_editor', 'system_admin', 'moderator', 'reporter', 'comments_moderator', 'content_manager', 'publisher', 'writer', 'content_creator', 'opinion_author'];
       const hasLegacyRole = allowedRoles.includes(user.role);
       
-      // Also check RBAC roles
+      // Also check RBAC roles - any role that's not 'reader' is considered staff
       let hasRbacRole = false;
       try {
         const userRoles = await storage.getUserRoles(userId);
-        hasRbacRole = userRoles.some(r => allowedRoles.includes(r.name));
+        // Check if user has any of the predefined staff roles OR any custom role
+        hasRbacRole = userRoles.some(r => allowedRoles.includes(r.name) || r.name !== 'reader');
       } catch (e) {
         // Ignore RBAC check errors
       }
@@ -10009,14 +10010,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Require staff role to view online moderators - check both legacy and RBAC roles
-      const staffRoles = ['admin', 'superadmin', 'editor', 'chief_editor', 'moderator', 'system_admin', 'reporter', 'comments_moderator'];
+      const staffRoles = ['admin', 'superadmin', 'editor', 'chief_editor', 'moderator', 'system_admin', 'reporter', 'comments_moderator', 'content_manager', 'publisher', 'writer', 'content_creator', 'opinion_author'];
       const hasLegacyRole = staffRoles.includes(user.role);
       
-      // Also check RBAC roles
+      // Also check RBAC roles - any role that's not 'reader' is considered staff
       let hasRbacRole = false;
       try {
         const userRoles = await storage.getUserRoles(userId);
-        hasRbacRole = userRoles.some(r => staffRoles.includes(r.name));
+        // Check if user has any of the predefined staff roles OR any custom role
+        hasRbacRole = userRoles.some(r => staffRoles.includes(r.name) || r.name !== 'reader');
       } catch (e) {
         // Ignore RBAC check errors
       }
