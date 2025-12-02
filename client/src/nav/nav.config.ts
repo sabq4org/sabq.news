@@ -83,7 +83,7 @@ export const navConfig: NavItem[] = [
     labelKey: "nav.content",
     labelAr: "المحتوى",
     icon: Newspaper,
-    roles: ["admin", "editor", "author", "reviewer"],
+    roles: ["admin", "editor", "author", "reviewer", "comments_moderator"],
     children: [
       {
         id: "articles",
@@ -131,7 +131,7 @@ export const navConfig: NavItem[] = [
         labelAr: "التعليقات",
         path: "/dashboard/comments",
         icon: MessageSquare,
-        roles: ["admin", "editor", "reviewer"],
+        roles: ["admin", "editor", "reviewer", "comments_moderator"],
       },
       {
         id: "ai_moderation",
@@ -139,7 +139,7 @@ export const navConfig: NavItem[] = [
         labelAr: "الرقابة الذكية",
         path: "/dashboard/ai-moderation",
         icon: ShieldCheck,
-        roles: ["admin"],
+        roles: ["admin", "comments_moderator"],
       },
       {
         id: "muqtarab",
@@ -607,7 +607,7 @@ export const navConfig: NavItem[] = [
     labelAr: "الملف الشخصي",
     path: "/dashboard/profile",
     icon: User,
-    roles: ["admin", "editor", "author", "reviewer", "analyst"],
+    roles: ["admin", "editor", "author", "reviewer", "analyst", "comments_moderator"],
     divider: true,
   },
 
@@ -617,6 +617,6 @@ export const navConfig: NavItem[] = [
     labelAr: "الإشعارات",
     path: "/dashboard/notifications",
     icon: Bell,
-    roles: ["admin", "editor", "author", "reviewer", "analyst"],
+    roles: ["admin", "editor", "author", "reviewer", "analyst", "comments_moderator"],
   },
 ];

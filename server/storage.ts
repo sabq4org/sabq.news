@@ -7000,7 +7000,7 @@ export class DatabaseStorage implements IStorage {
     lastActivityAt: Date | null;
     isOnline: boolean;
   }[]> {
-    const moderatorRoles = ['admin', 'superadmin', 'editor', 'chief_editor', 'moderator', 'system_admin'];
+    const moderatorRoles = ['admin', 'superadmin', 'editor', 'chief_editor', 'moderator', 'system_admin', 'comments_moderator'];
     const onlineThreshold = new Date(Date.now() - minutesThreshold * 60 * 1000);
     
     const moderators = await db

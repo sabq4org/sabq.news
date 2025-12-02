@@ -23,19 +23,20 @@ export function hasRole(user: { role?: string; roles?: string[] } | null | undef
 
 // Check if user is staff (has any role beyond reader)
 export function isStaff(user: User | null | undefined): boolean {
-  return hasRole(user, 'super_admin', 'admin', 'editor', 'reporter', 'opinion_author', 'moderator', 'content_creator');
+  return hasRole(user, 'super_admin', 'admin', 'editor', 'reporter', 'opinion_author', 'moderator', 'content_creator', 'comments_moderator');
 }
 
 // Role hierarchy for redirection priority (higher index = higher priority)
 const ROLE_HIERARCHY = [
-  'reader',           // 0 - lowest priority
-  'content_creator',  // 1
-  'moderator',        // 2
-  'opinion_author',   // 3
-  'reporter',         // 4
-  'editor',           // 5
-  'admin',            // 6
-  'super_admin',      // 7 - highest priority
+  'reader',             // 0 - lowest priority
+  'content_creator',    // 1
+  'comments_moderator', // 2 - مشرف التعليقات
+  'moderator',          // 3
+  'opinion_author',     // 4
+  'reporter',           // 5
+  'editor',             // 6
+  'admin',              // 7
+  'super_admin',        // 8 - highest priority
 ];
 
 // Get the highest role based on hierarchy
@@ -61,6 +62,11 @@ export function getHighestRole(user: User | null | undefined): string {
 // Get default redirect path based on user's highest role
 export function getDefaultRedirectPath(user: User | null | undefined): string {
   if (!user) return '/';
+  
+  // Comments moderator goes directly to AI moderation dashboard
+  if (hasRole(user, 'comments_moderator')) {
+    return '/dashboard/ai-moderation';
+  }
   
   // Staff members go to dashboard
   if (isStaff(user)) {

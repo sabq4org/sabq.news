@@ -10,7 +10,8 @@ function requireModeratorAuth(req: Request, res: Response, next: NextFunction) {
   if (!user) {
     return res.status(401).json({ error: "يجب تسجيل الدخول للقيام بهذا الإجراء" });
   }
-  const moderatorRoles = ['admin', 'superadmin', 'editor', 'chief_editor', 'moderator'];
+  // Added comments_moderator - مشرف التعليقات
+  const moderatorRoles = ['admin', 'superadmin', 'editor', 'chief_editor', 'moderator', 'comments_moderator'];
   if (!moderatorRoles.includes(user.role)) {
     return res.status(403).json({ error: "ليس لديك صلاحية للوصول إلى هذه الميزة" });
   }
