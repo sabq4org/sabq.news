@@ -899,6 +899,9 @@ export interface IStorage {
     isOnline: boolean;
   }[]>;
   
+  // Set moderator offline (clear lastActivityAt to mark user as logged out)
+  setModeratorOffline(userId: string): Promise<void>;
+  
   // Interest operations
   getAllInterests(): Promise<Interest[]>;
   getUserInterests(userId: string): Promise<InterestWithWeight[]>;
@@ -7610,6 +7613,22 @@ export class DatabaseStorage implements IStorage {
       ...mod,
       isOnline: mod.lastActivityAt ? mod.lastActivityAt >= onlineThreshold : false,
     }));
+  }
+
+  // Set moderator offline (clear lastActivityAt to mark user as logged out immediately)
+  async setModeratorOffline(userId: string): Promise<void> {
+    try {
+      // Set lastActivityAt to null to immediately mark the user as offline
+      await db
+        .update(users)
+        .set({ lastActivityAt: null })
+        .where(eq(users.id, userId));
+      
+      console.log(`[Online Status] User ${userId} marked as offline (logout)`);
+    } catch (error) {
+      console.error(`[Online Status] Error setting user ${userId} offline:`, error);
+      // Don't throw - logout should still proceed even if status update fails
+    }
   }
 
   // Interest operations
