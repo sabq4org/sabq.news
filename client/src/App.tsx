@@ -126,6 +126,7 @@ import AdminLogin from "@/pages/AdminLogin";
 import DeepAnalysis from "@/pages/dashboard/DeepAnalysis";
 import DeepAnalysisList from "@/pages/dashboard/DeepAnalysisList";
 import TasksPage from "@/pages/dashboard/TasksPage";
+import DashboardProfile from "@/pages/dashboard/DashboardProfile";
 import Omq from "@/pages/Omq";
 import OmqDetail from "@/pages/OmqDetail";
 import OmqStats from "@/pages/OmqStats";
@@ -499,7 +500,7 @@ function Router() {
       <Route path="/dashboard/integrations" component={ComingSoon} />
       <Route path="/dashboard/storage" component={ComingSoon} />
       <Route path="/dashboard/audit-logs" component={ActivityLogsPage} />
-      <Route path="/dashboard/profile" component={ComingSoon} />
+      <Route path="/dashboard/profile" component={DashboardProfile} />
       <Route path="/dashboard/notifications" component={Notifications} />
       <Route path="/dashboard/notification-admin" component={NotificationAdmin} />
       <Route path="/notifications" component={UserNotifications} />

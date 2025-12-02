@@ -12335,7 +12335,100 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     }
   });
 
+  // Get user's RBAC roles
+  app.get("/api/profile/roles", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Get user's roles from RBAC system
+      const userRolesResult = await db
+        .select({
+          roleId: roles.id,
+          roleName: roles.name,
+          roleDescription: roles.description,
+          assignedAt: userRoles.assignedAt,
+        })
+        .from(userRoles)
+        .innerJoin(roles, eq(userRoles.roleId, roles.id))
+        .where(eq(userRoles.userId, userId));
+      
+      // Also get legacy role from users table
+      const [user] = await db
+        .select({ role: users.role, jobTitle: users.jobTitle, department: users.department })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+      
+      res.json({
+        rbacRoles: userRolesResult,
+        legacyRole: user?.role || 'reader',
+        jobTitle: user?.jobTitle,
+        department: user?.department,
+      });
+    } catch (error) {
+      console.error("Error fetching user roles:", error);
+      res.status(500).json({ message: "Failed to fetch user roles" });
+    }
+  });
+
+  // Get user's personal activity logs
+  app.get("/api/profile/activity", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { page = 1, limit = 20, action, entityType } = req.query;
+      
+      const pageNum = parseInt(page as string) || 1;
+      const limitNum = Math.min(parseInt(limit as string) || 20, 100);
+      const offset = (pageNum - 1) * limitNum;
+      
+      // Build conditions
+      const conditions = [eq(activityLogs.userId, userId)];
+      if (action) {
+        conditions.push(eq(activityLogs.action, action as string));
+      }
+      if (entityType) {
+        conditions.push(eq(activityLogs.entityType, entityType as string));
+      }
+      
+      // Get total count
+      const [{ count }] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(activityLogs)
+        .where(and(...conditions));
+      
+      // Get paginated logs
+      const logs = await db
+        .select({
+          id: activityLogs.id,
+          action: activityLogs.action,
+          entityType: activityLogs.entityType,
+          entityId: activityLogs.entityId,
+          oldValue: activityLogs.oldValue,
+          newValue: activityLogs.newValue,
+          metadata: activityLogs.metadata,
+          createdAt: activityLogs.createdAt,
+        })
+        .from(activityLogs)
+        .where(and(...conditions))
+        .orderBy(desc(activityLogs.createdAt))
+        .limit(limitNum)
+        .offset(offset);
+      
+      res.json({
+        logs,
+        total: count,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(count / limitNum),
+      });
+    } catch (error) {
+      console.error("Error fetching user activity:", error);
+      res.status(500).json({ message: "Failed to fetch user activity" });
+    }
+  });
+
   // ============================================================
+  // RECOMMENDATIONS
   // RECOMMENDATIONS
   // ============================================================
 
