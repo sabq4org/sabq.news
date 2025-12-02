@@ -39,6 +39,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { QuickActionsSection } from "@/components/QuickActionsSection";
+import { OnlineModeratorsWidget } from "@/components/OnlineModeratorsWidget";
 import { formatDistanceToNow, formatDistance } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
@@ -288,8 +289,13 @@ function Dashboard() {
         <UrgentReminderBanner />
 
         {/* Quick Actions Section - Staff Only */}
-        <div className="mb-6">
-          <QuickActionsSection />
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
+          <div className="lg:col-span-3">
+            <QuickActionsSection />
+          </div>
+          <div className="lg:col-span-1">
+            <OnlineModeratorsWidget />
+          </div>
         </div>
 
         {/* Main Stats Cards - 2 columns on mobile for better space utilization */}

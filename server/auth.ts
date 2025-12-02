@@ -376,8 +376,25 @@ export async function setupAuth(app: Express) {
   });
 }
 
-export const isAuthenticated: RequestHandler = (req, res, next) => {
+const activityUpdateCache = new Map<string, number>();
+const ACTIVITY_UPDATE_INTERVAL = 60000; // Only update once per minute per user
+
+export const isAuthenticated: RequestHandler = async (req, res, next) => {
   if (req.isAuthenticated()) {
+    // Update user activity asynchronously (debounced to avoid database spam)
+    const userId = (req.user as any)?.id;
+    if (userId) {
+      const now = Date.now();
+      const lastUpdate = activityUpdateCache.get(userId) || 0;
+      
+      if (now - lastUpdate > ACTIVITY_UPDATE_INTERVAL) {
+        activityUpdateCache.set(userId, now);
+        // Fire and forget - don't block the request
+        storage.updateUserActivity(userId).catch(err => {
+          console.error('[Activity] Error updating user activity:', err);
+        });
+      }
+    }
     return next();
   }
   res.status(401).json({ message: "Unauthorized" });

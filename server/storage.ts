@@ -398,6 +398,7 @@ export interface IStorage {
     profileImageUrl?: string;
   }): Promise<User>;
   updateUser(id: string, userData: UpdateUser): Promise<User>;
+  updateUserActivity(userId: string): Promise<void>;
   getOrCreateSystemUser(): Promise<User>;
   getOrCreateReporterUser(email: string, name: string): Promise<User>;
   
@@ -796,6 +797,19 @@ export interface IStorage {
     recentComments: CommentWithUser[];
     topArticles: ArticleWithDetails[];
   }>;
+  
+  // Online moderators operations
+  getOnlineModerators(minutesThreshold?: number): Promise<{
+    id: string;
+    email: string;
+    firstName: string | null;
+    lastName: string | null;
+    profileImageUrl: string | null;
+    role: string;
+    jobTitle: string | null;
+    lastActivityAt: Date | null;
+    isOnline: boolean;
+  }[]>;
   
   // Interest operations
   getAllInterests(): Promise<Interest[]>;
@@ -2268,6 +2282,13 @@ export class DatabaseStorage implements IStorage {
       .returning();
       
     return user;
+  }
+
+  async updateUserActivity(userId: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ lastActivityAt: new Date() })
+      .where(eq(users.id, userId));
   }
 
   async getOrCreateSystemUser(): Promise<User> {
@@ -6965,6 +6986,47 @@ export class DatabaseStorage implements IStorage {
       recentComments,
       topArticles,
     };
+  }
+
+  // Online moderators operations
+  async getOnlineModerators(minutesThreshold: number = 15): Promise<{
+    id: string;
+    email: string;
+    firstName: string | null;
+    lastName: string | null;
+    profileImageUrl: string | null;
+    role: string;
+    jobTitle: string | null;
+    lastActivityAt: Date | null;
+    isOnline: boolean;
+  }[]> {
+    const moderatorRoles = ['admin', 'superadmin', 'editor', 'chief_editor', 'moderator', 'system_admin'];
+    const onlineThreshold = new Date(Date.now() - minutesThreshold * 60 * 1000);
+    
+    const moderators = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        profileImageUrl: users.profileImageUrl,
+        role: users.role,
+        jobTitle: users.jobTitle,
+        lastActivityAt: users.lastActivityAt,
+      })
+      .from(users)
+      .where(
+        and(
+          inArray(users.role, moderatorRoles),
+          eq(users.status, 'active')
+        )
+      )
+      .orderBy(desc(users.lastActivityAt));
+    
+    return moderators.map(mod => ({
+      ...mod,
+      isOnline: mod.lastActivityAt ? mod.lastActivityAt >= onlineThreshold : false,
+    }));
   }
 
   // Interest operations

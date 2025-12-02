@@ -9734,6 +9734,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Online moderators - Get currently active moderators
+  app.get("/api/admin/online-moderators", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+
+      // Require staff role to view online moderators
+      const staffRoles = ['admin', 'superadmin', 'editor', 'chief_editor', 'moderator', 'system_admin', 'reporter'];
+      if (!user || !staffRoles.includes(user.role)) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const moderators = await storage.getOnlineModerators(15); // 15 minutes threshold
+      res.json(moderators);
+    } catch (error) {
+      console.error("Error fetching online moderators:", error);
+      res.status(500).json({ message: "Failed to fetch online moderators" });
+    }
+  });
+
   // Admin dashboard comprehensive stats (English)
   app.get("/api/en/admin/dashboard/stats", isAuthenticated, async (req: any, res) => {
     try {
