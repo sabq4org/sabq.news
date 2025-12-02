@@ -6475,7 +6475,6 @@ export const tasksRelations = relations(tasks, ({ one, many }) => ({
     relationName: "taskHierarchy",
   }),
   subtasks: many(subtasks),
-  comments: many(taskComments),
   attachments: many(taskAttachments),
   activityLog: many(taskActivityLog),
 }));

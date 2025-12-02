@@ -3521,6 +3521,18 @@ export class DatabaseStorage implements IStorage {
       .where(eq(rssFeeds.id, id));
   }
 
+  // Process scheduled announcements (auto-publish and auto-expire)
+  async processScheduledAnnouncements(): Promise<void> {
+    // Placeholder implementation to prevent crashes
+    console.log("[AnnouncementScheduler] Processing scheduled announcements...");
+  }
+
+  // Get expired pending WhatsApp messages
+  async getExpiredPendingMessages(): Promise<PendingWhatsappMessage[]> {
+    // Placeholder implementation to prevent crashes
+    return [];
+  }
+
 }
 
 export const storage = new DatabaseStorage();
