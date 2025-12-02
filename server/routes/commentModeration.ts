@@ -234,4 +234,104 @@ router.post("/bulk", async (req: Request, res: Response) => {
   }
 });
 
+// Edit a comment with audit trail
+const editCommentSchema = z.object({
+  content: z.string().min(1, "يجب توفير محتوى التعليق"),
+  reason: z.string().optional(),
+});
+
+router.put("/edit/:commentId", async (req: Request, res: Response) => {
+  try {
+    const { commentId } = req.params;
+    const userId = (req as any).user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "يجب تسجيل الدخول" });
+    }
+
+    const parsed = editCommentSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: parsed.error.errors[0].message });
+    }
+
+    const { content, reason } = parsed.data;
+    
+    const updatedComment = await storage.editCommentWithHistory(
+      commentId, 
+      content, 
+      userId, 
+      reason
+    );
+
+    res.json({ success: true, comment: updatedComment });
+  } catch (error) {
+    console.error("[Moderation API] Edit error:", error);
+    const message = error instanceof Error ? error.message : "حدث خطأ أثناء تعديل التعليق";
+    res.status(500).json({ error: message });
+  }
+});
+
+// Delete a comment with audit trail
+const deleteCommentSchema = z.object({
+  reason: z.string().optional(),
+});
+
+router.delete("/delete/:commentId", async (req: Request, res: Response) => {
+  try {
+    const { commentId } = req.params;
+    const userId = (req as any).user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "يجب تسجيل الدخول" });
+    }
+
+    const parsed = deleteCommentSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: parsed.error.errors[0].message });
+    }
+
+    const { reason } = parsed.data;
+    
+    await storage.deleteCommentWithLog(commentId, userId, reason);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("[Moderation API] Delete error:", error);
+    const message = error instanceof Error ? error.message : "حدث خطأ أثناء حذف التعليق";
+    res.status(500).json({ error: message });
+  }
+});
+
+// Get edit history for a comment
+router.get("/history/:commentId", async (req: Request, res: Response) => {
+  try {
+    const { commentId } = req.params;
+    
+    const history = await storage.getCommentEditHistory(commentId);
+    
+    res.json(history);
+  } catch (error) {
+    console.error("[Moderation API] History error:", error);
+    res.status(500).json({ error: "حدث خطأ أثناء جلب سجل التعديلات" });
+  }
+});
+
+// Get comment with article details
+router.get("/details/:commentId", async (req: Request, res: Response) => {
+  try {
+    const { commentId } = req.params;
+    
+    const result = await storage.getCommentWithArticle(commentId);
+    
+    if (!result) {
+      return res.status(404).json({ error: "التعليق غير موجود" });
+    }
+    
+    res.json(result);
+  } catch (error) {
+    console.error("[Moderation API] Details error:", error);
+    res.status(500).json({ error: "حدث خطأ أثناء جلب تفاصيل التعليق" });
+  }
+});
+
 export default router;
