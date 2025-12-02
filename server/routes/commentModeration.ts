@@ -1,9 +1,21 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { storage } from "../storage";
 import { moderateComment, getStatusFromClassification, ModerationResult } from "../ai/commentModeration";
 import { z } from "zod";
 
 const router = Router();
+
+function requireModeratorAuth(req: Request, res: Response, next: NextFunction) {
+  const user = (req as any).user;
+  if (!user) {
+    return res.status(401).json({ error: "يجب تسجيل الدخول للقيام بهذا الإجراء" });
+  }
+  const moderatorRoles = ['admin', 'superadmin', 'editor', 'chief_editor', 'moderator'];
+  if (!moderatorRoles.includes(user.role)) {
+    return res.status(403).json({ error: "ليس لديك صلاحية للوصول إلى هذه الميزة" });
+  }
+  next();
+}
 
 // Analyze a comment with AI
 router.post("/analyze", async (req: Request, res: Response) => {
@@ -357,15 +369,9 @@ router.get("/details/:commentId", async (req: Request, res: Response) => {
 });
 
 // Get member profile with statistics (for moderators)
-router.get("/member/:memberId", async (req: Request, res: Response) => {
+router.get("/member/:memberId", requireModeratorAuth, async (req: Request, res: Response) => {
   try {
     const { memberId } = req.params;
-    
-    // Check authentication
-    const userId = (req as any).user?.id;
-    if (!userId) {
-      return res.status(401).json({ error: "يجب تسجيل الدخول للقيام بهذا الإجراء" });
-    }
     
     const profile = await storage.getMemberModerationProfile(memberId);
     
@@ -381,16 +387,10 @@ router.get("/member/:memberId", async (req: Request, res: Response) => {
 });
 
 // Get member comment history with filtering (for moderators)
-router.get("/member/:memberId/comments", async (req: Request, res: Response) => {
+router.get("/member/:memberId/comments", requireModeratorAuth, async (req: Request, res: Response) => {
   try {
     const { memberId } = req.params;
     const { status, classification, sortBy, sortOrder, limit, offset } = req.query;
-    
-    // Check authentication
-    const userId = (req as any).user?.id;
-    if (!userId) {
-      return res.status(401).json({ error: "يجب تسجيل الدخول للقيام بهذا الإجراء" });
-    }
     
     const result = await storage.getMemberCommentHistory(memberId, {
       status: status as string,
@@ -415,15 +415,10 @@ const bulkActionSchema = z.object({
   reason: z.string().optional(),
 });
 
-router.post("/member/:memberId/bulk-action", async (req: Request, res: Response) => {
+router.post("/member/:memberId/bulk-action", requireModeratorAuth, async (req: Request, res: Response) => {
   try {
     const { memberId } = req.params;
-    
-    // Check authentication
-    const userId = (req as any).user?.id;
-    if (!userId) {
-      return res.status(401).json({ error: "يجب تسجيل الدخول للقيام بهذا الإجراء" });
-    }
+    const moderatorId = (req as any).user?.id;
     
     // Validate request
     const parsed = bulkActionSchema.safeParse(req.body);
