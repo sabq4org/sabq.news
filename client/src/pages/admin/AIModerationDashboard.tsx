@@ -23,6 +23,19 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Shield,
   ShieldAlert,
@@ -45,6 +58,11 @@ import {
   Zap,
   Target,
   Filter,
+  Pencil,
+  Trash2,
+  FileText,
+  ExternalLink,
+  History,
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { arSA } from "date-fns/locale";
@@ -70,6 +88,8 @@ interface ModerationResult {
       email: string;
     };
     articleId: string;
+    articleTitle?: string;
+    articleSlug?: string;
   };
 }
 
@@ -116,6 +136,17 @@ export default function AIModerationDashboard() {
   const [scoreFilter, setScoreFilter] = useState<string>("all");
   const [selectedComment, setSelectedComment] = useState<ModerationResult | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  
+  // Edit dialog state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingComment, setEditingComment] = useState<ModerationResult | null>(null);
+  const [editContent, setEditContent] = useState("");
+  const [editReason, setEditReason] = useState("");
+  
+  // Delete confirmation dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingComment, setDeletingComment] = useState<ModerationResult | null>(null);
+  const [deleteReason, setDeleteReason] = useState("");
 
   const { data: stats, isLoading: statsLoading } = useQuery<ModerationStats>({
     queryKey: ["/api/moderation/stats"],
@@ -234,6 +265,99 @@ export default function AIModerationDashboard() {
       });
     },
   });
+
+  // Edit comment mutation
+  const editMutation = useMutation({
+    mutationFn: async ({ commentId, content, reason }: { commentId: string; content: string; reason?: string }) => {
+      return await apiRequest(`/api/moderation/edit/${commentId}`, {
+        method: "PUT",
+        body: JSON.stringify({ content, reason }),
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "تم التعديل",
+        description: "تم تعديل التعليق بنجاح",
+      });
+      setEditDialogOpen(false);
+      setEditingComment(null);
+      setEditContent("");
+      setEditReason("");
+      queryClient.invalidateQueries({ queryKey: ["/api/moderation"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/comments"] });
+      refetch();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل تعديل التعليق",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete comment mutation
+  const deleteMutation = useMutation({
+    mutationFn: async ({ commentId, reason }: { commentId: string; reason?: string }) => {
+      return await apiRequest(`/api/moderation/delete/${commentId}`, {
+        method: "DELETE",
+        body: JSON.stringify({ reason }),
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "تم الحذف",
+        description: "تم حذف التعليق بنجاح",
+      });
+      setDeleteDialogOpen(false);
+      setDeletingComment(null);
+      setDeleteReason("");
+      queryClient.invalidateQueries({ queryKey: ["/api/moderation"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/comments"] });
+      refetch();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل حذف التعليق",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle opening edit dialog
+  const handleEditClick = (result: ModerationResult) => {
+    setEditingComment(result);
+    setEditContent(result.comment.content);
+    setEditReason("");
+    setEditDialogOpen(true);
+  };
+
+  // Handle opening delete dialog
+  const handleDeleteClick = (result: ModerationResult) => {
+    setDeletingComment(result);
+    setDeleteReason("");
+    setDeleteDialogOpen(true);
+  };
+
+  // Handle edit submit
+  const handleEditSubmit = () => {
+    if (!editingComment || !editContent.trim()) return;
+    editMutation.mutate({
+      commentId: editingComment.commentId,
+      content: editContent.trim(),
+      reason: editReason.trim() || undefined,
+    });
+  };
+
+  // Handle delete confirm
+  const handleDeleteConfirm = () => {
+    if (!deletingComment) return;
+    deleteMutation.mutate({
+      commentId: deletingComment.commentId,
+      reason: deleteReason.trim() || undefined,
+    });
+  };
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-green-500";
@@ -525,7 +649,7 @@ export default function AIModerationDashboard() {
                               </div>
                             )}
 
-                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                            <div className="flex items-center flex-wrap gap-4 text-xs text-muted-foreground">
                               <div className="flex items-center gap-1">
                                 <User className="h-3 w-3" />
                                 {getUserName(result.comment.user)}
@@ -537,6 +661,19 @@ export default function AIModerationDashboard() {
                                   locale: arSA,
                                 })}
                               </div>
+                              {result.comment.articleTitle && (
+                                <a
+                                  href={`/article/${result.comment.articleSlug}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-1 text-primary hover:underline"
+                                  data-testid={`link-article-${result.commentId}`}
+                                >
+                                  <FileText className="h-3 w-3" />
+                                  <span className="truncate max-w-[150px]">{result.comment.articleTitle}</span>
+                                  <ExternalLink className="h-3 w-3" />
+                                </a>
+                              )}
                             </div>
                           </div>
 
@@ -550,6 +687,16 @@ export default function AIModerationDashboard() {
                             >
                               <Eye className="h-4 w-4" />
                               تفاصيل
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditClick(result)}
+                              className="gap-1"
+                              data-testid={`button-edit-${result.commentId}`}
+                            >
+                              <Pencil className="h-4 w-4" />
+                              تعديل
                             </Button>
                             {result.comment.status === "pending" && (
                               <>
@@ -576,6 +723,16 @@ export default function AIModerationDashboard() {
                                 </Button>
                               </>
                             )}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDeleteClick(result)}
+                              className="gap-1 text-destructive hover:text-destructive"
+                              data-testid={`button-delete-${result.commentId}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              حذف
+                            </Button>
                           </div>
                         </div>
                       </CardContent>
@@ -706,6 +863,131 @@ export default function AIModerationDashboard() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Edit Comment Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="max-w-lg" dir="rtl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Pencil className="h-5 w-5" />
+                تعديل التعليق
+              </DialogTitle>
+              <DialogDescription>
+                قم بتعديل محتوى التعليق. سيتم حفظ التعديل في سجل التغييرات.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-content">محتوى التعليق</Label>
+                <Textarea
+                  id="edit-content"
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  className="min-h-[120px] resize-none"
+                  dir="rtl"
+                  data-testid="textarea-edit-content"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-reason">سبب التعديل (اختياري)</Label>
+                <Input
+                  id="edit-reason"
+                  value={editReason}
+                  onChange={(e) => setEditReason(e.target.value)}
+                  placeholder="مثال: تصحيح إملائي، إزالة محتوى غير مناسب..."
+                  dir="rtl"
+                  data-testid="input-edit-reason"
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setEditDialogOpen(false)}
+                data-testid="button-cancel-edit"
+              >
+                إلغاء
+              </Button>
+              <Button
+                onClick={handleEditSubmit}
+                disabled={editMutation.isPending || !editContent.trim()}
+                className="gap-1"
+                data-testid="button-confirm-edit"
+              >
+                {editMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    جاري الحفظ...
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-4 w-4" />
+                    حفظ التعديلات
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent dir="rtl">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <Trash2 className="h-5 w-5 text-destructive" />
+                تأكيد حذف التعليق
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                هل أنت متأكد من حذف هذا التعليق؟ لا يمكن التراجع عن هذا الإجراء.
+                سيتم حفظ سجل الحذف للمراجعة.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            {deletingComment && (
+              <div className="my-4 p-3 bg-muted rounded-lg text-sm">
+                <p className="text-muted-foreground mb-2">التعليق المراد حذفه:</p>
+                <p className="line-clamp-3">{deletingComment.comment.content}</p>
+              </div>
+            )}
+
+            <div className="space-y-2 mb-4">
+              <Label htmlFor="delete-reason">سبب الحذف (اختياري)</Label>
+              <Input
+                id="delete-reason"
+                value={deleteReason}
+                onChange={(e) => setDeleteReason(e.target.value)}
+                placeholder="مثال: محتوى مخالف، سبام..."
+                dir="rtl"
+                data-testid="input-delete-reason"
+              />
+            </div>
+
+            <AlertDialogFooter className="gap-2">
+              <AlertDialogCancel data-testid="button-cancel-delete">إلغاء</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteConfirm}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-1"
+                disabled={deleteMutation.isPending}
+                data-testid="button-confirm-delete"
+              >
+                {deleteMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    جاري الحذف...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4" />
+                    تأكيد الحذف
+                  </>
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );

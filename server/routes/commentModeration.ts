@@ -236,31 +236,42 @@ router.post("/bulk", async (req: Request, res: Response) => {
 
 // Edit a comment with audit trail
 const editCommentSchema = z.object({
-  content: z.string().min(1, "يجب توفير محتوى التعليق"),
-  reason: z.string().optional(),
+  content: z.string().min(1, "يجب توفير محتوى التعليق").max(5000, "التعليق طويل جداً"),
+  reason: z.string().max(500, "السبب طويل جداً").optional(),
 });
 
 router.put("/edit/:commentId", async (req: Request, res: Response) => {
   try {
     const { commentId } = req.params;
-    const userId = (req as any).user?.id;
     
+    // Check authentication first - before any other operation
+    const userId = (req as any).user?.id;
     if (!userId) {
-      return res.status(401).json({ error: "يجب تسجيل الدخول" });
+      return res.status(401).json({ error: "يجب تسجيل الدخول للقيام بهذا الإجراء" });
     }
 
+    // Validate request body
     const parsed = editCommentSchema.safeParse(req.body);
     if (!parsed.success) {
-      return res.status(400).json({ error: parsed.error.errors[0].message });
+      return res.status(400).json({ 
+        error: parsed.error.errors[0].message,
+        field: parsed.error.errors[0].path[0]
+      });
     }
 
     const { content, reason } = parsed.data;
     
+    // Verify comment exists before attempting edit
+    const existingComment = await storage.getCommentById(commentId);
+    if (!existingComment) {
+      return res.status(404).json({ error: "التعليق غير موجود" });
+    }
+    
     const updatedComment = await storage.editCommentWithHistory(
       commentId, 
-      content, 
+      content.trim(), 
       userId, 
-      reason
+      reason?.trim()
     );
 
     res.json({ success: true, comment: updatedComment });
@@ -273,26 +284,37 @@ router.put("/edit/:commentId", async (req: Request, res: Response) => {
 
 // Delete a comment with audit trail
 const deleteCommentSchema = z.object({
-  reason: z.string().optional(),
+  reason: z.string().max(500, "السبب طويل جداً").optional(),
 });
 
 router.delete("/delete/:commentId", async (req: Request, res: Response) => {
   try {
     const { commentId } = req.params;
-    const userId = (req as any).user?.id;
     
+    // Check authentication first - before any other operation
+    const userId = (req as any).user?.id;
     if (!userId) {
-      return res.status(401).json({ error: "يجب تسجيل الدخول" });
+      return res.status(401).json({ error: "يجب تسجيل الدخول للقيام بهذا الإجراء" });
     }
 
+    // Validate request body
     const parsed = deleteCommentSchema.safeParse(req.body);
     if (!parsed.success) {
-      return res.status(400).json({ error: parsed.error.errors[0].message });
+      return res.status(400).json({ 
+        error: parsed.error.errors[0].message,
+        field: parsed.error.errors[0].path[0]
+      });
     }
 
     const { reason } = parsed.data;
     
-    await storage.deleteCommentWithLog(commentId, userId, reason);
+    // Verify comment exists before attempting delete
+    const existingComment = await storage.getCommentById(commentId);
+    if (!existingComment) {
+      return res.status(404).json({ error: "التعليق غير موجود" });
+    }
+    
+    await storage.deleteCommentWithLog(commentId, userId, reason?.trim());
 
     res.json({ success: true });
   } catch (error) {
