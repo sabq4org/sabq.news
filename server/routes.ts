@@ -5518,6 +5518,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error fetching roles:", error);
       res.status(500).json({ message: "Failed to fetch roles" });
     }
+  });
 
   // Create new role
   app.post("/api/admin/roles", requireAuth, requirePermission("system.manage_roles"), async (req: any, res) => {
@@ -5656,7 +5657,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("❌ [DELETE ROLE] Error deleting role:", error);
       res.status(500).json({ message: "فشل في حذف الدور" });
     }
-  });
   });
 
   // Get a single role with its permissions
