@@ -91,9 +91,7 @@ app.use(
         scriptSrc: isDevelopment 
           ? ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://platform.twitter.com", "https://cdn.syndication.twimg.com"]
           : ["'self'", "https://platform.twitter.com", "https://cdn.syndication.twimg.com"],
-        styleSrc: isDevelopment
-          ? ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://ton.twimg.com"]
-          : ["'self'", "https://fonts.googleapis.com", "https://ton.twimg.com"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://ton.twimg.com"],
         imgSrc: ["'self'", "data:", "https:", "blob:", "https://*.twimg.com"],
         fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
         connectSrc: [
