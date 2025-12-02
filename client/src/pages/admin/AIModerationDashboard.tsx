@@ -730,28 +730,28 @@ export default function AIModerationDashboard() {
         </div>
 
         {/* Online Moderators Block */}
-        <Card data-testid="card-online-moderators">
+        <Card data-testid="card-online-moderators" dir="rtl">
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
+            <CardTitle className="text-lg flex flex-row-reverse items-center justify-end gap-2">
               <Users className="h-5 w-5 text-primary" />
               المشرفون المتصلون
               {!moderatorsLoading && onlineModerators.length > 0 && (
-                <Badge variant="secondary" className="mr-2">
+                <Badge variant="secondary" className="ml-2">
                   {onlineModerators.filter(m => m.isOnline).length}
                 </Badge>
               )}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-right">
               المشرفون النشطون حالياً في النظام
             </CardDescription>
           </CardHeader>
           <CardContent>
             {moderatorsLoading ? (
-              <div className="flex items-center gap-4">
+              <div className="flex flex-row-reverse flex-wrap items-center gap-4">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center gap-2">
+                  <div key={i} className="flex flex-row-reverse items-center gap-2">
                     <Skeleton className="h-10 w-10 rounded-full" />
-                    <div className="space-y-1">
+                    <div className="space-y-1 text-right">
                       <Skeleton className="h-4 w-24" />
                       <Skeleton className="h-3 w-16" />
                     </div>
@@ -764,7 +764,7 @@ export default function AIModerationDashboard() {
                 <p>لا يوجد مشرفون متصلون حالياً</p>
               </div>
             ) : (
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-row-reverse flex-wrap gap-4">
                 {onlineModerators.map((moderator) => {
                   const getInitials = () => {
                     if (moderator.firstName && moderator.lastName) {
@@ -795,7 +795,7 @@ export default function AIModerationDashboard() {
                   return (
                     <div
                       key={moderator.id}
-                      className="flex items-center gap-3 p-3 rounded-lg border bg-card hover-elevate transition-all"
+                      className="flex flex-row-reverse items-center gap-3 p-3 rounded-lg border bg-card hover-elevate transition-all"
                       data-testid={`moderator-${moderator.id}`}
                     >
                       <div className="relative">
@@ -806,7 +806,7 @@ export default function AIModerationDashboard() {
                           </AvatarFallback>
                         </Avatar>
                         <span
-                          className={`absolute -bottom-0.5 -left-0.5 h-3.5 w-3.5 rounded-full border-2 border-background ${
+                          className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-background ${
                             moderator.isOnline 
                               ? 'bg-green-500 dark:bg-green-400' 
                               : 'bg-gray-400 dark:bg-gray-500'
@@ -814,16 +814,16 @@ export default function AIModerationDashboard() {
                           data-testid={`status-indicator-${moderator.id}`}
                         />
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0 text-right">
                         <p className="font-medium text-sm truncate" data-testid={`moderator-name-${moderator.id}`}>
                           {getDisplayName()}
                         </p>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-row-reverse items-center gap-2">
                           <Badge variant="outline" className="text-xs px-1.5 py-0">
                             {moderator.jobTitle || moderator.role}
                           </Badge>
                           {moderator.isOnline && moderator.lastActivityAt && (
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <span className="text-xs text-muted-foreground flex flex-row-reverse items-center gap-1">
                               <Clock className="h-3 w-3" />
                               {formatDistanceToNow(new Date(moderator.lastActivityAt), {
                                 addSuffix: true,
