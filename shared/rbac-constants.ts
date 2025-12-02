@@ -40,7 +40,7 @@ export const ROLE_DESCRIPTIONS_AR = {
   [ROLE_NAMES.EDITOR]: "إنشاء وتحرير ونشر المحتوى وإدارة الوسائط والتصنيفات",
   [ROLE_NAMES.REPORTER]: "إنشاء وتحرير المقالات الخاصة فقط دون صلاحيات النشر، مع إمكانية رفع الوسائط ومتابعة التعليقات والإحصائيات على مقالاته",
   [ROLE_NAMES.OPINION_AUTHOR]: "كتابة وتحرير مقالات الرأي الخاصة فقط وإرسالها للمراجعة، دون صلاحيات النشر المباشر",
-  [ROLE_NAMES.COMMENTS_MODERATOR]: "إدارة التعليقات: الموافقة والرفض والحظر",
+  [ROLE_NAMES.COMMENTS_MODERATOR]: "إدارة التعليقات: الموافقة والرفض والتعديل والحذف والحظر",
   [ROLE_NAMES.MEDIA_MANAGER]: "إدارة المكتبة الإعلامية والألبومات",
   [ROLE_NAMES.READER]: "مستخدم عادي بدون صلاحيات تحريرية",
 } as const;
@@ -77,6 +77,7 @@ export const PERMISSION_CODES = {
   COMMENTS_VIEW: "comments.view",
   COMMENTS_VIEW_OWN: "comments.view_own",
   COMMENTS_CREATE: "comments.create",
+  COMMENTS_EDIT: "comments.edit",
   COMMENTS_APPROVE: "comments.approve",
   COMMENTS_REJECT: "comments.reject",
   COMMENTS_DELETE: "comments.delete",
@@ -255,6 +256,7 @@ export const ROLE_PERMISSIONS_MAP: Record<string, string[]> = {
   
   [ROLE_NAMES.COMMENTS_MODERATOR]: [
     PERMISSION_CODES.COMMENTS_VIEW,
+    PERMISSION_CODES.COMMENTS_EDIT,
     PERMISSION_CODES.COMMENTS_APPROVE,
     PERMISSION_CODES.COMMENTS_REJECT,
     PERMISSION_CODES.COMMENTS_DELETE,
@@ -299,6 +301,7 @@ export const PERMISSION_LABELS_AR: Record<string, string> = {
   [PERMISSION_CODES.COMMENTS_VIEW]: "عرض جميع التعليقات",
   [PERMISSION_CODES.COMMENTS_VIEW_OWN]: "عرض التعليقات على مقالاتي",
   [PERMISSION_CODES.COMMENTS_CREATE]: "إنشاء التعليقات",
+  [PERMISSION_CODES.COMMENTS_EDIT]: "تعديل التعليقات",
   [PERMISSION_CODES.COMMENTS_APPROVE]: "الموافقة على التعليقات",
   [PERMISSION_CODES.COMMENTS_REJECT]: "رفض التعليقات",
   [PERMISSION_CODES.COMMENTS_DELETE]: "حذف التعليقات",

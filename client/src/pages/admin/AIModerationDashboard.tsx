@@ -69,6 +69,7 @@ import {
   CheckCircle,
   XCircle,
   ChevronLeft,
+  Clock,
 } from "lucide-react";
 import { formatDistanceToNow, format, differenceInDays } from "date-fns";
 import { arSA } from "date-fns/locale";
@@ -1407,45 +1408,63 @@ export default function AIModerationDashboard() {
                           {memberCommentsData.comments.map((comment) => (
                             <div
                               key={comment.id}
-                              className="p-3 bg-muted/50 rounded-lg"
+                              className="p-4 bg-muted/50 rounded-lg border border-border/50"
                               data-testid={`member-comment-${comment.id}`}
                             >
-                              <div className="flex items-start justify-between gap-2 mb-2">
-                                <p className="text-sm line-clamp-2 flex-1">{comment.content}</p>
+                              {/* Comment Header with Status */}
+                              <div className="flex items-start justify-between gap-3 mb-3">
+                                <p className="text-sm leading-relaxed flex-1">{comment.content}</p>
                                 <Badge
                                   variant="outline"
-                                  className={
+                                  className={`shrink-0 ${
                                     comment.status === 'approved'
-                                      ? 'bg-green-500/10 text-green-600 border-0'
+                                      ? 'bg-green-500/10 text-green-600 border-green-500/20'
                                       : comment.status === 'rejected'
-                                      ? 'bg-red-500/10 text-red-600 border-0'
-                                      : 'bg-yellow-500/10 text-yellow-600 border-0'
-                                  }
+                                      ? 'bg-red-500/10 text-red-600 border-red-500/20'
+                                      : 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20'
+                                  }`}
                                 >
                                   {comment.status === 'approved' ? 'معتمد' : comment.status === 'rejected' ? 'مرفوض' : 'معلق'}
                                 </Badge>
                               </div>
+                              
+                              {/* Article Link - Prominent Display */}
+                              {comment.articleTitle && (
+                                <a
+                                  href={`/article/${comment.articleSlug}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-2 p-2 mb-3 rounded-md bg-primary/5 hover:bg-primary/10 transition-colors group"
+                                  data-testid={`link-article-${comment.id}`}
+                                >
+                                  <FileText className="h-4 w-4 text-primary shrink-0" />
+                                  <span className="text-sm text-primary group-hover:underline truncate">
+                                    {comment.articleTitle}
+                                  </span>
+                                  <ExternalLink className="h-3 w-3 text-primary/60 mr-auto" />
+                                </a>
+                              )}
+                              
+                              {/* Comment Meta Info */}
                               <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                                <span>
+                                <span className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
                                   {formatDistanceToNow(new Date(comment.createdAt), {
                                     addSuffix: true,
                                     locale: arSA,
                                   })}
                                 </span>
-                                {comment.articleTitle && (
-                                  <a
-                                    href={`/article/${comment.articleSlug}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-1 text-primary hover:underline"
+                                {comment.aiClassification && (
+                                  <Badge
+                                    variant="secondary"
+                                    className={`text-xs ${classificationColors[comment.aiClassification]?.bg} ${classificationColors[comment.aiClassification]?.text} border-0`}
                                   >
-                                    <FileText className="h-3 w-3" />
-                                    <span className="truncate max-w-[150px]">{comment.articleTitle}</span>
-                                  </a>
+                                    {classificationLabels[comment.aiClassification] || comment.aiClassification}
+                                  </Badge>
                                 )}
                                 {comment.moderationScore !== undefined && (
-                                  <span className={getScoreColor(comment.moderationScore)}>
-                                    {comment.moderationScore}%
+                                  <span className={`font-medium ${getScoreColor(comment.moderationScore)}`}>
+                                    نقاط الأمان: {comment.moderationScore}%
                                   </span>
                                 )}
                               </div>
