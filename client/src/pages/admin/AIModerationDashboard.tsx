@@ -26,6 +26,7 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -63,8 +64,13 @@ import {
   FileText,
   ExternalLink,
   History,
+  UserCircle,
+  MessageSquare,
+  CheckCircle,
+  XCircle,
+  ChevronLeft,
 } from "lucide-react";
-import { formatDistanceToNow, format } from "date-fns";
+import { formatDistanceToNow, format, differenceInDays } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -102,6 +108,63 @@ interface ModerationStats {
   pending: number;
   averageScore: number;
 }
+
+interface MemberComment {
+  id: string;
+  content: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+  articleId: string;
+  articleTitle?: string;
+  articleSlug?: string;
+  moderationScore?: number;
+  aiClassification?: 'safe' | 'flagged' | 'spam' | 'harmful';
+}
+
+interface MemberProfile {
+  user: {
+    id: string;
+    firstName?: string;
+    lastName?: string;
+    email: string;
+    profileImage?: string;
+    createdAt: string;
+  };
+  stats: {
+    totalComments: number;
+    approvedComments: number;
+    rejectedComments: number;
+    pendingComments: number;
+    aiSafetyScore: number;
+  };
+  aiAnalysis: {
+    overallBehavior: 'excellent' | 'good' | 'moderate' | 'concerning' | 'high_risk';
+    behaviorScore: number;
+    topClassifications: {
+      classification: string;
+      count: number;
+      percentage: number;
+    }[];
+  };
+  comments?: MemberComment[];
+  totalPages?: number;
+}
+
+const behaviorColors: Record<string, { bg: string; text: string }> = {
+  excellent: { bg: "bg-green-500/10", text: "text-green-600" },
+  good: { bg: "bg-blue-500/10", text: "text-blue-600" },
+  moderate: { bg: "bg-yellow-500/10", text: "text-yellow-600" },
+  concerning: { bg: "bg-orange-500/10", text: "text-orange-600" },
+  high_risk: { bg: "bg-red-500/10", text: "text-red-600" },
+};
+
+const behaviorLabels: Record<string, string> = {
+  excellent: "ممتاز",
+  good: "جيد",
+  moderate: "متوسط",
+  concerning: "مقلق",
+  high_risk: "خطر عالي",
+};
 
 const classificationColors: Record<string, { bg: string; text: string; icon: typeof Shield }> = {
   safe: { bg: "bg-green-500/10", text: "text-green-600 dark:text-green-400", icon: ShieldCheck },
@@ -148,6 +211,12 @@ export default function AIModerationDashboard() {
   const [deletingComment, setDeletingComment] = useState<ModerationResult | null>(null);
   const [deleteReason, setDeleteReason] = useState("");
 
+  // Member profile dialog state
+  const [memberProfileOpen, setMemberProfileOpen] = useState(false);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  const [memberStatusFilter, setMemberStatusFilter] = useState<string>("all");
+  const [memberCommentPage, setMemberCommentPage] = useState(1);
+
   const { data: stats, isLoading: statsLoading } = useQuery<ModerationStats>({
     queryKey: ["/api/moderation/stats"],
   });
@@ -167,6 +236,34 @@ export default function AIModerationDashboard() {
       if (!response.ok) throw new Error("Failed to fetch results");
       return response.json();
     },
+  });
+
+  // Member profile query
+  const { data: memberProfile, isLoading: memberProfileLoading } = useQuery<MemberProfile>({
+    queryKey: ["/api/moderation/member", selectedMemberId],
+    queryFn: async () => {
+      if (!selectedMemberId) throw new Error("No member selected");
+      const response = await fetch(`/api/moderation/member/${selectedMemberId}`);
+      if (!response.ok) throw new Error("Failed to fetch member profile");
+      return response.json();
+    },
+    enabled: !!selectedMemberId && memberProfileOpen,
+  });
+
+  // Member comments query
+  const { data: memberCommentsData, isLoading: memberCommentsLoading } = useQuery<{ comments: MemberComment[]; totalPages: number }>({
+    queryKey: ["/api/moderation/member", selectedMemberId, "comments", memberStatusFilter, memberCommentPage],
+    queryFn: async () => {
+      if (!selectedMemberId) throw new Error("No member selected");
+      let url = `/api/moderation/member/${selectedMemberId}/comments?page=${memberCommentPage}`;
+      if (memberStatusFilter !== "all") {
+        url += `&status=${memberStatusFilter}`;
+      }
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch member comments");
+      return response.json();
+    },
+    enabled: !!selectedMemberId && memberProfileOpen,
   });
 
   const analyzeAllMutation = useMutation({
@@ -325,6 +422,40 @@ export default function AIModerationDashboard() {
     },
   });
 
+  // Bulk action mutation for member profile
+  const bulkActionMutation = useMutation({
+    mutationFn: async ({ memberId, action, commentIds, reason }: { 
+      memberId: string; 
+      action: 'approve' | 'reject'; 
+      commentIds: string[]; 
+      reason?: string 
+    }) => {
+      return await apiRequest(`/api/moderation/member/${memberId}/bulk-action`, {
+        method: "POST",
+        body: JSON.stringify({ action, commentIds, reason }),
+      });
+    },
+    onSuccess: (_, variables) => {
+      toast({
+        title: variables.action === 'approve' ? "تم الاعتماد" : "تم الرفض",
+        description: variables.action === 'approve' 
+          ? "تم اعتماد التعليقات المحددة بنجاح" 
+          : "تم رفض التعليقات المحددة بنجاح",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/moderation"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/moderation/member", selectedMemberId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/comments"] });
+      refetch();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل تنفيذ الإجراء",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Handle opening edit dialog
   const handleEditClick = (result: ModerationResult) => {
     setEditingComment(result);
@@ -383,6 +514,68 @@ export default function AIModerationDashboard() {
   const handleViewDetails = (result: ModerationResult) => {
     setSelectedComment(result);
     setDetailsOpen(true);
+  };
+
+  // Handle opening member profile dialog
+  const handleMemberProfileClick = (memberId: string) => {
+    setSelectedMemberId(memberId);
+    setMemberStatusFilter("all");
+    setMemberCommentPage(1);
+    setMemberProfileOpen(true);
+  };
+
+  // Handle bulk actions from member profile
+  const handleBulkApprove = () => {
+    if (!selectedMemberId || !memberCommentsData?.comments) return;
+    const pendingCommentIds = memberCommentsData.comments
+      .filter(c => c.status === 'pending')
+      .map(c => c.id);
+    if (pendingCommentIds.length === 0) {
+      toast({
+        title: "لا توجد تعليقات معلقة",
+        description: "لا توجد تعليقات معلقة لاعتمادها",
+      });
+      return;
+    }
+    bulkActionMutation.mutate({
+      memberId: selectedMemberId,
+      action: 'approve',
+      commentIds: pendingCommentIds,
+    });
+  };
+
+  const handleBulkReject = () => {
+    if (!selectedMemberId || !memberCommentsData?.comments) return;
+    const flaggedCommentIds = memberCommentsData.comments
+      .filter(c => c.aiClassification && ['flagged', 'spam', 'harmful'].includes(c.aiClassification))
+      .map(c => c.id);
+    if (flaggedCommentIds.length === 0) {
+      toast({
+        title: "لا توجد تعليقات مشكوك فيها",
+        description: "لا توجد تعليقات مشكوك فيها لرفضها",
+      });
+      return;
+    }
+    bulkActionMutation.mutate({
+      memberId: selectedMemberId,
+      action: 'reject',
+      commentIds: flaggedCommentIds,
+      reason: "تم الرفض الجماعي بناءً على تحليل الذكاء الاصطناعي",
+    });
+  };
+
+  // Get initials for avatar fallback
+  const getMemberInitials = (firstName?: string, lastName?: string, email?: string) => {
+    if (firstName && lastName) {
+      return `${firstName[0]}${lastName[0]}`.toUpperCase();
+    }
+    if (firstName) {
+      return firstName.slice(0, 2).toUpperCase();
+    }
+    if (email) {
+      return email.slice(0, 2).toUpperCase();
+    }
+    return "??";
   };
 
   if (statsLoading) {
@@ -650,10 +843,14 @@ export default function AIModerationDashboard() {
                             )}
 
                             <div className="flex items-center flex-wrap gap-4 text-xs text-muted-foreground">
-                              <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => handleMemberProfileClick(result.comment.user.id)}
+                                className="flex items-center gap-1 cursor-pointer hover:text-primary transition-colors"
+                                data-testid={`button-member-profile-${result.comment.user.id}`}
+                              >
                                 <User className="h-3 w-3" />
                                 {getUserName(result.comment.user)}
-                              </div>
+                              </button>
                               <div className="flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
                                 {formatDistanceToNow(new Date(result.aiModerationAnalyzedAt), {
@@ -988,6 +1185,358 @@ export default function AIModerationDashboard() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Member Profile Dialog */}
+        <Dialog open={memberProfileOpen} onOpenChange={setMemberProfileOpen}>
+          <DialogContent className="max-w-3xl max-h-[90vh]" dir="rtl" data-testid="dialog-member-profile">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <UserCircle className="h-5 w-5" />
+                ملف العضو
+              </DialogTitle>
+              <DialogDescription>
+                عرض معلومات العضو وسجل التعليقات
+              </DialogDescription>
+            </DialogHeader>
+
+            {memberProfileLoading ? (
+              <div className="space-y-4">
+                <Skeleton className="h-24 w-full" />
+                <div className="grid grid-cols-4 gap-4">
+                  {[1, 2, 3, 4].map((i) => (
+                    <Skeleton key={i} className="h-20" />
+                  ))}
+                </div>
+                <Skeleton className="h-32 w-full" />
+              </div>
+            ) : memberProfile ? (
+              <ScrollArea className="max-h-[calc(90vh-180px)]">
+                <div className="space-y-6 pl-4">
+                  {/* User Info Section */}
+                  <Card data-testid="card-user-info">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-4">
+                        <Avatar className="h-16 w-16" data-testid="avatar-member">
+                          <AvatarImage 
+                            src={memberProfile.user.profileImage} 
+                            alt={getUserName(memberProfile.user as any)} 
+                          />
+                          <AvatarFallback className="text-lg">
+                            {getMemberInitials(
+                              memberProfile.user.firstName,
+                              memberProfile.user.lastName,
+                              memberProfile.user.email
+                            )}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold" data-testid="text-member-name">
+                            {memberProfile.user.firstName && memberProfile.user.lastName
+                              ? `${memberProfile.user.firstName} ${memberProfile.user.lastName}`
+                              : memberProfile.user.email.split('@')[0]}
+                          </h3>
+                          <p className="text-sm text-muted-foreground" data-testid="text-member-email">
+                            {memberProfile.user.email}
+                          </p>
+                          <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                            <div className="flex items-center gap-1" data-testid="text-member-since">
+                              <Calendar className="h-3 w-3" />
+                              عضو منذ {format(new Date(memberProfile.user.createdAt), "PP", { locale: arSA })}
+                            </div>
+                            <div className="flex items-center gap-1" data-testid="text-days-active">
+                              <History className="h-3 w-3" />
+                              {differenceInDays(new Date(), new Date(memberProfile.user.createdAt))} يوم نشط
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Stats Cards Grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <Card data-testid="card-stat-total">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-xs text-muted-foreground">إجمالي التعليقات</p>
+                            <p className="text-2xl font-bold">{memberProfile.stats.totalComments}</p>
+                          </div>
+                          <div className="p-2 rounded-full bg-primary/10">
+                            <MessageSquare className="h-5 w-5 text-primary" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card data-testid="card-stat-approved">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-xs text-muted-foreground">التعليقات المعتمدة</p>
+                            <p className="text-2xl font-bold text-green-600">{memberProfile.stats.approvedComments}</p>
+                          </div>
+                          <div className="p-2 rounded-full bg-green-500/10">
+                            <CheckCircle className="h-5 w-5 text-green-500" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card data-testid="card-stat-rejected">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-xs text-muted-foreground">التعليقات المرفوضة</p>
+                            <p className="text-2xl font-bold text-red-600">{memberProfile.stats.rejectedComments}</p>
+                          </div>
+                          <div className="p-2 rounded-full bg-red-500/10">
+                            <XCircle className="h-5 w-5 text-red-500" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card data-testid="card-stat-safety">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-xs text-muted-foreground">نقاط الأمان AI</p>
+                            <p className={`text-2xl font-bold ${getScoreColor(memberProfile.stats.aiSafetyScore)}`}>
+                              {memberProfile.stats.aiSafetyScore}%
+                            </p>
+                          </div>
+                          <div className="p-2 rounded-full bg-primary/10">
+                            <Shield className="h-5 w-5 text-primary" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* AI Behavior Analysis Section */}
+                  <Card data-testid="card-ai-analysis">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <Brain className="h-4 w-4" />
+                        تحليل سلوك AI
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">السلوك العام:</span>
+                        <Badge
+                          className={`${behaviorColors[memberProfile.aiAnalysis.overallBehavior]?.bg} ${behaviorColors[memberProfile.aiAnalysis.overallBehavior]?.text} border-0`}
+                          data-testid="badge-behavior"
+                        >
+                          {behaviorLabels[memberProfile.aiAnalysis.overallBehavior]}
+                        </Badge>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">نقاط السلوك:</span>
+                          <span className={`font-bold ${getScoreColor(memberProfile.aiAnalysis.behaviorScore)}`}>
+                            {memberProfile.aiAnalysis.behaviorScore}%
+                          </span>
+                        </div>
+                        <Progress
+                          value={memberProfile.aiAnalysis.behaviorScore}
+                          className="h-2"
+                          data-testid="progress-behavior-score"
+                        />
+                      </div>
+
+                      {memberProfile.aiAnalysis.topClassifications.length > 0 && (
+                        <div className="space-y-2">
+                          <span className="text-sm text-muted-foreground">أعلى التصنيفات:</span>
+                          <div className="space-y-2">
+                            {memberProfile.aiAnalysis.topClassifications.map((cls) => (
+                              <div key={cls.classification} className="flex items-center gap-2">
+                                <Badge
+                                  variant="secondary"
+                                  className={`${classificationColors[cls.classification]?.bg} ${classificationColors[cls.classification]?.text} border-0`}
+                                >
+                                  {classificationLabels[cls.classification] || cls.classification}
+                                </Badge>
+                                <span className="text-sm text-muted-foreground">
+                                  {cls.count} ({cls.percentage.toFixed(1)}%)
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Comment History Section */}
+                  <Card data-testid="card-comment-history">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          <MessageCircle className="h-4 w-4" />
+                          سجل التعليقات
+                        </CardTitle>
+                        <Select
+                          value={memberStatusFilter}
+                          onValueChange={(value) => {
+                            setMemberStatusFilter(value);
+                            setMemberCommentPage(1);
+                          }}
+                          data-testid="select-member-status-filter"
+                        >
+                          <SelectTrigger className="w-[140px]">
+                            <SelectValue placeholder="الحالة" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">الكل</SelectItem>
+                            <SelectItem value="pending">معلق</SelectItem>
+                            <SelectItem value="approved">معتمد</SelectItem>
+                            <SelectItem value="rejected">مرفوض</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {memberCommentsLoading ? (
+                        <div className="space-y-2">
+                          {[1, 2, 3].map((i) => (
+                            <Skeleton key={i} className="h-16" />
+                          ))}
+                        </div>
+                      ) : memberCommentsData?.comments && memberCommentsData.comments.length > 0 ? (
+                        <div className="space-y-3">
+                          {memberCommentsData.comments.map((comment) => (
+                            <div
+                              key={comment.id}
+                              className="p-3 bg-muted/50 rounded-lg"
+                              data-testid={`member-comment-${comment.id}`}
+                            >
+                              <div className="flex items-start justify-between gap-2 mb-2">
+                                <p className="text-sm line-clamp-2 flex-1">{comment.content}</p>
+                                <Badge
+                                  variant="outline"
+                                  className={
+                                    comment.status === 'approved'
+                                      ? 'bg-green-500/10 text-green-600 border-0'
+                                      : comment.status === 'rejected'
+                                      ? 'bg-red-500/10 text-red-600 border-0'
+                                      : 'bg-yellow-500/10 text-yellow-600 border-0'
+                                  }
+                                >
+                                  {comment.status === 'approved' ? 'معتمد' : comment.status === 'rejected' ? 'مرفوض' : 'معلق'}
+                                </Badge>
+                              </div>
+                              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                <span>
+                                  {formatDistanceToNow(new Date(comment.createdAt), {
+                                    addSuffix: true,
+                                    locale: arSA,
+                                  })}
+                                </span>
+                                {comment.articleTitle && (
+                                  <a
+                                    href={`/article/${comment.articleSlug}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1 text-primary hover:underline"
+                                  >
+                                    <FileText className="h-3 w-3" />
+                                    <span className="truncate max-w-[150px]">{comment.articleTitle}</span>
+                                  </a>
+                                )}
+                                {comment.moderationScore !== undefined && (
+                                  <span className={getScoreColor(comment.moderationScore)}>
+                                    {comment.moderationScore}%
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+
+                          {/* Pagination */}
+                          {memberCommentsData.totalPages > 1 && (
+                            <div className="flex items-center justify-center gap-2 mt-4">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setMemberCommentPage((p) => Math.max(1, p - 1))}
+                                disabled={memberCommentPage === 1}
+                                data-testid="button-prev-page"
+                              >
+                                <ChevronRight className="h-4 w-4" />
+                              </Button>
+                              <span className="text-sm text-muted-foreground">
+                                صفحة {memberCommentPage} من {memberCommentsData.totalPages}
+                              </span>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setMemberCommentPage((p) => Math.min(memberCommentsData.totalPages, p + 1))}
+                                disabled={memberCommentPage === memberCommentsData.totalPages}
+                                data-testid="button-next-page"
+                              >
+                                <ChevronLeft className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p>لا توجد تعليقات</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              </ScrollArea>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <UserCircle className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>فشل تحميل ملف العضو</p>
+              </div>
+            )}
+
+            <DialogFooter className="gap-2 flex-wrap">
+              <Button variant="outline" onClick={() => setMemberProfileOpen(false)} data-testid="button-close-profile">
+                إغلاق
+              </Button>
+              {memberProfile && memberProfile.stats.pendingComments > 0 && (
+                <Button
+                  onClick={handleBulkApprove}
+                  disabled={bulkActionMutation.isPending}
+                  className="gap-1"
+                  data-testid="button-bulk-approve"
+                >
+                  {bulkActionMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <CheckCircle className="h-4 w-4" />
+                  )}
+                  اعتماد كل المعلق ({memberProfile.stats.pendingComments})
+                </Button>
+              )}
+              {memberProfile && memberCommentsData?.comments?.some(c => c.aiClassification && ['flagged', 'spam', 'harmful'].includes(c.aiClassification)) && (
+                <Button
+                  variant="destructive"
+                  onClick={handleBulkReject}
+                  disabled={bulkActionMutation.isPending}
+                  className="gap-1"
+                  data-testid="button-bulk-reject"
+                >
+                  {bulkActionMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <XCircle className="h-4 w-4" />
+                  )}
+                  رفض المشكوك فيه
+                </Button>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
