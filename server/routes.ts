@@ -9741,7 +9741,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(userId);
 
       // Require staff role to view online moderators
-      const staffRoles = ['admin', 'superadmin', 'editor', 'chief_editor', 'moderator', 'system_admin', 'reporter'];
+      const staffRoles = ['admin', 'superadmin', 'editor', 'chief_editor', 'moderator', 'system_admin', 'reporter', 'comments_moderator'];
       if (!user || !staffRoles.includes(user.role)) {
         return res.status(403).json({ message: "Forbidden" });
       }

@@ -3,8 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Circle, Clock } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Users, Circle } from "lucide-react";
+import { format, formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { useEffect, useState } from "react";
 
@@ -31,17 +36,6 @@ const roleLabels: Record<string, string> = {
   comments_moderator: "مشرف التعليقات",
 };
 
-const roleColors: Record<string, string> = {
-  admin: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
-  superadmin: "bg-red-500/10 text-red-600 dark:text-red-400",
-  editor: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-  chief_editor: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-  moderator: "bg-green-500/10 text-green-600 dark:text-green-400",
-  system_admin: "bg-slate-500/10 text-slate-600 dark:text-slate-400",
-  reporter: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400",
-  comments_moderator: "bg-teal-500/10 text-teal-600 dark:text-teal-400",
-};
-
 export function OnlineModeratorsWidget() {
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -59,7 +53,8 @@ export function OnlineModeratorsWidget() {
   }, []);
 
   const onlineModerators = moderators?.filter(m => m.isOnline) || [];
-  const offlineModerators = moderators?.filter(m => !m.isOnline).slice(0, 3) || [];
+  const offlineModerators = moderators?.filter(m => !m.isOnline).slice(0, 5) || [];
+  const allModerators = [...onlineModerators, ...offlineModerators];
 
   const getInitials = (firstName: string | null, lastName: string | null, email: string) => {
     if (firstName && lastName) {
@@ -81,13 +76,21 @@ export function OnlineModeratorsWidget() {
     return mod.email.split("@")[0];
   };
 
-  const getTimeSinceLogin = (lastActivityAt: string | null) => {
+  const getShortName = (mod: OnlineModerator) => {
+    if (mod.firstName) {
+      return mod.firstName;
+    }
+    return mod.email.split("@")[0].slice(0, 8);
+  };
+
+  const formatLastActivity = (lastActivityAt: string | null) => {
     if (!lastActivityAt) return "غير محدد";
     try {
-      return formatDistanceToNow(new Date(lastActivityAt), { 
-        locale: arSA, 
-        addSuffix: true 
-      });
+      const date = new Date(lastActivityAt);
+      const formattedDate = format(date, "dd/MM/yyyy", { locale: arSA });
+      const formattedTime = format(date, "hh:mm a", { locale: arSA });
+      const timeAgo = formatDistanceToNow(date, { locale: arSA, addSuffix: true });
+      return `${formattedDate} - ${formattedTime}\n(${timeAgo})`;
     } catch {
       return "غير محدد";
     }
@@ -97,19 +100,15 @@ export function OnlineModeratorsWidget() {
     return (
       <Card data-testid="card-online-moderators-loading">
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">المشرفون المتصلون</CardTitle>
+          <CardTitle className="text-sm font-medium">المشرفون</CardTitle>
           <Users className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
-        <CardContent className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="flex items-center gap-3">
-              <Skeleton className="h-10 w-10 rounded-full" />
-              <div className="flex-1 space-y-1">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-3 w-16" />
-              </div>
-            </div>
-          ))}
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-8 w-20 rounded-full" />
+            ))}
+          </div>
         </CardContent>
       </Card>
     );
@@ -117,103 +116,79 @@ export function OnlineModeratorsWidget() {
 
   return (
     <Card data-testid="card-online-moderators">
-      <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-3">
+      <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
         <div className="flex items-center gap-2">
-          <CardTitle className="text-sm font-medium">المشرفون المتصلون</CardTitle>
+          <CardTitle className="text-sm font-medium">المشرفون</CardTitle>
           {onlineModerators.length > 0 && (
-            <Badge variant="secondary" className="text-xs" data-testid="badge-online-count">
-              {onlineModerators.length}
+            <Badge variant="secondary" className="text-xs px-1.5 py-0" data-testid="badge-online-count">
+              {onlineModerators.length} متصل
             </Badge>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          <Circle className="h-2 w-2 fill-green-500 text-green-500 animate-pulse" />
-          <span className="text-xs text-muted-foreground">مباشر</span>
-        </div>
+        <Users className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
-      <CardContent className="space-y-3">
-        {onlineModerators.length === 0 && offlineModerators.length === 0 ? (
-          <div className="text-center py-4 text-muted-foreground text-sm" data-testid="text-no-moderators">
-            لا يوجد مشرفون متصلون حالياً
+      <CardContent>
+        {allModerators.length === 0 ? (
+          <div className="text-center py-3 text-muted-foreground text-sm" data-testid="text-no-moderators">
+            لا يوجد مشرفون
           </div>
         ) : (
-          <>
-            {onlineModerators.map((mod) => (
-              <div 
-                key={mod.id} 
-                className="flex items-center gap-3 p-2 rounded-lg bg-green-50/50 dark:bg-green-950/20 border border-green-100 dark:border-green-900/30"
-                data-testid={`moderator-online-${mod.id}`}
-              >
-                <div className="relative">
-                  <Avatar className="h-10 w-10 border-2 border-green-500">
-                    <AvatarImage src={mod.profileImageUrl || undefined} alt={getDisplayName(mod)} />
-                    <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                      {getInitials(mod.firstName, mod.lastName, mod.email)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <Circle 
-                    className="absolute -bottom-0.5 -right-0.5 h-3 w-3 fill-green-500 text-green-500 border-2 border-background rounded-full" 
-                    data-testid="indicator-online"
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-medium truncate" data-testid={`text-name-${mod.id}`}>
-                      {getDisplayName(mod)}
-                    </p>
-                    <Badge 
-                      variant="secondary" 
-                      className={`text-xs ${roleColors[mod.role] || ""}`}
-                      data-testid={`badge-role-${mod.id}`}
-                    >
-                      {mod.jobTitle || roleLabels[mod.role] || mod.role}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
-                    <Clock className="h-3 w-3" />
-                    <span data-testid={`text-time-${mod.id}`}>
-                      نشط {getTimeSinceLogin(mod.lastActivityAt)}
+          <div className="flex flex-wrap gap-2">
+            {allModerators.map((mod) => (
+              <Tooltip key={mod.id}>
+                <TooltipTrigger asChild>
+                  <div
+                    className={`
+                      inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium
+                      border cursor-default transition-colors
+                      ${mod.isOnline 
+                        ? "bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800 text-green-700 dark:text-green-300" 
+                        : "bg-muted/50 border-border text-muted-foreground"
+                      }
+                    `}
+                    data-testid={`moderator-${mod.isOnline ? 'online' : 'offline'}-${mod.id}`}
+                  >
+                    <Circle 
+                      className={`h-2 w-2 ${
+                        mod.isOnline 
+                          ? "fill-green-500 text-green-500" 
+                          : "fill-gray-400 text-gray-400"
+                      }`}
+                      data-testid={`indicator-${mod.isOnline ? 'online' : 'offline'}`}
+                    />
+                    <span className="max-w-[80px] truncate" data-testid={`text-name-${mod.id}`}>
+                      {getShortName(mod)}
                     </span>
                   </div>
-                </div>
-              </div>
+                </TooltipTrigger>
+                <TooltipContent 
+                  side="top" 
+                  className="text-right"
+                  data-testid={`tooltip-${mod.id}`}
+                >
+                  <div className="space-y-1">
+                    <p className="font-medium">{getDisplayName(mod)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {mod.jobTitle || roleLabels[mod.role] || mod.role}
+                    </p>
+                    <div className="border-t pt-1 mt-1">
+                      <p className="text-xs">
+                        {mod.isOnline ? (
+                          <span className="text-green-600 dark:text-green-400">متصل الآن</span>
+                        ) : (
+                          <>
+                            <span className="text-muted-foreground">آخر ظهور:</span>
+                            <br />
+                            <span className="whitespace-pre-line">{formatLastActivity(mod.lastActivityAt)}</span>
+                          </>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
             ))}
-
-            {offlineModerators.length > 0 && onlineModerators.length > 0 && (
-              <div className="border-t pt-2 mt-2">
-                <p className="text-xs text-muted-foreground mb-2">آخر نشاط</p>
-              </div>
-            )}
-
-            {offlineModerators.map((mod) => (
-              <div 
-                key={mod.id} 
-                className="flex items-center gap-3 p-2 rounded-lg opacity-60"
-                data-testid={`moderator-offline-${mod.id}`}
-              >
-                <div className="relative">
-                  <Avatar className="h-9 w-9">
-                    <AvatarImage src={mod.profileImageUrl || undefined} alt={getDisplayName(mod)} />
-                    <AvatarFallback className="bg-muted text-muted-foreground text-sm">
-                      {getInitials(mod.firstName, mod.lastName, mod.email)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <Circle 
-                    className="absolute -bottom-0.5 -right-0.5 h-3 w-3 fill-gray-400 text-gray-400 border-2 border-background rounded-full" 
-                    data-testid="indicator-offline"
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm truncate" data-testid={`text-name-${mod.id}`}>
-                    {getDisplayName(mod)}
-                  </p>
-                  <p className="text-xs text-muted-foreground" data-testid={`text-time-${mod.id}`}>
-                    {getTimeSinceLogin(mod.lastActivityAt)}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </>
+          </div>
         )}
       </CardContent>
     </Card>
