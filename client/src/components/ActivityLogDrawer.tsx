@@ -86,12 +86,12 @@ export default function ActivityLogDrawer({ log, open, onOpenChange }: ActivityL
               <span>المستخدم</span>
               <User className="h-4 w-4" />
             </h3>
-            <div className="flex items-center gap-3 p-3 rounded-md border flex-row-reverse">
+            <div className="flex items-center gap-3 p-3 rounded-md border">
               <Avatar className="h-10 w-10 shrink-0">
                 <AvatarImage src={log.user?.profileImageUrl || undefined} />
                 <AvatarFallback>{userInitials}</AvatarFallback>
               </Avatar>
-              <div className="flex-1 min-w-0 text-right">
+              <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm">{userName}</p>
                 {log.user && (
                   <p className="text-xs text-muted-foreground truncate" dir="ltr">{log.user.email}</p>
@@ -121,22 +121,19 @@ export default function ActivityLogDrawer({ log, open, onOpenChange }: ActivityL
               </div>
             </h3>
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-2 rounded-md bg-muted/50 flex-row-reverse">
+              <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                 <span className="text-sm text-muted-foreground">نوع العملية</span>
-                <div className="flex items-center gap-2">
-                  <Badge variant={actionPresentation.badgeVariant} data-testid="badge-action">
-                    {actionPresentation.label}
-                  </Badge>
-                </div>
+                <Badge variant={actionPresentation.badgeVariant} data-testid="badge-action">
+                  {actionPresentation.label}
+                </Badge>
               </div>
-              <div className="flex items-center justify-between p-2 rounded-md bg-muted/50 flex-row-reverse">
+              <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                 <span className="text-sm text-muted-foreground">نوع الكيان</span>
                 <span className="text-sm font-medium">{getEntityTypeLabel(log.entityType)}</span>
               </div>
-              <div className="flex items-center justify-between p-2 rounded-md bg-muted/50 flex-row-reverse">
+              <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                 <span className="text-sm text-muted-foreground">معرف الكيان</span>
                 <div className="flex items-center gap-2">
-                  <code className="text-xs bg-background px-2 py-1 rounded" dir="ltr">{log.entityId}</code>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -145,6 +142,7 @@ export default function ActivityLogDrawer({ log, open, onOpenChange }: ActivityL
                   >
                     <Copy className="h-3 w-3" />
                   </Button>
+                  <code className="text-xs bg-background px-2 py-1 rounded" dir="ltr">{log.entityId}</code>
                 </div>
               </div>
             </div>
@@ -231,7 +229,7 @@ export default function ActivityLogDrawer({ log, open, onOpenChange }: ActivityL
 
           {/* Actions */}
           <Separator />
-          <div className="flex gap-2 flex-row-reverse">
+          <div className="flex gap-2">
             <Button
               variant="outline"
               className="flex-1"
