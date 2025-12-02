@@ -396,6 +396,7 @@ export interface IStorage {
     activityDays?: number;
   }): Promise<{
     users: (User & {
+      commentCount: number;
       articleCount: number;
       totalPoints: number;
     })[];
@@ -1820,6 +1821,7 @@ export interface IStorage {
     bookmarkCount: number | null;
     viewCount: number | null;
     shareCount: number | null;
+    commentCount: number | null;
   }>>;
   
   // 6. Budget Tracking - Monitor API usage and costs
@@ -2056,6 +2058,7 @@ export interface IStorage {
       avgScrollDepth: number;
       bounceRate: number;
       shareCount: number;
+      commentCount: number;
       reactionCount: number;
       bookmarkCount: number;
       uniqueVisitors: number;
@@ -2222,9 +2225,11 @@ export class DatabaseStorage implements IStorage {
     verificationBadge?: string;
     emailVerified?: boolean;
     searchQuery?: string;
+    hasRejectedComments?: boolean;
     activityDays?: number;
   }): Promise<{
     users: (User & {
+      commentCount: number;
       articleCount: number;
       totalPoints: number;
     })[];
