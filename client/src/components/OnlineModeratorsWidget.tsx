@@ -90,12 +90,13 @@ export function OnlineModeratorsWidget() {
         <CardContent>
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center gap-3">
+              <div key={i} className="flex flex-row-reverse items-center gap-3">
                 <Skeleton className="h-10 w-10 rounded-full" />
-                <div className="space-y-1.5 flex-1">
-                  <Skeleton className="h-4 w-24 mr-auto" />
-                  <Skeleton className="h-3 w-16 mr-auto" />
+                <div className="space-y-1.5 flex-1 text-right">
+                  <Skeleton className="h-4 w-24 ml-auto" />
+                  <Skeleton className="h-3 w-16 ml-auto" />
                 </div>
+                <Skeleton className="h-5 w-12" />
               </div>
             ))}
           </div>
@@ -133,7 +134,7 @@ export function OnlineModeratorsWidget() {
                   {onlineModerators.map((mod) => (
                     <div
                       key={mod.id}
-                      className="flex items-center gap-3 p-2 rounded-lg hover-elevate"
+                      className="flex flex-row-reverse items-center gap-3 p-2 rounded-lg hover-elevate"
                       data-testid={`moderator-online-${mod.id}`}
                     >
                       <div className="relative">
@@ -144,7 +145,7 @@ export function OnlineModeratorsWidget() {
                           </AvatarFallback>
                         </Avatar>
                         <Circle 
-                          className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 fill-green-500 text-green-500 bg-background rounded-full"
+                          className="absolute -bottom-0.5 -left-0.5 h-3.5 w-3.5 fill-green-500 text-green-500 bg-background rounded-full"
                           data-testid="indicator-online"
                         />
                       </div>
@@ -156,7 +157,7 @@ export function OnlineModeratorsWidget() {
                           {mod.jobTitle || getRoleLabel(mod)}
                         </p>
                       </div>
-                      <Badge variant="outline" className="text-xs text-green-600 dark:text-green-400 border-green-200 dark:border-green-800 shrink-0 mr-auto">
+                      <Badge variant="outline" className="text-xs text-green-600 dark:text-green-400 border-green-200 dark:border-green-800 shrink-0">
                         متصل
                       </Badge>
                     </div>
