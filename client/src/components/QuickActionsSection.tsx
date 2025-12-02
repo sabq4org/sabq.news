@@ -3,12 +3,26 @@ import {
   Newspaper,
   CheckSquare,
   TrendingUp,
-  Megaphone,
   Blocks,
 } from "lucide-react";
+import { useAuth, hasAnyPermission } from "@/hooks/useAuth";
+
+interface QuickAction {
+  id: string;
+  title: string;
+  description: string;
+  icon: typeof Newspaper;
+  iconColor: string;
+  iconBgColor: string;
+  href: string;
+  testId: string;
+  permissions: string[];
+}
 
 export function QuickActionsSection() {
-  const actions = [
+  const { user } = useAuth();
+
+  const allActions: QuickAction[] = [
     {
       id: "add-article",
       title: "إضافة خبر",
@@ -18,6 +32,7 @@ export function QuickActionsSection() {
       iconBgColor: "bg-emerald-50 dark:bg-emerald-950",
       href: "/dashboard/article/new",
       testId: "quick-action-add-article",
+      permissions: ["articles.create"],
     },
     {
       id: "add-task",
@@ -28,6 +43,7 @@ export function QuickActionsSection() {
       iconBgColor: "bg-indigo-50 dark:bg-indigo-950",
       href: "/dashboard/tasks",
       testId: "quick-action-add-task",
+      permissions: ["tasks.manage"],
     },
     {
       id: "add-analysis",
@@ -38,6 +54,7 @@ export function QuickActionsSection() {
       iconBgColor: "bg-purple-50 dark:bg-purple-950",
       href: "/dashboard/ai/deep",
       testId: "quick-action-add-analysis",
+      permissions: ["analysis.create", "omq.create"],
     },
     {
       id: "add-block",
@@ -48,8 +65,17 @@ export function QuickActionsSection() {
       iconBgColor: "bg-cyan-50 dark:bg-cyan-950",
       href: "/dashboard/smart-blocks",
       testId: "quick-action-add-block",
+      permissions: ["blocks.manage"],
     },
   ];
+
+  const visibleActions = allActions.filter((action) =>
+    hasAnyPermission(user, ...action.permissions)
+  );
+
+  if (visibleActions.length === 0) {
+    return null;
+  }
 
   return (
     <div className="space-y-3 sm:space-y-4">
@@ -65,7 +91,7 @@ export function QuickActionsSection() {
 
       {/* Grid - 2 columns on mobile for better space utilization */}
       <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-4">
-        {actions.map((action) => (
+        {visibleActions.map((action) => (
           <QuickActionCard
             key={action.id}
             title={action.title}

@@ -7533,11 +7533,13 @@ export class DatabaseStorage implements IStorage {
     lastName: string | null;
     profileImageUrl: string | null;
     role: string;
+    roleNameAr: string | null;
     jobTitle: string | null;
     lastActivityAt: Date | null;
     isOnline: boolean;
   }[]> {
-    const moderatorRoles = ['admin', 'superadmin', 'editor', 'chief_editor', 'moderator', 'system_admin', 'comments_moderator'];
+    const legacyModeratorRoles = ['admin', 'superadmin', 'editor', 'chief_editor', 'moderator', 'system_admin', 'comments_moderator'];
+    const excludedRoles = ['reader']; // Roles to exclude from moderators list
     const onlineThreshold = new Date(Date.now() - minutesThreshold * 60 * 1000);
     
     // Query 1: Get users with moderator roles from legacy users.role field
@@ -7549,6 +7551,7 @@ export class DatabaseStorage implements IStorage {
         lastName: users.lastName,
         profileImageUrl: users.profileImageUrl,
         role: users.role,
+        roleNameAr: sql<string | null>`null`,
         jobTitle: users.jobTitle,
         lastActivityAt: users.lastActivityAt,
         loggedOutAt: users.loggedOutAt,
@@ -7556,12 +7559,13 @@ export class DatabaseStorage implements IStorage {
       .from(users)
       .where(
         and(
-          inArray(users.role, moderatorRoles),
+          inArray(users.role, legacyModeratorRoles),
           eq(users.status, 'active')
         )
       );
     
-    // Query 2: Get users with moderator roles from RBAC user_roles table
+    // Query 2: Get ALL users with ANY RBAC role (except excluded roles like 'reader')
+    // This includes custom roles like content_manager, opinion_author, etc.
     const rbacModerators = await db
       .select({
         id: users.id,
@@ -7570,6 +7574,7 @@ export class DatabaseStorage implements IStorage {
         lastName: users.lastName,
         profileImageUrl: users.profileImageUrl,
         role: roles.name,
+        roleNameAr: roles.nameAr,
         jobTitle: users.jobTitle,
         lastActivityAt: users.lastActivityAt,
         loggedOutAt: users.loggedOutAt,
@@ -7579,7 +7584,7 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(roles, eq(userRoles.roleId, roles.id))
       .where(
         and(
-          inArray(roles.name, moderatorRoles),
+          not(inArray(roles.name, excludedRoles)),
           eq(users.status, 'active')
         )
       );
@@ -7592,6 +7597,7 @@ export class DatabaseStorage implements IStorage {
       lastName: string | null;
       profileImageUrl: string | null;
       role: string;
+      roleNameAr: string | null;
       jobTitle: string | null;
       lastActivityAt: Date | null;
       loggedOutAt: Date | null;
@@ -7627,6 +7633,7 @@ export class DatabaseStorage implements IStorage {
         lastName: mod.lastName,
         profileImageUrl: mod.profileImageUrl,
         role: mod.role,
+        roleNameAr: mod.roleNameAr,
         jobTitle: mod.jobTitle,
         lastActivityAt: mod.lastActivityAt,
         isOnline: Boolean(hasRecentActivity && notLoggedOut),

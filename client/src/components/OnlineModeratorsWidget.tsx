@@ -16,6 +16,7 @@ interface OnlineModerator {
   lastName: string | null;
   profileImageUrl: string | null;
   role: string;
+  roleNameAr: string | null;
   jobTitle: string | null;
   lastActivityAt: string | null;
   isOnline: boolean;
@@ -30,6 +31,14 @@ const roleLabels: Record<string, string> = {
   system_admin: "مدير تقني",
   reporter: "مراسل",
   comments_moderator: "مشرف التعليقات",
+  content_manager: "مدير المحتوى",
+  opinion_author: "كاتب رأي",
+  publisher: "ناشر",
+};
+
+const getRoleLabel = (mod: OnlineModerator): string => {
+  if (mod.roleNameAr) return mod.roleNameAr;
+  return roleLabels[mod.role] || mod.role;
 };
 
 export function OnlineModeratorsWidget() {
@@ -144,7 +153,7 @@ export function OnlineModeratorsWidget() {
                           {getDisplayName(mod)}
                         </p>
                         <p className="text-xs text-muted-foreground truncate">
-                          {mod.jobTitle || roleLabels[mod.role] || mod.role}
+                          {mod.jobTitle || getRoleLabel(mod)}
                         </p>
                       </div>
                       <Badge variant="outline" className="text-xs text-green-600 dark:text-green-400 border-green-200 dark:border-green-800 shrink-0">
