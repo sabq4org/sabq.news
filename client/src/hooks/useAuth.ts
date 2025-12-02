@@ -22,8 +22,28 @@ export function hasRole(user: { role?: string; roles?: string[] } | null | undef
 }
 
 // Check if user is staff (has any role beyond reader)
+// This checks both predefined roles and any RBAC role that isn't 'reader'
 export function isStaff(user: User | null | undefined): boolean {
-  return hasRole(user, 'super_admin', 'admin', 'editor', 'reporter', 'opinion_author', 'moderator', 'content_creator', 'comments_moderator');
+  if (!user) return false;
+  
+  // Check for predefined staff roles
+  const predefinedStaffRoles = [
+    'super_admin', 'superadmin', 'admin', 'system_admin',
+    'editor', 'chief_editor', 'reporter', 'writer',
+    'opinion_author', 'moderator', 'content_creator', 
+    'comments_moderator', 'content_manager', 'publisher'
+  ];
+  
+  if (hasRole(user, ...predefinedStaffRoles)) {
+    return true;
+  }
+  
+  // If user has ANY RBAC role(s) beyond just 'reader', consider them staff
+  // This allows custom roles created through the RBAC system to access dashboard
+  const userRoles = user.roles || [user.role].filter(Boolean);
+  const nonReaderRoles = userRoles.filter(role => role && role !== 'reader');
+  
+  return nonReaderRoles.length > 0;
 }
 
 // Role hierarchy for redirection priority (higher index = higher priority)
