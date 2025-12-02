@@ -67,7 +67,7 @@ import {
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { SeoPreview } from "@/components/SeoPreview";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, hasAnyPermission } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Category, ArticleWithDetails } from "@shared/schema";
 import { RichTextEditor } from "@/components/RichTextEditor";
@@ -202,6 +202,27 @@ export default function ArticleEditor() {
 
   // Check authentication and redirect if needed
   const { user, isLoading: isUserLoading } = useAuth({ redirectToLogin: true });
+
+  // Permission check: require articles.create for new articles, articles.edit/edit_any/edit_own for editing
+  const canAccessEditor = user && hasAnyPermission(
+    user, 
+    "articles.create", 
+    "articles.edit", 
+    "articles.edit_any", 
+    "articles.edit_own"
+  );
+  
+  // Redirect to dashboard if user doesn't have permission
+  useEffect(() => {
+    if (!isUserLoading && user && !canAccessEditor) {
+      toast({
+        title: "غير مصرح",
+        description: "ليس لديك صلاحية الوصول إلى محرر المقالات",
+        variant: "destructive",
+      });
+      navigate("/dashboard");
+    }
+  }, [isUserLoading, user, canAccessEditor, navigate, toast]);
 
   const { data: allCategories = [] } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
@@ -1851,6 +1872,11 @@ const generateSlug = (text: string) => {
     generateAllInOneMutation.isPending ||
     generateSeoMutation.isPending ||
     autoClassifyMutation.isPending;
+
+  // Early return if user doesn't have permission
+  if (!isUserLoading && user && !canAccessEditor) {
+    return null;
+  }
 
   return (
     <DashboardLayout>

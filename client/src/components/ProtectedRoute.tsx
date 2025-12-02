@@ -1,20 +1,26 @@
 import { useEffect } from "react";
 import { useLocation } from "wouter";
-import { useAuth, hasRole, isStaff } from "@/hooks/useAuth";
+import { useAuth, hasRole, isStaff, hasAnyPermission, hasAllPermissions } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requireStaff?: boolean;
   requireRoles?: string[];
+  requireAnyPermission?: string[];
+  requireAllPermissions?: string[];
   redirectTo?: string;
+  fallbackPath?: string;
 }
 
 export function ProtectedRoute({
   children,
   requireStaff = false,
   requireRoles = [],
+  requireAnyPermission = [],
+  requireAllPermissions = [],
   redirectTo = "/login",
+  fallbackPath = "/dashboard",
 }: ProtectedRouteProps) {
   const [, setLocation] = useLocation();
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -36,10 +42,22 @@ export function ProtectedRoute({
 
     // Check specific role requirements
     if (requireRoles.length > 0 && !hasRole(user, ...requireRoles)) {
-      setLocation("/");
+      setLocation(fallbackPath);
       return;
     }
-  }, [user, isLoading, isAuthenticated, requireStaff, requireRoles, redirectTo, setLocation]);
+
+    // Check any permission requirement (user needs at least one of the specified permissions)
+    if (requireAnyPermission.length > 0 && !hasAnyPermission(user, ...requireAnyPermission)) {
+      setLocation(fallbackPath);
+      return;
+    }
+
+    // Check all permissions requirement (user needs all of the specified permissions)
+    if (requireAllPermissions.length > 0 && !hasAllPermissions(user, ...requireAllPermissions)) {
+      setLocation(fallbackPath);
+      return;
+    }
+  }, [user, isLoading, isAuthenticated, requireStaff, requireRoles, requireAnyPermission, requireAllPermissions, redirectTo, fallbackPath, setLocation]);
 
   // Show loading state
   if (isLoading) {
@@ -65,6 +83,39 @@ export function ProtectedRoute({
     return null;
   }
 
+  // Any permission check failed
+  if (requireAnyPermission.length > 0 && !hasAnyPermission(user, ...requireAnyPermission)) {
+    return null;
+  }
+
+  // All permissions check failed
+  if (requireAllPermissions.length > 0 && !hasAllPermissions(user, ...requireAllPermissions)) {
+    return null;
+  }
+
   // All checks passed - render children
   return <>{children}</>;
+}
+
+// Convenience component for permission-only protection
+export function PermissionRoute({
+  children,
+  anyOf,
+  allOf,
+  fallbackPath = "/dashboard",
+}: {
+  children: React.ReactNode;
+  anyOf?: string[];
+  allOf?: string[];
+  fallbackPath?: string;
+}) {
+  return (
+    <ProtectedRoute
+      requireAnyPermission={anyOf}
+      requireAllPermissions={allOf}
+      fallbackPath={fallbackPath}
+    >
+      {children}
+    </ProtectedRoute>
+  );
 }

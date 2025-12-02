@@ -6217,7 +6217,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update article
-  app.patch("/api/admin/articles/:id", requireAuth, async (req: any, res) => {
+  app.patch("/api/admin/articles/:id", requireAuth, requireAnyPermission("articles.edit", "articles.edit_any", "articles.edit_own"), async (req: any, res) => {
     try {
       const userId = req.user?.id;
       if (!userId) {
@@ -11185,7 +11185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/dashboard/articles/:id", isAuthenticated, async (req: any, res) => {
+  app.put("/api/dashboard/articles/:id", isAuthenticated, requireAnyPermission("articles.edit", "articles.edit_any", "articles.edit_own"), async (req: any, res) => {
     try {
       const userId = req.user.id;
       const user = await storage.getUser(userId);

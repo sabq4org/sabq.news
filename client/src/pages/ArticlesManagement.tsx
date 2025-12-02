@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, hasAnyPermission } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -133,9 +133,28 @@ function SortableRow({ article, children, isSaving }: { article: Article; childr
 }
 
 export default function ArticlesManagement() {
-  const { user } = useAuth({ redirectToLogin: true });
+  const { user, isLoading: isUserLoading } = useAuth({ redirectToLogin: true });
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+
+  // Permission check: require articles.view or any create/edit permission
+  const canViewArticles = user && hasAnyPermission(user, "articles.view", "articles.create", "articles.edit", "articles.edit_any", "articles.edit_own");
+  const canCreateArticle = user && hasAnyPermission(user, "articles.create");
+  const canEditArticle = user && hasAnyPermission(user, "articles.edit", "articles.edit_any", "articles.edit_own", "articles.create");
+  const canDeleteArticle = user && hasAnyPermission(user, "articles.delete");
+  const canPublishArticle = user && hasAnyPermission(user, "articles.publish");
+
+  // Redirect to dashboard if user doesn't have permission
+  useEffect(() => {
+    if (!isUserLoading && user && !canViewArticles) {
+      toast({
+        title: "غير مصرح",
+        description: "ليس لديك صلاحية عرض المقالات",
+        variant: "destructive",
+      });
+      setLocation("/dashboard");
+    }
+  }, [isUserLoading, user, canViewArticles, setLocation, toast]);
 
   // State for dialogs and filters
   const [deletingArticle, setDeletingArticle] = useState<Article | null>(null);
@@ -629,15 +648,17 @@ export default function ArticlesManagement() {
               إدارة المحتوى الإخباري والمقالات
             </p>
           </div>
-          <Button
-            onClick={() => setLocation("/dashboard/articles/new")}
-            className="gap-2 w-full sm:w-auto"
-            size="sm"
-            data-testid="button-create-article"
-          >
-            <Plus className="h-3.5 w-3.5 md:h-4 md:w-4" />
-            مقال جديد
-          </Button>
+          {canCreateArticle && (
+            <Button
+              onClick={() => setLocation("/dashboard/articles/new")}
+              className="gap-2 w-full sm:w-auto"
+              size="sm"
+              data-testid="button-create-article"
+            >
+              <Plus className="h-3.5 w-3.5 md:h-4 md:w-4" />
+              مقال جديد
+            </Button>
+          )}
         </div>
 
         {/* Status Cards */}
@@ -1006,52 +1027,60 @@ export default function ArticlesManagement() {
                     />
                   </div>
                   
-                  {/* Action Buttons - Always Visible */}
+                  {/* Action Buttons - Permission-based visibility */}
                   <div className="flex gap-2 pt-2 border-t">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleEdit(article)}
-                      className="flex-1"
-                      data-testid={`button-edit-mobile-${article.id}`}
-                    >
-                      <Edit className="ml-2 h-3.5 w-3.5" />
-                      تعديل
-                    </Button>
+                    {canEditArticle && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEdit(article)}
+                        className="flex-1"
+                        data-testid={`button-edit-mobile-${article.id}`}
+                      >
+                        <Edit className="ml-2 h-3.5 w-3.5" />
+                        تعديل
+                      </Button>
+                    )}
                     
-                    <Button
-                      size="sm"
-                      variant={article.newsType === "breaking" ? "destructive" : "outline"}
-                      onClick={() => toggleBreakingMutation.mutate({ 
-                        id: article.id, 
-                        currentState: article.newsType === "breaking"
-                      })}
-                      disabled={toggleBreakingMutation.isPending}
-                      className="flex-1"
-                      data-testid={`button-breaking-mobile-${article.id}`}
-                    >
-                      <Bell className="ml-2 h-3.5 w-3.5" />
-                      {article.newsType === "breaking" ? "إلغاء العاجل" : "عاجل"}
-                    </Button>
+                    {canPublishArticle && (
+                      <Button
+                        size="sm"
+                        variant={article.newsType === "breaking" ? "destructive" : "outline"}
+                        onClick={() => toggleBreakingMutation.mutate({ 
+                          id: article.id, 
+                          currentState: article.newsType === "breaking"
+                        })}
+                        disabled={toggleBreakingMutation.isPending}
+                        className="flex-1"
+                        data-testid={`button-breaking-mobile-${article.id}`}
+                      >
+                        <Bell className="ml-2 h-3.5 w-3.5" />
+                        {article.newsType === "breaking" ? "إلغاء العاجل" : "عاجل"}
+                      </Button>
+                    )}
                     
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => featureMutation.mutate({ id: article.id, featured: !article.isFeatured })}
-                      disabled={featureMutation.isPending}
-                      data-testid={`button-feature-mobile-${article.id}`}
-                    >
-                      <Star className={`h-4 w-4 ${article.isFeatured ? 'text-yellow-500 fill-yellow-500' : ''}`} />
-                    </Button>
+                    {canPublishArticle && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => featureMutation.mutate({ id: article.id, featured: !article.isFeatured })}
+                        disabled={featureMutation.isPending}
+                        data-testid={`button-feature-mobile-${article.id}`}
+                      >
+                        <Star className={`h-4 w-4 ${article.isFeatured ? 'text-yellow-500 fill-yellow-500' : ''}`} />
+                      </Button>
+                    )}
                     
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => setDeletingArticle(article)}
-                      data-testid={`button-delete-mobile-${article.id}`}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {canDeleteArticle && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => setDeletingArticle(article)}
+                        data-testid={`button-delete-mobile-${article.id}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))
