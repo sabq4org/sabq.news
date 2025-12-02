@@ -3,8 +3,8 @@ import { storage } from "../storage";
 import { moderateComment, getStatusFromClassification, ModerationResult } from "../ai/commentModeration";
 import { z } from "zod";
 import { db } from "../db";
-import { userRoles, roles } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { userRoles, roles, users, comments } from "@shared/schema";
+import { eq, sql } from "drizzle-orm";
 
 const router = Router();
 
@@ -569,6 +569,155 @@ router.post("/member/:memberId/bulk-action-by-filter", requireModeratorAuth, asy
   } catch (error) {
     console.error("[Moderation API] Bulk action by filter error:", error);
     res.status(500).json({ error: "حدث خطأ أثناء تنفيذ الإجراء الجماعي" });
+  }
+});
+
+// =============================================
+// Advanced Search API - البحث المتقدم في الرقابة الذكية
+// =============================================
+
+// Search comments with advanced filters
+const searchCommentsSchema = z.object({
+  query: z.string().optional(),
+  userId: z.string().optional(),
+  status: z.enum(['pending', 'approved', 'rejected', 'flagged']).optional(),
+  aiClassification: z.enum(['safe', 'flagged', 'spam', 'harmful']).optional(),
+  dateFrom: z.string().optional().transform(val => val ? new Date(val) : undefined),
+  dateTo: z.string().optional().transform(val => val ? new Date(val) : undefined),
+  sortBy: z.enum(['relevance', 'date', 'score']).optional().default('date'),
+  sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
+  page: z.coerce.number().int().min(1).optional().default(1),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+});
+
+router.get("/search/comments", async (req: Request, res: Response) => {
+  try {
+    const parsed = searchCommentsSchema.safeParse(req.query);
+    if (!parsed.success) {
+      return res.status(400).json({ 
+        error: "معلمات البحث غير صالحة",
+        details: parsed.error.flatten()
+      });
+    }
+
+    const params = parsed.data;
+    console.log("[Moderation Search] Comments search params:", params);
+
+    const results = await storage.searchModerationComments({
+      query: params.query,
+      userId: params.userId,
+      status: params.status,
+      aiClassification: params.aiClassification,
+      dateFrom: params.dateFrom,
+      dateTo: params.dateTo,
+      sortBy: params.sortBy,
+      sortOrder: params.sortOrder,
+      page: params.page,
+      limit: params.limit,
+    });
+
+    res.json(results);
+  } catch (error) {
+    console.error("[Moderation Search] Comments search error:", error);
+    res.status(500).json({ error: "حدث خطأ أثناء البحث في التعليقات" });
+  }
+});
+
+// Search articles with their comments
+const searchArticlesSchema = z.object({
+  query: z.string().optional(),
+  categoryId: z.string().optional(),
+  publishFrom: z.string().optional().transform(val => val ? new Date(val) : undefined),
+  publishTo: z.string().optional().transform(val => val ? new Date(val) : undefined),
+  includeComments: z.string().optional().transform(val => val !== 'false'),
+  sortBy: z.enum(['relevance', 'date', 'comments', 'engagement']).optional().default('date'),
+  sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
+  page: z.coerce.number().int().min(1).optional().default(1),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+});
+
+router.get("/search/articles", async (req: Request, res: Response) => {
+  try {
+    const parsed = searchArticlesSchema.safeParse(req.query);
+    if (!parsed.success) {
+      return res.status(400).json({ 
+        error: "معلمات البحث غير صالحة",
+        details: parsed.error.flatten()
+      });
+    }
+
+    const params = parsed.data;
+    console.log("[Moderation Search] Articles search params:", params);
+
+    const results = await storage.searchModerationArticles({
+      query: params.query,
+      categoryId: params.categoryId,
+      publishFrom: params.publishFrom,
+      publishTo: params.publishTo,
+      includeComments: params.includeComments,
+      sortBy: params.sortBy,
+      sortOrder: params.sortOrder,
+      page: params.page,
+      limit: params.limit,
+    });
+
+    res.json(results);
+  } catch (error) {
+    console.error("[Moderation Search] Articles search error:", error);
+    res.status(500).json({ error: "حدث خطأ أثناء البحث في الأخبار" });
+  }
+});
+
+// Get categories for filter dropdown
+router.get("/search/categories", async (req: Request, res: Response) => {
+  try {
+    const categoriesData = await storage.getAllCategories();
+    const activeCategories = categoriesData
+      .filter(c => c.status === 'active')
+      .map(c => ({
+        id: c.id,
+        name: c.nameAr,
+        slug: c.slug,
+      }));
+    
+    res.json(activeCategories);
+  } catch (error) {
+    console.error("[Moderation Search] Categories error:", error);
+    res.status(500).json({ error: "حدث خطأ أثناء جلب الأقسام" });
+  }
+});
+
+// Get users who have comments (for filter dropdown)
+router.get("/search/commenters", async (req: Request, res: Response) => {
+  try {
+    const { search, limit = "20" } = req.query;
+    
+    // Get users who have at least one comment
+    const commentersData = await db
+      .selectDistinct({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        profileImage: users.profileImageUrl,
+      })
+      .from(users)
+      .innerJoin(comments, eq(users.id, comments.userId))
+      .where(
+        search 
+          ? sql`(
+              ${users.firstName} ILIKE ${`%${search}%`}
+              OR ${users.lastName} ILIKE ${`%${search}%`}
+              OR ${users.email} ILIKE ${`%${search}%`}
+            )`
+          : undefined
+      )
+      .limit(parseInt(limit as string, 10));
+    
+    res.json(commentersData);
+  } catch (error) {
+    console.error("[Moderation Search] Commenters error:", error);
+    res.status(500).json({ error: "حدث خطأ أثناء جلب المعلقين" });
   }
 });
 

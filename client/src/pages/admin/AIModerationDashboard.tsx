@@ -76,6 +76,7 @@ import { arSA } from "date-fns/locale";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { ModerationAdvancedSearch } from "@/components/ModerationAdvancedSearch";
 
 interface ModerationResult {
   commentId: string;
@@ -729,6 +730,22 @@ export default function AIModerationDashboard() {
             </CardContent>
           </Card>
         )}
+
+        {/* Advanced Search Section */}
+        <Card>
+          <ModerationAdvancedSearch
+            onSelectComment={(commentId) => {
+              const foundResult = results?.find(r => r.commentId === commentId);
+              if (foundResult) {
+                setSelectedComment(foundResult);
+                setDetailsOpen(true);
+              }
+            }}
+            onSelectArticle={(articleId) => {
+              window.open(`/admin/articles/${articleId}`, '_blank');
+            }}
+          />
+        </Card>
 
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">

@@ -1,6 +1,6 @@
 // Reference: javascript_database blueprint + javascript_log_in_with_replit blueprint
 import { db } from "./db";
-import { eq, desc, asc, sql, and, or, not, inArray, ne, gte, lt, lte, isNull, isNotNull, ilike, count, getTableColumns } from "drizzle-orm";
+import { eq, desc, asc, sql, and, or, not, inArray, ne, gte, lt, lte, isNull, isNotNull, ilike, count, getTableColumns, type SQL } from "drizzle-orm";
 import { alias as aliasedTable } from "drizzle-orm/pg-core";
 import { nanoid } from 'nanoid';
 import bcrypt from 'bcrypt';
@@ -655,6 +655,94 @@ export interface IStorage {
       articleSlug?: string;
     };
   }[]>;
+
+  // Advanced Moderation Search - البحث المتقدم في الرقابة الذكية
+  searchModerationComments(params: {
+    query?: string;
+    userId?: string;
+    status?: string;
+    aiClassification?: string;
+    dateFrom?: Date;
+    dateTo?: Date;
+    sortBy?: 'relevance' | 'date' | 'score';
+    sortOrder?: 'asc' | 'desc';
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    comments: Array<{
+      id: string;
+      content: string;
+      status: string;
+      createdAt: string;
+      aiModerationScore: number | null;
+      aiClassification: string | null;
+      aiDetectedIssues: string[] | null;
+      highlightedContent?: string;
+      relevanceScore?: number;
+      user: {
+        id: string;
+        firstName: string | null;
+        lastName: string | null;
+        email: string;
+        profileImage: string | null;
+      };
+      article: {
+        id: string;
+        title: string;
+        slug: string;
+        categoryId: string | null;
+        categoryName: string | null;
+      };
+    }>;
+    total: number;
+    page: number;
+    totalPages: number;
+  }>;
+  
+  searchModerationArticles(params: {
+    query?: string;
+    categoryId?: string;
+    publishFrom?: Date;
+    publishTo?: Date;
+    includeComments?: boolean;
+    sortBy?: 'relevance' | 'date' | 'comments' | 'engagement';
+    sortOrder?: 'asc' | 'desc';
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    articles: Array<{
+      id: string;
+      title: string;
+      slug: string;
+      excerpt: string | null;
+      imageUrl: string | null;
+      publishedAt: string | null;
+      views: number;
+      categoryId: string | null;
+      categoryName: string | null;
+      highlightedTitle?: string;
+      relevanceScore?: number;
+      commentStats: {
+        total: number;
+        pending: number;
+        approved: number;
+        rejected: number;
+        flagged: number;
+      };
+      latestComments?: Array<{
+        id: string;
+        content: string;
+        status: string;
+        aiClassification: string | null;
+        aiModerationScore: number | null;
+        createdAt: string;
+        userName: string;
+      }>;
+    }>;
+    total: number;
+    page: number;
+    totalPages: number;
+  }>;
 
   // Comment Edit & Delete operations with audit logging
   editCommentWithHistory(commentId: string, newContent: string, editedBy: string, editReason?: string): Promise<Comment>;
@@ -4118,6 +4206,449 @@ export class DatabaseStorage implements IStorage {
         articleSlug: r.article?.slug || undefined,
       },
     }));
+  }
+
+  // Advanced Moderation Search - البحث المتقدم في الرقابة الذكية
+  async searchModerationComments(params: {
+    query?: string;
+    userId?: string;
+    status?: string;
+    aiClassification?: string;
+    dateFrom?: Date;
+    dateTo?: Date;
+    sortBy?: 'relevance' | 'date' | 'score';
+    sortOrder?: 'asc' | 'desc';
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    comments: Array<{
+      id: string;
+      content: string;
+      status: string;
+      createdAt: string;
+      aiModerationScore: number | null;
+      aiClassification: string | null;
+      aiDetectedIssues: string[] | null;
+      highlightedContent?: string;
+      relevanceScore?: number;
+      user: {
+        id: string;
+        firstName: string | null;
+        lastName: string | null;
+        email: string;
+        profileImage: string | null;
+      };
+      article: {
+        id: string;
+        title: string;
+        slug: string;
+        categoryId: string | null;
+        categoryName: string | null;
+      };
+    }>;
+    total: number;
+    page: number;
+    totalPages: number;
+  }> {
+    const page = params.page || 1;
+    const limit = params.limit || 20;
+    const offset = (page - 1) * limit;
+    const sortOrder = params.sortOrder || 'desc';
+
+    const conditions: SQL[] = [];
+
+    // Arabic text normalization helper (removes diacritics)
+    const normalizeArabic = (text: string) => {
+      return text
+        .replace(/[\u064B-\u065F\u0670]/g, '') // Remove Arabic diacritics
+        .replace(/[أإآ]/g, 'ا') // Normalize Hamza
+        .replace(/[ى]/g, 'ي') // Normalize Ya
+        .replace(/[ة]/g, 'ه') // Normalize Ta Marbuta
+        .trim();
+    };
+
+    // Escape regex special characters to prevent injection
+    const escapeRegex = (text: string) => {
+      return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    };
+
+    // Text search with Arabic optimization - using ILIKE only (safer than regex)
+    if (params.query && params.query.trim()) {
+      const normalizedQuery = normalizeArabic(params.query.trim());
+      
+      if (normalizedQuery.length > 0) {
+        // Use parameterized ILIKE for safe text search
+        conditions.push(sql`${comments.content} ILIKE ${`%${normalizedQuery}%`}`);
+      }
+    }
+
+    // User filter
+    if (params.userId) {
+      conditions.push(eq(comments.userId, params.userId));
+    }
+
+    // Status filter
+    if (params.status) {
+      conditions.push(eq(comments.status, params.status));
+    }
+
+    // AI Classification filter
+    if (params.aiClassification) {
+      conditions.push(eq(comments.aiClassification, params.aiClassification));
+    }
+
+    // Date range filters
+    if (params.dateFrom) {
+      conditions.push(sql`${comments.createdAt} >= ${params.dateFrom}`);
+    }
+    if (params.dateTo) {
+      conditions.push(sql`${comments.createdAt} <= ${params.dateTo}`);
+    }
+
+    // Get total count
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(comments)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+
+    const total = countResult?.count || 0;
+
+    // Build sort expression
+    let orderByExpr;
+    if (params.sortBy === 'score') {
+      orderByExpr = sortOrder === 'asc' 
+        ? sql`COALESCE(${comments.aiModerationScore}, 0) ASC`
+        : sql`COALESCE(${comments.aiModerationScore}, 0) DESC`;
+    } else if (params.sortBy === 'relevance' && params.query) {
+      // Simple relevance scoring based on exact match position
+      orderByExpr = sql`
+        CASE 
+          WHEN ${comments.content} ILIKE ${`%${params.query}%`} THEN 1
+          ELSE 2
+        END,
+        ${comments.createdAt} DESC
+      `;
+    } else {
+      orderByExpr = sortOrder === 'asc'
+        ? sql`${comments.createdAt} ASC`
+        : sql`${comments.createdAt} DESC`;
+    }
+
+    // Query with joins
+    const results = await db
+      .select({
+        comment: comments,
+        user: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          email: users.email,
+          profileImage: users.profileImageUrl,
+        },
+        article: {
+          id: articles.id,
+          title: articles.title,
+          slug: articles.slug,
+          categoryId: articles.categoryId,
+        },
+        categoryName: categories.nameAr,
+      })
+      .from(comments)
+      .leftJoin(users, eq(comments.userId, users.id))
+      .leftJoin(articles, eq(comments.articleId, articles.id))
+      .leftJoin(categories, eq(articles.categoryId, categories.id))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(orderByExpr)
+      .limit(limit)
+      .offset(offset);
+
+    // Process results with highlighting
+    const processedComments = results.map((r) => {
+      let highlightedContent = r.comment.content;
+      let relevanceScore = 0;
+
+      if (params.query && params.query.trim()) {
+        const searchTerm = params.query.trim();
+        const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        highlightedContent = r.comment.content.replace(regex, '<mark>$1</mark>');
+        
+        // Calculate simple relevance score
+        const matchCount = (r.comment.content.match(regex) || []).length;
+        relevanceScore = Math.min(matchCount * 0.2, 1);
+      }
+
+      return {
+        id: r.comment.id,
+        content: r.comment.content,
+        status: r.comment.status,
+        createdAt: r.comment.createdAt.toISOString(),
+        aiModerationScore: r.comment.aiModerationScore,
+        aiClassification: r.comment.aiClassification,
+        aiDetectedIssues: r.comment.aiDetectedIssues as string[] | null,
+        highlightedContent,
+        relevanceScore: relevanceScore > 0 ? relevanceScore : undefined,
+        user: {
+          id: r.user?.id || '',
+          firstName: r.user?.firstName || null,
+          lastName: r.user?.lastName || null,
+          email: r.user?.email || '',
+          profileImage: r.user?.profileImage || null,
+        },
+        article: {
+          id: r.article?.id || '',
+          title: r.article?.title || '',
+          slug: r.article?.slug || '',
+          categoryId: r.article?.categoryId || null,
+          categoryName: r.categoryName || null,
+        },
+      };
+    });
+
+    return {
+      comments: processedComments,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  async searchModerationArticles(params: {
+    query?: string;
+    categoryId?: string;
+    publishFrom?: Date;
+    publishTo?: Date;
+    includeComments?: boolean;
+    sortBy?: 'relevance' | 'date' | 'comments' | 'engagement';
+    sortOrder?: 'asc' | 'desc';
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    articles: Array<{
+      id: string;
+      title: string;
+      slug: string;
+      excerpt: string | null;
+      imageUrl: string | null;
+      publishedAt: string | null;
+      views: number;
+      categoryId: string | null;
+      categoryName: string | null;
+      highlightedTitle?: string;
+      relevanceScore?: number;
+      commentStats: {
+        total: number;
+        pending: number;
+        approved: number;
+        rejected: number;
+        flagged: number;
+      };
+      latestComments?: Array<{
+        id: string;
+        content: string;
+        status: string;
+        aiClassification: string | null;
+        aiModerationScore: number | null;
+        createdAt: string;
+        userName: string;
+      }>;
+    }>;
+    total: number;
+    page: number;
+    totalPages: number;
+  }> {
+    const page = params.page || 1;
+    const limit = params.limit || 20;
+    const offset = (page - 1) * limit;
+    const sortOrder = params.sortOrder || 'desc';
+    const includeComments = params.includeComments !== false;
+
+    const conditions: SQL[] = [eq(articles.status, 'published')];
+
+    // Arabic text normalization
+    const normalizeArabic = (text: string) => {
+      return text
+        .replace(/[\u064B-\u065F\u0670]/g, '')
+        .replace(/[أإآ]/g, 'ا')
+        .replace(/[ى]/g, 'ي')
+        .replace(/[ة]/g, 'ه')
+        .trim();
+    };
+
+    // Text search
+    if (params.query && params.query.trim()) {
+      const normalizedQuery = normalizeArabic(params.query.trim());
+      conditions.push(sql`(
+        ${articles.title} ILIKE ${`%${normalizedQuery}%`}
+        OR ${articles.excerpt} ILIKE ${`%${normalizedQuery}%`}
+        OR ${articles.content} ILIKE ${`%${normalizedQuery}%`}
+      )`);
+    }
+
+    // Category filter
+    if (params.categoryId) {
+      conditions.push(eq(articles.categoryId, params.categoryId));
+    }
+
+    // Date range filters
+    if (params.publishFrom) {
+      conditions.push(sql`${articles.publishedAt} >= ${params.publishFrom}`);
+    }
+    if (params.publishTo) {
+      conditions.push(sql`${articles.publishedAt} <= ${params.publishTo}`);
+    }
+
+    // Get total count
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(articles)
+      .where(and(...conditions));
+
+    const total = countResult?.count || 0;
+
+    // Subquery for comment counts
+    const commentCountSubquery = db
+      .select({
+        articleId: comments.articleId,
+        totalComments: sql<number>`count(*)::int`.as('total_comments'),
+        pendingComments: sql<number>`count(*) FILTER (WHERE ${comments.status} = 'pending')::int`.as('pending_comments'),
+        approvedComments: sql<number>`count(*) FILTER (WHERE ${comments.status} = 'approved')::int`.as('approved_comments'),
+        rejectedComments: sql<number>`count(*) FILTER (WHERE ${comments.status} = 'rejected')::int`.as('rejected_comments'),
+        flaggedComments: sql<number>`count(*) FILTER (WHERE ${comments.aiClassification} IN ('flagged', 'harmful', 'spam'))::int`.as('flagged_comments'),
+      })
+      .from(comments)
+      .groupBy(comments.articleId)
+      .as('comment_stats');
+
+    // Build order expression
+    let orderByExpr;
+    if (params.sortBy === 'comments') {
+      orderByExpr = sortOrder === 'asc'
+        ? sql`COALESCE(${commentCountSubquery.totalComments}, 0) ASC`
+        : sql`COALESCE(${commentCountSubquery.totalComments}, 0) DESC`;
+    } else if (params.sortBy === 'engagement') {
+      orderByExpr = sortOrder === 'asc'
+        ? sql`(${articles.views} + COALESCE(${commentCountSubquery.totalComments}, 0) * 10) ASC`
+        : sql`(${articles.views} + COALESCE(${commentCountSubquery.totalComments}, 0) * 10) DESC`;
+    } else if (params.sortBy === 'relevance' && params.query) {
+      orderByExpr = sql`
+        CASE 
+          WHEN ${articles.title} ILIKE ${`%${params.query}%`} THEN 1
+          WHEN ${articles.excerpt} ILIKE ${`%${params.query}%`} THEN 2
+          ELSE 3
+        END,
+        ${articles.publishedAt} DESC NULLS LAST
+      `;
+    } else {
+      orderByExpr = sortOrder === 'asc'
+        ? sql`${articles.publishedAt} ASC NULLS LAST`
+        : sql`${articles.publishedAt} DESC NULLS LAST`;
+    }
+
+    // Main query with join for comment stats
+    const results = await db
+      .select({
+        article: {
+          id: articles.id,
+          title: articles.title,
+          slug: articles.slug,
+          excerpt: articles.excerpt,
+          imageUrl: articles.imageUrl,
+          publishedAt: articles.publishedAt,
+          views: articles.views,
+          categoryId: articles.categoryId,
+        },
+        categoryName: categories.nameAr,
+        totalComments: commentCountSubquery.totalComments,
+        pendingComments: commentCountSubquery.pendingComments,
+        approvedComments: commentCountSubquery.approvedComments,
+        rejectedComments: commentCountSubquery.rejectedComments,
+        flaggedComments: commentCountSubquery.flaggedComments,
+      })
+      .from(articles)
+      .leftJoin(categories, eq(articles.categoryId, categories.id))
+      .leftJoin(commentCountSubquery, eq(articles.id, commentCountSubquery.articleId))
+      .where(and(...conditions))
+      .orderBy(orderByExpr)
+      .limit(limit)
+      .offset(offset);
+
+    // Process results
+    const processedArticles = await Promise.all(results.map(async (r) => {
+      let highlightedTitle = r.article.title;
+      let relevanceScore = 0;
+
+      if (params.query && params.query.trim()) {
+        const searchTerm = params.query.trim();
+        const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        highlightedTitle = r.article.title.replace(regex, '<mark>$1</mark>');
+        
+        const matchCount = (r.article.title.match(regex) || []).length;
+        relevanceScore = Math.min(matchCount * 0.25, 1);
+      }
+
+      // Get latest comments if requested
+      let latestComments: Array<{
+        id: string;
+        content: string;
+        status: string;
+        aiClassification: string | null;
+        aiModerationScore: number | null;
+        createdAt: string;
+        userName: string;
+      }> | undefined;
+
+      if (includeComments && (r.totalComments || 0) > 0) {
+        const commentsData = await db
+          .select({
+            comment: comments,
+            userName: sql<string>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`.as('user_name'),
+          })
+          .from(comments)
+          .leftJoin(users, eq(comments.userId, users.id))
+          .where(eq(comments.articleId, r.article.id))
+          .orderBy(desc(comments.createdAt))
+          .limit(5);
+
+        latestComments = commentsData.map(c => ({
+          id: c.comment.id,
+          content: c.comment.content,
+          status: c.comment.status,
+          aiClassification: c.comment.aiClassification,
+          aiModerationScore: c.comment.aiModerationScore,
+          createdAt: c.comment.createdAt.toISOString(),
+          userName: c.userName || 'مجهول',
+        }));
+      }
+
+      return {
+        id: r.article.id,
+        title: r.article.title,
+        slug: r.article.slug,
+        excerpt: r.article.excerpt,
+        imageUrl: r.article.imageUrl,
+        publishedAt: r.article.publishedAt?.toISOString() || null,
+        views: r.article.views,
+        categoryId: r.article.categoryId,
+        categoryName: r.categoryName || null,
+        highlightedTitle: highlightedTitle !== r.article.title ? highlightedTitle : undefined,
+        relevanceScore: relevanceScore > 0 ? relevanceScore : undefined,
+        commentStats: {
+          total: r.totalComments || 0,
+          pending: r.pendingComments || 0,
+          approved: r.approvedComments || 0,
+          rejected: r.rejectedComments || 0,
+          flagged: r.flaggedComments || 0,
+        },
+        latestComments,
+      };
+    }));
+
+    return {
+      articles: processedArticles,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   // Comment Edit & Delete operations with audit logging
