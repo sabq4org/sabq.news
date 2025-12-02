@@ -300,6 +300,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Start WhatsApp message aggregator job (processes multi-part messages)
   startMessageAggregatorJob();
 
+  // Helper function to check if user has moderator role (legacy + RBAC)
+  const COMMENT_MODERATOR_ROLES = ["admin", "superadmin", "editor", "chief_editor", "moderator", "comments_moderator"];
+  
+  async function hasModeratorRole(userId: string, legacyRole: string): Promise<boolean> {
+    // Check 1: Legacy role field
+    if (legacyRole && COMMENT_MODERATOR_ROLES.includes(legacyRole)) {
+      return true;
+    }
+    
+    // Check 2: RBAC user_roles table
+    try {
+      const rbacRoles = await db
+        .select({ roleName: roles.name })
+        .from(userRoles)
+        .innerJoin(roles, eq(userRoles.roleId, roles.id))
+        .where(eq(userRoles.userId, userId));
+      
+      const userRoleNames = rbacRoles.map(r => r.roleName);
+      return userRoleNames.some(roleName => COMMENT_MODERATOR_ROLES.includes(roleName));
+    } catch (error) {
+      console.error("[hasModeratorRole] RBAC check error:", error);
+      return false;
+    }
+  }
+
   // ============================================================
   // SETUP ROUTES (Protected, one-time use)
   // ============================================================
@@ -11351,8 +11376,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.id;
       const user = await storage.getUser(userId);
 
-      const moderatorRoles = ["admin", "superadmin", "editor", "chief_editor", "moderator", "comments_moderator"];
-      if (!user || !moderatorRoles.includes(user.role)) {
+      const isModerator = await hasModeratorRole(userId, user?.role || "");
+      if (!isModerator) {
         return res.status(403).json({ message: "Forbidden" });
       }
 
@@ -11370,8 +11395,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.id;
       const user = await storage.getUser(userId);
 
-      const moderatorRoles2 = ["admin", "superadmin", "editor", "chief_editor", "moderator", "comments_moderator"];
-      if (!user || !moderatorRoles2.includes(user.role)) {
+      const isModerator2 = await hasModeratorRole(userId, user?.role || "");
+      if (!isModerator2) {
         return res.status(403).json({ message: "Forbidden" });
       }
 
@@ -11390,8 +11415,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.id;
       const user = await storage.getUser(userId);
 
-      const moderatorRoles3 = ["admin", "superadmin", "editor", "chief_editor", "moderator", "comments_moderator"];
-      if (!user || !moderatorRoles3.includes(user.role)) {
+      const isModerator3 = await hasModeratorRole(userId, user?.role || "");
+      if (!isModerator3) {
         return res.status(403).json({ message: "Forbidden" });
       }
 

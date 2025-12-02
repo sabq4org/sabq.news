@@ -2,20 +2,48 @@ import { Router, Request, Response, NextFunction } from "express";
 import { storage } from "../storage";
 import { moderateComment, getStatusFromClassification, ModerationResult } from "../ai/commentModeration";
 import { z } from "zod";
+import { db } from "../db";
+import { userRoles, roles } from "@shared/schema";
+import { eq } from "drizzle-orm";
 
 const router = Router();
 
-function requireModeratorAuth(req: Request, res: Response, next: NextFunction) {
+// List of moderator roles that can access comment moderation features
+const MODERATOR_ROLES = ['admin', 'superadmin', 'editor', 'chief_editor', 'moderator', 'comments_moderator'];
+
+async function requireModeratorAuth(req: Request, res: Response, next: NextFunction) {
   const user = (req as any).user;
   if (!user) {
     return res.status(401).json({ error: "يجب تسجيل الدخول للقيام بهذا الإجراء" });
   }
-  // Added comments_moderator - مشرف التعليقات
-  const moderatorRoles = ['admin', 'superadmin', 'editor', 'chief_editor', 'moderator', 'comments_moderator'];
-  if (!moderatorRoles.includes(user.role)) {
-    return res.status(403).json({ error: "ليس لديك صلاحية للوصول إلى هذه الميزة" });
+  
+  // Check 1: Legacy role field in users table
+  if (user.role && MODERATOR_ROLES.includes(user.role)) {
+    return next();
   }
-  next();
+  
+  // Check 2: RBAC user_roles table (for new role-based system)
+  try {
+    const rbacRoles = await db
+      .select({ roleName: roles.name })
+      .from(userRoles)
+      .innerJoin(roles, eq(userRoles.roleId, roles.id))
+      .where(eq(userRoles.userId, user.id));
+    
+    const userRoleNames = rbacRoles.map(r => r.roleName);
+    const hasModeratorRole = userRoleNames.some(roleName => MODERATOR_ROLES.includes(roleName));
+    
+    if (hasModeratorRole) {
+      console.log(`[Moderation] RBAC auth granted for user ${user.email} with roles: ${userRoleNames.join(', ')}`);
+      return next();
+    }
+    
+    console.log(`[Moderation] Access denied for user ${user.email}. Legacy role: ${user.role}, RBAC roles: ${userRoleNames.join(', ')}`);
+  } catch (error) {
+    console.error("[Moderation] RBAC check error:", error);
+  }
+  
+  return res.status(403).json({ error: "ليس لديك صلاحية للوصول إلى هذه الميزة" });
 }
 
 // Analyze a comment with AI
