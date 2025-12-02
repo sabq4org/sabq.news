@@ -1357,7 +1357,7 @@ export default function AIModerationDashboard() {
                                   {classificationLabels[cls.classification] || cls.classification}
                                 </Badge>
                                 <span className="text-sm text-muted-foreground">
-                                  {cls.count} ({cls.percentage.toFixed(1)}%)
+                                  {cls.count} ({(cls.percentage ?? 0).toFixed(1)}%)
                                 </span>
                               </div>
                             ))}
@@ -1503,11 +1503,11 @@ export default function AIModerationDashboard() {
               {memberProfile && memberProfile.stats.pendingComments > 0 && (
                 <Button
                   onClick={handleBulkApprove}
-                  disabled={bulkActionMutation.isPending}
+                  disabled={bulkActionByFilterMutation.isPending}
                   className="gap-1"
                   data-testid="button-bulk-approve"
                 >
-                  {bulkActionMutation.isPending ? (
+                  {bulkActionByFilterMutation.isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <CheckCircle className="h-4 w-4" />
@@ -1519,11 +1519,11 @@ export default function AIModerationDashboard() {
                 <Button
                   variant="destructive"
                   onClick={handleBulkReject}
-                  disabled={bulkActionMutation.isPending}
+                  disabled={bulkActionByFilterMutation.isPending}
                   className="gap-1"
                   data-testid="button-bulk-reject"
                 >
-                  {bulkActionMutation.isPending ? (
+                  {bulkActionByFilterMutation.isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <XCircle className="h-4 w-4" />
