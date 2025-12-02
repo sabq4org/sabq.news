@@ -13,15 +13,32 @@ export async function userHasPermission(
   permissionCode: PermissionCode
 ): Promise<boolean> {
   try {
-    // First check if user has system.admin or admin role (legacy support)
+    // Admin/superuser roles that should bypass permission checks
+    const superuserRoles = ['admin', 'superadmin', 'system_admin', 'system.admin'];
+    
+    // First check if user has superuser role from legacy users.role field
     const [user] = await db
       .select({ role: users.role })
       .from(users)
       .where(eq(users.id, userId))
       .limit(1);
     
-    if (user && (user.role === 'system.admin' || user.role === 'admin')) {
-      console.log(`[RBAC] User ${userId} has legacy admin role, granting all permissions`);
+    if (user && superuserRoles.includes(user.role)) {
+      console.log(`[RBAC] User ${userId} has legacy superuser role (${user.role}), granting all permissions`);
+      return true;
+    }
+
+    // Check if user has superuser role from RBAC user_roles table
+    const rbacRoles = await db
+      .select({ roleName: roles.name })
+      .from(userRoles)
+      .innerJoin(roles, eq(userRoles.roleId, roles.id))
+      .where(eq(userRoles.userId, userId));
+    
+    const hasRbacSuperuserRole = rbacRoles.some(r => superuserRoles.includes(r.roleName));
+    if (hasRbacSuperuserRole) {
+      const superRole = rbacRoles.find(r => superuserRoles.includes(r.roleName));
+      console.log(`[RBAC] User ${userId} has RBAC superuser role (${superRole?.roleName}), granting all permissions`);
       return true;
     }
 
