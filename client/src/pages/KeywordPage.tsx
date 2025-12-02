@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
   Clock, Tag, MessageSquare, Flame, Zap, Sparkles, Eye, BarChart3,
-  TrendingUp, Bell, BellOff, Filter, SortDesc, Newspaper, FileText,
-  PenTool, Calendar, ChevronLeft, Hash, Users, Activity, ArrowUpRight
+  Bell, BellOff, Filter, SortDesc, Newspaper, FileText,
+  PenTool, Hash
 } from "lucide-react";
-import { formatDistanceToNow, format } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import type { ArticleWithDetails } from "@shared/schema";
 import { Header } from "@/components/Header";
@@ -140,9 +140,6 @@ export default function KeywordPage() {
     return result;
   }, [articles, sortBy, filterBy]);
 
-  const featuredArticle = filteredAndSortedArticles[0];
-  const gridArticles = filteredAndSortedArticles.slice(1);
-
   const articleTypeCounts = useMemo(() => {
     if (!articles) return {};
     return articles.reduce((acc, a) => {
@@ -168,7 +165,7 @@ export default function KeywordPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-background" dir="rtl">
       <Header user={user} />
 
       <main className="flex-1">
@@ -334,113 +331,10 @@ export default function KeywordPage() {
             </div>
           )}
 
-          {/* Featured Article */}
-          {!isLoading && featuredArticle && (
-            <div className="mb-8">
-              <Link href={`/article/${featuredArticle.slug}`}>
-                <Card 
-                  className="overflow-hidden hover-elevate group cursor-pointer"
-                  data-testid={`card-featured-${featuredArticle.id}`}
-                >
-                  <div className="grid md:grid-cols-2 gap-0">
-                    {/* Image */}
-                    <div className="relative aspect-[16/10] md:aspect-auto md:min-h-[400px] overflow-hidden bg-muted">
-                      {featuredArticle.imageUrl ? (
-                        <OptimizedImage
-                          src={featuredArticle.imageUrl}
-                          alt={featuredArticle.title}
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                          preferSize="large"
-                          priority
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 via-muted to-primary/5">
-                          <Newspaper className="h-20 w-20 text-primary/20" />
-                        </div>
-                      )}
-                      
-                      {/* Badges */}
-                      <div className="absolute top-4 right-4 flex flex-wrap gap-2">
-                        {featuredArticle.newsType === "breaking" && (
-                          <Badge variant="destructive" className="gap-1 shadow-lg">
-                            <Zap className="h-3 w-3" />
-                            عاجل
-                          </Badge>
-                        )}
-                        {isNewArticle(featuredArticle.publishedAt) && featuredArticle.newsType !== "breaking" && (
-                          <Badge className="gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-0 shadow-lg">
-                            <Flame className="h-3 w-3" />
-                            جديد
-                          </Badge>
-                        )}
-                        <Badge className="gap-1 bg-primary/90 text-primary-foreground shadow-lg">
-                          <TrendingUp className="h-3 w-3" />
-                          مميز
-                        </Badge>
-                      </div>
-                    </div>
-
-                    {/* Content */}
-                    <div className="p-6 md:p-8 flex flex-col justify-center">
-                      {featuredArticle.category && (
-                        <Badge variant="outline" className="w-fit mb-4" data-testid={`badge-category-${featuredArticle.id}`}>
-                          {featuredArticle.category.nameAr}
-                        </Badge>
-                      )}
-                      
-                      <h2 
-                        className={`text-2xl md:text-3xl font-bold mb-4 leading-tight transition-colors ${
-                          featuredArticle.newsType === "breaking"
-                            ? "text-destructive"
-                            : "group-hover:text-primary"
-                        }`}
-                        data-testid={`text-featured-title`}
-                      >
-                        {featuredArticle.title}
-                      </h2>
-                      
-                      {featuredArticle.excerpt && (
-                        <p className="text-muted-foreground text-lg mb-6 line-clamp-3">
-                          {featuredArticle.excerpt}
-                        </p>
-                      )}
-                      
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                        {featuredArticle.publishedAt && (
-                          <span className="flex items-center gap-1.5">
-                            <Calendar className="h-4 w-4" />
-                            {format(new Date(featuredArticle.publishedAt), 'dd MMMM yyyy', { locale: arSA })}
-                          </span>
-                        )}
-                        {(featuredArticle.views || 0) > 0 && (
-                          <span className="flex items-center gap-1.5">
-                            <Eye className="h-4 w-4" />
-                            {(featuredArticle.views || 0).toLocaleString('ar-SA')} مشاهدة
-                          </span>
-                        )}
-                        {(featuredArticle.commentsCount ?? 0) > 0 && (
-                          <span className="flex items-center gap-1.5">
-                            <MessageSquare className="h-4 w-4" />
-                            {featuredArticle.commentsCount} تعليق
-                          </span>
-                        )}
-                      </div>
-
-                      <Button variant="outline" className="w-fit mt-6 gap-2 group/btn">
-                        اقرأ المزيد
-                        <ArrowUpRight className="h-4 w-4 transition-transform group-hover/btn:-translate-y-0.5 group-hover/btn:translate-x-0.5" />
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              </Link>
-            </div>
-          )}
-
-          {/* Articles Grid */}
-          {!isLoading && gridArticles.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-              {gridArticles.map((article, index) => {
+          {/* Articles Grid - 4 columns */}
+          {!isLoading && filteredAndSortedArticles.length > 0 && (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
+              {filteredAndSortedArticles.map((article, index) => {
                 const timeAgo = article.publishedAt
                   ? formatDistanceToNow(new Date(article.publishedAt), {
                       addSuffix: true,
