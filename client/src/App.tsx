@@ -68,6 +68,7 @@ import UserNotifications from "@/pages/UserNotifications";
 import UserRecommendationSettings from "@/pages/UserRecommendationSettings";
 import RecommendationAnalytics from "@/pages/RecommendationAnalytics";
 import SentimentAnalytics from "@/pages/dashboard/SentimentAnalytics";
+import ArticleAnalyticsDashboard from "@/pages/dashboard/ArticleAnalyticsDashboard";
 import AIModerationDashboard from "@/pages/admin/AIModerationDashboard";
 import MyFollows from "@/pages/MyFollows";
 import MyKeywords from "@/pages/MyKeywords";
@@ -401,6 +402,7 @@ function Router() {
       
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/dashboard/analytics" component={AnalyticsDashboard} />
+      <Route path="/dashboard/article-analytics" component={ArticleAnalyticsDashboard} />
       <Route path="/dashboard/articles/new" component={ArticleEditor} />
       <Route path="/dashboard/article/new" component={ArticleEditor} />
       <Route path="/dashboard/articles/:id" component={ArticleEditor} />
