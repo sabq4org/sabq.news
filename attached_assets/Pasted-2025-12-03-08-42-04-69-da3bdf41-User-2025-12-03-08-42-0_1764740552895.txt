@@ -1,0 +1,100 @@
+2025-12-03 08:42:04.69
+da3bdf41
+User
+}
+2025-12-03 08:42:04.69
+da3bdf41
+User
+hasUser: true,
+2025-12-03 08:42:04.69
+da3bdf41
+User
+userId: 'admin-sabq',
+2025-12-03 08:42:04.69
+da3bdf41
+User
+🔍 /api/auth/user check: {
+2025-12-03 08:42:04.82
+da3bdf41
+User
+5:42:04 AM [express] GET /api/auth/user 304 in 318ms :: {"id":"admin-sabq","email":"admin@sabq.sa","…
+2025-12-03 08:42:05.08
+da3bdf41
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-03 08:42:05.10
+da3bdf41
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-03 08:42:05.13
+da3bdf41
+User
+5:42:05 AM [express] GET /api/admin/article-analytics/search/sortBy=views&limit=10&offset=0 304 in 7…
+2025-12-03 08:42:07.80
+da3bdf41
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-03 08:42:07.82
+da3bdf41
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-03 08:42:07.85
+da3bdf41
+User
+5:42:07 AM [express] GET /api/admin/article-analytics/search/query=%D8%A7&sortBy=views&limit=10&offs…
+2025-12-03 08:42:07.97
+da3bdf41
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-03 08:42:08.00
+da3bdf41
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-03 08:42:08.02
+da3bdf41
+User
+5:42:08 AM [express] GET /api/admin/article-analytics/search/query=%D8%A7%D9%84&sortBy=views&limit=1…
+2025-12-03 08:42:08.28
+da3bdf41
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-03 08:42:08.30
+da3bdf41
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-03 08:42:08.32
+da3bdf41
+User
+5:42:08 AM [express] GET /api/admin/article-analytics/search/query=%D8%A7%D9%84%D9%85&sortBy=views&l…
+2025-12-03 08:42:08.43
+da3bdf41
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-03 08:42:08.45
+da3bdf41
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-03 08:42:08.47
+da3bdf41
+User
+5:42:08 AM [express] GET /api/admin/article-analytics/search/query=%D8%A7%D9%84%D9%85%D9%85&sortBy=v…
+2025-12-03 08:42:08.59
+da3bdf41
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-03 08:42:08.62
+da3bdf41
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-03 08:42:08.64
+da3bdf41
+User
+5:42:08 AM [express] GET /api/admin/article-analytics/search/query=%D8%A7%D9%84%D9%85%D9%85%D9%84&so…
+2025-12-03 08:42:08.85
+da3bdf41
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-03 08:42:08.87
+da3bdf41
+User
+✅ DeserializeUser: User found: admin@sabq.sa

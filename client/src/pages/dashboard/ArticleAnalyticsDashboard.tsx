@@ -521,7 +521,7 @@ export default function ArticleAnalyticsDashboard() {
   });
 
   const { data: searchData, isLoading: isSearching, refetch } = useQuery<SearchResponse>({
-    queryKey: ['/api/admin/article-analytics/search', buildQueryParams()],
+    queryKey: [`/api/admin/article-analytics/search?${buildQueryParams()}`],
     enabled: !!user,
   });
 
