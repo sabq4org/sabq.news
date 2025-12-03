@@ -9299,3 +9299,133 @@ export type InsertCommentEditHistory = z.infer<typeof insertCommentEditHistorySc
 
 export type CommentDeletionLog = typeof commentDeletionLog.$inferSelect;
 export type InsertCommentDeletionLog = z.infer<typeof insertCommentDeletionLogSchema>;
+
+// ============================================
+// Smart Notification System v2.0
+// ============================================
+
+// جدول ذاكرة الإشعارات - Notification Memory Layer (30-day deduplication)
+export const notificationMemory = pgTable("notification_memory", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }).notNull(),
+  notificationType: varchar("notification_type", { length: 50 }).notNull(), // 'breaking', 'interest', 'behavior'
+  hash: varchar("hash", { length: 64 }).notNull().unique(), // SHA256(userId + articleId + type)
+  sentAt: timestamp("sent_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at").default(sql`NOW() + INTERVAL '30 days'`).notNull(),
+}, (table) => [
+  index("idx_notification_memory_user").on(table.userId),
+  index("idx_notification_memory_expires").on(table.expiresAt),
+  index("idx_notification_memory_hash").on(table.hash),
+  index("idx_notification_memory_user_article").on(table.userId, table.articleId),
+]);
+
+// جدول إشارات سلوك المستخدم - User Behavior Signals
+export const userBehaviorSignals = pgTable("user_behavior_signals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  signalType: varchar("signal_type", { length: 50 }).notNull(), // 'read', 'like', 'share', 'bookmark', 'time_spent', 'comment', 'search', 'notification_click', 'notification_dismiss'
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }),
+  categoryId: varchar("category_id").references(() => categories.id, { onDelete: "set null" }),
+  tagId: varchar("tag_id"),
+  weight: real("weight").default(1.0).notNull(), // Signal importance weight
+  decayFactor: real("decay_factor").default(1.0).notNull(), // Decays over time
+  metadata: jsonb("metadata"), // Additional signal context
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_behavior_signals_user").on(table.userId),
+  index("idx_behavior_signals_type").on(table.signalType),
+  index("idx_behavior_signals_created").on(table.createdAt),
+  index("idx_behavior_signals_user_category").on(table.userId, table.categoryId),
+  index("idx_behavior_signals_user_type").on(table.userId, table.signalType),
+]);
+
+// جدول الاهتمامات الديناميكية - Dynamic User Interests (calculated from behavior)
+export const userDynamicInterests = pgTable("user_dynamic_interests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  interestType: varchar("interest_type", { length: 50 }).notNull(), // 'category', 'tag', 'author', 'topic'
+  interestId: varchar("interest_id", { length: 255 }).notNull(),
+  interestName: varchar("interest_name", { length: 255 }), // Display name
+  score: real("score").default(0.0).notNull(), // 0.0 to 1.0 affinity score
+  interactionCount: integer("interaction_count").default(0).notNull(),
+  lastInteraction: timestamp("last_interaction").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_dynamic_interests_user").on(table.userId),
+  index("idx_dynamic_interests_score").on(table.userId, table.score),
+  index("idx_dynamic_interests_type").on(table.userId, table.interestType),
+  uniqueIndex("idx_dynamic_interests_unique").on(table.userId, table.interestType, table.interestId),
+]);
+
+// جدول تحليلات الإشعارات - Notification Analytics
+export const notificationAnalytics = pgTable("notification_analytics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  notificationId: varchar("notification_id").references(() => notificationsInbox.id, { onDelete: "cascade" }).notNull(),
+  notificationType: varchar("notification_type", { length: 50 }).notNull(),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "set null" }),
+  scoreAtSend: real("score_at_send"), // The score when notification was sent
+  recommendationReason: varchar("recommendation_reason", { length: 100 }), // Why this was recommended
+  opened: boolean("opened").default(false).notNull(),
+  clicked: boolean("clicked").default(false).notNull(),
+  dismissed: boolean("dismissed").default(false).notNull(),
+  timeToOpen: integer("time_to_open"), // Seconds until opened
+  timeToClick: integer("time_to_click"), // Seconds until clicked
+  openedAt: timestamp("opened_at"),
+  clickedAt: timestamp("clicked_at"),
+  dismissedAt: timestamp("dismissed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_notification_analytics_user").on(table.userId),
+  index("idx_notification_analytics_type").on(table.notificationType),
+  index("idx_notification_analytics_article").on(table.articleId),
+  index("idx_notification_analytics_created").on(table.createdAt),
+]);
+
+// Insert schemas for Smart Notification System
+export const insertNotificationMemorySchema = createInsertSchema(notificationMemory).omit({
+  id: true,
+  sentAt: true,
+  expiresAt: true,
+});
+
+export const insertUserBehaviorSignalSchema = createInsertSchema(userBehaviorSignals).omit({
+  id: true,
+  createdAt: true,
+  decayFactor: true,
+});
+
+export const insertUserDynamicInterestSchema = createInsertSchema(userDynamicInterests).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  interactionCount: true,
+});
+
+export const insertNotificationAnalyticsSchema = createInsertSchema(notificationAnalytics).omit({
+  id: true,
+  createdAt: true,
+  opened: true,
+  clicked: true,
+  dismissed: true,
+  timeToOpen: true,
+  timeToClick: true,
+  openedAt: true,
+  clickedAt: true,
+  dismissedAt: true,
+});
+
+// Select types for Smart Notification System
+export type NotificationMemory = typeof notificationMemory.$inferSelect;
+export type InsertNotificationMemory = z.infer<typeof insertNotificationMemorySchema>;
+
+export type UserBehaviorSignal = typeof userBehaviorSignals.$inferSelect;
+export type InsertUserBehaviorSignal = z.infer<typeof insertUserBehaviorSignalSchema>;
+
+export type UserDynamicInterest = typeof userDynamicInterests.$inferSelect;
+export type InsertUserDynamicInterest = z.infer<typeof insertUserDynamicInterestSchema>;
+
+export type NotificationAnalytics = typeof notificationAnalytics.$inferSelect;
+export type InsertNotificationAnalytics = z.infer<typeof insertNotificationAnalyticsSchema>;
