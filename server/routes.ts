@@ -6991,6 +6991,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Search and filter articles with analytics
   app.get("/api/admin/article-analytics/search", requireAuth, requirePermission("articles.view"), async (req: any, res) => {
+    console.log('[Article Analytics] Search request received:', { query: req.query, userId: req.user?.id });
     try {
       const {
         query,
