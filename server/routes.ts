@@ -7199,6 +7199,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return b.commentsCount - a.commentsCount;
           case "shares":
             return b.sharesCount - a.sharesCount;
+          case "publishedAt":
+            return new Date(b.publishedAt || 0).getTime() - new Date(a.publishedAt || 0).getTime();
           case "views":
           default:
             return b.views - a.views;
@@ -7368,70 +7370,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const wordCount = calculateWordCount(article.content);
 
-      // Build response
+      // Build flattened response to match frontend ArticleDetail interface
       const response = {
-        article: {
-          id: article.id,
-          title: article.title,
-          subtitle: article.subtitle,
-          slug: article.slug,
-          excerpt: article.excerpt,
-          imageUrl: article.imageUrl,
-          thumbnailUrl: article.thumbnailUrl,
-          status: article.status,
-          publishedAt: article.publishedAt,
-          createdAt: article.createdAt,
-          updatedAt: article.updatedAt,
-          articleType: article.articleType,
-          newsType: article.newsType,
-          isFeatured: article.isFeatured,
-          category: article.categoryId ? {
-            id: article.categoryId,
-            name: article.categoryName,
-            slug: article.categorySlug
-          } : null,
-          author: {
-            id: article.authorId,
-            firstName: article.authorFirstName,
-            lastName: article.authorLastName,
-            email: article.authorEmail
-          }
+        id: article.id,
+        title: article.title,
+        subtitle: article.subtitle,
+        slug: article.slug,
+        excerpt: article.excerpt,
+        content: article.content,
+        imageUrl: article.imageUrl,
+        thumbnailUrl: article.thumbnailUrl,
+        status: article.status,
+        publishedAt: article.publishedAt,
+        createdAt: article.createdAt,
+        category: article.categoryId ? {
+          id: article.categoryId,
+          nameAr: article.categoryName,
+          slug: article.categorySlug
+        } : null,
+        author: {
+          id: article.authorId,
+          name: article.authorFirstName && article.authorLastName 
+            ? `${article.authorFirstName} ${article.authorLastName}` 
+            : article.authorFirstName || article.authorLastName || null
         },
-        metrics: {
-          views: article.views || 0,
-          wordCount,
-          estimatedReadingTime: Math.ceil(wordCount / 200),
-          reactions: {
-            total: Object.values(reactionsMap).reduce((sum, count) => sum + count, 0),
-            breakdown: reactionsMap
-          },
-          saves: savesCount,
-          shares: {
-            totalClicks: sharesCount,
-            uniqueLinks: uniqueShareLinks
-          },
-          comments: {
-            total: totalComments,
-            breakdown: commentsStatusMap
-          },
-          reading: {
-            avgReadingTime: Math.round((readingStats?.avgReadingTime || 0) * 10) / 10,
-            totalReaders: readingStats?.totalReaders || 0,
-            totalReadSessions: readingStats?.totalReadSessions || 0,
-            avgScrollDepth: Math.round(readingStats?.avgScrollDepth || 0),
-            avgCompletionRate: Math.round(readingStats?.avgCompletionRate || 0)
-          }
+        views: article.views || 0,
+        likesCount: reactionsMap['like'] || 0,
+        savesCount,
+        sharesCount,
+        commentsCount: totalComments,
+        wordCount,
+        avgReadingTime: Math.round((readingStats?.avgReadingTime || 0) * 10) / 10,
+        reactions: reactionsMap,
+        commentsBreakdown: commentsStatusMap,
+        readingStats: {
+          avgReadingTime: Math.round((readingStats?.avgReadingTime || 0) * 10) / 10,
+          totalReaders: readingStats?.totalReaders || 0,
+          totalReadSessions: readingStats?.totalReadSessions || 0,
+          avgScrollDepth: Math.round(readingStats?.avgScrollDepth || 0),
+          avgCompletionRate: Math.round(readingStats?.avgCompletionRate || 0)
         },
         recentComments: recentComments.map(c => ({
           id: c.id,
           content: c.content,
           status: c.status,
           createdAt: c.createdAt,
-          user: {
-            id: c.userId,
-            firstName: c.userFirstName,
-            lastName: c.userLastName
-          },
+          user: c.userId ? {
+            name: c.userFirstName && c.userLastName 
+              ? `${c.userFirstName} ${c.userLastName}` 
+              : c.userFirstName || c.userLastName || null
+          } : null,
           sentiment: c.currentSentiment ? {
             type: c.currentSentiment,
             confidence: c.currentSentimentConfidence
