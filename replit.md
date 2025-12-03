@@ -68,3 +68,15 @@ Core data models include Users, Articles, Categories, Comments, Reactions, Bookm
 -   **Digital Credentials:** `passkit-generator`
 -   **Accessibility Testing:** `axe-core`
 -   **Voice Assistant:** Web Speech API
+### Smart Auto-Format System
+AI-powered smart formatting for the rich text editor that automatically highlights important keywords in Arabic news content:
+- **API Endpoint**: `POST /api/ai/auto-format` - Accepts text and formatting rules, returns formatted text with Markdown bold markers
+- **Frontend Integration**: "تنسيق ذكي" (Smart Format) button in the RichTextEditor toolbar with Wand2 icon
+- **Features**:
+  - Automatic detection and bolding of important names, institutions, numbers, and statistics
+  - Configurable rules: `bold_names`, `bold_numbers`, `bold_institutions`, `max_bold_per_paragraph`
+  - Returns formatted Markdown text and detailed highlights array with reasons
+  - Loading state with spinner indicator
+  - Toast notifications for success/failure
+- **Authorization**: Requires editor, admin, or reporter role
+- **Model**: Uses GPT-5.1 with JSON response format

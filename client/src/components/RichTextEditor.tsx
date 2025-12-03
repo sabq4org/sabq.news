@@ -39,7 +39,11 @@ import {
   Youtube as YoutubeIcon,
   Video,
   Sparkles,
+  Wand2,
+  Loader2,
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import {
   Dialog,
   DialogContent,
@@ -97,6 +101,8 @@ export function RichTextEditor({
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
   const [aiImageDialogOpen, setAiImageDialogOpen] = useState(false);
+  const [isSmartFormatting, setIsSmartFormatting] = useState(false);
+  const { toast } = useToast();
 
   const editor = useEditor({
     extensions: [
@@ -357,6 +363,71 @@ export function RichTextEditor({
     }
   };
 
+  // Smart AI Auto-Format handler
+  const handleSmartFormat = async () => {
+    if (!editor) return;
+    
+    const text = editor.getText();
+    if (!text || text.trim().length < 20) {
+      toast({
+        title: "محتوى غير كافٍ",
+        description: "يرجى كتابة نص أطول للتنسيق الذكي (20 حرف على الأقل)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSmartFormatting(true);
+    
+    try {
+      const response = await apiRequest<{
+        strategy: string;
+        formatted_text: string;
+        highlights: Array<{
+          text: string;
+          type: string;
+          reason: string;
+          importance: number;
+        }>;
+      }>("/api/ai/auto-format", {
+        method: "POST",
+        body: JSON.stringify({
+          text,
+          rules: {
+            bold_names: true,
+            bold_numbers: true,
+            bold_institutions: true,
+            max_bold_per_paragraph: 5
+          }
+        }),
+      });
+
+      if (response.formatted_text) {
+        // Convert Markdown bold (**text**) to HTML
+        const htmlContent = response.formatted_text
+          .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+          .replace(/\n/g, '<br/>');
+        
+        // Set the formatted content
+        editor.commands.setContent(htmlContent);
+        
+        toast({
+          title: "تم التنسيق بنجاح",
+          description: `تم تطبيق ${response.highlights?.length || 0} تنسيق ذكي على النص`,
+        });
+      }
+    } catch (error: any) {
+      console.error("Smart format error:", error);
+      toast({
+        title: "فشل التنسيق",
+        description: error.message || "حدث خطأ أثناء التنسيق الذكي",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSmartFormatting(false);
+    }
+  };
+
   const textColors = [
     { name: 'أسود', value: '#000000' },
     { name: 'أحمر', value: '#ef4444' },
@@ -602,6 +673,24 @@ export function RichTextEditor({
         >
           <Sparkles className="h-4 w-4 text-primary" />
         </ToolbarButton>
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={handleSmartFormat}
+          disabled={isSmartFormatting}
+          className="h-8 gap-1 px-2"
+          title="تنسيق ذكي بالذكاء الاصطناعي"
+          data-testid="button-smart-format"
+        >
+          {isSmartFormatting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Wand2 className="h-4 w-4 text-purple-500" />
+          )}
+          <span className="text-xs hidden sm:inline">تنسيق ذكي</span>
+        </Button>
 
         <ToolbarButton
           onClick={() => setGalleryDialogOpen(true)}

@@ -12552,6 +12552,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+
+  // Smart Auto-Format - AI-powered formatting for rich text editor
+  app.post("/api/ai/auto-format", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.id);
+      if (!user || (user.role !== "editor" && user.role !== "admin" && user.role !== "reporter")) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const { text, rules } = req.body;
+      
+      // Validate text input
+      if (!text || typeof text !== 'string') {
+        return res.status(400).json({ message: "Text is required and must be a string" });
+      }
+      
+      if (text.trim().length < 20) {
+        return res.status(400).json({ message: "Text must be at least 20 characters" });
+      }
+      
+      // Sanitize and validate rules - only extract primitive values
+      const sanitizedRules = {
+        bold_names: typeof rules?.bold_names === 'boolean' ? rules.bold_names : true,
+        bold_numbers: typeof rules?.bold_numbers === 'boolean' ? rules.bold_numbers : true,
+        bold_institutions: typeof rules?.bold_institutions === 'boolean' ? rules.bold_institutions : true,
+        max_bold_per_paragraph: typeof rules?.max_bold_per_paragraph === 'number' 
+          ? Math.min(Math.max(1, rules.max_bold_per_paragraph), 10) 
+          : 5
+      };
+
+      // Dynamic import to avoid circular dependencies
+      const { autoFormatContent } = await import("./openai");
+      
+      const result = await autoFormatContent(text, sanitizedRules);
+      res.json(result);
+    } catch (error) {
+      console.error("Error auto-formatting content:", error);
+      res.status(500).json({ message: "Failed to auto-format content" });
+    }
+  });
   // Smart Headline Comparison - Multi-Model AI
   app.post("/api/ai/compare-headlines", isAuthenticated, async (req: any, res) => {
     try {

@@ -1272,3 +1272,160 @@ export async function analyzeIFoxContent(
     throw new Error("Failed to analyze content");
   }
 }
+
+// ============================================
+// Smart Auto-Format for Rich Text Editor
+// ============================================
+
+export interface AutoFormatRules {
+  bold_names?: boolean;
+  bold_numbers?: boolean;
+  bold_institutions?: boolean;
+  max_bold_per_paragraph?: number;
+}
+
+export interface AutoFormatHighlight {
+  text: string;
+  type: 'bold' | 'italic' | 'underline' | 'heading' | 'quote' | 'highlight';
+  reason: string;
+  importance: number;
+}
+
+export interface AutoFormatResult {
+  strategy: 'conservative' | 'moderate' | 'aggressive';
+  formatted_text: string;
+  highlights: AutoFormatHighlight[];
+}
+
+/**
+ * AI-powered smart auto-formatting for Arabic news content
+ * Analyzes text and returns formatted version with highlighted keywords
+ * 
+ * @param text - The raw text content to format
+ * @param rules - Formatting rules and preferences
+ * @returns Formatted text with Markdown and highlight metadata
+ */
+export async function autoFormatContent(
+  text: string,
+  rules: AutoFormatRules = {}
+): Promise<AutoFormatResult> {
+  try {
+    console.log("[AutoFormat] 🚀 Starting AI auto-formatting...");
+    console.log("[AutoFormat] Text length:", text.length);
+    console.log("[AutoFormat] Rules:", JSON.stringify(rules));
+    
+    // Strip HTML tags for clean processing
+    const cleanText = stripHtml(text);
+    console.log("[AutoFormat] Clean text length:", cleanText.length);
+
+    const systemPrompt = `أنت محرر صحفي آلي متخصص في الأخبار العربية.
+مهمتك هي تحليل النصوص الإخبارية وتحديد الكلمات والعبارات الأهم التي يجب إبرازها بصريًا داخل المحرر (مثل الكلمات المفتاحية، الأسماء المهمة، الجهات، الدول، المناصب، العناوين الفرعية).
+
+أعد لي استجابة بصيغة JSON فقط بدون أي نص آخر خارج JSON.
+
+صيغة الـ JSON يجب أن تكون كالتالي بالضبط:
+
+{
+  "strategy": "conservative | moderate | aggressive",
+  "formatted_text": "نفس النص مع استخدام Markdown للتنسيق",
+  "highlights": [
+    {
+      "text": "النص الذي سيتم تنسيقه",
+      "type": "bold | italic | underline | heading | quote | highlight",
+      "reason": "سبب اختيار هذه الكلمة أو العبارة",
+      "importance": 1
+    }
+  ]
+}
+
+التعليمات:
+• استخدم Markdown لوضع الكلمات أو العبارات المهمة بين ** لتكون بالخط العريض داخل المحرر.
+• لا تُبالغ في كثرة الكلمات الغامقة؛ ركّز على:
+  - أسماء الأشخاص البارزين
+  - أسماء الدول والجهات الرسمية
+  - الأرقام والإحصائيات المهمة
+  - العناوين الفرعية داخل المتن إن وجدت
+• لا تُعد صياغة الخبر بشكل كامل، ركّز على التنسيق فقط.
+• لا تستخدم أي لغة غير العربية في المحتوى نفسه.
+• لا تضف مقدمة ولا خاتمة؛ فقط النتيجة حسب نموذج الـ JSON أعلاه.
+• الحد الأقصى للكلمات الغامقة: ${rules.max_bold_per_paragraph || 5} لكل فقرة.`;
+
+    const userPrompt = JSON.stringify({
+      mode: "auto_format",
+      tone: "news",
+      rules: {
+        bold_names: rules.bold_names ?? true,
+        bold_numbers: rules.bold_numbers ?? true,
+        bold_institutions: rules.bold_institutions ?? true,
+        max_bold_per_paragraph: rules.max_bold_per_paragraph ?? 5
+      },
+      text: cleanText
+    });
+
+    console.log("[AutoFormat] Calling OpenAI API...");
+    
+    const response = await openai.chat.completions.create({
+      model: "gpt-5.1",
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt,
+        },
+        {
+          role: "user",
+          content: userPrompt,
+        },
+      ],
+      response_format: { type: "json_object" },
+      max_completion_tokens: 4096,
+    });
+
+    console.log("[AutoFormat] ✅ OpenAI response received");
+    
+    const messageContent = response.choices?.[0]?.message?.content;
+    
+    if (!messageContent) {
+      console.warn("[AutoFormat] ⚠️ Empty response from OpenAI!");
+      return {
+        strategy: 'moderate',
+        formatted_text: text,
+        highlights: []
+      };
+    }
+    
+    console.log("[AutoFormat] Raw response length:", messageContent.length);
+    
+    const result = JSON.parse(messageContent) as AutoFormatResult;
+    
+    // Validate and sanitize the result
+    const validStrategies = ['conservative', 'moderate', 'aggressive'];
+    const strategy = validStrategies.includes(result.strategy) 
+      ? result.strategy 
+      : 'moderate';
+    
+    const formatted_text = typeof result.formatted_text === 'string' 
+      ? result.formatted_text 
+      : text;
+    
+    const highlights = Array.isArray(result.highlights) 
+      ? result.highlights.filter(h => 
+          typeof h.text === 'string' && 
+          typeof h.type === 'string' && 
+          typeof h.reason === 'string'
+        ).slice(0, 50) // Limit to 50 highlights
+      : [];
+    
+    console.log("[AutoFormat] ✅ Successfully formatted content");
+    console.log("[AutoFormat] Strategy:", strategy);
+    console.log("[AutoFormat] Highlights count:", highlights.length);
+    
+    return {
+      strategy: strategy as AutoFormatResult['strategy'],
+      formatted_text,
+      highlights
+    };
+  } catch (error) {
+    console.error("[AutoFormat] ❌ Error auto-formatting content:", error);
+    throw new Error("Failed to auto-format content");
+  }
+}
