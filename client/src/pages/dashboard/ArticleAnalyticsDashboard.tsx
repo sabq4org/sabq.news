@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -35,6 +34,7 @@ import { format, subDays, subMonths } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { DashboardLayout } from "@/components/DashboardLayout";
 
 interface Category {
   id: string;
@@ -469,8 +469,7 @@ function ArticleDetailPanel({
 }
 
 export default function ArticleAnalyticsDashboard() {
-  const [, setLocation] = useLocation();
-  const { user, isLoading: isAuthLoading } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -530,12 +529,6 @@ export default function ArticleAnalyticsDashboard() {
   }, [searchQuery, selectedCategory, selectedStatus, dateRange, sortBy]);
 
   useEffect(() => {
-    if (!isAuthLoading && !user) {
-      setLocation('/login');
-    }
-  }, [user, isAuthLoading, setLocation]);
-
-  useEffect(() => {
     document.title = "تحليلات المقالات - لوحة التحكم";
   }, []);
 
@@ -590,24 +583,14 @@ export default function ArticleAnalyticsDashboard() {
     setOffset(0);
   }, []);
 
-  if (isAuthLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
-          <p className="text-muted-foreground">جاري التحميل...</p>
-        </div>
-      </div>
-    );
-  }
-
   const articles = searchData?.articles || [];
   const pagination = searchData?.pagination;
   const totalPages = pagination ? Math.ceil(pagination.totalCount / limit) : 0;
   const currentPage = pagination ? Math.floor(pagination.offset / limit) + 1 : 1;
 
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
+    <DashboardLayout>
+      <div className="min-h-screen bg-background" dir="rtl">
       <div className="container mx-auto p-4 md:p-6 lg:p-8" data-testid="article-analytics-dashboard">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -850,6 +833,7 @@ export default function ArticleAnalyticsDashboard() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
