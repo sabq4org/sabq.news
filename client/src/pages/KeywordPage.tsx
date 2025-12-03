@@ -169,137 +169,138 @@ export default function KeywordPage() {
       <Header user={user} />
 
       <main className="flex-1">
-        {/* Hero Section */}
+        {/* Hero Section - Mobile Optimized */}
         <div className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-primary/10">
           <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-primary/5 rounded-full blur-2xl" />
+          <div className="absolute top-0 left-1/4 w-48 md:w-96 h-48 md:h-96 bg-primary/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 w-32 md:w-64 h-32 md:h-64 bg-primary/5 rounded-full blur-2xl" />
           
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 relative">
-            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
-              {/* Keyword Info */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-primary/10 backdrop-blur-sm border border-primary/20">
-                    <Hash className="h-7 w-7 text-primary" />
+          <div className="container mx-auto px-4 py-6 md:py-12 lg:py-16 relative">
+            <div className="flex flex-col gap-4 md:gap-6">
+              {/* Keyword Header with Follow Button */}
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+                  <div className="p-2 md:p-3 rounded-lg md:rounded-xl bg-primary/10 backdrop-blur-sm border border-primary/20 flex-shrink-0">
+                    <Hash className="h-5 w-5 md:h-7 md:w-7 text-primary" />
                   </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground font-medium">كلمة مفتاحية</p>
-                    <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-l from-primary to-primary/70 bg-clip-text text-transparent" data-testid="text-keyword-title">
+                  <div className="min-w-0">
+                    <p className="text-xs md:text-sm text-muted-foreground font-medium">كلمة مفتاحية</p>
+                    <h1 className="text-xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-l from-primary to-primary/70 bg-clip-text text-transparent truncate" data-testid="text-keyword-title">
                       {keyword}
                     </h1>
                   </div>
                 </div>
                 
-                {/* Stats Grid */}
-                {!isLoading && (
-                  <div className="flex flex-wrap gap-4 mt-6">
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
-                      <Newspaper className="h-4 w-4 text-primary" />
-                      <span className="text-lg font-bold">{stats.total}</span>
-                      <span className="text-sm text-muted-foreground">مقال</span>
-                    </div>
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
-                      <Eye className="h-4 w-4 text-blue-500" />
-                      <span className="text-lg font-bold">{stats.views.toLocaleString('ar-SA')}</span>
-                      <span className="text-sm text-muted-foreground">مشاهدة</span>
-                    </div>
-                    {stats.breaking > 0 && (
-                      <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-destructive/10 backdrop-blur-sm border border-destructive/20">
-                        <Zap className="h-4 w-4 text-destructive" />
-                        <span className="text-lg font-bold text-destructive">{stats.breaking}</span>
-                        <span className="text-sm text-destructive/80">عاجل</span>
-                      </div>
-                    )}
-                    {stats.latest && (
-                      <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">
-                          آخر تحديث: {formatDistanceToNow(new Date(stats.latest), { addSuffix: true, locale: arSA })}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Follow Button */}
-              {user && (
-                <div className="flex-shrink-0">
+                {/* Follow Button - Compact on Mobile */}
+                {user && (
                   <Button
-                    size="lg"
+                    size="default"
                     variant={isFollowing ? "outline" : "default"}
                     onClick={() => isFollowing ? unfollowMutation.mutate() : followMutation.mutate()}
                     disabled={followMutation.isPending || unfollowMutation.isPending}
-                    className="gap-2 min-w-[140px]"
+                    className="gap-1.5 md:gap-2 flex-shrink-0 text-sm md:text-base"
                     data-testid="button-follow-keyword"
                   >
                     {isFollowing ? (
                       <>
                         <BellOff className="h-4 w-4" />
-                        إلغاء المتابعة
+                        <span className="hidden sm:inline">إلغاء المتابعة</span>
+                        <span className="sm:hidden">إلغاء</span>
                       </>
                     ) : (
                       <>
                         <Bell className="h-4 w-4" />
-                        متابعة
+                        <span>متابعة</span>
                       </>
                     )}
                   </Button>
+                )}
+              </div>
+              
+              {/* Stats - Horizontal Scroll on Mobile */}
+              {!isLoading && (
+                <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap scrollbar-hide snap-x snap-mandatory">
+                  <div className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full md:rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 flex-shrink-0 snap-start">
+                    <Newspaper className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" />
+                    <span className="text-sm md:text-lg font-bold">{stats.total}</span>
+                    <span className="text-xs md:text-sm text-muted-foreground">مقال</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full md:rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 flex-shrink-0 snap-start">
+                    <Eye className="h-3.5 w-3.5 md:h-4 md:w-4 text-blue-500" />
+                    <span className="text-sm md:text-lg font-bold">{stats.views.toLocaleString('ar-SA')}</span>
+                    <span className="text-xs md:text-sm text-muted-foreground">مشاهدة</span>
+                  </div>
+                  {stats.breaking > 0 && (
+                    <div className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full md:rounded-lg bg-destructive/10 backdrop-blur-sm border border-destructive/20 flex-shrink-0 snap-start">
+                      <Zap className="h-3.5 w-3.5 md:h-4 md:w-4 text-destructive" />
+                      <span className="text-sm md:text-lg font-bold text-destructive">{stats.breaking}</span>
+                      <span className="text-xs md:text-sm text-destructive/80">عاجل</span>
+                    </div>
+                  )}
+                  {stats.latest && (
+                    <div className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full md:rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 flex-shrink-0 snap-start">
+                      <Clock className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground" />
+                      <span className="text-xs md:text-sm text-muted-foreground whitespace-nowrap">
+                        آخر تحديث: {formatDistanceToNow(new Date(stats.latest), { addSuffix: true, locale: arSA })}
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Filter & Sort Bar */}
+        {/* Filter & Sort Bar - Mobile Optimized */}
         <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              {/* Filter Pills */}
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                {(Object.keys(filterLabels) as FilterOption[]).map((filter) => {
-                  const { label, icon: Icon } = filterLabels[filter];
-                  const count = filter === 'all' ? stats.total : (articleTypeCounts[filter] || 0);
-                  if (filter !== 'all' && count === 0) return null;
-                  
-                  return (
-                    <Button
-                      key={filter}
-                      size="sm"
-                      variant={filterBy === filter ? "default" : "outline"}
-                      onClick={() => setFilterBy(filter)}
-                      className="gap-1.5 whitespace-nowrap"
-                      data-testid={`button-filter-${filter}`}
-                    >
-                      <Icon className="h-3.5 w-3.5" />
-                      {label}
-                      {count > 0 && (
-                        <Badge variant="secondary" className="mr-1 h-5 px-1.5 text-xs">
-                          {count}
-                        </Badge>
-                      )}
-                    </Button>
-                  );
-                })}
+          <div className="container mx-auto px-4 py-2.5 md:py-3">
+            <div className="flex items-center justify-between gap-2 md:gap-3">
+              {/* Filter Pills - Horizontal Scroll with Snap */}
+              <div className="flex-1 min-w-0 overflow-x-auto scrollbar-hide -mx-1 px-1">
+                <div className="flex items-center gap-1.5 md:gap-2 snap-x snap-mandatory">
+                  {(Object.keys(filterLabels) as FilterOption[]).map((filter) => {
+                    const { label, icon: Icon } = filterLabels[filter];
+                    const count = filter === 'all' ? stats.total : (articleTypeCounts[filter] || 0);
+                    if (filter !== 'all' && count === 0) return null;
+                    
+                    return (
+                      <Button
+                        key={filter}
+                        size="sm"
+                        variant={filterBy === filter ? "default" : "outline"}
+                        onClick={() => setFilterBy(filter)}
+                        className="gap-1 md:gap-1.5 whitespace-nowrap flex-shrink-0 snap-start h-8 md:h-9 px-2 md:px-3 text-[11px] md:text-sm min-w-[44px]"
+                        data-testid={`button-filter-${filter}`}
+                      >
+                        <Icon className="h-3 w-3 md:h-3.5 md:w-3.5" />
+                        {label}
+                        {count > 0 && (
+                          <Badge variant="secondary" className="mr-0.5 md:mr-1 h-4 md:h-5 px-1 md:px-1.5 text-[10px] md:text-xs">
+                            {count}
+                          </Badge>
+                        )}
+                      </Button>
+                    );
+                  })}
+                </div>
               </div>
 
-              {/* Sort Dropdown */}
+              {/* Sort Dropdown - Compact on Mobile */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2" data-testid="button-sort">
-                    <SortDesc className="h-4 w-4" />
-                    {sortLabels[sortBy]}
+                  <Button variant="outline" size="sm" className="gap-1.5 md:gap-2 flex-shrink-0 h-8 md:h-9 px-2.5 md:px-3" data-testid="button-sort">
+                    <SortDesc className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                    <span className="hidden sm:inline text-xs md:text-sm">{sortLabels[sortBy]}</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>ترتيب حسب</DropdownMenuLabel>
+                <DropdownMenuContent align="end" className="min-w-[140px]">
+                  <DropdownMenuLabel className="text-xs md:text-sm">ترتيب حسب</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {(Object.keys(sortLabels) as SortOption[]).map((sort) => (
                     <DropdownMenuItem
                       key={sort}
                       onClick={() => setSortBy(sort)}
-                      className={sortBy === sort ? "bg-accent" : ""}
+                      className={`text-xs md:text-sm ${sortBy === sort ? "bg-accent" : ""}`}
                       data-testid={`menu-sort-${sort}`}
                     >
                       {sortLabels[sort]}
@@ -311,19 +312,19 @@ export default function KeywordPage() {
           </div>
         </div>
 
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Loading State */}
+        <div className="container mx-auto px-4 py-4 md:py-8">
+          {/* Loading State - Mobile Optimized */}
           {isLoading && (
-            <div className="space-y-8">
-              <Skeleton className="aspect-[21/9] w-full rounded-2xl" />
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <div className="space-y-4 md:space-y-8">
+              <Skeleton className="aspect-[16/9] md:aspect-[21/9] w-full rounded-xl md:rounded-2xl" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
                   <Card key={i} className="overflow-hidden">
                     <Skeleton className="aspect-[16/10] w-full" />
-                    <CardContent className="p-4 space-y-2">
-                      <Skeleton className="h-5 w-20" />
-                      <Skeleton className="h-5 w-full" />
-                      <Skeleton className="h-4 w-3/4" />
+                    <CardContent className="p-3 md:p-4 space-y-2">
+                      <Skeleton className="h-4 md:h-5 w-16 md:w-20" />
+                      <Skeleton className="h-4 md:h-5 w-full" />
+                      <Skeleton className="h-3 md:h-4 w-3/4" />
                     </CardContent>
                   </Card>
                 ))}
@@ -331,9 +332,9 @@ export default function KeywordPage() {
             </div>
           )}
 
-          {/* Articles Grid - 4 columns */}
+          {/* Articles Grid - Single Column on Mobile, Progressive on Larger Screens */}
           {!isLoading && filteredAndSortedArticles.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 lg:gap-5">
               {filteredAndSortedArticles.map((article, index) => {
                 const timeAgo = article.publishedAt
                   ? formatDistanceToNow(new Date(article.publishedAt), {
@@ -353,9 +354,9 @@ export default function KeywordPage() {
                       style={{ animationDelay: `${index * 50}ms` }}
                       data-testid={`card-article-${article.id}`}
                     >
-                      {/* Image Container */}
+                      {/* Image Container - Adjusted for Mobile */}
                       <div className={`relative overflow-hidden bg-muted ${
-                        isInfographic ? 'aspect-[3/4]' : 'aspect-[16/10]'
+                        isInfographic ? 'aspect-[3/4]' : 'aspect-[16/9] sm:aspect-[16/10]'
                       }`}>
                         {article.imageUrl ? (
                           <OptimizedImage
@@ -368,9 +369,9 @@ export default function KeywordPage() {
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 via-muted to-primary/5">
                             {isInfographic ? (
-                              <BarChart3 className="h-16 w-16 text-primary/30" />
+                              <BarChart3 className="h-12 w-12 md:h-16 md:w-16 text-primary/30" />
                             ) : (
-                              <Newspaper className="h-12 w-12 text-primary/20" />
+                              <Newspaper className="h-10 w-10 md:h-12 md:w-12 text-primary/20" />
                             )}
                           </div>
                         )}
@@ -378,33 +379,33 @@ export default function KeywordPage() {
                         {/* Overlay Gradient */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                         
-                        {/* Top Badges */}
-                        <div className="absolute top-3 right-3 flex flex-wrap gap-2">
+                        {/* Top Badges - Smaller on Mobile */}
+                        <div className="absolute top-2 md:top-3 right-2 md:right-3 flex flex-wrap gap-1.5 md:gap-2">
                           {article.newsType === "breaking" && (
                             <Badge 
                               variant="destructive" 
-                              className="gap-1 shadow-lg" 
+                              className="gap-0.5 md:gap-1 shadow-lg text-[10px] md:text-xs h-5 md:h-auto px-1.5 md:px-2" 
                               data-testid={`badge-breaking-${article.id}`}
                             >
-                              <Zap className="h-3 w-3" />
+                              <Zap className="h-2.5 w-2.5 md:h-3 md:w-3" />
                               عاجل
                             </Badge>
                           )}
                           {isNewArticle(article.publishedAt) && article.newsType !== "breaking" && (
                             <Badge 
-                              className="gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-0 shadow-lg" 
+                              className="gap-0.5 md:gap-1 bg-emerald-500 hover:bg-emerald-600 text-white border-0 shadow-lg text-[10px] md:text-xs h-5 md:h-auto px-1.5 md:px-2" 
                               data-testid={`badge-new-${article.id}`}
                             >
-                              <Flame className="h-3 w-3" />
+                              <Flame className="h-2.5 w-2.5 md:h-3 md:w-3" />
                               جديد
                             </Badge>
                           )}
                           {isInfographic && (
                             <Badge 
-                              className="gap-1 bg-purple-600 hover:bg-purple-700 text-white border-0 shadow-lg"
+                              className="gap-0.5 md:gap-1 bg-purple-600 hover:bg-purple-700 text-white border-0 shadow-lg text-[10px] md:text-xs h-5 md:h-auto px-1.5 md:px-2"
                               data-testid={`badge-infographic-${article.id}`}
                             >
-                              <BarChart3 className="h-3 w-3" />
+                              <BarChart3 className="h-2.5 w-2.5 md:h-3 md:w-3" />
                               إنفوجرافيك
                             </Badge>
                           )}
@@ -412,55 +413,55 @@ export default function KeywordPage() {
                         
                         {/* AI Badge */}
                         {article.aiSummary && (
-                          <div className="absolute top-3 left-3">
-                            <Badge className="bg-primary/90 text-primary-foreground shadow-lg">
-                              <Sparkles className="h-3 w-3 ml-1" />
+                          <div className="absolute top-2 md:top-3 left-2 md:left-3">
+                            <Badge className="bg-primary/90 text-primary-foreground shadow-lg text-[10px] md:text-xs h-5 md:h-auto px-1.5 md:px-2">
+                              <Sparkles className="h-2.5 w-2.5 md:h-3 md:w-3 ml-0.5 md:ml-1" />
                               AI
                             </Badge>
                           </div>
                         )}
                         
-                        {/* Bottom Stats Overlay */}
-                        <div className="absolute bottom-3 right-3 left-3 flex items-center justify-between text-white/90 text-xs">
-                          <div className="flex items-center gap-3">
+                        {/* Bottom Stats Overlay - Adjusted for Mobile */}
+                        <div className="absolute bottom-2 md:bottom-3 right-2 md:right-3 left-2 md:left-3 flex items-center justify-between text-white/90 text-[10px] md:text-xs">
+                          <div className="flex items-center gap-2 md:gap-3">
                             {(article.views || 0) > 0 && (
-                              <span className="flex items-center gap-1">
-                                <Eye className="h-3 w-3" />
+                              <span className="flex items-center gap-0.5 md:gap-1">
+                                <Eye className="h-2.5 w-2.5 md:h-3 md:w-3" />
                                 {(article.views || 0).toLocaleString('ar-SA')}
                               </span>
                             )}
                             {(article.commentsCount ?? 0) > 0 && (
-                              <span className="flex items-center gap-1">
-                                <MessageSquare className="h-3 w-3" />
+                              <span className="flex items-center gap-0.5 md:gap-1">
+                                <MessageSquare className="h-2.5 w-2.5 md:h-3 md:w-3" />
                                 {article.commentsCount}
                               </span>
                             )}
                           </div>
                           {timeAgo && (
-                            <span className="flex items-center gap-1 bg-black/30 backdrop-blur-sm rounded-full px-2 py-0.5">
-                              <Clock className="h-3 w-3" />
-                              {timeAgo}
+                            <span className="flex items-center gap-0.5 md:gap-1 bg-black/30 backdrop-blur-sm rounded-full px-1.5 md:px-2 py-0.5">
+                              <Clock className="h-2.5 w-2.5 md:h-3 md:w-3" />
+                              <span className="truncate max-w-[80px] md:max-w-none">{timeAgo}</span>
                             </span>
                           )}
                         </div>
                       </div>
                       
-                      {/* Content */}
-                      <CardContent className="p-4 space-y-2">
+                      {/* Content - Mobile Optimized Spacing */}
+                      <CardContent className="p-3 md:p-4 space-y-1.5 md:space-y-2">
                         {/* Category */}
                         {article.category && (
                           <Badge 
                             variant="secondary"
-                            className="text-xs"
+                            className="text-[10px] md:text-xs h-5 md:h-auto"
                             data-testid={`badge-category-${article.id}`}
                           >
                             {article.category.nameAr}
                           </Badge>
                         )}
                         
-                        {/* Title */}
+                        {/* Title - Larger and More Readable on Mobile */}
                         <h3 
-                          className={`font-bold text-base line-clamp-2 leading-snug transition-colors ${
+                          className={`font-bold text-sm sm:text-base md:text-lg line-clamp-2 leading-snug md:leading-normal transition-colors ${
                             article.newsType === "breaking"
                               ? "text-destructive"
                               : "group-hover:text-primary"
@@ -470,9 +471,9 @@ export default function KeywordPage() {
                           {article.title}
                         </h3>
                         
-                        {/* Excerpt - Only for non-infographics */}
+                        {/* Excerpt - Hidden on very small screens, visible on larger */}
                         {!isInfographic && article.excerpt && (
-                          <p className="text-sm text-muted-foreground line-clamp-2">
+                          <p className="hidden sm:block text-xs md:text-sm text-muted-foreground line-clamp-2">
                             {article.excerpt}
                           </p>
                         )}
