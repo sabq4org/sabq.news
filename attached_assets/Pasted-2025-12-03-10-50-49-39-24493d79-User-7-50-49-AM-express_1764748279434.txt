@@ -1,0 +1,113 @@
+2025-12-03 10:50:49.39
+24493d79
+User
+7:50:49 AM [express] GET /api/notifications 304 in 139ms :: {"notifications":[{"id":"hoOAPYEKQXDIw_8…
+2025-12-03 10:50:49.39
+24493d79
+User
+7:50:49 AM [express] GET /api/announcements/active 304 in 126ms :: []
+2025-12-03 10:50:49.40
+24493d79
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-03 10:50:49.40
+24493d79
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-03 10:50:49.40
+24493d79
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-03 10:50:49.40
+24493d79
+User
+📡 SSE connection opened for user: admin-sabq
+2025-12-03 10:50:49.40
+24493d79
+User
+📡 User admin-sabq subscribed to notification stream
+2025-12-03 10:50:49.40
+24493d79
+User
+📡 User admin-sabq subscribed to notification stream
+2025-12-03 10:50:49.40
+24493d79
+User
+📡 SSE connection opened for user: admin-sabq
+2025-12-03 10:50:49.42
+24493d79
+User
+[RBAC] User admin-sabq has legacy superuser role (admin), granting all permissions
+2025-12-03 10:50:49.44
+24493d79
+User
+7:50:49 AM [express] GET /api/admin/articles/metrics 304 in 174ms :: {"published":152,"scheduled":0,…
+2025-12-03 10:50:49.63
+24493d79
+User
+7:50:49 AM [express] GET /api/admin/articles 304 in 264ms :: [{"id":"CipovzsEkayj95Vi6lcSN","title":…
+2025-12-03 10:50:54.12
+24493d79
+User
+at orderSelectedFields (file:///home/runner/workspace/node_modules/drizzle-orm/utils.js:53:17)
+2025-12-03 10:50:54.12
+24493d79
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-12-03 10:50:54.12
+24493d79
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/utils.js:63:22
+2025-12-03 10:50:54.12
+24493d79
+User
+at Function.entries ()
+2025-12-03 10:50:54.12
+24493d79
+User
+Error fetching article analytics: TypeError: Cannot convert undefined or null to object
+2025-12-03 10:50:54.12
+24493d79
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/query-builders/select.js:684:26
+2025-12-03 10:50:54.12
+24493d79
+User
+at PgSelectBase._prepare (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/query-builders/select.js:683:19)
+2025-12-03 10:50:54.12
+24493d79
+User
+at PgSelectBase.then (file:///home/runner/workspace/node_modules/drizzle-orm/query-promise.js:21:17)
+2025-12-03 10:50:54.12
+24493d79
+User
+at PgSelectBase.execute (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/query-builders/select.js:707:19)
+2025-12-03 10:50:54.12
+24493d79
+User
+at Array.reduce ()
+2025-12-03 10:50:54.12
+24493d79
+User
+at Object.startActiveSpan (file:///home/runner/workspace/node_modules/drizzle-orm/tracing.js:8:14)
+2025-12-03 10:50:54.12
+24493d79
+User
+at orderSelectedFields (file:///home/runner/workspace/node_modules/drizzle-orm/utils.js:53:33)
+2025-12-03 10:50:54.12
+24493d79
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/query-builders/select.js:708:19
+2025-12-03 10:50:54.14
+24493d79
+User
+7:50:54 AM [express] GET /api/admin/article-analytics/search 500 in 94ms :: {"message":"Failed to fe…
+2025-12-03 10:50:58.04
+24493d79
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-03 10:50:58.06
+24493d79
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+
