@@ -7012,8 +7012,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (query) {
         whereConditions.push(
           or(
-            ilike(articles.title, `%\${query}%`),
-            ilike(articles.excerpt, `%\${query}%`)
+            ilike(articles.title, `%${query}%`),
+            ilike(articles.excerpt, `%${query}%`)
           )
         );
       }
