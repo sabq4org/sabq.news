@@ -1,0 +1,76 @@
+2025-12-03 16:49:17.54
+3809f8e3
+User
+1:49:17 PM [express] GET /api/admin/article-analytics/search 200 in 315ms :: {"articles":[{"id":"zVh…
+2025-12-03 16:49:18.54
+3809f8e3
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-03 16:49:18.57
+3809f8e3
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-03 16:49:28.88
+3809f8e3
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-03 16:49:28.91
+3809f8e3
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-03 16:49:28.93
+3809f8e3
+User
+[RBAC] User admin-sabq has legacy superuser role (admin), granting all permissions
+2025-12-03 16:49:29.15
+3809f8e3
+User
+1:49:29 PM [express] GET /api/admin/article-analytics/1ilFglZW6x27pC_EEGhpd 200 in 464ms :: {"id":"1…
+2025-12-03 16:49:32.50
+3809f8e3
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-03 16:49:32.52
+3809f8e3
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-03 16:49:32.54
+3809f8e3
+User
+[RBAC] User admin-sabq has legacy superuser role (admin), granting all permissions
+2025-12-03 16:49:32.54
+3809f8e3
+User
+[PDF Export] Starting export for articleId: 1ilFglZW6x27pC_EEGhpd
+2025-12-03 16:49:33.76
+3809f8e3
+User
+[PDF Export] Creating PDF document...
+2025-12-03 16:49:33.77
+3809f8e3
+User
+at Array.forEach ()
+2025-12-03 16:49:33.77
+3809f8e3
+User
+code: 'ENOENT',
+2025-12-03 16:49:33.77
+3809f8e3
+User
+Error exporting article analytics PDF: Error: ENOENT: no such file or directory, open '/home/runner/workspace/dist/fonts/NotoSansArabic-Bold.ttf'
+2025-12-03 16:49:33.77
+3809f8e3
+User
+at DocMeasure.measureLeaf (/home/runner/workspace/node_modules/pdfmake/src/docMeasure.js:238:28)
+2025-12-03 16:49:33.77
+3809f8e3
+User
+at DocMeasure.measureNode (/home/runner/workspace/node_modules/pdfmake/src/docMeasure.js:44:25)
+2025-12-03 16:49:33.77
+3809f8e3
+User
+at /home/runner/workspace/node_modules/pdfmake/src/docMeasure.js:51:30
+2025-12-03 16:49:33.77
+3809f8e3
+User
+at StyleContextStack.auto (/home/runner/workspace/node_modules/pdfmake/src/styleContextStack.js:102:15) {

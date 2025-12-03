@@ -7536,15 +7536,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       
       // Create __dirname equivalent for ESM
-      const __dirname = path.dirname(fileURLToPath(import.meta.url));
+      const __dirname = process.cwd();
       
       // Use NotoSansArabic font for Arabic RTL support
       const fonts = {
         NotoSansArabic: {
-          normal: path.join(__dirname, 'fonts', 'NotoSansArabic-Regular.ttf'),
-          bold: path.join(__dirname, 'fonts', 'NotoSansArabic-Bold.ttf'),
-          italics: path.join(__dirname, 'fonts', 'NotoSansArabic-Regular.ttf'),
-          bolditalics: path.join(__dirname, 'fonts', 'NotoSansArabic-Bold.ttf')
+          normal: path.join(__dirname, 'server/fonts', 'NotoSansArabic-Regular.ttf'),
+          bold: path.join(__dirname, 'server/fonts', 'NotoSansArabic-Bold.ttf'),
+          italics: path.join(__dirname, 'server/fonts', 'NotoSansArabic-Regular.ttf'),
+          bolditalics: path.join(__dirname, 'server/fonts', 'NotoSansArabic-Bold.ttf')
         }
       };
       const printer = new PdfPrinter(fonts);
