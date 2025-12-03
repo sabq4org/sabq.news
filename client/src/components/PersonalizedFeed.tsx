@@ -209,8 +209,8 @@ export function PersonalizedFeed({ articles: initialArticles, title = "جميع 
                         article.newsType === "breaking" ? "bg-destructive/5" : ""
                       }`}>
                         <div className="flex gap-3">
-                          {/* Image - Clean, no badges */}
-                          <div className="relative flex-shrink-0 w-20 h-16 rounded-lg overflow-hidden">
+                          {/* Image - Same dimensions as QuadCategoriesBlock */}
+                          <div className="relative flex-shrink-0 w-28 h-20 rounded-lg overflow-hidden">
                             {(article.imageUrl || article.thumbnailUrl) ? (
                               <img
                                 src={article.thumbnailUrl ?? article.imageUrl ?? ''}
