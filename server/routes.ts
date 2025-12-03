@@ -7160,7 +7160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return plainText.split(/\s+/).filter(Boolean).length;
       };
 
-      // Build final response with all metrics
+      // Build final response with all metrics flattened
       const articlesWithFullMetrics = articlesToReturn.map(article => ({
         id: article.id,
         title: article.title,
@@ -7172,37 +7172,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdAt: article.createdAt,
         category: article.categoryId ? {
           id: article.categoryId,
-          name: article.categoryName,
+          nameAr: article.categoryName,
           slug: article.categorySlug
         } : null,
         author: {
           id: article.authorId,
-          firstName: article.authorFirstName,
-          lastName: article.authorLastName
+          name: article.authorFirstName && article.authorLastName 
+            ? `${article.authorFirstName} ${article.authorLastName}` 
+            : article.authorFirstName || article.authorLastName || null
         },
-        metrics: {
-          views: article.views || 0,
-          likesCount: likesMap.get(article.id) || 0,
-          savesCount: savesMap.get(article.id) || 0,
-          sharesCount: sharesMap.get(article.id) || 0,
-          commentsCount: commentsMap.get(article.id) || 0,
-          wordCount: calculateWordCount(article.content),
-          avgReadingTime: Math.round((readingTimeMap.get(article.id) || 0) * 10) / 10
-        }
+        views: article.views || 0,
+        likesCount: likesMap.get(article.id) || 0,
+        savesCount: savesMap.get(article.id) || 0,
+        sharesCount: sharesMap.get(article.id) || 0,
+        commentsCount: commentsMap.get(article.id) || 0,
+        wordCount: calculateWordCount(article.content),
+        avgReadingTime: Math.round((readingTimeMap.get(article.id) || 0) * 10) / 10
       }));
 
       // Sort by the requested metric
       const sortedArticles = [...articlesWithFullMetrics].sort((a, b) => {
         switch (sortBy) {
           case "likes":
-            return b.metrics.likesCount - a.metrics.likesCount;
+            return b.likesCount - a.likesCount;
           case "comments":
-            return b.metrics.commentsCount - a.metrics.commentsCount;
+            return b.commentsCount - a.commentsCount;
           case "shares":
-            return b.metrics.sharesCount - a.metrics.sharesCount;
+            return b.sharesCount - a.sharesCount;
           case "views":
           default:
-            return b.metrics.views - a.metrics.views;
+            return b.views - a.views;
         }
       });
 
