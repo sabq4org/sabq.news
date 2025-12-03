@@ -6986,6 +6986,469 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================================
+  // ARTICLE ANALYTICS DASHBOARD ROUTES
+  // ============================================================
+
+  // Search and filter articles with analytics
+  app.get("/api/admin/article-analytics/search", requireAuth, requirePermission("articles.view"), async (req: any, res) => {
+    try {
+      const {
+        query,
+        categoryId,
+        status,
+        dateFrom,
+        dateTo,
+        sortBy = "views",
+        limit = "20",
+        offset = "0"
+      } = req.query;
+
+      const limitNum = Math.min(parseInt(limit) || 20, 100);
+      const offsetNum = parseInt(offset) || 0;
+
+      // Build where conditions
+      const whereConditions = [];
+
+      if (query) {
+        whereConditions.push(
+          or(
+            ilike(articles.title, `%\${query}%`),
+            ilike(articles.excerpt, `%\${query}%`)
+          )
+        );
+      }
+
+      if (categoryId) {
+        whereConditions.push(eq(articles.categoryId, categoryId));
+      }
+
+      if (status && status !== "all") {
+        whereConditions.push(eq(articles.status, status));
+      }
+
+      if (dateFrom) {
+        const fromDate = new Date(dateFrom);
+        if (!isNaN(fromDate.getTime())) {
+          whereConditions.push(gte(articles.publishedAt, fromDate));
+        }
+      }
+
+      if (dateTo) {
+        const toDate = new Date(dateTo);
+        if (!isNaN(toDate.getTime())) {
+          whereConditions.push(lte(articles.publishedAt, toDate));
+        }
+      }
+
+      // Query articles with aggregated metrics using subqueries
+      const articlesWithMetrics = await db
+        .select({
+          id: articles.id,
+          title: articles.title,
+          slug: articles.slug,
+          excerpt: articles.excerpt,
+          imageUrl: articles.imageUrl,
+          status: articles.status,
+          views: articles.views,
+          content: articles.content,
+          publishedAt: articles.publishedAt,
+          createdAt: articles.createdAt,
+          categoryId: articles.categoryId,
+          categoryName: categories.name,
+          categorySlug: categories.slug,
+          authorId: articles.authorId,
+          authorFirstName: users.firstName,
+          authorLastName: users.lastName,
+        })
+        .from(articles)
+        .leftJoin(categories, eq(articles.categoryId, categories.id))
+        .leftJoin(users, eq(articles.authorId, users.id))
+        .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
+        .orderBy(desc(articles.views))
+        .limit(limitNum + 1)
+        .offset(offsetNum);
+
+      // Check if there are more results
+      const hasMore = articlesWithMetrics.length > limitNum;
+      const articlesToReturn = hasMore ? articlesWithMetrics.slice(0, limitNum) : articlesWithMetrics;
+      
+      // Get article IDs for batch queries
+      const articleIds = articlesToReturn.map(a => a.id);
+
+      if (articleIds.length === 0) {
+        return res.json({
+          articles: [],
+          hasMore: false,
+          totalCount: 0
+        });
+      }
+
+      // Batch query for likes count
+      const likesCountResult = await db
+        .select({
+          articleId: reactions.articleId,
+          count: sql<number>`COUNT(*)::int`
+        })
+        .from(reactions)
+        .where(and(
+          inArray(reactions.articleId, articleIds),
+          eq(reactions.type, "like")
+        ))
+        .groupBy(reactions.articleId);
+
+      const likesMap = new Map(likesCountResult.map(r => [r.articleId, r.count]));
+
+      // Batch query for saves/bookmarks count
+      const savesCountResult = await db
+        .select({
+          articleId: bookmarks.articleId,
+          count: sql<number>`COUNT(*)::int`
+        })
+        .from(bookmarks)
+        .where(inArray(bookmarks.articleId, articleIds))
+        .groupBy(bookmarks.articleId);
+
+      const savesMap = new Map(savesCountResult.map(r => [r.articleId, r.count]));
+
+      // Batch query for shares count from shortLinks
+      const sharesCountResult = await db
+        .select({
+          articleId: shortLinks.articleId,
+          count: sql<number>`COALESCE(SUM(click_count), 0)::int`
+        })
+        .from(shortLinks)
+        .where(and(
+          inArray(shortLinks.articleId, articleIds),
+          eq(shortLinks.isActive, true)
+        ))
+        .groupBy(shortLinks.articleId);
+
+      const sharesMap = new Map(sharesCountResult.map(r => [r.articleId, r.count]));
+
+      // Batch query for comments count
+      const commentsCountResult = await db
+        .select({
+          articleId: comments.articleId,
+          count: sql<number>`COUNT(*)::int`
+        })
+        .from(comments)
+        .where(inArray(comments.articleId, articleIds))
+        .groupBy(comments.articleId);
+
+      const commentsMap = new Map(commentsCountResult.map(r => [r.articleId, r.count]));
+
+      // Batch query for average reading time
+      const readingTimeResult = await db
+        .select({
+          articleId: readingHistory.articleId,
+          avgReadingTime: sql<number>`COALESCE(AVG(read_duration) / 60.0, 0)::real`
+        })
+        .from(readingHistory)
+        .where(and(
+          inArray(readingHistory.articleId, articleIds),
+          isNotNull(readingHistory.readDuration)
+        ))
+        .groupBy(readingHistory.articleId);
+
+      const readingTimeMap = new Map(readingTimeResult.map(r => [r.articleId, r.avgReadingTime]));
+
+      // Calculate word count helper function
+      const calculateWordCount = (content: string | null): number => {
+        if (!content) return 0;
+        const plainText = content.replace(/<[^>]*>/g, '');
+        return plainText.split(/\s+/).filter(Boolean).length;
+      };
+
+      // Build final response with all metrics
+      const articlesWithFullMetrics = articlesToReturn.map(article => ({
+        id: article.id,
+        title: article.title,
+        slug: article.slug,
+        excerpt: article.excerpt,
+        imageUrl: article.imageUrl,
+        status: article.status,
+        publishedAt: article.publishedAt,
+        createdAt: article.createdAt,
+        category: article.categoryId ? {
+          id: article.categoryId,
+          name: article.categoryName,
+          slug: article.categorySlug
+        } : null,
+        author: {
+          id: article.authorId,
+          firstName: article.authorFirstName,
+          lastName: article.authorLastName
+        },
+        metrics: {
+          views: article.views || 0,
+          likesCount: likesMap.get(article.id) || 0,
+          savesCount: savesMap.get(article.id) || 0,
+          sharesCount: sharesMap.get(article.id) || 0,
+          commentsCount: commentsMap.get(article.id) || 0,
+          wordCount: calculateWordCount(article.content),
+          avgReadingTime: Math.round((readingTimeMap.get(article.id) || 0) * 10) / 10
+        }
+      }));
+
+      // Sort by the requested metric
+      const sortedArticles = [...articlesWithFullMetrics].sort((a, b) => {
+        switch (sortBy) {
+          case "likes":
+            return b.metrics.likesCount - a.metrics.likesCount;
+          case "comments":
+            return b.metrics.commentsCount - a.metrics.commentsCount;
+          case "shares":
+            return b.metrics.sharesCount - a.metrics.sharesCount;
+          case "views":
+          default:
+            return b.metrics.views - a.metrics.views;
+        }
+      });
+
+      // Get total count for pagination
+      const [{ count: totalCount }] = await db
+        .select({ count: sql<number>`COUNT(*)::int` })
+        .from(articles)
+        .where(whereConditions.length > 0 ? and(...whereConditions) : undefined);
+
+      res.json({
+        articles: sortedArticles,
+        hasMore,
+        totalCount: totalCount || 0,
+        offset: offsetNum,
+        limit: limitNum
+      });
+
+    } catch (error) {
+      console.error("Error fetching article analytics:", error);
+      res.status(500).json({ message: "Failed to fetch article analytics" });
+    }
+  });
+
+  // Get detailed analytics for a single article
+  app.get("/api/admin/article-analytics/:articleId", requireAuth, requirePermission("articles.view"), async (req: any, res) => {
+    try {
+      const { articleId } = req.params;
+
+      // Get article with basic info
+      const [article] = await db
+        .select({
+          id: articles.id,
+          title: articles.title,
+          subtitle: articles.subtitle,
+          slug: articles.slug,
+          excerpt: articles.excerpt,
+          content: articles.content,
+          imageUrl: articles.imageUrl,
+          thumbnailUrl: articles.thumbnailUrl,
+          status: articles.status,
+          views: articles.views,
+          publishedAt: articles.publishedAt,
+          createdAt: articles.createdAt,
+          updatedAt: articles.updatedAt,
+          articleType: articles.articleType,
+          newsType: articles.newsType,
+          isFeatured: articles.isFeatured,
+          categoryId: articles.categoryId,
+          categoryName: categories.name,
+          categorySlug: categories.slug,
+          authorId: articles.authorId,
+          authorFirstName: users.firstName,
+          authorLastName: users.lastName,
+          authorEmail: users.email,
+        })
+        .from(articles)
+        .leftJoin(categories, eq(articles.categoryId, categories.id))
+        .leftJoin(users, eq(articles.authorId, users.id))
+        .where(eq(articles.id, articleId))
+        .limit(1);
+
+      if (!article) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      // Get reactions breakdown (all types)
+      const reactionsBreakdown = await db
+        .select({
+          type: reactions.type,
+          count: sql<number>`COUNT(*)::int`
+        })
+        .from(reactions)
+        .where(eq(reactions.articleId, articleId))
+        .groupBy(reactions.type);
+
+      const reactionsMap: Record<string, number> = {};
+      reactionsBreakdown.forEach(r => {
+        reactionsMap[r.type] = r.count;
+      });
+
+      // Get total bookmarks/saves count
+      const [bookmarksResult] = await db
+        .select({
+          count: sql<number>`COUNT(*)::int`
+        })
+        .from(bookmarks)
+        .where(eq(bookmarks.articleId, articleId));
+
+      const savesCount = bookmarksResult?.count || 0;
+
+      // Get shares count from shortLinks (sum of clickCount)
+      const [sharesResult] = await db
+        .select({
+          count: sql<number>`COALESCE(SUM(click_count), 0)::int`,
+          uniqueLinks: sql<number>`COUNT(*)::int`
+        })
+        .from(shortLinks)
+        .where(and(
+          eq(shortLinks.articleId, articleId),
+          eq(shortLinks.isActive, true)
+        ));
+
+      const sharesCount = sharesResult?.count || 0;
+      const uniqueShareLinks = sharesResult?.uniqueLinks || 0;
+
+      // Get comments breakdown by status
+      const commentsBreakdown = await db
+        .select({
+          status: comments.status,
+          count: sql<number>`COUNT(*)::int`
+        })
+        .from(comments)
+        .where(eq(comments.articleId, articleId))
+        .groupBy(comments.status);
+
+      const commentsStatusMap: Record<string, number> = {
+        pending: 0,
+        approved: 0,
+        rejected: 0,
+        flagged: 0
+      };
+      commentsBreakdown.forEach(c => {
+        commentsStatusMap[c.status] = c.count;
+      });
+      const totalComments = Object.values(commentsStatusMap).reduce((sum, count) => sum + count, 0);
+
+      // Get reading time stats from readingHistory
+      const [readingStats] = await db
+        .select({
+          avgReadingTime: sql<number>`COALESCE(AVG(read_duration) / 60.0, 0)::real`,
+          totalReaders: sql<number>`COUNT(DISTINCT user_id)::int`,
+          totalReadSessions: sql<number>`COUNT(*)::int`,
+          avgScrollDepth: sql<number>`COALESCE(AVG(scroll_depth), 0)::real`,
+          avgCompletionRate: sql<number>`COALESCE(AVG(completion_rate), 0)::real`
+        })
+        .from(readingHistory)
+        .where(eq(readingHistory.articleId, articleId));
+
+      // Get recent comments (last 10 comments)
+      const recentComments = await db
+        .select({
+          id: comments.id,
+          content: comments.content,
+          status: comments.status,
+          createdAt: comments.createdAt,
+          userId: comments.userId,
+          userFirstName: users.firstName,
+          userLastName: users.lastName,
+          currentSentiment: comments.currentSentiment,
+          currentSentimentConfidence: comments.currentSentimentConfidence,
+        })
+        .from(comments)
+        .leftJoin(users, eq(comments.userId, users.id))
+        .where(eq(comments.articleId, articleId))
+        .orderBy(desc(comments.createdAt))
+        .limit(10);
+
+      // Calculate word count
+      const calculateWordCount = (content: string | null): number => {
+        if (!content) return 0;
+        const plainText = content.replace(/<[^>]*>/g, '');
+        return plainText.split(/\s+/).filter(Boolean).length;
+      };
+
+      const wordCount = calculateWordCount(article.content);
+
+      // Build response
+      const response = {
+        article: {
+          id: article.id,
+          title: article.title,
+          subtitle: article.subtitle,
+          slug: article.slug,
+          excerpt: article.excerpt,
+          imageUrl: article.imageUrl,
+          thumbnailUrl: article.thumbnailUrl,
+          status: article.status,
+          publishedAt: article.publishedAt,
+          createdAt: article.createdAt,
+          updatedAt: article.updatedAt,
+          articleType: article.articleType,
+          newsType: article.newsType,
+          isFeatured: article.isFeatured,
+          category: article.categoryId ? {
+            id: article.categoryId,
+            name: article.categoryName,
+            slug: article.categorySlug
+          } : null,
+          author: {
+            id: article.authorId,
+            firstName: article.authorFirstName,
+            lastName: article.authorLastName,
+            email: article.authorEmail
+          }
+        },
+        metrics: {
+          views: article.views || 0,
+          wordCount,
+          estimatedReadingTime: Math.ceil(wordCount / 200),
+          reactions: {
+            total: Object.values(reactionsMap).reduce((sum, count) => sum + count, 0),
+            breakdown: reactionsMap
+          },
+          saves: savesCount,
+          shares: {
+            totalClicks: sharesCount,
+            uniqueLinks: uniqueShareLinks
+          },
+          comments: {
+            total: totalComments,
+            breakdown: commentsStatusMap
+          },
+          reading: {
+            avgReadingTime: Math.round((readingStats?.avgReadingTime || 0) * 10) / 10,
+            totalReaders: readingStats?.totalReaders || 0,
+            totalReadSessions: readingStats?.totalReadSessions || 0,
+            avgScrollDepth: Math.round(readingStats?.avgScrollDepth || 0),
+            avgCompletionRate: Math.round(readingStats?.avgCompletionRate || 0)
+          }
+        },
+        recentComments: recentComments.map(c => ({
+          id: c.id,
+          content: c.content,
+          status: c.status,
+          createdAt: c.createdAt,
+          user: {
+            id: c.userId,
+            firstName: c.userFirstName,
+            lastName: c.userLastName
+          },
+          sentiment: c.currentSentiment ? {
+            type: c.currentSentiment,
+            confidence: c.currentSentimentConfidence
+          } : null
+        }))
+      };
+
+      res.json(response);
+
+    } catch (error) {
+      console.error("Error fetching article analytics detail:", error);
+      res.status(500).json({ message: "Failed to fetch article analytics detail" });
+    }
+  });
+
+
+  // ============================================================
   // ADMIN ACTIVITY LOGS ROUTES
   // ============================================================
 
