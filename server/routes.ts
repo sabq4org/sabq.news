@@ -416,14 +416,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("✅ Admin bootstrap completed successfully");
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         success: true,
         message: "Admin user created successfully",
         credentials: {
@@ -465,15 +457,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.error("❌ Session save error:", saveErr);
             return res.status(500).json({ message: "خطأ في حفظ الجلسة" });
           }
-          return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); 
+          return res.json({ 
             requires2FA: true,
             message: "يرجى إدخال رمز التحقق بخطوتين" 
           });
@@ -495,15 +479,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return res.status(500).json({ message: "خطأ في حفظ الجلسة" });
           }
           console.log("✅ Login successful:", user.email);
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "تم تسجيل الدخول بنجاح", user: { id: user.id, email: user.email } });
+      res.json({ message: "تم تسجيل الدخول بنجاح", user: { id: user.id, email: user.email } });
         });
       });
     })(req, res, next);
@@ -669,15 +645,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: result.error || "فشل التحقق من البريد الإلكتروني" });
       }
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); 
+      res.json({ 
         message: "تم التحقق من بريدك الإلكتروني بنجاح",
         userId: result.userId
       });
@@ -701,15 +669,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: result.error || "فشل إعادة إرسال رسالة التحقق" });
       }
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "تم إرسال رسالة التحقق بنجاح. يرجى فحص بريدك الإلكتروني" });
+      res.json({ message: "تم إرسال رسالة التحقق بنجاح. يرجى فحص بريدك الإلكتروني" });
     } catch (error) {
       console.error("Resend verification error:", error);
       res.status(500).json({ message: "خطأ في إرسال رسالة التحقق" });
@@ -734,15 +694,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Always return success to prevent email enumeration
       if (!user) {
-        return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); 
+        return res.json({ 
           message: "إذا كان البريد الإلكتروني مسجلاً، سيتم إرسال رابط إعادة تعيين كلمة المرور" 
         });
       }
@@ -768,15 +720,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`🔗 Password reset link for ${email}: ${resetLink}`);
       }
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); 
+      res.json({ 
         message: "إذا كان البريد الإلكتروني مسجلاً، سيتم إرسال رابط إعادة تعيين كلمة المرور"
       });
     } catch (error) {
@@ -838,15 +782,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .set({ used: true })
         .where(eq(passwordResetTokens.id, matchedToken.id));
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "تم إعادة تعيين كلمة المرور بنجاح" });
+      res.json({ message: "تم إعادة تعيين كلمة المرور بنجاح" });
     } catch (error) {
       console.error("Reset password error:", error);
       res.status(500).json({ message: "خطأ في إعادة تعيين كلمة المرور" });
@@ -881,15 +817,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "تم تسجيل الخروج بنجاح" });
+      res.json({ message: "تم تسجيل الخروج بنجاح" });
     } catch (error) {
       console.error("Logout error:", error);
       
@@ -1003,15 +931,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // SECURITY: Never send passwordHash to client
       const { passwordHash, twoFactorSecret, ...safeUser } = user;
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); ...safeUser, role, roles: allRoles, permissions: permissionsArray });
+      res.json({ ...safeUser, role, roles: allRoles, permissions: permissionsArray });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
@@ -1043,15 +963,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const objectStorageService = new ObjectStorageService();
       const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); uploadURL });
+      res.json({ uploadURL });
     } catch (error) {
       console.error("Error getting upload URL:", error);
       res.status(500).json({ message: "فشل في الحصول على رابط الرفع" });
@@ -1086,15 +998,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("[Profile Image] User updated with new image:", user.profileImageUrl);
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); 
+      res.json({ 
         success: true,
         profileImageUrl: objectPath,
         user
@@ -1232,14 +1136,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const hasMore = pageNum * limitNum < total;
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         files: filesWithUrls,
         total,
         page: pageNum,
@@ -1497,14 +1393,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         : `/api/media/proxy/${mediaFile.id}`;
       
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         ...mediaFileWithDetails,
         url: responseUrl,
         proxyUrl: `/api/media/proxy/${mediaFile.id}`,
@@ -1743,15 +1631,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Delete from database
       await db.delete(mediaFiles).where(eq(mediaFiles.id, mediaId));
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "تم حذف ملف الوسائط بنجاح" });
+      res.json({ message: "تم حذف ملف الوسائط بنجاح" });
     } catch (error) {
       console.error("Error deleting media file:", error);
       res.status(500).json({ message: "فشل في حذف ملف الوسائط" });
@@ -2007,14 +1887,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`[Make Public] Complete. Success: ${successCount}, Errors: ${errorCount}`);
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         success: true,
         processed: allFiles.length,
         successCount,
@@ -2073,15 +1945,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Delete folder
       await db.delete(mediaFolders).where(eq(mediaFolders.id, folderId));
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "تم حذف المجلد بنجاح" });
+      res.json({ message: "تم حذف المجلد بنجاح" });
     } catch (error) {
       console.error("Error deleting media folder:", error);
       res.status(500).json({ message: "فشل في حذف مجلد الوسائط" });
@@ -2159,14 +2023,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (extractedKeywords.length === 0) {
         return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           suggestions: [],
           extractedKeywords: [],
           confidence: "low",
@@ -2299,14 +2155,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("[Media Suggestions] ✅ Returning", suggestions.length, "suggestions with confidence:", confidence);
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         suggestions,
         extractedKeywords,
         confidence,
@@ -2412,15 +2260,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("[Avatar Upload] User updated with new avatar:", user.profileImageUrl);
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); 
+      res.json({ 
         success: true,
         profileImageUrl: publicUrl,
         user
@@ -2555,14 +2395,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const [user] = await db.select().from(users).where(eq(users.id, userId));
       
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         enabled: user.twoFactorEnabled || false,
         hasBackupCodes: (user.twoFactorBackupCodes?.length || 0) > 0,
         backupCodesCount: user.twoFactorBackupCodes?.length || 0,
@@ -2598,14 +2430,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(eq(users.id, userId));
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         secret,
         qrCode,
         backupCodes
@@ -2653,15 +2477,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Return the backup codes that were generated during setup
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); 
+      res.json({ 
         message: "تم تفعيل المصادقة الثنائية بنجاح",
         backupCodes: user.twoFactorBackupCodes || []
       });
@@ -2719,15 +2535,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         newValue: { enabled: false }
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "تم تعطيل المصادقة الثنائية بنجاح" });
+      res.json({ message: "تم تعطيل المصادقة الثنائية بنجاح" });
     } catch (error) {
       console.error("Error disabling 2FA:", error);
       res.status(500).json({ message: "فشل في تعطيل المصادقة الثنائية" });
@@ -2788,15 +2596,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Clear the pending 2FA userId from session
         delete (req.session as any).pending2FAUserId;
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); 
+      res.json({ 
           message: "تم التحقق بنجاح",
           user: {
             id: user.id,
@@ -2839,15 +2639,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: result.message });
       }
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); 
+      res.json({ 
         success: true,
         message: result.message,
         phoneNumber: user.phoneNumber.replace(/(\d{3})\d{4}(\d{3})/, '$1****$2') // Mask phone number
@@ -2874,14 +2666,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         method: user.twoFactorMethod || 'authenticator',
         hasPhoneNumber: !!user.phoneNumber
       });
@@ -2930,15 +2714,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Clear the pending 2FA userId from session
         delete (req.session as any).pending2FAUserId;
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); 
+      res.json({ 
           message: "تم التحقق بنجاح",
           user: {
             id: user.id,
@@ -2999,15 +2775,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         newValue: { method }
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); 
+      res.json({ 
         success: true,
         message: "تم تحديث طريقة المصادقة الثنائية بنجاح",
         method
@@ -3055,15 +2823,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         newValue: { count: backupCodes.length }
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); backupCodes });
+      res.json({ backupCodes });
     } catch (error) {
       console.error("Error generating backup codes:", error);
       res.status(500).json({ message: "فشل في إنشاء الرموز الاحتياطية" });
@@ -3120,15 +2880,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       await db.insert(userInterests).values(interestsToInsert);
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true, message: "تم حفظ الاهتمامات بنجاح" });
+      res.json({ success: true, message: "تم حفظ الاهتمامات بنجاح" });
     } catch (error) {
       console.error("Error saving interests:", error);
       res.status(500).json({ message: "Failed to save interests" });
@@ -3144,15 +2896,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isProfileComplete: true 
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true, user });
+      res.json({ success: true, user });
     } catch (error) {
       console.error("Error completing profile:", error);
       res.status(500).json({ message: "Failed to complete profile" });
@@ -3183,14 +2927,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         : 0;
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         analysis,
         summary: {
           totalCategories,
@@ -3218,14 +2954,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const summary = await storage.updateUserInterestsAutomatically(userId, daysToUse);
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         success: true,
         summary,
       });
@@ -3249,14 +2977,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const articles = await storage.getPersonalizedFeed(userId, limit);
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         articles,
         count: articles.length,
       });
@@ -3287,14 +3007,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If user has no interests, return empty brief
       if (userInterestsList.length === 0) {
         return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           hasInterests: false,
           categories: [],
           totalArticles: 0,
@@ -3349,14 +3061,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const estimatedReadingTime = Math.ceil(totalArticles * 2); // 2 minutes per article average
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         hasInterests: true,
         categories: briefByCategory,
         totalArticles,
@@ -3654,14 +3358,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // ============================================================
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         hasActivity: true,
         personalizedGreeting,
         metrics,
@@ -3687,15 +3383,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const announcement = await storage.getSystemSetting("announcement");
       
       if (!announcement) {
-        return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); isActive: false, message: "", type: "info" });
+        return res.json({ isActive: false, message: "", type: "info" });
       }
       
       res.json(announcement);
@@ -3720,15 +3408,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       await storage.upsertSystemSetting("announcement", announcementData, "system", true);
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true, announcement: announcementData });
+      res.json({ success: true, announcement: announcementData });
     } catch (error) {
       console.error("Error updating announcement:", error);
       res.status(500).json({ message: "Failed to update announcement" });
@@ -4099,14 +3779,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         categoryName: category.nameAr,
         categoryIcon: category.icon,
         categoryColor: category.color,
@@ -4240,14 +3912,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const aiSignalsActive = 47;
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         articlesProcessed: articlesCount || 0,
         aiSignalsActive,
         smartCategoriesCount: smartCategoriesCount || 0,
@@ -4429,15 +4093,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "Category deleted successfully" });
+      res.json({ message: "Category deleted successfully" });
     } catch (error) {
       console.error("Error deleting category:", error);
       res.status(500).json({ message: "Failed to delete category" });
@@ -4650,14 +4306,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`[Smart Categories Seed] ✅ Completed: ${insertedCount} inserted, ${updatedCount} updated`);
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         success: true,
         message: `تم إضافة/تحديث ${insertedCount + updatedCount} تصنيف ذكي بنجاح`,
         inserted: insertedCount,
@@ -4710,15 +4358,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "Categories reordered successfully" });
+      res.json({ message: "Categories reordered successfully" });
     } catch (error) {
       console.error("Error reordering categories:", error);
       res.status(500).json({ message: "Failed to reorder categories" });
@@ -4797,15 +4437,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("[Profile Image Upload] Success. Proxy URL:", proxyUrl);
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); 
+      res.json({ 
         success: true,
         url: proxyUrl
       });
@@ -4897,15 +4529,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return (b.articlesCount + b.followersCount) - (a.articlesCount + a.followersCount);
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); users: usersWithStats.slice(0, 20) });
+      res.json({ users: usersWithStats.slice(0, 20) });
     } catch (error) {
       console.error("Error fetching suggested users:", error);
       res.status(500).json({ message: "Failed to fetch suggested users" });
@@ -5110,15 +4734,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // If no users have this role, return empty array
         if (filteredUserIds.length === 0) {
-          return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); items: [], users: [] });
+          return res.json({ items: [], users: [] });
         }
 
         // Add to query conditions
@@ -5156,14 +4772,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Return in both formats for compatibility
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         items: usersWithRoles.map(u => ({
           id: u.id,
           name: `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email,
@@ -5234,14 +4842,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(eq(userRoles.userId, userId));
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         ...user,
         roles: userRolesData,
       });
@@ -5476,15 +5076,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "User deleted successfully" });
+      res.json({ message: "User deleted successfully" });
     } catch (error) {
       console.error("Error deleting user:", error);
       res.status(500).json({ message: "Failed to delete user" });
@@ -5549,15 +5141,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "Password reset successfully" });
+      res.json({ message: "Password reset successfully" });
     } catch (error) {
       console.error("Error resetting password:", error);
       res.status(500).json({ message: "Failed to reset password" });
@@ -5745,15 +5329,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "User roles updated successfully" });
+      res.json({ message: "User roles updated successfully" });
     } catch (error) {
       console.error("❌ [UPDATE USER ROLES] Error updating user roles:", error);
       res.status(500).json({ message: "Failed to update user roles" });
@@ -5901,14 +5477,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const bannedTrend = banned > 0 ? -2 : 0; // Mock trend
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         total,
         emailVerified,
         emailVerifiedTrend: Number(verifiedTrend.toFixed(1)),
@@ -6095,15 +5663,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("✅ [DELETE ROLE] Role deleted:", { roleId, name: role[0].name });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "تم حذف الدور بنجاح" });
+      res.json({ message: "تم حذف الدور بنجاح" });
     } catch (error) {
       console.error("❌ [DELETE ROLE] Error deleting role:", error);
       res.status(500).json({ message: "فشل في حذف الدور" });
@@ -6133,14 +5693,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(eq(userRoles.roleId, req.params.id));
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         ...role[0],
         permissions: rolePerms.map(rp => rp.permission),
         userCount: userCount.length,
@@ -6278,14 +5830,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(eq(rolePermissions.roleId, roleId));
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         ...role[0],
         permissions: updatedRolePerms.map(rp => rp.permission),
       });
@@ -6467,14 +6011,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         ...result.article,
         category: result.category,
         author: result.reporter || result.author,
@@ -7226,15 +6762,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "Article archived successfully" });
+      res.json({ message: "Article archived successfully" });
     } catch (error) {
       console.error("Error archiving article:", error);
       res.status(500).json({ message: "Failed to archive article" });
@@ -7290,15 +6818,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "Article permanently deleted successfully" });
+      res.json({ message: "Article permanently deleted successfully" });
     } catch (error) {
       console.error("Error permanently deleting article:", error);
       res.status(500).json({ message: "Failed to permanently delete article" });
@@ -7348,15 +6868,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: `Successfully archived ${articleIds.length} articles` });
+      res.json({ message: `Successfully archived ${articleIds.length} articles` });
     } catch (error) {
       console.error("Error bulk archiving articles:", error);
       res.status(500).json({ message: "Failed to bulk archive articles" });
@@ -7426,15 +6938,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: `Successfully permanently deleted ${articleIds.length} articles` });
+      res.json({ message: `Successfully permanently deleted ${articleIds.length} articles` });
     } catch (error) {
       console.error("Error bulk permanently deleting articles:", error);
       res.status(500).json({ message: "Failed to bulk permanently delete articles" });
@@ -7474,15 +6978,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "Successfully updated article order" });
+      res.json({ message: "Successfully updated article order" });
     } catch (error) {
       console.error("Error updating article order:", error);
       res.status(500).json({ message: "Failed to update article order" });
@@ -7582,14 +7078,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (articleIds.length === 0) {
         return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           articles: [],
           hasMore: false,
           totalCount: 0
@@ -7726,12 +7214,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({
         articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
+        hasMore,
+        totalCount: totalCount || 0,
+        offset: offsetNum,
+        limit: limitNum
       });
 
     } catch (error) {
@@ -8516,15 +8002,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         entityId: tag.id,
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true, tagId: tag.id });
+      res.json({ success: true, tagId: tag.id });
     } catch (error) {
       console.error("Error following keyword:", error);
       res.status(500).json({ message: "حدث خطأ أثناء متابعة الكلمة" });
@@ -8565,15 +8043,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         entityId: tagId,
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true });
+      res.json({ success: true });
     } catch (error) {
       console.error("Error unfollowing keyword:", error);
       res.status(500).json({ message: "حدث خطأ أثناء إلغاء متابعة الكلمة" });
@@ -8690,15 +8160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         entityId: tagId,
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true });
+      res.json({ success: true });
     } catch (error) {
       console.error("Error unfollowing keyword:", error);
       res.status(500).json({ message: "حدث خطأ أثناء إلغاء متابعة الكلمة" });
@@ -8784,15 +8246,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       console.log('[Social Follow] User unfollowed:', { followerId, followingId });
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true, message: "تم إلغاء المتابعة بنجاح" });
+      res.json({ success: true, message: "تم إلغاء المتابعة بنجاح" });
     } catch (error) {
       console.error("Error unfollowing user:", error);
       res.status(500).json({ message: "حدث خطأ أثناء إلغاء متابعة المستخدم" });
@@ -8889,15 +8343,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const isFollowing = await storage.isFollowing(followerId, followingId);
 
       console.log('[Social Follow] Checked following status:', { followerId, followingId, isFollowing });
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); isFollowing });
+      res.json({ isFollowing });
     } catch (error) {
       console.error("Error checking follow status:", error);
       res.status(500).json({ message: "حدث خطأ أثناء التحقق من حالة المتابعة" });
@@ -9169,14 +8615,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         : null;
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         items: formattedActivities,
         nextCursor,
       });
@@ -9284,14 +8722,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           : null;
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         items: formattedItems,
         nextCursor,
       });
@@ -9374,14 +8804,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }));
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         items: formattedItems,
       });
     } catch (error) {
@@ -9522,14 +8944,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const firstName = user.firstName || user.email?.split('@')[0] || "عزيزي";
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         greeting: `${greeting} يا ${firstName}`,
         metrics: {
           readingTime: readingTimeMinutes,
@@ -9763,14 +9177,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (articleIds.length === 0) {
         return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           totalArticles: 0,
           totalViews: 0,
           totalLikes: 0,
@@ -9798,14 +9204,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(inArray(comments.articleId, articleIds));
       
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         totalArticles: myArticles.length,
         totalViews,
         totalLikes: likesResult[0]?.count || 0,
@@ -10334,14 +9732,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         period: {
           today: todayCount.count || 0,
           week: weekCount.count || 0,
@@ -10745,14 +10135,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         : 0;
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         avgReadTime: Math.round(avgReadTime), // in seconds
         totalReads,
         totalReactions,
@@ -10870,15 +10252,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const cappedDuration = Math.min(duration, 1800);
 
       await storage.recordArticleRead(userId, articleId, cappedDuration);
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true, duration: cappedDuration });
+      res.json({ success: true, duration: cappedDuration });
     } catch (error) {
       console.error("Error recording reading time:", error);
       res.status(500).json({ message: "Failed to record reading time" });
@@ -11106,14 +10480,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Return combined result with best of both worlds
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         // Rewritten content from Sabq editor
         editedContent: editResult.optimized.content,
         editedLead: editResult.optimized.lead,
@@ -11379,14 +10745,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const [archivedResult] = await db.select({ count: sql<number>`count(*)::int` }).from(enArticles).where(eq(enArticles.status, "archived"));
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         total: totalResult.count || 0,
         published: publishedResult.count || 0,
         draft: draftResult.count || 0,
@@ -11753,15 +11111,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "English article archived successfully" });
+      res.json({ message: "English article archived successfully" });
     } catch (error) {
       console.error("Error archiving English article:", error);
       res.status(500).json({ message: "Failed to archive English article" });
@@ -11970,15 +11320,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "Successfully reordered English articles" });
+      res.json({ message: "Successfully reordered English articles" });
     } catch (error) {
       console.error("Error reordering English articles:", error);
       res.status(500).json({ message: "Failed to reorder English articles" });
@@ -12025,15 +11367,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: `Successfully archived ${articleIds.length} English articles` });
+      res.json({ message: `Successfully archived ${articleIds.length} English articles` });
     } catch (error) {
       console.error("Error bulk archiving English articles:", error);
       res.status(500).json({ message: "Failed to bulk archive English articles" });
@@ -12080,15 +11414,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: `Successfully archived ${articleIds.length} English articles` });
+      res.json({ message: `Successfully archived ${articleIds.length} English articles` });
     } catch (error) {
       console.error("Error bulk archiving English articles:", error);
       res.status(500).json({ message: "Failed to bulk archive English articles" });
@@ -12322,15 +11648,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "English category deleted successfully" });
+      res.json({ message: "English category deleted successfully" });
     } catch (error) {
       console.error("Error deleting English category:", error);
       res.status(500).json({ message: "Failed to delete English category" });
@@ -12374,15 +11692,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "English categories reordered successfully" });
+      res.json({ message: "English categories reordered successfully" });
     } catch (error) {
       console.error("Error reordering English categories:", error);
       res.status(500).json({ message: "Failed to reorder English categories" });
@@ -12689,15 +11999,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       memoryCache.invalidatePattern('^opinion:');
       memoryCache.invalidatePattern('^trending:');
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "Article deleted" });
+      res.json({ message: "Article deleted" });
     } catch (error) {
       console.error("Error deleting article:", error);
       res.status(500).json({ message: "Failed to delete article" });
@@ -12802,14 +12104,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(status && status !== "all" ? eq(comments.status, status) : sql`1=1`);
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         comments: allComments,
         total: Number(count),
         page: parseInt(page),
@@ -12846,15 +12140,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "التعليق غير موجود" });
       }
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "تم تعديل التعليق بنجاح", comment: updated });
+      res.json({ message: "تم تعديل التعليق بنجاح", comment: updated });
     } catch (error) {
       console.error("Error updating comment:", error);
       res.status(500).json({ message: "فشل في تعديل التعليق" });
@@ -12875,15 +12161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "التعليق غير موجود" });
       }
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "تم حذف التعليق بنجاح" });
+      res.json({ message: "تم حذف التعليق بنجاح" });
     } catch (error) {
       console.error("Error deleting comment:", error);
       res.status(500).json({ message: "فشل في حذف التعليق" });
@@ -12909,15 +12187,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "التعليق غير موجود" });
       }
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "تمت الموافقة على التعليق", comment: updated });
+      res.json({ message: "تمت الموافقة على التعليق", comment: updated });
     } catch (error) {
       console.error("Error approving comment:", error);
       res.status(500).json({ message: "فشل في الموافقة على التعليق" });
@@ -12945,15 +12215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "التعليق غير موجود" });
       }
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "تم رفض التعليق", comment: updated });
+      res.json({ message: "تم رفض التعليق", comment: updated });
     } catch (error) {
       console.error("Error rejecting comment:", error);
       res.status(500).json({ message: "فشل في رفض التعليق" });
@@ -13056,15 +12318,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "الكلمة غير موجودة" });
       }
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "تم تعديل الكلمة بنجاح", word: updated });
+      res.json({ message: "تم تعديل الكلمة بنجاح", word: updated });
     } catch (error) {
       console.error("Error updating suspicious word:", error);
       res.status(500).json({ message: "فشل في تعديل الكلمة" });
@@ -13085,15 +12339,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "الكلمة غير موجودة" });
       }
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "تم حذف الكلمة بنجاح" });
+      res.json({ message: "تم حذف الكلمة بنجاح" });
     } catch (error) {
       console.error("Error deleting suspicious word:", error);
       res.status(500).json({ message: "فشل في حذف الكلمة" });
@@ -13197,14 +12443,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         hasSuspiciousWords: foundWords.length > 0,
         foundWords,
         highestSeverity: foundWords.length > 0
@@ -13239,14 +12477,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(eq(suspiciousWords.isActive, true));
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         comments: {
           total: Number(stats.total),
           pending: Number(stats.pending),
@@ -13281,15 +12511,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const summary = await summarizeArticle(content);
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); summary });
+      res.json({ summary });
     } catch (error) {
       console.error("Error generating summary:", error);
       res.status(500).json({ message: "Failed to generate summary" });
@@ -13313,15 +12535,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const titles = await generateTitle(content, language as "ar" | "en" | "ur");
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); titles });
+      res.json({ titles });
     } catch (error) {
       console.error("Error generating titles:", error);
       res.status(500).json({ message: "Failed to generate titles" });
@@ -13368,15 +12582,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         error: result.error,
       }));
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); suggestions });
+      res.json({ suggestions });
     } catch (error) {
       console.error("Error comparing headlines:", error);
       res.status(500).json({ message: "Failed to compare headlines" });
@@ -13619,15 +12825,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         recentArticles: articlesForContext,
       });
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); response: result.content, model: result.modelUsed });
+      res.json({ response: result.content, model: result.modelUsed });
     } catch (error) {
       console.error("Error in AI chat (Arabic):", error);
       res.status(500).json({ message: "فشل في معالجة الرسالة" });
@@ -13665,15 +12863,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         recentArticles: articlesForContext,
       });
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); response: result.content, model: result.modelUsed });
+      res.json({ response: result.content, model: result.modelUsed });
     } catch (error) {
       console.error("Error in AI chat (English):", error);
       res.status(500).json({ message: "Failed to process message" });
@@ -13711,15 +12901,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         recentArticles: articlesForContext,
       });
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); response: result.content, model: result.modelUsed });
+      res.json({ response: result.content, model: result.modelUsed });
     } catch (error) {
       console.error("Error in AI chat (Urdu):", error);
       res.status(500).json({ message: "پیغام پر کارروائی ناکام" });
@@ -14043,15 +13225,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
 
       const { categoryId } = req.body;
       const count = await importFromRssFeed(req.params.id, categoryId, user.id);
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); imported: count });
+      res.json({ imported: count });
     } catch (error) {
       console.error("Error importing from RSS:", error);
       res.status(500).json({ message: "Failed to import from RSS" });
@@ -14120,14 +13294,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         .limit(1);
       
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         rbacRoles: userRolesResult,
         legacyRole: user?.role || 'reader',
         jobTitle: user?.jobTitle,
@@ -14183,14 +13349,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         .offset(offset);
       
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         logs,
         total: count,
         page: pageNum,
@@ -14256,15 +13414,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   app.post("/api/objects/upload", isAuthenticated, async (req, res) => {
     const objectStorageService = new ObjectStorageService();
     const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-    res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); uploadURL });
+    res.json({ uploadURL });
   });
 
   app.put("/api/article-images", isAuthenticated, async (req: any, res) => {
@@ -14343,15 +13493,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       }
       
       const srcset = generateSrcSet(path);
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); srcset, sizes: IMAGE_SIZES });
+      res.json({ srcset, sizes: IMAGE_SIZES });
     } catch (error) {
       console.error("[Image Srcset API] Error:", error);
       res.status(500).json({ error: "Failed to generate srcset" });
@@ -14553,14 +13695,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       const sentimentProfile = await storage.getUserSentimentProfile(userId);
       
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         interests: userInterests,
         behaviorSummary: {
           last7Days: behaviorSummary,
@@ -14758,14 +13892,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       });
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         message: "تم استيراد السمات بنجاح",
         imported,
         updated,
@@ -14857,15 +13983,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       }
 
       await storage.deleteTheme(req.params.id);
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true });
+      res.json({ success: true });
     } catch (error) {
       console.error("Error deleting theme:", error);
       res.status(500).json({ message: "Failed to delete theme" });
@@ -15024,15 +14142,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         .limit(1);
 
       if (existing.length > 0) {
-        return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); 
+        return res.json({ 
           message: "Theme 'سبق الأحمر' already exists",
           theme: existing[0] 
         });
@@ -15096,14 +14206,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       });
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         message: "تم إنشاء ثيم 'سبق الأحمر' بنجاح",
         theme: sabqRedTheme,
       });
@@ -15317,15 +14419,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       }
 
       await recommendationService.recordClick(userId, articleId);
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true });
+      res.json({ success: true });
     } catch (error: any) {
       console.error('[Recommendations] Error recording click:', error);
       res.status(500).json({ message: 'Failed to record click' });
@@ -15337,29 +14431,13 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     try {
       const userId = req.user?.id;
       if (!userId) {
-        return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); recommendations: [], hasInteractions: false });
+        return res.json({ recommendations: [], hasInteractions: false });
       }
 
       const limit = Math.min(parseInt(req.query.limit as string) || 5, 10);
       const recommendations = await recommendationService.getFeedRecommendations(userId, limit);
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         recommendations,
         hasInteractions: recommendations.length > 0,
       });
@@ -15374,29 +14452,13 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     try {
       const userId = req.user?.id;
       if (!userId) {
-        return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); articles: [] });
+        return res.json({ articles: [] });
       }
 
       const limit = Math.min(parseInt(req.query.limit as string) || 5, 10);
       const articles = await storage.getContinueReading(userId, limit);
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); 
+      res.json({ 
         articles: articles.map(article => ({
           ...article,
           reasonText: `${article.progress}% مقروء`,
@@ -15419,15 +14481,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       }
       
       await storage.clearAllContinueReading(userId);
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true });
+      res.json({ success: true });
     } catch (error: any) {
       console.error("[Personalization] Error clearing continue reading:", error);
       res.status(500).json({ message: "Failed to clear continue reading" });
@@ -15445,15 +14499,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       }
       
       await storage.dismissContinueReading(userId, articleId);
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true });
+      res.json({ success: true });
     } catch (error: any) {
       console.error("[Personalization] Error dismissing article:", error);
       res.status(500).json({ message: "Failed to dismiss article" });
@@ -15465,15 +14511,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     try {
       const userId = req.user?.id;
       if (!userId) {
-        return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); interests: [] });
+        return res.json({ interests: [] });
       }
 
       const { userAffinities } = await import("@shared/schema");
@@ -15488,15 +14526,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         .orderBy(desc(userAffinities.score))
         .limit(10);
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); interests: affinities });
+      res.json({ interests: affinities });
     } catch (error: any) {
       console.error("[Personalization] Error getting top interests:", error);
       res.status(500).json({ message: "Failed to get interests" });
@@ -15507,15 +14537,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   app.post("/api/recommendations/:id/displayed", isAuthenticated, async (req: any, res) => {
     try {
       await recommendationService.markRecommendationDisplayed(req.params.id);
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true });
+      res.json({ success: true });
     } catch (error: any) {
       console.error('[Recommendations] Error marking displayed:', error);
       res.status(500).json({ message: 'Failed to mark displayed' });
@@ -15526,15 +14548,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   app.post("/api/recommendations/:id/clicked", isAuthenticated, async (req: any, res) => {
     try {
       await recommendationService.markRecommendationClicked(req.params.id);
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true });
+      res.json({ success: true });
     } catch (error: any) {
       console.error('[Recommendations] Error marking clicked:', error);
       res.status(500).json({ message: 'Failed to mark clicked' });
@@ -15582,15 +14596,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       
       const count = await storage.getUnreadNotificationsCount(userId);
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); count });
+      res.json({ count });
     } catch (error) {
       console.error("Error fetching unread count:", error);
       res.status(500).json({ message: "Failed to fetch unread count" });
@@ -15622,15 +14628,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       // Mark as read
       await storage.markNotificationAsRead(notificationId);
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true, message: "Notification marked as read" });
+      res.json({ success: true, message: "Notification marked as read" });
     } catch (error) {
       console.error("Error marking notification as read:", error);
       res.status(500).json({ message: "Failed to mark notification as read" });
@@ -15644,15 +14642,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       
       await storage.markAllNotificationsAsRead(userId);
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true, message: "All notifications marked as read" });
+      res.json({ success: true, message: "All notifications marked as read" });
     } catch (error) {
       console.error("Error marking all notifications as read:", error);
       res.status(500).json({ message: "Failed to mark all notifications as read" });
@@ -15684,15 +14674,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       // Delete notification
       await storage.deleteNotification(notificationId);
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true, message: "Notification deleted" });
+      res.json({ success: true, message: "Notification deleted" });
     } catch (error) {
       console.error("Error deleting notification:", error);
       res.status(500).json({ message: "Failed to delete notification" });
@@ -15706,15 +14688,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       
       await storage.clearAllNotifications(userId);
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true, message: "All notifications cleared" });
+      res.json({ success: true, message: "All notifications cleared" });
     } catch (error) {
       console.error("Error clearing notifications:", error);
       res.status(500).json({ message: "Failed to clear notifications" });
@@ -15753,15 +14727,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         createdCount++;
       }
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); 
+      res.json({ 
         success: true,
         message: `تم إنشاء إعدادات إشعارات لـ ${createdCount} مستخدم`,
         createdCount,
@@ -15799,15 +14765,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         .limit(1);
 
       if (existing) {
-        return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); 
+        return res.json({ 
           success: true,
           message: "الاهتمام موجود مسبقاً",
           alreadyExists: true
@@ -15820,15 +14778,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         categoryId,
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); 
+      res.json({ 
         success: true,
         message: "تم إضافة الاهتمام بنجاح",
         alreadyExists: false
@@ -15875,14 +14825,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       const totalNotifications = Number(totalNotificationsResult?.count || 0);
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         totalUsers,
         usersWithPrefs,
         usersWithInterests,
@@ -15945,14 +14887,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       if (!points) {
         // إنشاء سجل جديد للمستخدم
         return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           totalPoints: 0,
           currentRank: "القارئ الجديد",
           lifetimePoints: 0
@@ -16020,15 +14954,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       // Trigger pass update
       await storage.triggerLoyaltyPassUpdate(userId, reason || 'manual_update');
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true, points });
+      res.json({ success: true, points });
     } catch (error: any) {
       console.error('Error updating points:', error);
       res.status(500).json({ error: error.message });
@@ -16059,15 +14985,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     try {
       const limit = Number(req.query.limit) || 3;
       const topics = await storage.getLatestPublishedTopics(limit);
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); topics });
+      res.json({ topics });
     } catch (error) {
       console.error("Error fetching latest topics:", error);
       res.status(500).json({ message: "Failed to fetch latest topics" });
@@ -16097,15 +15015,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       }
       
       const articles = await storage.getArticlesByAngle(slug, limit);
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); ...angle, articles });
+      res.json({ ...angle, articles });
     } catch (error) {
       console.error("Error fetching angle:", error);
       res.status(500).json({ message: "Failed to fetch angle" });
@@ -16123,15 +15033,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       const limit = Number(req.query.limit) || 20;
       
       const topics = await storage.getPublishedTopicsByAngle(angleSlug, limit);
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); topics });
+      res.json({ topics });
     } catch (error) {
       console.error("Error fetching topics:", error);
       res.status(500).json({ message: "Failed to fetch topics" });
@@ -16157,15 +15059,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       }
       
       // Return both angle info and topic for breadcrumb building
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); topic, angle });
+      res.json({ topic, angle });
     } catch (error) {
       console.error("Error fetching topic:", error);
       res.status(500).json({ message: "Internal server error" });
@@ -16260,15 +15154,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         entityType: "angle",
         entityId: id,
       });
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "تم حذف الزاوية بنجاح" });
+      res.json({ message: "تم حذف الزاوية بنجاح" });
     } catch (error) {
       console.error("Error deleting angle:", error);
       res.status(500).json({ message: "فشل في حذف الزاوية" });
@@ -16401,15 +15287,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         entityId: articleId,
         newValue: { articleId, angleId },
       });
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "تم ربط المقال بالزاوية بنجاح" });
+      res.json({ message: "تم ربط المقال بالزاوية بنجاح" });
     } catch (error) {
       console.error("Error linking article to angle:", error);
       res.status(500).json({ message: "فشل في ربط المقال" });
@@ -16428,15 +15306,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         entityId: articleId,
         oldValue: { articleId, angleId },
       });
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "تم إلغاء ربط المقال بنجاح" });
+      res.json({ message: "تم إلغاء ربط المقال بنجاح" });
     } catch (error) {
       console.error("Error unlinking article:", error);
       res.status(500).json({ message: "فشل في إلغاء الربط" });
@@ -16533,14 +15403,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         .where(eq(articleTags.tagId, id));
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         ...tag,
         articleCount: articleCount?.count || 0,
       });
@@ -16703,15 +15565,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         oldValue: existingTag,
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "تم حذف الوسم بنجاح" });
+      res.json({ message: "تم حذف الوسم بنجاح" });
     } catch (error) {
       console.error("Error deleting tag:", error);
       res.status(500).json({ message: "فشل في حذف الوسم" });
@@ -16886,15 +15740,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         oldValue: { articleId, tagId },
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "تم فك ربط الوسم بنجاح" });
+      res.json({ message: "تم فك ربط الوسم بنجاح" });
     } catch (error) {
       console.error("Error unlinking tag from article:", error);
       res.status(500).json({ message: "فشل في فك الربط" });
@@ -16974,14 +15820,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       await sendArticleNotification(article, notificationType);
       
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         success: true,
         message: `Notifications sent for article: ${article.title}`,
         articleId: article.id,
@@ -17031,14 +15869,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       await sendArticleNotification(article, notificationType);
       
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         success: true,
         message: `تم إرسال الإشعارات للمقال: ${article.title}`,
         articleId: article.id,
@@ -17076,15 +15906,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         metadata,
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true });
+      res.json({ success: true });
     } catch (error) {
       console.error("Error tracking event:", error);
       res.status(500).json({ message: "فشل في تتبع الحدث" });
@@ -17110,15 +15932,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
 
         console.log(`[API] Successfully fetched ${recommendations.length} personalized recommendations for user ${userId}`);
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); recommendations });
+      res.json({ recommendations });
       } catch (error) {
         console.error("[API] Error getting personalized recommendations:", error);
         res.status(500).json({ message: "فشل في جلب التوصيات الشخصية" });
@@ -17135,15 +15949,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       const { findSimilarArticles } = await import('./similarityEngine');
       const similar = await findSimilarArticles(articleId, limit);
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); similar });
+      res.json({ similar });
     } catch (error) {
       console.error("Error finding similar articles:", error);
       res.status(500).json({ message: "فشل في جلب المقالات المشابهة" });
@@ -17158,15 +15964,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       const { getTrendingArticles } = await import('./similarityEngine');
       const trending = await getTrendingArticles(limit);
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); trending });
+      res.json({ trending });
     } catch (error) {
       console.error("Error getting trending articles:", error);
       res.status(500).json({ message: "فشل في جلب المقالات الرائجة" });
@@ -17191,15 +15989,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         prefs = newPrefs;
       }
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); preferences: prefs });
+      res.json({ preferences: prefs });
     } catch (error) {
       console.error("Error getting recommendation preferences:", error);
       res.status(500).json({ message: "فشل في جلب إعدادات التوصيات" });
@@ -17245,15 +16035,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
           userId,
           ...filteredUpdates,
         }).returning();
-        return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); preferences: newPrefs });
+        return res.json({ preferences: newPrefs });
       }
 
       // Update existing
@@ -17263,15 +16045,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         .where(eq(userRecommendationPrefs.userId, userId))
         .returning();
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); preferences: updated });
+      res.json({ preferences: updated });
     } catch (error) {
       console.error("Error updating recommendation preferences:", error);
       res.status(500).json({ message: "فشل في تحديث إعدادات التوصيات" });
@@ -17291,15 +16065,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         limit,
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); logs });
+      res.json({ logs });
     } catch (error) {
       console.error("Error getting recommendation log:", error);
       res.status(500).json({ message: "فشل في جلب سجل التوصيات" });
@@ -17314,15 +16080,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       const { processUserRecommendations } = await import('./recommendationNotificationService');
       await processUserRecommendations(userId);
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true, message: "تم معالجة التوصيات بنجاح" });
+      res.json({ success: true, message: "تم معالجة التوصيات بنجاح" });
     } catch (error) {
       console.error("Error processing recommendations:", error);
       res.status(500).json({ message: "فشل في معالجة التوصيات" });
@@ -17341,15 +16099,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         limit: 50,
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); affinities });
+      res.json({ affinities });
     } catch (error) {
       console.error("Error getting user affinities:", error);
       res.status(500).json({ message: "فشل في جلب الاهتمامات" });
@@ -17372,15 +16122,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         return res.status(404).json({ message: "لا توجد مقالات جديدة في اهتماماتك" });
       }
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); digest });
+      res.json({ digest });
     } catch (error) {
       console.error("Error getting digest preview:", error);
       res.status(500).json({ message: "فشل في جلب الملخص اليومي" });
@@ -17399,15 +16141,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         return res.status(404).json({ message: "لا يمكن إرسال الملخص اليومي" });
       }
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true, message: "تم إرسال الملخص اليومي بنجاح" });
+      res.json({ success: true, message: "تم إرسال الملخص اليومي بنجاح" });
     } catch (error) {
       console.error("Error sending digest:", error);
       res.status(500).json({ message: "فشل في إرسال الملخص اليومي" });
@@ -17424,15 +16158,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         console.error("Error in background digest processing:", err);
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true, message: "بدأت معالجة الملخصات اليومية" });
+      res.json({ success: true, message: "بدأت معالجة الملخصات اليومية" });
     } catch (error) {
       console.error("Error processing digests:", error);
       res.status(500).json({ message: "فشل في معالجة الملخصات اليومية" });
@@ -17534,14 +16260,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         .where(sql`${recommendationLog.sentAt} >= ${startDate}`);
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         period: {
           days: daysNum,
           startDate: startDate.toISOString(),
@@ -17659,14 +16377,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       });
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         success: true,
         primaryCategory: classification.primaryCategory,
         suggestedCategories: classification.suggestedCategories,
@@ -17721,14 +16431,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
 
       // Return classification results without saving to database
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         success: true,
         primaryCategory: classification.primaryCategory,
         suggestedCategories: classification.suggestedCategories,
@@ -17852,14 +16554,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
 
         console.log('[SEO] Generated and saved for article:', articleId);
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           success: true,
           seo: seoContent,
           metadata: seoMetadata,
@@ -17895,14 +16589,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         
         // Return results without saving to database
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           success: true,
           seo: seoContent,
           provider: seoResult.provider,
@@ -17988,14 +16674,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       });
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         success: true,
         sentiment: result.sentiment,
         confidence: result.confidence,
@@ -18110,14 +16788,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       });
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         success: true,
         results: processedResults,
         summary: {
@@ -18175,14 +16845,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         .orderBy(desc(commentSentiments.analyzedAt));
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         commentId: id,
         currentSentiment: comment.currentSentiment,
         currentConfidence: comment.currentSentimentConfidence,
@@ -18265,14 +16927,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       const negativeCount = distribution.find(d => d.sentiment === 'negative')?.count || 0;
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         period: {
           days: daysNum,
           startDate: startDate.toISOString(),
@@ -18381,15 +17035,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         entityType: 'Story',
         entityId: req.params.id,
       });
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true });
+      res.json({ success: true });
     } catch (error) {
       console.error("Error deleting story:", error);
       res.status(500).json({ message: "فشل في حذف القصة" });
@@ -18430,15 +17076,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   app.delete("/api/stories/links/:linkId", requireAuth, requireRole('admin', 'editor'), async (req, res) => {
     try {
       await storage.deleteStoryLink(req.params.linkId);
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true });
+      res.json({ success: true });
     } catch (error) {
       console.error("Error deleting story link:", error);
       res.status(500).json({ message: "فشل في إزالة الربط" });
@@ -18481,15 +17119,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         entityType: 'Story',
         entityId: req.params.storyId,
       });
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true });
+      res.json({ success: true });
     } catch (error) {
       console.error("Error unfollowing story:", error);
       res.status(500).json({ message: "فشل في إلغاء متابعة القصة" });
@@ -18522,15 +17152,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   app.get("/api/stories/:storyId/is-following", requireAuth, async (req: any, res) => {
     try {
       const isFollowing = await storage.isFollowingStory(req.user?.id, req.params.storyId);
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); isFollowing });
+      res.json({ isFollowing });
     } catch (error) {
       console.error("Error checking story follow status:", error);
       res.status(500).json({ message: "فشل في التحقق من حالة المتابعة" });
@@ -18570,14 +17192,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       console.log(`[ADMIN] Finished! Success: ${successCount}, Errors: ${errorCount}`);
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         success: true,
         message: `تم ربط ${successCount} مقال بقصص بنجاح`,
         stats: {
@@ -18641,15 +17255,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         entityId: req.params.id
       });
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true });
+      res.json({ success: true });
     } catch (error) {
       console.error("Error deleting Mirqab entry:", error);
       res.status(500).json({ message: "فشل في حذف المدخل" });
@@ -18695,15 +17301,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       }
       
       const indexData = await storage.getSabqIndexByEntryId(entry.id);
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); ...entry, indexData });
+      res.json({ ...entry, indexData });
     } catch (error) {
       console.error("Error fetching SABQ index:", error);
       res.status(500).json({ message: "فشل في جلب المؤشر" });
@@ -18776,15 +17374,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         newValue: { title: entry.title }
       });
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true });
+      res.json({ success: true });
     } catch (error) {
       console.error("Error updating SABQ index:", error);
       res.status(500).json({ message: "فشل في تحديث المؤشر" });
@@ -18803,15 +17393,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         entityId: req.params.id
       });
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true });
+      res.json({ success: true });
     } catch (error) {
       console.error("Error deleting SABQ index:", error);
       res.status(500).json({ message: "فشل في حذف المؤشر" });
@@ -18843,15 +17425,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       }
       
       const storyData = await storage.getNextStoryByEntryId(entry.id);
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); ...entry, storyData });
+      res.json({ ...entry, storyData });
     } catch (error) {
       console.error("Error fetching next story:", error);
       res.status(500).json({ message: "فشل في جلب القصة" });
@@ -18924,15 +17498,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         newValue: { title: entry.title }
       });
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true });
+      res.json({ success: true });
     } catch (error) {
       console.error("Error updating next story:", error);
       res.status(500).json({ message: "فشل في تحديث القصة" });
@@ -18951,15 +17517,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         entityId: req.params.id
       });
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true });
+      res.json({ success: true });
     } catch (error) {
       console.error("Error deleting next story:", error);
       res.status(500).json({ message: "فشل في حذف القصة" });
@@ -19004,15 +17562,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       }
       
       const radarData = await storage.getRadarReportByEntryId(entry.id);
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); ...entry, radarData });
+      res.json({ ...entry, radarData });
     } catch (error) {
       console.error("Error fetching radar report:", error);
       res.status(500).json({ message: "فشل في جلب التقرير" });
@@ -19085,15 +17635,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         newValue: { title: entry.title }
       });
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true });
+      res.json({ success: true });
     } catch (error) {
       console.error("Error updating radar report:", error);
       res.status(500).json({ message: "فشل في تحديث التقرير" });
@@ -19112,15 +17654,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         entityId: req.params.id
       });
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true });
+      res.json({ success: true });
     } catch (error) {
       console.error("Error deleting radar report:", error);
       res.status(500).json({ message: "فشل في حذف التقرير" });
@@ -19137,14 +17671,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         limit ? parseInt(limit as string) : 10
       );
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         entries: articles,
         total: articles.length
       });
@@ -19163,15 +17689,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       }
       
       const articleData = await storage.getAlgorithmArticleByEntryId(entry.id);
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); ...entry, articleData });
+      res.json({ ...entry, articleData });
     } catch (error) {
       console.error("Error fetching algorithm article:", error);
       res.status(500).json({ message: "فشل في جلب المقال" });
@@ -19244,15 +17762,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         newValue: { title: entry.title }
       });
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true });
+      res.json({ success: true });
     } catch (error) {
       console.error("Error updating algorithm article:", error);
       res.status(500).json({ message: "فشل في تحديث المقال" });
@@ -19271,15 +17781,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         entityId: req.params.id
       });
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true });
+      res.json({ success: true });
     } catch (error) {
       console.error("Error deleting algorithm article:", error);
       res.status(500).json({ message: "فشل في حذف المقال" });
@@ -19367,15 +17869,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       // Get variants as well
       const variants = await storage.getExperimentVariants(req.params.id);
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); ...experiment, variants });
+      res.json({ ...experiment, variants });
     } catch (error) {
       console.error("Error fetching experiment:", error);
       res.status(500).json({ message: "فشل في جلب التجربة" });
@@ -19444,15 +17938,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         oldValue: { name: experiment.name },
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true, message: "تم حذف التجربة بنجاح" });
+      res.json({ success: true, message: "تم حذف التجربة بنجاح" });
     } catch (error) {
       console.error("Error deleting experiment:", error);
       res.status(500).json({ message: "فشل في حذف التجربة" });
@@ -19740,15 +18226,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         entityId: req.params.variantId,
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true, message: "تم حذف النسخة بنجاح" });
+      res.json({ success: true, message: "تم حذف النسخة بنجاح" });
     } catch (error) {
       console.error("Error deleting variant:", error);
       res.status(500).json({ message: "فشل في حذف النسخة" });
@@ -19848,15 +18326,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         return res.status(404).json({ message: "التجربة غير موجودة أو غير نشطة" });
       }
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); 
+      res.json({ 
         variant,
         sessionId, // Return sessionId so frontend can store it if needed
       });
@@ -20032,15 +18502,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         oldValue: { title: existingBlock.title, keyword: existingBlock.keyword }
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true, message: "تم حذف البلوك الذكي بنجاح" });
+      res.json({ success: true, message: "تم حذف البلوك الذكي بنجاح" });
     } catch (error: any) {
       console.error("Error deleting smart block:", error);
       res.status(500).json({ message: "فشل في حذف البلوك الذكي" });
@@ -20080,15 +18542,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         console.log(`   ${index + 1}. "${article.title.substring(0, 60)}..."`);
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); items: articles, total: articles.length });
+      res.json({ items: articles, total: articles.length });
     } catch (error: any) {
       console.error("❌ [Smart Block] Error querying articles:", error);
       res.status(500).json({ message: "فشل في البحث عن المقالات" });
@@ -20223,15 +18677,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         oldValue: { title: existingBlock.title, keyword: existingBlock.keyword }
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true, message: "Smart block deleted successfully" });
+      res.json({ success: true, message: "Smart block deleted successfully" });
     } catch (error: any) {
       console.error("Error deleting English smart block:", error);
       res.status(500).json({ message: "Failed to delete smart block" });
@@ -20300,15 +18746,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
 
       console.log(`✅ [EN Smart Block] Found ${articles.length} articles for "${keyword}"`);
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); items: articles, total: articles.length });
+      res.json({ items: articles, total: articles.length });
     } catch (error: any) {
       console.error("❌ [EN Smart Block] Error querying articles:", error);
       res.status(500).json({ message: "Failed to search articles" });
@@ -20352,15 +18790,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         offset: parseInt(offset as string),
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); newsletters, total: newsletters.length });
+      res.json({ newsletters, total: newsletters.length });
     } catch (error: any) {
       console.error("Error fetching audio newsletters:", error);
       res.status(500).json({ message: "فشل في جلب النشرات الصوتية" });
@@ -20504,15 +18934,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
           userId: req.user.id 
         });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); 
+      res.json({ 
           status: 'queued', 
           jobId, 
           message: 'جاري التوليد في الخلفية' 
@@ -20593,15 +19015,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         oldValue: { title: existing.title }
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true, message: "تم حذف النشرة الصوتية بنجاح" });
+      res.json({ success: true, message: "تم حذف النشرة الصوتية بنجاح" });
     } catch (error: any) {
       console.error("Error deleting audio newsletter:", error);
       res.status(500).json({ message: "فشل في حذف النشرة الصوتية" });
@@ -20624,15 +19038,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
 
       await storage.addArticlesToNewsletter(req.params.id, articleIds);
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true, message: "تمت إضافة المقالات بنجاح" });
+      res.json({ success: true, message: "تمت إضافة المقالات بنجاح" });
     } catch (error: any) {
       console.error("Error adding articles to newsletter:", error);
       res.status(500).json({ message: "فشل في إضافة المقالات" });
@@ -20644,15 +19050,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     try {
       await storage.removeArticleFromNewsletter(req.params.id, req.params.articleId);
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true, message: "تمت إزالة المقال بنجاح" });
+      res.json({ success: true, message: "تمت إزالة المقال بنجاح" });
     } catch (error: any) {
       console.error("Error removing article from newsletter:", error);
       res.status(500).json({ message: "فشل في إزالة المقال" });
@@ -20820,15 +19218,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
           userId: req.user.id 
         });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); 
+      res.json({ 
           status: 'queued', 
           jobId, 
           message: 'جاري التوليد في الخلفية' 
@@ -21508,14 +19898,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       const featuredShorts = await storage.getFeaturedShorts(limitNum);
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         shorts: featuredShorts,
         total: featuredShorts.length,
       });
@@ -21622,15 +20004,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         eventType: "like",
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); 
+      res.json({ 
         message: "تم الإعجاب بالشورت",
         likes: updated.likes 
       });
@@ -21668,15 +20042,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         eventType: "unlike",
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); 
+      res.json({ 
         message: "تم إلغاء الإعجاب بالشورت",
         likes: updated.likes 
       });
@@ -21812,14 +20178,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         }));
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           shorts: shortsWithDetails,
           total: count,
           page: pageNum,
@@ -22022,15 +20380,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       try {
         const objectStorageService = new ObjectStorageService();
         const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); uploadURL });
+      res.json({ uploadURL });
       } catch (error: any) {
         console.error("Error getting upload URL for shorts:", error);
         res.status(500).json({ message: "فشل في الحصول على رابط الرفع" });
@@ -22185,14 +20535,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       }));
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         total: formattedArticles.length,
         limit: limitNum,
         hasMore,
@@ -22376,14 +20718,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       }));
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         query: searchQuery,
         total: formattedResults.length,
         results: formattedResults,
@@ -22435,14 +20769,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       }));
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         total: formattedResults.length,
         breaking_news: formattedResults,
       });
@@ -22471,14 +20797,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       }));
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         total: formattedCategories.length,
         categories: formattedCategories,
       });
@@ -22491,14 +20809,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   // GET /.well-known/ai-usage.json - AI usage policy (machine-readable)
   app.get("/.well-known/ai-usage.json", (req, res) => {
     res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
       policy_version: "1.0",
       publisher: {
         name: "صحيفة سبق",
@@ -22656,15 +20966,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
 
       await db.delete(categories).where(eq(categories.id, id));
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "تم حذف التصنيف بنجاح" });
+      res.json({ message: "تم حذف التصنيف بنجاح" });
     } catch (error) {
       console.error("[Smart Categories Admin] Error deleting category:", error);
       res.status(500).json({ message: "فشل في حذف التصنيف" });
@@ -22678,14 +20980,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       const result = await updateSeasonalCategories();
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         message: "تم تحديث التصنيفات الموسمية بنجاح",
         activated: result.activated,
         deactivated: result.deactivated,
@@ -22716,15 +21010,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         .limit(1);
 
       if (!settings) {
-        return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); items: [] });
+        return res.json({ items: [] });
       }
 
       const config = settings.config;
@@ -22939,14 +21225,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       if (!settings) {
         // Return default configuration
         return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           config: {
             sections: [
               {
@@ -22992,14 +21270,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       }
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         config: settings.config,
         isActive: settings.isActive,
       });
@@ -23039,14 +21309,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       });
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         message: "تم حفظ الإعدادات بنجاح",
         settings: newSettings,
       });
@@ -23072,15 +21334,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         .limit(1);
 
       if (!settings) {
-        return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); items: [] });
+        return res.json({ items: [] });
       }
 
       const config = settings.config;
@@ -23270,14 +21524,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       }
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         items,
         mobileCarousel: config.mobileCarousel,
         backgroundColor: config.backgroundColor,
@@ -23300,14 +21546,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       if (!settings) {
         // Return default configuration
         return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           config: {
             sections: [
               {
@@ -23353,14 +21591,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       }
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         config: settings.config,
         isActive: settings.isActive,
       });
@@ -23400,14 +21630,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       });
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         message: "Settings saved successfully",
         settings: newSettings,
       });
@@ -23433,15 +21655,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         .limit(1);
 
       if (!settings) {
-        return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); items: [] });
+        return res.json({ items: [] });
       }
 
       const config = settings.config;
@@ -23584,14 +21798,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       }
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         items,
         mobileCarousel: config.mobileCarousel,
         backgroundColor: config.backgroundColor,
@@ -23614,14 +21820,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       if (!settings) {
         // Return default configuration
         return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           config: {
             sections: [
               { categorySlug: "", headlineMode: "latest", statType: "dailyCount", teaser: "", listSize: 5 },
@@ -23642,14 +21840,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       }
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         config: settings.config,
         isActive: settings.isActive,
       });
@@ -23689,14 +21879,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       });
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         message: "Settings saved successfully",
         settings: newSettings,
       });
@@ -23906,14 +22088,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         const bookmarksChange = calculateChange(thisMonthBookmarks?.count || 0, lastMonthBookmarks?.count || 0);
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           totalViews,
           viewsChange,
           totalUsers,
@@ -24008,14 +22182,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         }
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           months,
           views: viewsArray,
           users: usersArray,
@@ -24444,14 +22610,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       const results = await query;
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         articles: results.map(r => ({
           id: r.id,
           title: r.title,
@@ -24553,14 +22711,6 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       };
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         articles: formattedArticles,
         metrics,
         pagination: {
@@ -25038,15 +23188,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         },
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "Opinion article deleted successfully" });
+      res.json({ message: "Opinion article deleted successfully" });
     } catch (error) {
       console.error("Error deleting opinion article:", error);
       res.status(500).json({ message: "Failed to delete opinion article" });
@@ -25264,15 +23406,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         oldValue: event
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true, message: "تم حذف الحدث بنجاح" });
+      res.json({ success: true, message: "تم حذف الحدث بنجاح" });
     } catch (error) {
       console.error("خطأ في حذف الحدث:", error);
       res.status(500).json({ message: "حدث خطأ في حذف الحدث" });
@@ -25338,15 +23472,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         entityId: id
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true, message: "تم حذف التذكير بنجاح" });
+      res.json({ success: true, message: "تم حذف التذكير بنجاح" });
     } catch (error) {
       console.error("خطأ في حذف التذكير:", error);
       res.status(500).json({ message: "حدث خطأ في حذف التذكير" });
@@ -25726,15 +23852,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
         entityId: id,
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "تم حذف الكيان بنجاح" });
+      res.json({ message: "تم حذف الكيان بنجاح" });
     } catch (error: any) {
       console.error("خطأ في حذف الكيان:", error);
       res.status(500).json({ message: "حدث خطأ في حذف الكيان" });
@@ -25846,15 +23964,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       // تحديد عدد النتائج
       const limitedArticles = articlesData.slice(0, parseInt(limit as string));
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); articles: limitedArticles, total: articlesData.length });
+      res.json({ articles: limitedArticles, total: articlesData.length });
     } catch (error: any) {
       console.error("خطأ في جلب المقالات المرتبطة:", error);
       res.status(500).json({ message: "حدث خطأ في جلب المقالات" });
@@ -25887,15 +23997,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       // تحديد عدد النتائج
       const limitedArticles = articlesData.slice(0, parseInt(limit as string));
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); articles: limitedArticles, total: articlesData.length });
+      res.json({ articles: limitedArticles, total: articlesData.length });
     } catch (error: any) {
       console.error("خطأ في جلب المقالات المرتبطة:", error);
       res.status(500).json({ message: "حدث خطأ في جلب المقالات" });
@@ -25949,15 +24051,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       const objectPath = `/objects/${filename}`;
 
       console.log(`✅ Image uploaded successfully: ${objectPath}`);
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); imageUrl: objectPath });
+      res.json({ imageUrl: objectPath });
     } catch (error: any) {
       console.error("خطأ في رفع الصورة:", error);
       res.status(500).json({ message: "حدث خطأ في رفع الصورة: " + error.message });
@@ -26004,15 +24098,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
 
       const description = completion.choices[0]?.message?.content?.trim() || "";
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); description });
+      res.json({ description });
     } catch (error: any) {
       console.error("خطأ في توليد التعريف:", error);
       res.status(500).json({ message: "حدث خطأ في توليد التعريف" });
@@ -26479,14 +24565,6 @@ Allow: /
       const totalInteractions = (reactionsCount?.count || 0) + (commentsCount?.count || 0);
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         categoryName: category.name,
         categoryIcon: category.icon,
         categoryColor: category.color,
@@ -26729,14 +24807,6 @@ Allow: /
       };
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         period: {
           today: todayCount.count || 0,
           week: weekCount.count || 0,
@@ -26907,14 +24977,6 @@ Allow: /
       };
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         period: {
           today: todayCount.count || 0,
           week: weekCount.count || 0,
@@ -27115,14 +25177,6 @@ Allow: /
         : 0;
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         avgReadTime: Math.round(avgReadTime), // in seconds
         totalReads,
         totalReactions,
@@ -27204,15 +25258,7 @@ Allow: /
           .delete(enReactions)
           .where(eq(enReactions.id, existing[0].id));
         
-        return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); hasReacted: false });
+        return res.json({ hasReacted: false });
       } else {
         // Add reaction
         await db
@@ -27223,15 +25269,7 @@ Allow: /
             type: "like",
           });
         
-        return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); hasReacted: true });
+        return res.json({ hasReacted: true });
       }
     } catch (error) {
       console.error("Error toggling EN reaction:", error);
@@ -27263,15 +25301,7 @@ Allow: /
           .delete(enBookmarks)
           .where(eq(enBookmarks.id, existing[0].id));
         
-        return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); isBookmarked: false });
+        return res.json({ isBookmarked: false });
       } else {
         // Add bookmark
         await db
@@ -27281,15 +25311,7 @@ Allow: /
             userId: userId,
           });
         
-        return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); isBookmarked: true });
+        return res.json({ isBookmarked: true });
       }
     } catch (error) {
       console.error("Error toggling EN bookmark:", error);
@@ -27413,15 +25435,7 @@ Allow: /
         .delete(enArticles)
         .where(eq(enArticles.id, req.params.id));
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "Article deleted successfully" });
+      res.json({ message: "Article deleted successfully" });
     } catch (error) {
       console.error("Error deleting EN article:", error);
       res.status(500).json({ message: "Failed to delete article" });
@@ -27506,15 +25520,7 @@ Allow: /
           .delete(enReactions)
           .where(eq(enReactions.id, existing[0].id));
         
-        return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); liked: false });
+        return res.json({ liked: false });
       } else {
         // Add reaction
         await db
@@ -27525,15 +25531,7 @@ Allow: /
             type: "like",
           });
         
-        return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); liked: true });
+        return res.json({ liked: true });
       }
     } catch (error) {
       console.error("Error toggling EN reaction:", error);
@@ -27566,15 +25564,7 @@ Allow: /
           .delete(enBookmarks)
           .where(eq(enBookmarks.id, existing[0].id));
         
-        return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); bookmarked: false });
+        return res.json({ bookmarked: false });
       } else {
         await db
           .insert(enBookmarks)
@@ -27583,15 +25573,7 @@ Allow: /
             userId: user.id,
           });
         
-        return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); bookmarked: true });
+        return res.json({ bookmarked: true });
       }
     } catch (error) {
       console.error("Error toggling EN bookmark:", error);
@@ -27903,14 +25885,6 @@ Allow: /
       // ============================================================
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         hasActivity: true,
         personalizedGreeting,
         metrics,
@@ -28242,14 +26216,6 @@ Allow: /
         : 0;
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         avgReadTime: Math.round(avgReadTime), // in seconds
         totalReads,
         totalReactions,
@@ -28527,14 +26493,6 @@ Allow: /
         : 0;
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         totalArticles: articleCount.count || 0,
         totalViews: viewsSum.total || 0,
         totalInteractions,
@@ -28763,15 +26721,7 @@ Allow: /
         },
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "Urdu category deleted successfully" });
+      res.json({ message: "Urdu category deleted successfully" });
     } catch (error) {
       console.error("Error deleting Urdu category:", error);
       res.status(500).json({ message: "Failed to delete Urdu category" });
@@ -28802,14 +26752,6 @@ Allow: /
         .where(eq(urArticles.status, "published"));
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         published: publishedCount.count,
         draft: draftCount.count,
         scheduled: scheduledCount.count,
@@ -29120,15 +27062,7 @@ Allow: /
         },
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "Urdu article archived successfully" });
+      res.json({ message: "Urdu article archived successfully" });
     } catch (error) {
       console.error("Error archiving Urdu article:", error);
       res.status(500).json({ message: "Failed to archive Urdu article" });
@@ -29277,15 +27211,7 @@ Allow: /
           )
         );
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "Reaction removed" });
+      res.json({ message: "Reaction removed" });
     } catch (error) {
       console.error("Error removing Urdu reaction:", error);
       res.status(500).json({ message: "Failed to remove reaction" });
@@ -29351,15 +27277,7 @@ Allow: /
           )
         );
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "Bookmark removed" });
+      res.json({ message: "Bookmark removed" });
     } catch (error) {
       console.error("Error removing Urdu bookmark:", error);
       res.status(500).json({ message: "Failed to remove bookmark" });
@@ -29476,15 +27394,7 @@ Allow: /
         oldValue: existingBlock,
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "Smart block deleted successfully" });
+      res.json({ message: "Smart block deleted successfully" });
     } catch (error) {
       console.error("Error deleting Urdu smart block:", error);
       res.status(500).json({ message: "Failed to delete smart block" });
@@ -29525,14 +27435,6 @@ Allow: /
       });
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         items: articles,
         total: articles.length
       });
@@ -29874,15 +27776,7 @@ Allow: /
       
       // Check if user is authorized
       if (!req.user.hasPressCard) {
-        return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); 
+        return res.json({ 
           hasPass: false,
           authorized: false,
           message: 'غير مصرح لك بإصدار بطاقة صحفية',
@@ -29892,29 +27786,13 @@ Allow: /
       const pass = await storage.getWalletPassByUserAndType(userId, 'press');
       
       if (!pass) {
-        return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); 
+        return res.json({ 
           hasPass: false,
           authorized: true,
         });
       }
       
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         hasPass: true,
         authorized: true,
         serialNumber: pass.serialNumber,
@@ -30044,14 +27922,6 @@ Allow: /
       const pass = await storage.getWalletPassByUserAndType(userId, 'loyalty');
       
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         hasPass: !!pass,
         ...(pass && {
           serialNumber: pass.serialNumber,
@@ -30110,14 +27980,6 @@ Allow: /
         }
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           serialNumbers,
           lastUpdated: new Date().toISOString(),
         });
@@ -30312,15 +28174,7 @@ Allow: /
         },
       });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); 
+      res.json({ 
         success: true, 
         analysis: updated,
         message: `تم تحديث حالة التحليل إلى "${statusArabic[status as keyof typeof statusArabic]}"` 
@@ -30366,15 +28220,7 @@ Allow: /
       }
 
       await storage.deleteDeepAnalysis(req.params.id);
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true });
+      res.json({ success: true });
     } catch (error: any) {
       console.error('Error deleting deep analysis:', error);
       res.status(500).json({ error: error.message });
@@ -30392,14 +28238,6 @@ Allow: /
       const stats = await storage.getDeepAnalysisStats();
       
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         totalAnalyses: stats.totalAnalyses,
         totalViews: stats.totalViews,
         totalShares: stats.totalShares,
@@ -30437,14 +28275,6 @@ Allow: /
       const result = await storage.getPublishedDeepAnalyses(filters);
       
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         analyses: result.analyses,
         total: result.total,
         page: filters.page,
@@ -30509,14 +28339,6 @@ Allow: /
       });
       
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         success: true,
         data: {
           ...analysis,
@@ -30593,14 +28415,6 @@ Allow: /
       const updatedMetrics = await storage.getDeepAnalysisMetrics(id);
       
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         success: true,
         message: 'تم تسجيل الحدث بنجاح',
         data: {
@@ -30623,14 +28437,6 @@ Allow: /
       const stats = await storage.getDeepAnalysisStats();
       
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         success: true,
         data: stats,
       });
@@ -30704,14 +28510,6 @@ Allow: /
       });
       
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         success: true,
         message: 'تم تحديث التحليل بنجاح',
         data: updated,
@@ -30792,14 +28590,6 @@ Allow: /
       
       const hasMore = result.total > offset + limitNum;
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         tasks: result.tasks,
         total: result.total,
         page: pageNum,
@@ -31035,15 +28825,7 @@ Allow: /
       
       await storage.deleteTask(id);
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true, message: 'تم حذف المهمة بنجاح' });
+      res.json({ success: true, message: 'تم حذف المهمة بنجاح' });
     } catch (error: any) {
       console.error('Error deleting task:', error);
       res.status(500).json({ error: 'فشل في حذف المهمة' });
@@ -31221,15 +29003,7 @@ Allow: /
       
       await storage.deleteSubtask(id);
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true, message: 'تم حذف المهمة الفرعية بنجاح' });
+      res.json({ success: true, message: 'تم حذف المهمة الفرعية بنجاح' });
     } catch (error: any) {
       console.error('Error deleting subtask:', error);
       res.status(500).json({ error: 'فشل في حذف المهمة الفرعية' });
@@ -31324,15 +29098,7 @@ Allow: /
       
       await storage.deleteTaskComment(id);
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true, message: 'تم حذف التعليق بنجاح' });
+      res.json({ success: true, message: 'تم حذف التعليق بنجاح' });
     } catch (error: any) {
       console.error('Error deleting comment:', error);
       res.status(500).json({ error: 'فشل في حذف التعليق' });
@@ -31435,15 +29201,7 @@ Allow: /
       
       await storage.deleteTaskAttachment(id);
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true, message: 'تم حذف المرفق بنجاح' });
+      res.json({ success: true, message: 'تم حذف المرفق بنجاح' });
     } catch (error: any) {
       console.error('Error deleting attachment:', error);
       res.status(500).json({ error: 'فشل في حذف المرفق' });
@@ -31524,15 +29282,7 @@ Allow: /
       
       const [event] = await db.insert(accessibilityEvents).values(validated).returning();
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); success: true, eventId: event.id });
+      res.json({ success: true, eventId: event.id });
     } catch (error: any) {
       console.error('Error tracking accessibility event:', error);
       
@@ -31619,14 +29369,6 @@ Allow: /
         .orderBy(asc(sql`DATE(${accessibilityEvents.createdAt})`));
       
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
         totalEvents,
         byEventType,
         byLanguage,
@@ -31676,15 +29418,7 @@ Allow: /
         .orderBy(desc(accessibilityEvents.createdAt))
         .limit(limitNum);
       
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); events });
+      res.json({ events });
     } catch (error: any) {
       console.error('Error fetching recent accessibility events:', error);
       res.status(500).json({ error: 'فشل في جلب الأحداث الأخيرة' });
@@ -31718,15 +29452,7 @@ Allow: /
             unsubscribedAt: null,
             unsubscribeReason: null,
           });
-          return res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "تم تفعيل اشتراكك بنجاح", subscription: existing });
+          return res.json({ message: "تم تفعيل اشتراكك بنجاح", subscription: existing });
         }
       }
       
@@ -31792,15 +29518,7 @@ Allow: /
     async (req: any, res) => {
       try {
         await storage.deleteNewsletterSubscription(req.params.id);
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "تم حذف الاشتراك بنجاح" });
+      res.json({ message: "تم حذف الاشتراك بنجاح" });
       } catch (error: any) {
         console.error("Error deleting newsletter subscription:", error);
         res.status(500).json({ message: "فشل في حذف الاشتراك" });
@@ -31917,15 +29635,7 @@ Allow: /
           "public"            // visibility
         );
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); url: result.url });
+      res.json({ url: result.url });
       } catch (error: any) {
         console.error("Error uploading publisher logo:", error);
         res.status(500).json({ message: "فشل في رفع الشعار" });
@@ -32320,14 +30030,6 @@ Allow: /
         const activeCredit = await storage.getActivePublisherCredit(publisher.id);
         
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           publisher,
           stats,
           activeCredit,
@@ -32602,14 +30304,6 @@ Allow: /
         });
         
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           message: "تم الموافقة على المقال ونشره بنجاح",
           article: publishedArticle,
           creditDeducted: true,
@@ -32683,14 +30377,6 @@ Allow: /
         });
         
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           message: "تم رفض المقال",
           article: rejectedArticle,
         });
@@ -32723,14 +30409,6 @@ Allow: /
         const activeCredit = await storage.getActivePublisherCredit(publisher.id);
         
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           publisher,
           stats,
           credits,
@@ -32783,14 +30461,6 @@ Allow: /
         });
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           message: "تم الموافقة على المقال ونشره بنجاح",
           article: publishedArticle,
           creditDeducted: true,
@@ -32861,14 +30531,6 @@ Allow: /
         });
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           message: "تم رفض المقال",
           article: rejectedArticle,
         });
@@ -33043,14 +30705,6 @@ Allow: /
         });
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           message: `تم حذف ${result.deleted} مقال بنجاح`,
           deleted: result.deleted,
         });
@@ -33249,14 +30903,6 @@ Allow: /
         });
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           message: `تم أرشفة ${result.archived} مقال بنجاح`,
           archived: result.archived,
         });
@@ -33367,15 +31013,7 @@ Allow: /
           entityId: key,
         });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "تم حذف الإعداد بنجاح" });
+      res.json({ message: "تم حذف الإعداد بنجاح" });
       } catch (error: any) {
         console.error("Error deleting iFox setting:", error);
         res.status(500).json({ message: "فشل في حذف إعداد آي فوكس" });
@@ -33404,15 +31042,7 @@ Allow: /
           entityId: categorySlug || 'all',
         });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); settings });
+      res.json({ settings });
       } catch (error: any) {
         if (error instanceof z.ZodError) {
           return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
@@ -33455,14 +31085,6 @@ Allow: /
         });
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           message: "تم حفظ إعدادات الفئة بنجاح",
           setting,
         });
@@ -33571,14 +31193,6 @@ Allow: /
         });
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           message: "تم رفع الملف بنجاح",
           media,
         });
@@ -33613,15 +31227,7 @@ Allow: /
           entityId: id.toString(),
         });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "تم حذف الملف بنجاح" });
+      res.json({ message: "تم حذف الملف بنجاح" });
       } catch (error: any) {
         console.error("Error deleting iFox media:", error);
         res.status(500).json({ message: "فشل في حذف الملف" });
@@ -33657,15 +31263,7 @@ Allow: /
           metadata: params as any,
         });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); schedules });
+      res.json({ schedules });
       } catch (error: any) {
         if (error instanceof z.ZodError) {
           return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
@@ -33711,14 +31309,6 @@ Allow: /
         });
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           message: "تم جدولة المقال بنجاح",
           schedule,
         });
@@ -33766,14 +31356,6 @@ Allow: /
         });
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           message: "تم تحديث الجدولة بنجاح",
           schedule,
         });
@@ -33808,15 +31390,7 @@ Allow: /
           entityId: id.toString(),
         });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "تم إلغاء الجدولة بنجاح" });
+      res.json({ message: "تم إلغاء الجدولة بنجاح" });
       } catch (error: any) {
         console.error("Error cancelling iFox schedule:", error);
         res.status(500).json({ message: "فشل في إلغاء الجدولة" });
@@ -33842,14 +31416,6 @@ Allow: /
         });
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           message: `تم معالجة ${result.published} مقال بنجاح${result.failed > 0 ? ` وفشل ${result.failed} مقال` : ''}`,
           published: result.published,
           failed: result.failed,
@@ -33890,15 +31456,7 @@ Allow: /
           metadata: params as any,
         });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); analytics });
+      res.json({ analytics });
       } catch (error: any) {
         if (error instanceof z.ZodError) {
           return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
@@ -33972,14 +31530,6 @@ Allow: /
         });
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           message: `تم تسجيل ${events.length} حدث تحليلي`,
           recorded: events.length,
         });
@@ -34059,15 +31609,7 @@ Allow: /
           metadata: { category },
         });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); suggestions });
+      res.json({ suggestions });
       } catch (error: any) {
         if (error instanceof z.ZodError) {
           return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
@@ -34324,15 +31866,7 @@ Allow: /
           newValue: { status },
         });
 
-      res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      }); message: "تم تحديث حالة الفئة بنجاح", status });
+      res.json({ message: "تم تحديث حالة الفئة بنجاح", status });
       } catch (error: any) {
         if (error instanceof z.ZodError) {
           return res.status(400).json({ message: "بيانات غير صالحة", errors: error.errors });
@@ -34414,14 +31948,6 @@ Allow: /
         });
 
       res.json({
-        articles: sortedArticles,
-        pagination: {
-          totalCount: totalCount || 0,
-          offset: offsetNum,
-          limit: limitNum,
-          hasMore
-        }
-      });
           message: "تم حفظ الإعدادات بنجاح",
           settings,
         });
