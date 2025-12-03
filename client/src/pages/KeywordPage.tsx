@@ -169,36 +169,32 @@ export default function KeywordPage() {
       <Header user={user} />
 
       <main className="flex-1">
-        {/* Hero Section - Mobile Optimized */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-primary/10">
-          <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-          <div className="absolute top-0 left-1/4 w-48 md:w-96 h-48 md:h-96 bg-primary/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 w-32 md:w-64 h-32 md:h-64 bg-primary/5 rounded-full blur-2xl" />
-          
-          <div className="container mx-auto px-4 py-6 md:py-12 lg:py-16 relative">
-            <div className="flex flex-col gap-4 md:gap-6">
+        {/* Hero Section - Clean Light/Dark Theme Compatible */}
+        <div className="bg-card border-b">
+          <div className="container mx-auto px-4 py-5 md:py-8 lg:py-10">
+            <div className="flex flex-col gap-4 md:gap-5">
               {/* Keyword Header with Follow Button */}
               <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
-                  <div className="p-2 md:p-3 rounded-lg md:rounded-xl bg-primary/10 backdrop-blur-sm border border-primary/20 flex-shrink-0">
-                    <Hash className="h-5 w-5 md:h-7 md:w-7 text-primary" />
+                <div className="flex items-center gap-2.5 md:gap-3 min-w-0 flex-1">
+                  <div className="p-2 md:p-2.5 rounded-lg bg-primary text-primary-foreground flex-shrink-0">
+                    <Hash className="h-5 w-5 md:h-6 md:w-6" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs md:text-sm text-muted-foreground font-medium">كلمة مفتاحية</p>
-                    <h1 className="text-xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-l from-primary to-primary/70 bg-clip-text text-transparent truncate" data-testid="text-keyword-title">
+                    <p className="text-xs md:text-sm text-muted-foreground">كلمة مفتاحية</p>
+                    <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-foreground truncate" data-testid="text-keyword-title">
                       {keyword}
                     </h1>
                   </div>
                 </div>
                 
-                {/* Follow Button - Compact on Mobile */}
+                {/* Follow Button */}
                 {user && (
                   <Button
                     size="default"
-                    variant={isFollowing ? "outline" : "default"}
+                    variant={isFollowing ? "secondary" : "default"}
                     onClick={() => isFollowing ? unfollowMutation.mutate() : followMutation.mutate()}
                     disabled={followMutation.isPending || unfollowMutation.isPending}
-                    className="gap-1.5 md:gap-2 flex-shrink-0 text-sm md:text-base"
+                    className="gap-1.5 md:gap-2 flex-shrink-0"
                     data-testid="button-follow-keyword"
                   >
                     {isFollowing ? (
@@ -217,30 +213,30 @@ export default function KeywordPage() {
                 )}
               </div>
               
-              {/* Stats - Horizontal Scroll on Mobile */}
+              {/* Stats - Clean Chips */}
               {!isLoading && (
-                <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap scrollbar-hide snap-x snap-mandatory">
-                  <div className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full md:rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 flex-shrink-0 snap-start">
-                    <Newspaper className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" />
-                    <span className="text-sm md:text-lg font-bold">{stats.total}</span>
-                    <span className="text-xs md:text-sm text-muted-foreground">مقال</span>
+                <div className="flex gap-2 md:gap-2.5 overflow-x-auto pb-1 -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap scrollbar-hide snap-x snap-mandatory">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted border border-border flex-shrink-0 snap-start">
+                    <Newspaper className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-sm font-semibold">{stats.total}</span>
+                    <span className="text-xs text-muted-foreground">مقال</span>
                   </div>
-                  <div className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full md:rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 flex-shrink-0 snap-start">
-                    <Eye className="h-3.5 w-3.5 md:h-4 md:w-4 text-blue-500" />
-                    <span className="text-sm md:text-lg font-bold">{stats.views.toLocaleString('ar-SA')}</span>
-                    <span className="text-xs md:text-sm text-muted-foreground">مشاهدة</span>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted border border-border flex-shrink-0 snap-start">
+                    <Eye className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                    <span className="text-sm font-semibold">{stats.views.toLocaleString('ar-SA')}</span>
+                    <span className="text-xs text-muted-foreground">مشاهدة</span>
                   </div>
                   {stats.breaking > 0 && (
-                    <div className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full md:rounded-lg bg-destructive/10 backdrop-blur-sm border border-destructive/20 flex-shrink-0 snap-start">
-                      <Zap className="h-3.5 w-3.5 md:h-4 md:w-4 text-destructive" />
-                      <span className="text-sm md:text-lg font-bold text-destructive">{stats.breaking}</span>
-                      <span className="text-xs md:text-sm text-destructive/80">عاجل</span>
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-destructive/10 border border-destructive/30 flex-shrink-0 snap-start">
+                      <Zap className="h-3.5 w-3.5 text-destructive" />
+                      <span className="text-sm font-semibold text-destructive">{stats.breaking}</span>
+                      <span className="text-xs text-destructive/80">عاجل</span>
                     </div>
                   )}
                   {stats.latest && (
-                    <div className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full md:rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 flex-shrink-0 snap-start">
-                      <Clock className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground" />
-                      <span className="text-xs md:text-sm text-muted-foreground whitespace-nowrap">
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted border border-border flex-shrink-0 snap-start">
+                      <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">
                         آخر تحديث: {formatDistanceToNow(new Date(stats.latest), { addSuffix: true, locale: arSA })}
                       </span>
                     </div>
