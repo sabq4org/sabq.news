@@ -7588,7 +7588,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           {
             columns: [
               { width: '*', stack: [{ text: 'التعليقات', style: 'statLabel', alignment: 'center' as const }, { text: totalComments.toLocaleString('ar-SA'), style: 'statValue', alignment: 'center' as const, color: '#F97316' }], margin: [0, 0, 10, 0] },
-              { width: '*', stack: [{ text: 'متوسط وقت القراءة', style: 'statLabel', alignment: 'center' as const }, { text: readingStats?.avgReadingTime > 0 ? `${readingStats.avgReadingTime.toFixed(1)} دقيقة` : 'لا توجد بيانات', style: 'statValue', alignment: 'center' as const, color: '#6366F1' }], margin: [0, 0, 10, 0] },
+              { width: '*', stack: [{ text: 'متوسط وقت القراءة', style: 'statLabel', alignment: 'center' as const }, { text: Number(readingStats?.avgReadingTime) > 0 ? `${Number(readingStats.avgReadingTime).toFixed(1)} دقيقة` : 'لا توجد بيانات', style: 'statValue', alignment: 'center' as const, color: '#6366F1' }], margin: [0, 0, 10, 0] },
               { width: '*', stack: [{ text: 'إجمالي القراء', style: 'statLabel', alignment: 'center' as const }, { text: (readingStats?.totalReaders || 0).toLocaleString('ar-SA'), style: 'statValue', alignment: 'center' as const, color: '#0EA5E9' }] }
             ],
             margin: [0, 0, 0, 25]
