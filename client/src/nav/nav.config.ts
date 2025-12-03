@@ -529,6 +529,15 @@ export const navConfig: NavItem[] = [
         roles: ["admin", "analyst"],
         permissions: ["analytics.view", "analytics.sentiment"],
       },
+      {
+        id: "article-analytics",
+        labelKey: "nav.article_analytics",
+        labelAr: "تحليلات المقالات",
+        path: "/dashboard/article-analytics",
+        icon: BarChart,
+        roles: ["admin", "editor", "analyst"],
+        permissions: ["analytics.view", "articles.view"],
+      },
     ],
   },
 
