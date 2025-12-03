@@ -809,7 +809,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Then mark user as offline (in finally-like pattern)
       if (userId) {
-        try {
+    try {
           await storage.setModeratorOffline(userId);
         } catch (offlineError) {
           console.error("[Logout] Failed to mark user offline:", offlineError);
@@ -823,7 +823,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Still try to mark offline even if logout failed
       if (userId) {
-        try {
+    try {
           await storage.setModeratorOffline(userId);
         } catch (offlineError) {
           console.error("[Logout] Failed to mark user offline:", offlineError);
@@ -855,7 +855,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Then mark user as offline
       if (userId) {
-        try {
+    try {
           await storage.setModeratorOffline(userId);
         } catch (offlineError) {
           console.error("[Logout] Failed to mark user offline:", offlineError);
@@ -869,7 +869,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Still try to mark offline even if logout failed
       if (userId) {
-        try {
+    try {
           await storage.setModeratorOffline(userId);
         } catch (offlineError) {
           console.error("[Logout] Failed to mark user offline:", offlineError);
@@ -1234,7 +1234,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Make the file publicly accessible for direct access from GCS
       let isPublic = false;
-      try {
+    try {
         await file.makePublic();
         console.log("[Media Upload] File made public successfully");
         isPublic = true;
@@ -1256,7 +1256,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let height: number | undefined;
 
       if (req.file.mimetype.startsWith('image/')) {
-        try {
+    try {
           // Use sharp or image-size library to extract dimensions
           // For now, we'll leave them as undefined and can be updated later
           // In production, you'd use: const { width: w, height: h } = await sharp(req.file.buffer).metadata();
@@ -1290,7 +1290,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Parse keywords - handle both JSON array string and comma-separated string
       let parsedKeywords: string[] = [];
       if (keywords) {
-        try {
+    try {
           // Try parsing as JSON first (e.g., ["keyword1", "keyword2"])
           if (typeof keywords === 'string' && keywords.trim().startsWith('[')) {
             parsedKeywords = JSON.parse(keywords);
@@ -1609,7 +1609,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Delete from GCS
-      try {
+    try {
         const { objectStorageClient } = await import('./objectStorage');
         const url = new URL(existingMedia.url);
         const pathParts = url.pathname.split('/').filter(Boolean);
@@ -1852,7 +1852,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const errors: string[] = [];
 
       for (const file of allFiles) {
-        try {
+    try {
           // Parse gs://bucket-name/path
           const gcsPath = file.url.replace('gs://', '');
           const pathParts = gcsPath.split('/');
@@ -1991,7 +1991,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log("[Media Suggestions] ✅ Using cached keywords:", extractedKeywords);
         } else {
           // Call AI to extract keywords
-          try {
+    try {
             const { extractMediaKeywords } = await import('./openai');
             extractedKeywords = await extractMediaKeywords(title, content);
             
@@ -4236,7 +4236,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const results = [];
 
       for (const categoryConfig of smartCategories) {
-        try {
+    try {
           // Check if category exists
           const existingCategories = await storage.getAllCategories();
           const existing = existingCategories.find((c: any) => c.slug === categoryConfig.slug);
@@ -5201,7 +5201,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Auto-create staff record if user has reporter role
       const hasReporterRole = userRoles.some(r => r.name === 'reporter');
       if (hasReporterRole) {
-        try {
+    try {
           console.log("🔍 [AUTO-CREATE STAFF] New user has reporter role, creating staff record");
           const staffRecord = await storage.ensureReporterStaffRecord(newUser.id);
           console.log("✅ [AUTO-CREATE STAFF] Staff record created for new reporter", { 
@@ -5313,7 +5313,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .limit(1);
       
       if (reporterRole && parsed.data.roleIds.includes(reporterRole.id)) {
-        try {
+    try {
           console.log("🔍 [AUTO-CREATE STAFF] User assigned reporter role, ensuring staff record exists");
           const staffRecord = await storage.ensureReporterStaffRecord(targetUserId);
           console.log("✅ [AUTO-CREATE STAFF] Staff record ensured for reporter", { 
@@ -6186,7 +6186,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (newArticle.status === 'published') {
         console.log(`🔔 [CREATE ARTICLE] Article is PUBLISHED - sending notifications...`);
-        try {
+    try {
           // Determine notification type based on newsType
           let notificationType: 'published' | 'breaking' | 'featured' = 'published';
           if (newArticle.newsType === 'breaking') {
@@ -6375,7 +6375,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (updatedArticle.status === "published" && existingArticle.status !== "published") {
         console.log(`🔔 [UPDATE ARTICLE] Status changed to PUBLISHED - sending notifications...`);
-        try {
+    try {
           // Determine notification type based on article properties
           let notificationType: 'published' | 'breaking' | 'featured';
           
@@ -6470,7 +6470,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Trigger notification for published article
       console.log(`🔔 [PUBLISH ARTICLE] Publishing article - ID: ${updatedArticle.id}, Title: ${updatedArticle.title}`);
-      try {
+    try {
         // Determine notification type based on article properties
         let notificationType: 'published' | 'breaking' | 'featured';
         
@@ -7441,6 +7441,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/article-analytics/:articleId/export", requireAuth, requirePermission("articles.view"), async (req: any, res) => {
     try {
       const { articleId } = req.params;
+      console.log("[PDF Export] Starting export for articleId:", articleId);
 
       // Get article with basic info
       const [article] = await db
@@ -7528,24 +7529,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
       };
 
-      // Use pdfmake for PDF generation
+      // Use pdfmake for PDF generation with Arabic font support
       const PdfPrinter = require('pdfmake');
+      const path = require('path');
+      
+      // Use NotoSansArabic font for Arabic RTL support
       const fonts = {
-        Roboto: {
-          normal: 'Helvetica',
-          bold: 'Helvetica-Bold',
-          italics: 'Helvetica-Oblique',
-          bolditalics: 'Helvetica-BoldOblique'
+        NotoSansArabic: {
+          normal: path.join(__dirname, 'fonts', 'NotoSansArabic-Regular.ttf'),
+          bold: path.join(__dirname, 'fonts', 'NotoSansArabic-Bold.ttf'),
+          italics: path.join(__dirname, 'fonts', 'NotoSansArabic-Regular.ttf'),
+          bolditalics: path.join(__dirname, 'fonts', 'NotoSansArabic-Bold.ttf')
         }
       };
-
       const printer = new PdfPrinter(fonts);
 
       // Create document definition
       const docDefinition = {
         pageSize: 'A4',
         pageMargins: [40, 60, 40, 60],
-        defaultStyle: { font: 'Roboto', alignment: 'right' as const },
+        defaultStyle: { font: 'NotoSansArabic', alignment: 'right' as const },
         content: [
           { text: 'تقرير تحليلات المقال', style: 'header', alignment: 'center' as const, margin: [0, 0, 0, 20] },
           { text: `تاريخ التقرير: ${formatDate(new Date())}`, style: 'subheader', alignment: 'center' as const, margin: [0, 0, 0, 30] },
@@ -7623,8 +7626,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       // Generate PDF
+      console.log("[PDF Export] Creating PDF document...");
       const pdfDoc = printer.createPdfKitDocument(docDefinition);
       
+      console.log("[PDF Export] PDF document created, setting headers...");
       // Set response headers
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="article-analytics-${article.slug || 'report'}.pdf"`);
@@ -7750,7 +7755,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     // Send heartbeat every 30 seconds to keep connection alive
     const heartbeat = setInterval(() => {
-      try {
+    try {
         res.write(": heartbeat\n\n");
       } catch (e) {
         clearInterval(heartbeat);
@@ -9963,7 +9968,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get personalized recommendations if user is logged in
       let personalizedRecommendations: any[] = [];
       if (userId) {
-        try {
+    try {
           personalizedRecommendations = await getPersonalizedRecommendations(userId, 3, [article.id]);
         } catch (error) {
           console.error("Error getting personalized recommendations:", error);
@@ -10173,7 +10178,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // إضافة نقطة ولاء عند الإعجاب (ليس عند الإلغاء)
       if (result.hasReacted) {
-        try {
+    try {
           await storage.recordLoyaltyPoints({
             userId,
             action: "LIKE",
@@ -10189,7 +10194,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
         // Track user event for daily summary analytics
-        try {
+    try {
           await trackUserEvent({
             userId,
             articleId: req.params.id,
@@ -10216,7 +10221,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Track user event for daily summary analytics (when bookmarking, not unbookmarking)
       if (result.isBookmarked) {
-        try {
+    try {
           await trackUserEvent({
             userId,
             articleId: req.params.id,
@@ -10378,7 +10383,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const comment = await storage.createComment(parsed.data);
 
       // إضافة نقطة ولاء للتعليق
-      try {
+    try {
         await storage.recordLoyaltyPoints({
           userId,
           action: "COMMENT",
@@ -10395,7 +10400,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const commentId = comment.id;
       const commentContent = comment.content;
       (async () => {
-        try {
+    try {
           const { moderateComment, getStatusFromClassification } = await import("./ai/commentModeration");
           const moderationResult = await moderateComment(commentContent);
           
@@ -10428,7 +10433,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
       // Track user event for daily summary analytics
-      try {
+    try {
         await trackUserEvent({
           userId,
           articleId: article.id,
@@ -10509,7 +10514,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     requireRole("reporter", "editor", "admin"),
     async (req: any, res) => {
-      try {
+    try {
         const { articleId } = req.params;
         
         const parsed = insertArticleMediaAssetSchema.safeParse({
@@ -10574,7 +10579,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     requireRole("reporter", "editor", "admin"),
     async (req: any, res) => {
-      try {
+    try {
         const { id } = req.params;
         
         const parsed = updateArticleMediaAssetSchema.safeParse(req.body);
@@ -10605,7 +10610,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     requireRole("editor", "admin"),
     async (req: any, res) => {
-      try {
+    try {
         const { id } = req.params;
         
         await storage.deleteArticleMediaAsset(id);
@@ -10655,7 +10660,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Also check RBAC roles - any role that's not 'reader' is considered staff
       let hasRbacRole = false;
-      try {
+    try {
         const userRoles = await storage.getUserRoles(userId);
         // Check if user has any of the predefined staff roles OR any custom role
         hasRbacRole = userRoles.some(r => allowedRoles.includes(r.name) || r.name !== 'reader');
@@ -10691,7 +10696,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Also check RBAC roles - any role that's not 'reader' is considered staff
       let hasRbacRole = false;
-      try {
+    try {
         const userRoles = await storage.getUserRoles(userId);
         // Check if user has any of the predefined staff roles OR any custom role
         hasRbacRole = userRoles.some(r => staffRoles.includes(r.name) || r.name !== 'reader');
@@ -11790,7 +11795,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Run async operations without blocking the response
         setImmediate(async () => {
-          try {
+    try {
             // Determine notification type based on newsType
             let notificationType: 'published' | 'breaking' | 'featured' = 'published';
             if (article.newsType === 'breaking') {
@@ -11807,7 +11812,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log(`✅ [DASHBOARD CREATE] Notifications sent for new article: ${article.title}`);
 
             // Generate article embeddings for recommendation system
-            try {
+    try {
               await vectorizeArticle(article.id);
               console.log(`✅ [DASHBOARD CREATE] Article vectorized for recommendations: ${article.title}`);
             } catch (vectorizationError) {
@@ -11816,7 +11821,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
 
             // Auto-link article to story using AI
-            try {
+    try {
               const { matchAndLinkArticle } = await import("./storyMatcher");
               await matchAndLinkArticle(article.id);
               console.log(`✅ [DASHBOARD CREATE] Article auto-linked to story: ${article.title}`);
@@ -11918,7 +11923,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Run async operations without blocking the response
         setImmediate(async () => {
-          try {
+    try {
             // Determine notification type based on article properties
             let notificationType: 'published' | 'breaking' | 'featured';
             
@@ -11938,7 +11943,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log(`✅ [DASHBOARD UPDATE] Notifications sent successfully`);
 
             // Generate article embeddings for recommendation system
-            try {
+    try {
               await vectorizeArticle(updated.id);
               console.log(`✅ [DASHBOARD UPDATE] Article vectorized for recommendations: ${updated.title}`);
             } catch (vectorizationError) {
@@ -11947,7 +11952,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
 
             // Auto-link article to story using AI
-            try {
+    try {
               const { matchAndLinkArticle } = await import("./storyMatcher");
               await matchAndLinkArticle(updated.id);
               console.log(`✅ [DASHBOARD UPDATE] Article auto-linked to story: ${updated.title}`);
@@ -12420,7 +12425,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             matched = lowerText.includes(lowerWord);
             break;
           case "regex":
-            try {
+    try {
               const regex = new RegExp(wordEntry.word, "i");
               matched = regex.test(text);
             } catch (e) {
@@ -13517,7 +13522,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       }
       
       if (shouldOptimize) {
-        try {
+    try {
           const [originalBuffer] = await file.download();
           const format = requestedFormat as 'webp' | 'avif' | 'jpeg' | 'png' || getBestFormat(req.headers.accept);
           
@@ -13608,7 +13613,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
 
       // Track events in userEvents table for daily summary analytics
       if (meta.articleId) {
-        try {
+    try {
           // Map behavior event types to userEvent types for daily summary
           if (eventType === "article_read") {
             await trackUserEvent({
@@ -13646,7 +13651,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       }
 
       // إضافة نقاط ولاء بناءً على نوع السلوك
-      try {
+    try {
         let loyaltyPoints = 0;
         let action = "";
         
@@ -15917,7 +15922,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAuth,
     cacheControl({ maxAge: CACHE_DURATIONS.MEDIUM, public: false }),
     async (req: any, res) => {
-      try {
+    try {
         const userId = req.user.id;
         console.log(`[API] GET /api/recommendations/personalized - User: ${userId}`);
 
@@ -16712,7 +16717,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       const results = await Promise.allSettled(
         commentsToAnalyze.map(comment =>
           limit(async () => {
-            try {
+    try {
               // Detect language and analyze sentiment
               const language = detectLanguage(comment.content);
               const result = await analyzeSentiment(comment.content, language);
@@ -17177,7 +17182,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
 
       // ربط كل مقال بقصة
       for (const article of publishedArticles) {
-        try {
+    try {
           console.log(`[ADMIN] Processing article: ${article.title}`);
           await matchAndLinkArticle(article.id);
           successCount++;
@@ -18760,7 +18765,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAuth,
     requirePermission('audio_newsletters.view'),
     async (req: any, res) => {
-      try {
+    try {
         const { limit = 50, offset = 0 } = req.query;
 
         // Admin can see all statuses
@@ -18916,7 +18921,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAuth, 
     requirePermission('audio_newsletters.manage_all'),
     async (req: any, res) => {
-      try {
+    try {
         const newsletter = await storage.getAudioNewsletterById(req.params.id);
 
         if (!newsletter) {
@@ -18948,7 +18953,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   app.get("/api/audio-newsletters/jobs/:jobId",
     requireAuth,
     async (req: any, res) => {
-      try {
+    try {
         const { jobQueue } = await import("./services/job-queue");
         const job = await jobQueue.getStatus(req.params.jobId);
         
@@ -19140,7 +19145,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const briefs = await storage.getAllAudioNewsBriefs();
         res.json(briefs);
       } catch (error: any) {
@@ -19181,7 +19186,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const validatedData = insertAudioNewsBriefSchema.parse({
           ...req.body,
           createdBy: req.user.id,
@@ -19203,7 +19208,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const brief = await storage.getAudioNewsBriefById(req.params.id);
         if (!brief) {
           return res.status(404).json({ message: "الخبر غير موجود" });
@@ -19232,7 +19237,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   app.get("/api/audio-briefs/jobs/:jobId",
     requireAuth,
     async (req: any, res) => {
-      try {
+    try {
         const { jobQueue } = await import("./services/job-queue");
         const job = await jobQueue.getStatus(req.params.jobId);
         
@@ -19253,7 +19258,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const brief = await storage.updateAudioNewsBrief(req.params.id, req.body);
         res.json(brief);
       } catch (error: any) {
@@ -19268,7 +19273,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const brief = await storage.getAudioNewsBriefById(req.params.id);
         
         if (!brief) {
@@ -19302,7 +19307,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         await storage.deleteAudioNewsBrief(req.params.id);
         res.status(204).send();
       } catch (error: any) {
@@ -19321,7 +19326,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const userId = req.user?.id;
         if (!userId) {
           return res.status(401).json({ message: "غير مصرح" });
@@ -19360,7 +19365,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   // IMPORTANT: This must be BEFORE /:id route to avoid matching "active" as an id
   app.get("/api/announcements/active",
     async (req: any, res) => {
-      try {
+    try {
         const userId = req.user?.id;
         
         // If user is not logged in, return empty array (no announcements for guests)
@@ -19394,7 +19399,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const {
           status,
           priority,
@@ -19430,7 +19435,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const announcement = await storage.getInternalAnnouncementById(req.params.id);
 
         if (!announcement) {
@@ -19450,7 +19455,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const userId = req.user?.id;
         if (!userId) {
           return res.status(401).json({ message: "غير مصرح" });
@@ -19522,7 +19527,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const userId = req.user?.id;
         if (!userId) {
           return res.status(401).json({ message: "غير مصرح" });
@@ -19561,7 +19566,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const userId = req.user?.id;
         if (!userId) {
           return res.status(401).json({ message: "غير مصرح" });
@@ -19606,7 +19611,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const userId = req.user?.id;
         if (!userId) {
           return res.status(401).json({ message: "غير مصرح" });
@@ -19646,7 +19651,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const userId = req.user?.id;
         if (!userId) {
           return res.status(401).json({ message: "غير مصرح" });
@@ -19719,7 +19724,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const announcementId = req.params.id;
 
         // Check if announcement exists
@@ -19743,7 +19748,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const userId = req.user?.id;
         if (!userId) {
           return res.status(401).json({ message: "غير مصرح" });
@@ -19784,7 +19789,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   app.post("/api/announcements/:id/metrics",
     requireAuth,
     async (req: any, res) => {
-      try {
+    try {
         const userId = req.user?.id;
         const announcementId = req.params.id;
         const { event, channel, meta } = req.body;
@@ -19823,7 +19828,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const announcementId = req.params.id;
 
         // Check if announcement exists
@@ -20121,7 +20126,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAuth,
     requireAnyPermission('shorts:view', 'shorts:manage'),
     async (req: any, res) => {
-      try {
+    try {
         const { 
           page = "1", 
           limit = "20", 
@@ -20195,7 +20200,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAuth,
     requireAnyPermission('shorts:create', 'shorts:manage'),
     async (req: any, res) => {
-      try {
+    try {
         const userId = req.user?.id;
         if (!userId) {
           return res.status(401).json({ message: "غير مصرح" });
@@ -20251,7 +20256,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAuth,
     requireAnyPermission('shorts:edit', 'shorts:manage'),
     async (req: any, res) => {
-      try {
+    try {
         const userId = req.user?.id;
         if (!userId) {
           return res.status(401).json({ message: "غير مصرح" });
@@ -20308,7 +20313,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAuth,
     requireAnyPermission('shorts:view', 'shorts:edit', 'shorts:manage'),
     async (req: any, res) => {
-      try {
+    try {
         const shortId = req.params.id;
 
         const short = await storage.getShortById(shortId);
@@ -20330,7 +20335,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAuth,
     requireAnyPermission('shorts:delete', 'shorts:manage'),
     async (req: any, res) => {
-      try {
+    try {
         const userId = req.user?.id;
         if (!userId) {
           return res.status(401).json({ message: "غير مصرح" });
@@ -20375,7 +20380,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAuth,
     requireAnyPermission('shorts:create', 'shorts:edit', 'shorts:manage'),
     async (req: any, res) => {
-      try {
+    try {
         const objectStorageService = new ObjectStorageService();
         const uploadURL = await objectStorageService.getObjectEntityUploadURL();
       res.json({ uploadURL });
@@ -20391,7 +20396,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAuth,
     requireAnyPermission('shorts:view', 'shorts:manage'),
     async (req: any, res) => {
-      try {
+    try {
         const shortId = req.params.id;
         const { eventType, startDate, endDate } = req.query;
 
@@ -21899,7 +21904,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAnyPermission("analytics.view", "articles.view"), 
     cacheControl({ maxAge: CACHE_DURATIONS.MEDIUM }),
     async (req, res) => {
-      try {
+    try {
         const now = new Date();
         const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
         const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1); // Upper bound for "this month" queries
@@ -22112,7 +22117,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAnyPermission("analytics.view", "articles.view"),
     cacheControl({ maxAge: CACHE_DURATIONS.MEDIUM }),
     async (req, res) => {
-      try {
+    try {
         const now = new Date();
         const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1);
 
@@ -22198,7 +22203,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAnyPermission("analytics.view", "articles.view"),
     cacheControl({ maxAge: CACHE_DURATIONS.MEDIUM }),
     async (req, res) => {
-      try {
+    try {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         
@@ -22285,7 +22290,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
     requireAnyPermission("analytics.view", "articles.view"),
     cacheControl({ maxAge: CACHE_DURATIONS.MEDIUM }),
     async (req, res) => {
-      try {
+    try {
         // Get latest activities from activityLogs
         // Using INNER JOIN to filter out activities with null/undefined users
         const activities = await db
@@ -23104,7 +23109,7 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       });
 
       // Send notifications for published opinion article
-      try {
+    try {
         await createNotification({
           type: "NEW_ARTICLE",
           data: {
@@ -27575,7 +27580,7 @@ Allow: /
       // If there's an articleId, fetch article data for Open Graph tags
       let article = null;
       if (shortLink.articleId) {
-        try {
+    try {
           article = await storage.getArticleById(shortLink.articleId);
         } catch (err) {
           console.error("Error fetching article for short link:", err);
@@ -27681,7 +27686,7 @@ Allow: /
       
       if (existingPass) {
         // Regenerate existing pass
-        try {
+    try {
           const passData: PressPassData = {
             userId: req.user.id,
             serialNumber: existingPass.serialNumber,
@@ -27734,7 +27739,7 @@ Allow: /
         validUntil: req.user.cardValidUntil,
       };
       
-      try {
+    try {
         const passBuffer = await passKitService.generatePressPass(passData);
         
         // Save to database AFTER successful generation
@@ -27823,7 +27828,7 @@ Allow: /
       
       if (existingPass) {
         // Regenerate with latest points
-        try {
+    try {
           const passData: LoyaltyPassData = {
             userId: req.user.id,
             serialNumber: existingPass.serialNumber,
@@ -27876,7 +27881,7 @@ Allow: /
         memberSince: userPoints.createdAt,
       };
       
-      try {
+    try {
         const passBuffer = await passKitService.generateLoyaltyPass(passData);
         
         // Save to database AFTER successful generation
@@ -27942,7 +27947,7 @@ Allow: /
   // PassKit Web Service: Register device
   app.post("/api/wallet/v1/devices/:deviceLibraryId/registrations/:passTypeId/:serialNumber", 
     async (req, res) => {
-      try {
+    try {
         const { deviceLibraryId, passTypeId, serialNumber } = req.params;
         const { pushToken } = req.body;
 
@@ -27967,7 +27972,7 @@ Allow: /
   // PassKit Web Service: Get updatable passes
   app.get("/api/wallet/v1/devices/:deviceLibraryId/registrations/:passTypeId", 
     async (req, res) => {
-      try {
+    try {
         const { deviceLibraryId, passTypeId } = req.params;
         const passesUpdatedSince = req.query.passesUpdatedSince as string | undefined;
         
@@ -27990,7 +27995,7 @@ Allow: /
   // PassKit Web Service: Unregister device
   app.delete("/api/wallet/v1/devices/:deviceLibraryId/registrations/:passTypeId/:serialNumber",
     async (req, res) => {
-      try {
+    try {
         const { deviceLibraryId, serialNumber } = req.params;
         
         const pass = await storage.getWalletPassBySerial(serialNumber);
@@ -28029,7 +28034,7 @@ Allow: /
         res.write(`data: ${JSON.stringify(data)}\n\n`);
       };
 
-      try {
+    try {
         sendEvent('progress', { stage: 'initializing', message: 'جاري تهيئة التحليل...', percent: 10 });
 
         const { deepAnalysisEngine } = await import('./deepAnalysisEngine');
@@ -29493,7 +29498,7 @@ Allow: /
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const { status, language, limit, offset } = req.query;
         const result = await storage.getAllNewsletterSubscriptions({
           status: status as string,
@@ -29514,7 +29519,7 @@ Allow: /
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         await storage.deleteNewsletterSubscription(req.params.id);
       res.json({ message: "تم حذف الاشتراك بنجاح" });
       } catch (error: any) {
@@ -29533,7 +29538,7 @@ Allow: /
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const { userEmail, userPassword, userFirstName, userLastName, ...publisherFields } = req.body;
         
         // Validate: must provide user credentials for new publisher
@@ -29613,7 +29618,7 @@ Allow: /
     requireRole('admin'),
     upload.single('logo'),
     async (req: any, res) => {
-      try {
+    try {
         if (!req.file) {
           return res.status(400).json({ message: "لم يتم إرفاق صورة" });
         }
@@ -29646,7 +29651,7 @@ Allow: /
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const { page, limit, isActive } = req.query;
         const result = await storage.getAllPublishers({
           page: page ? parseInt(page as string) : 1,
@@ -29666,7 +29671,7 @@ Allow: /
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const publisher = await storage.getPublisher(req.params.id);
         if (!publisher) {
           return res.status(404).json({ message: "الناشر غير موجود" });
@@ -29684,7 +29689,7 @@ Allow: /
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const updateData = updatePublisherSchema.parse(req.body);
         const oldPublisher = await storage.getPublisher(req.params.id);
         
@@ -29720,7 +29725,7 @@ Allow: /
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const publisher = await storage.getPublisher(req.params.id);
         if (!publisher) {
           return res.status(404).json({ message: "الناشر غير موجود" });
@@ -29758,7 +29763,7 @@ Allow: /
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const publisher = await storage.getPublisher(req.params.id);
         if (!publisher) {
           return res.status(404).json({ message: "الناشر غير موجود" });
@@ -29778,7 +29783,7 @@ Allow: /
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const publisher = await storage.getPublisher(req.params.id);
         if (!publisher) {
           return res.status(404).json({ message: "الناشر غير موجود" });
@@ -29831,7 +29836,7 @@ Allow: /
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const publisher = await storage.getPublisher(req.params.id);
         if (!publisher) {
           return res.status(404).json({ message: "الناشر غير موجود" });
@@ -29861,7 +29866,7 @@ Allow: /
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const { page, limit, isActive } = req.query;
         const result = await storage.getAllPublishers({
           page: page ? parseInt(page as string) : 1,
@@ -29881,7 +29886,7 @@ Allow: /
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const publisher = await storage.getPublisher(req.params.id);
         if (!publisher) {
           return res.status(404).json({ message: "الناشر غير موجود" });
@@ -29899,7 +29904,7 @@ Allow: /
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const publisherData = insertPublisherSchema.parse(req.body);
         const publisher = await storage.createPublisher(publisherData);
 
@@ -29928,7 +29933,7 @@ Allow: /
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const updateData = updatePublisherSchema.parse(req.body);
         const oldPublisher = await storage.getPublisher(req.params.id);
 
@@ -29967,7 +29972,7 @@ Allow: /
   app.get("/api/publisher/me",
     requireAuth,
     async (req: any, res) => {
-      try {
+    try {
         const publisher = await storage.getPublisherByUserId(req.user.id);
         if (!publisher) {
           return res.status(404).json({ message: "لم يتم العثور على حساب الناشر" });
@@ -29985,7 +29990,7 @@ Allow: /
   app.get("/api/publisher/stats",
     requireAuth,
     async (req: any, res) => {
-      try {
+    try {
         const publisher = await storage.getPublisherByUserId(req.user.id);
         if (!publisher) {
           return res.status(404).json({ message: "لم يتم العثور على حساب الناشر" });
@@ -30014,7 +30019,7 @@ Allow: /
   app.get("/api/publisher/dashboard", 
     requireAuth,
     async (req: any, res) => {
-      try {
+    try {
         const publisher = await storage.getPublisherByUserId(req.user.id);
         if (!publisher) {
           return res.status(404).json({ message: "لم يتم العثور على حساب الناشر" });
@@ -30043,7 +30048,7 @@ Allow: /
   app.get("/api/publisher/articles", 
     requireAuth,
     async (req: any, res) => {
-      try {
+    try {
         const publisher = await storage.getPublisherByUserId(req.user.id);
         if (!publisher) {
           return res.status(404).json({ message: "لم يتم العثور على حساب الناشر" });
@@ -30068,7 +30073,7 @@ Allow: /
   app.post("/api/publisher/articles", 
     requireAuth,
     async (req: any, res) => {
-      try {
+    try {
         const publisher = await storage.getPublisherByUserId(req.user.id);
         if (!publisher) {
           return res.status(404).json({ message: "لم يتم العثور على حساب الناشر" });
@@ -30119,7 +30124,7 @@ Allow: /
   app.patch("/api/publisher/articles/:id", 
     requireAuth,
     async (req: any, res) => {
-      try {
+    try {
         const publisher = await storage.getPublisherByUserId(req.user.id);
         if (!publisher) {
           return res.status(404).json({ message: "لم يتم العثور على حساب الناشر" });
@@ -30197,7 +30202,7 @@ Allow: /
   app.get("/api/publisher/credits", 
     requireAuth,
     async (req: any, res) => {
-      try {
+    try {
         const publisher = await storage.getPublisherByUserId(req.user.id);
         if (!publisher) {
           return res.status(404).json({ message: "لم يتم العثور على حساب الناشر" });
@@ -30221,7 +30226,7 @@ Allow: /
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const { status } = req.query;
         
         // Get all publishers
@@ -30268,7 +30273,7 @@ Allow: /
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         // Pre-flight checks for better error messages
         const article = await storage.getArticleById(req.params.id);
         if (!article) {
@@ -30333,7 +30338,7 @@ Allow: /
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const { reason } = req.body;
         
         const article = await storage.getArticleById(req.params.id);
@@ -30390,7 +30395,7 @@ Allow: /
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const publisher = await storage.getPublisher(req.params.publisherId);
         if (!publisher) {
           return res.status(404).json({ message: "الناشر غير موجود" });
@@ -30429,7 +30434,7 @@ Allow: /
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const article = await storage.getArticleById(req.params.id);
         if (!article) {
           return res.status(404).json({ message: "المقال غير موجود" });
@@ -30489,7 +30494,7 @@ Allow: /
     requireAuth,
     requireRole('admin'),
     async (req: any, res) => {
-      try {
+    try {
         const { reason } = req.body;
 
         const article = await storage.getArticleById(req.params.id);
@@ -30562,7 +30567,7 @@ Allow: /
     requireRole('admin', 'editor'),
     ifoxLimiter,
     async (req: any, res) => {
-      try {
+    try {
         const querySchema = z.object({
           categorySlug: z.string().optional(),
           status: z.enum(['draft', 'published', 'scheduled', 'archived']).optional(),
@@ -30631,7 +30636,7 @@ Allow: /
     requireRole('admin', 'editor'),
     ifoxLimiter,
     async (req: any, res) => {
-      try {
+    try {
         const stats = await storage.getIFoxArticleStats();
 
         await logActivity({
@@ -30655,7 +30660,7 @@ Allow: /
     requireRole('admin', 'editor'),
     ifoxLimiter,
     async (req: any, res) => {
-      try {
+    try {
         const metrics = await storage.getIFoxArticleMetrics();
 
         await logActivity({
@@ -30679,7 +30684,7 @@ Allow: /
     requireRole('admin'),
     strictLimiter,
     async (req: any, res) => {
-      try {
+    try {
         const bodySchema = z.object({
           articleIds: z.array(z.string()).min(1),
         });
@@ -30721,7 +30726,7 @@ Allow: /
     requireRole('admin'),
     strictLimiter,
     async (req: any, res) => {
-      try {
+    try {
         const validatedData = insertIFoxArticleSchema.parse(req.body);
         
         // Convert categorySlug to categoryId using cached map
@@ -30809,7 +30814,7 @@ Allow: /
     requireRole('admin'),
     strictLimiter,
     async (req: any, res) => {
-      try {
+    try {
         const { id } = req.params;
         const validatedData = updateIFoxArticleSchema.parse(req.body);
         
@@ -30877,7 +30882,7 @@ Allow: /
     requireRole('admin'),
     strictLimiter,
     async (req: any, res) => {
-      try {
+    try {
         const bodySchema = z.object({
           articleIds: z.array(z.string()).min(1),
         });
@@ -30924,7 +30929,7 @@ Allow: /
     requireRole('admin'),
     ifoxLimiter,
     async (req: any, res) => {
-      try {
+    try {
         // Return structured settings object matching IFoxSettings interface
         // TODO: Implement actual storage layer - for now returning defaults
         const defaultSettings = {
@@ -31000,7 +31005,7 @@ Allow: /
     requireRole('admin'),
     strictLimiter,
     async (req: any, res) => {
-      try {
+    try {
         const { key } = req.params;
         await storage.deleteIFoxSetting(key);
 
@@ -31025,7 +31030,7 @@ Allow: /
     requireRole('admin', 'editor'),
     ifoxLimiter,
     async (req: any, res) => {
-      try {
+    try {
         const querySchema = z.object({
           categorySlug: z.string().optional(),
         });
@@ -31057,7 +31062,7 @@ Allow: /
     requireRole('admin'),
     strictLimiter,
     async (req: any, res) => {
-      try {
+    try {
         const bodySchema = z.object({
           categorySlug: z.string().min(1),
           autoPublish: z.boolean().optional(),
@@ -31106,7 +31111,7 @@ Allow: /
     requireRole('admin', 'editor'),
     ifoxLimiter,
     async (req: any, res) => {
-      try {
+    try {
         const querySchema = z.object({
           type: z.enum(['image', 'video', 'audio', 'document']).optional(),
           categorySlug: z.string().optional(),
@@ -31143,7 +31148,7 @@ Allow: /
     strictLimiter,
     upload.single('file'),
     async (req: any, res) => {
-      try {
+    try {
         if (!req.file) {
           return res.status(400).json({ message: "لم يتم رفع أي ملف" });
         }
@@ -31210,7 +31215,7 @@ Allow: /
     requireRole('admin'),
     strictLimiter,
     async (req: any, res) => {
-      try {
+    try {
         const id = parseInt(req.params.id);
         if (isNaN(id)) {
           return res.status(400).json({ message: "معرف غير صالح" });
@@ -31243,7 +31248,7 @@ Allow: /
     requireRole('admin', 'editor'),
     ifoxLimiter,
     async (req: any, res) => {
-      try {
+    try {
         const querySchema = z.object({
           status: z.enum(['pending', 'published', 'failed', 'cancelled']).optional(),
           fromDate: z.string().datetime().optional(),
@@ -31278,7 +31283,7 @@ Allow: /
     requireRole('admin', 'editor'),
     strictLimiter,
     async (req: any, res) => {
-      try {
+    try {
         const bodySchema = z.object({
           articleId: z.string().min(1),
           scheduledAt: z.string().datetime(),
@@ -31326,7 +31331,7 @@ Allow: /
     requireRole('admin'),
     strictLimiter,
     async (req: any, res) => {
-      try {
+    try {
         const id = parseInt(req.params.id);
         if (isNaN(id)) {
           return res.status(400).json({ message: "معرف غير صالح" });
@@ -31373,7 +31378,7 @@ Allow: /
     requireRole('admin'),
     strictLimiter,
     async (req: any, res) => {
-      try {
+    try {
         const id = parseInt(req.params.id);
         if (isNaN(id)) {
           return res.status(400).json({ message: "معرف غير صالح" });
@@ -31402,7 +31407,7 @@ Allow: /
     requireRole('admin'),
     strictLimiter,
     async (req: any, res) => {
-      try {
+    try {
         const result = await storage.processScheduledPublishing();
 
         await logActivity({
@@ -31435,7 +31440,7 @@ Allow: /
     requireRole('admin', 'editor'),
     ifoxLimiter,
     async (req: any, res) => {
-      try {
+    try {
         const querySchema = z.object({
           categorySlug: z.string().optional(),
           fromDate: z.string().datetime(),
@@ -31471,7 +31476,7 @@ Allow: /
     requireRole('admin', 'editor'),
     ifoxLimiter,
     async (req: any, res) => {
-      try {
+    try {
         const querySchema = z.object({
           categorySlug: z.string().optional(),
         });
@@ -31504,7 +31509,7 @@ Allow: /
     requireRole('system'),
     strictLimiter,
     async (req: any, res) => {
-      try {
+    try {
         const bodySchema = z.object({
           events: z.array(z.object({
             categorySlug: z.string(),
@@ -31551,7 +31556,7 @@ Allow: /
     requireRole('admin', 'editor'),
     strictLimiter,
     async (req: any, res) => {
-      try {
+    try {
         const bodySchema = z.object({
           content: z.string().min(50, "المحتوى قصير جداً"),
           category: z.string().optional(),
@@ -31587,7 +31592,7 @@ Allow: /
     requireRole('admin', 'editor'),
     strictLimiter,
     async (req: any, res) => {
-      try {
+    try {
         const bodySchema = z.object({
           title: z.string().min(5, "العنوان قصير جداً"),
           content: z.string().min(50, "المحتوى قصير جداً"),
@@ -31624,7 +31629,7 @@ Allow: /
     requireRole('admin', 'editor'),
     strictLimiter,
     async (req: any, res) => {
-      try {
+    try {
         const bodySchema = z.object({
           title: z.string().min(5, "العنوان قصير جداً"),
           content: z.string().min(50, "المحتوى قصير جداً"),
@@ -31665,7 +31670,7 @@ Allow: /
     requireRole('admin', 'editor'),
     ifoxLimiter,
     async (req: any, res) => {
-      try {
+    try {
         const { timeRange = '30d' } = req.query;
         
         // Mock data for now - replace with actual analytics logic later
@@ -31698,7 +31703,7 @@ Allow: /
     requireRole('admin', 'editor'),
     ifoxLimiter,
     async (req: any, res) => {
-      try {
+    try {
         const { timeRange = '30d' } = req.query;
         
         // Mock time series data
@@ -31724,7 +31729,7 @@ Allow: /
     requireRole('admin', 'editor'),
     ifoxLimiter,
     async (req: any, res) => {
-      try {
+    try {
         // Mock category performance data
         const data = [
           { category: 'ai-news', categoryAr: 'آي سبق', views: 12500, engagement: 3200, articles: 8, avgAIScore: 92, growth: 15.2 },
@@ -31747,7 +31752,7 @@ Allow: /
     requireRole('admin', 'editor'),
     ifoxLimiter,
     async (req: any, res) => {
-      try {
+    try {
         // Fetch actual articles from database
         const topArticles = await db
           .select({
@@ -31786,7 +31791,7 @@ Allow: /
     requireRole('admin', 'editor'),
     ifoxLimiter,
     async (req: any, res) => {
-      try {
+    try {
         // Mock engagement data
         const metrics = {
           likes: 15432,
@@ -31811,7 +31816,7 @@ Allow: /
   app.get("/api/admin/ifox/categories",
     requireAuth,
     async (req: any, res) => {
-      try {
+    try {
         const categoryMap = await storage.getIFoxCategoryMap();
         
         // Return as array of {slug, id, nameAr} for easier frontend use
@@ -31843,7 +31848,7 @@ Allow: /
     requireRole('admin'),
     strictLimiter,
     async (req: any, res) => {
-      try {
+    try {
         const { id } = req.params;
         const bodySchema = z.object({
           status: z.enum(['active', 'inactive']),
@@ -31881,7 +31886,7 @@ Allow: /
     requireRole('admin'),
     strictLimiter,
     async (req: any, res) => {
-      try {
+    try {
         const bodySchema = z.object({
           ai: z.object({
             provider: z.enum(['openai', 'anthropic', 'gemini']),
