@@ -3,6 +3,12 @@ import { db } from "./db";
 import { eq, and, lte, isNull, sql } from "drizzle-orm";
 import { notificationQueue, notificationsInbox, notificationMetrics, articles } from "@shared/schema";
 import { storage } from "./storage";
+import { 
+  notificationMemoryService, 
+  behaviorSignalService, 
+  notificationAnalyticsService,
+  runNotificationSystemCleanup 
+} from "./notificationMemoryService";
 
 let isProcessingQueue = false;
 let isPublishing = false;
@@ -43,28 +49,69 @@ async function processNotificationQueue() {
       try {
         // Extract notification data from payload
         const payload = queueItem.payload as any;
+        const articleId = payload.articleId;
+        
+        // Map queue type to memory type for deduplication
+        const memoryType = queueItem.type === 'BreakingNews' ? 'breaking' :
+                          queueItem.type === 'InterestMatch' ? 'interest' :
+                          queueItem.type === 'BehaviorMatch' ? 'behavior' : 'general';
+        
+        // Check if notification was already sent (Memory Layer deduplication)
+        if (articleId) {
+          const wasSent = await notificationMemoryService.wasNotificationSent(
+            queueItem.userId,
+            articleId,
+            memoryType
+          );
+          
+          if (wasSent) {
+            console.log(`[NotificationWorker] ⏭️ Skipping duplicate: ${queueItem.type} for user ${queueItem.userId.slice(0, 8)}...`);
+            
+            // Mark as skipped (not sent, but processed)
+            await db
+              .update(notificationQueue)
+              .set({
+                sentAt: new Date(),
+                status: "skipped",
+                errorMessage: "Duplicate notification (memory layer)",
+              })
+              .where(eq(notificationQueue.id, queueItem.id));
+            
+            continue;
+          }
+        }
         
         // Determine title and body based on notification type
         let title = "";
         let body = "";
         let deeplink = payload.deeplink || null;
+        let recommendationReason: string | null = null;
         
         if (queueItem.type === "BreakingNews") {
           title = "⚡ عاجل";
           body = payload.articleTitle || "خبر عاجل جديد";
           deeplink = `/article/${payload.articleSlug || payload.articleId}`;
+          recommendationReason = "breaking_news";
         } else if (queueItem.type === "InterestMatch") {
           title = "📰 مقال جديد";
           body = payload.articleTitle || "مقال جديد في اهتماماتك";
           deeplink = `/article/${payload.articleSlug || payload.articleId}`;
+          recommendationReason = payload.matchReason || "interest_match";
+        } else if (queueItem.type === "BehaviorMatch") {
+          title = "💡 قد يعجبك";
+          body = payload.articleTitle || "مقال مقترح بناءً على تفضيلاتك";
+          deeplink = `/article/${payload.articleSlug || payload.articleId}`;
+          recommendationReason = payload.matchReason || "behavior_match";
         } else if (queueItem.type === "LikedStoryUpdate") {
           title = "🔔 تحديث";
           body = payload.articleTitle || "تحديث على مقال أعجبك";
           deeplink = `/article/${payload.articleSlug || payload.articleId}`;
+          recommendationReason = "story_update";
         } else if (queueItem.type === "MostReadTodayForYou") {
           title = "🔥 الأكثر قراءة";
           body = payload.articleTitle || "الأكثر قراءة اليوم في اهتماماتك";
           deeplink = `/article/${payload.articleSlug || payload.articleId}`;
+          recommendationReason = "most_read";
         } else {
           // Fallback for unrecognized types
           title = "📬 إشعار جديد";
@@ -87,6 +134,8 @@ async function processNotificationQueue() {
               articleId: payload.articleId,
               imageUrl: payload.imageUrl,
               categorySlug: payload.categorySlug,
+              recommendationReason,
+              scoreAtSend: payload.score,
             },
           })
           .returning();
@@ -109,8 +158,27 @@ async function processNotificationQueue() {
           clicked: false,
           dismissed: false,
         });
+        
+        // Record in Memory Layer for deduplication
+        if (articleId) {
+          await notificationMemoryService.recordNotificationSent(
+            queueItem.userId,
+            articleId,
+            memoryType
+          );
+        }
+        
+        // Record in Analytics Layer
+        await notificationAnalyticsService.recordNotificationSend(
+          queueItem.userId,
+          inboxNotification.id,
+          queueItem.type,
+          articleId || null,
+          payload.score || null,
+          recommendationReason
+        );
 
-        console.log(`[NotificationWorker] Delivered notification ${queueItem.id} to user ${queueItem.userId}`);
+        console.log(`[NotificationWorker] ✅ Delivered ${queueItem.type} to user ${queueItem.userId.slice(0, 8)}...`);
       } catch (error) {
         console.error(`[NotificationWorker] Error processing notification ${queueItem.id}:`, error);
 
@@ -162,6 +230,10 @@ async function cleanupOldNotifications() {
       );
 
     console.log(`[NotificationWorker] Cleanup completed. Deleted ${deletedQueue.rowCount || 0} queue items and ${deletedInbox.rowCount || 0} inbox items`);
+    
+    // Run Memory Layer cleanup (expired memories + time decay)
+    await runNotificationSystemCleanup();
+    
   } catch (error) {
     console.error("[NotificationWorker] Error in cleanup:", error);
     // Don't throw - just log and continue

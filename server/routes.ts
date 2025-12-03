@@ -14925,6 +14925,196 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
   });
 
   // ============================================================
+
+  // ============================================================
+  // SMART NOTIFICATION SYSTEM v2.0 - Behavior Tracking Routes
+  // ============================================================
+
+  // POST /api/behavior/signal - Record a user behavior signal
+  app.post("/api/behavior/signal", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { signalType, articleId, categoryId, tagId, weight, metadata } = req.body;
+      
+      if (!signalType) {
+        return res.status(400).json({ message: "signalType is required" });
+      }
+      
+      const validSignalTypes = [
+        'article_read', 'article_like', 'article_bookmark', 'article_share',
+        'article_comment', 'category_read', 'tag_read', 'notification_click',
+        'notification_dismiss', 'time_spent', 'search_query'
+      ];
+      
+      if (!validSignalTypes.includes(signalType)) {
+        return res.status(400).json({ 
+          message: "Invalid signalType",
+          validTypes: validSignalTypes
+        });
+      }
+      
+      const { behaviorSignalService } = await import('./notificationMemoryService');
+      
+      await behaviorSignalService.recordSignal(userId, signalType, {
+        articleId,
+        categoryId,
+        tagId,
+        weight,
+        metadata
+      });
+      
+      res.json({ success: true, message: "Signal recorded" });
+    } catch (error) {
+      console.error("Error recording behavior signal:", error);
+      res.status(500).json({ message: "Failed to record signal" });
+    }
+  });
+
+  // GET /api/behavior/interests - Get user's dynamic interests
+  app.get("/api/behavior/interests", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const limit = Math.min(parseInt(req.query.limit as string) || 10, 50);
+      
+      const { behaviorSignalService } = await import('./notificationMemoryService');
+      const interests = await behaviorSignalService.getTopInterests(userId, limit);
+      
+      res.json({ interests });
+    } catch (error) {
+      console.error("Error fetching user interests:", error);
+      res.status(500).json({ message: "Failed to fetch interests" });
+    }
+  });
+
+  // GET /api/behavior/profile - Get user's behavioral profile
+  app.get("/api/behavior/profile", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      const { behaviorSignalService } = await import('./notificationMemoryService');
+      const profile = await behaviorSignalService.getUserBehavioralProfile(userId);
+      
+      // Convert Maps to objects for JSON response
+      res.json({
+        categoryScores: Object.fromEntries(profile.categoryScores),
+        tagScores: Object.fromEntries(profile.tagScores),
+        totalEngagement: profile.totalEngagement,
+        lastActivity: profile.lastActivity
+      });
+    } catch (error) {
+      console.error("Error fetching behavioral profile:", error);
+      res.status(500).json({ message: "Failed to fetch profile" });
+    }
+  });
+
+  // POST /api/notifications/:id/clicked - Record notification click
+  app.post("/api/notifications/:id/clicked", isAuthenticated, async (req: any, res) => {
+    try {
+      const notificationId = req.params.id;
+      const userId = req.user.id;
+      
+      // SECURITY: Verify notification ownership FIRST before recording analytics
+      const [notification] = await db
+        .select()
+        .from(notificationsInbox)
+        .where(
+          and(
+            eq(notificationsInbox.id, notificationId),
+            eq(notificationsInbox.userId, userId)
+          )
+        )
+        .limit(1);
+      
+      if (!notification) {
+        return res.status(404).json({ message: "Notification not found" });
+      }
+      
+      // Record click in analytics (only after ownership verified)
+      const { notificationAnalyticsService, behaviorSignalService } = await import('./notificationMemoryService');
+      await notificationAnalyticsService.recordClick(notificationId);
+      
+      const metadata = notification.metadata as any;
+      const articleId = metadata?.articleId;
+      
+      if (articleId) {
+        // Record positive signal for clicking notification
+        await behaviorSignalService.recordSignal(userId, 'notification_click', {
+          articleId
+        });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error recording notification click:", error);
+      res.status(500).json({ message: "Failed to record click" });
+    }
+  });
+
+  // POST /api/notifications/:id/dismissed - Record notification dismiss
+  app.post("/api/notifications/:id/dismissed", isAuthenticated, async (req: any, res) => {
+    try {
+      const notificationId = req.params.id;
+      const userId = req.user.id;
+      
+      // SECURITY: Verify notification ownership FIRST before recording analytics
+      const [notification] = await db
+        .select()
+        .from(notificationsInbox)
+        .where(
+          and(
+            eq(notificationsInbox.id, notificationId),
+            eq(notificationsInbox.userId, userId)
+          )
+        )
+        .limit(1);
+      
+      if (!notification) {
+        return res.status(404).json({ message: "Notification not found" });
+      }
+      
+      // Record dismiss in analytics (only after ownership verified)
+      const { notificationAnalyticsService, behaviorSignalService } = await import('./notificationMemoryService');
+      await notificationAnalyticsService.recordDismiss(notificationId);
+      
+      const metadata = notification.metadata as any;
+      const articleId = metadata?.articleId;
+      
+      if (articleId) {
+        // Record negative signal for dismissing notification
+        await behaviorSignalService.recordSignal(userId, 'notification_dismiss', {
+          articleId
+        });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error recording notification dismiss:", error);
+      res.status(500).json({ message: "Failed to record dismiss" });
+    }
+  });
+
+  // GET /api/admin/notification-analytics - Get notification analytics (admin only)
+  app.get("/api/admin/notification-analytics", requireRole('admin'), async (req: any, res) => {
+    try {
+      const days = parseInt(req.query.days as string) || 7;
+      const fromDate = new Date();
+      fromDate.setDate(fromDate.getDate() - days);
+      const toDate = new Date();
+      
+      const { notificationAnalyticsService } = await import('./notificationMemoryService');
+      const metrics = await notificationAnalyticsService.getMetrics(fromDate, toDate);
+      
+      res.json({
+        period: { from: fromDate, to: toDate },
+        metrics
+      });
+    } catch (error) {
+      console.error("Error fetching notification analytics:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
+  // ============================================================
   // LOYALTY SYSTEM ROUTES
   // ============================================================
 

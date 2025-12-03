@@ -37,7 +37,17 @@ Comprehensive on-demand image optimization for performance:
 -   **iFox Content Generator:** Automated AI content generation system for articles and images, including auto-publishing and notifications.
 -   **iFox Public Articles Page:** Public-facing page displaying AI-generated articles with URL-based category filtering.
 -   **Audio Newsletter System:** Comprehensive audio broadcasting platform with ElevenLabs integration for Arabic TTS, automated daily briefings, 8 newsletter templates, and an advanced editor with enhanced voice capabilities and analytics.
--   **Real-Time Capabilities:** "Moment by Moment" Live News Desk with breaking news ticker and Smart Notifications System via SSE.
+-   **Real-Time Capabilities:** "Moment by Moment" Live News Desk with breaking news ticker and Smart Notifications System v2.0 via SSE.
+-   **Smart Notification System v2.0:** Advanced notification system with intelligent deduplication and behavioral tracking:
+    - **Memory Layer**: 30-day duplicate prevention using SHA256 hash (userId + articleId + type). Hash generation handles null articleId using "none" placeholder to prevent collisions for non-article notifications. Includes `sentAt` field for precise timing analytics.
+    - **Behavior Tracking**: 11 signal types (article_read, article_like, article_bookmark, article_share, article_comment, category_read, tag_read, notification_click, notification_dismiss, time_spent, search_query) with configurable weights
+    - **Time-Decay Algorithm**: Signals decay over time (e.g., article_like: 1%/day, notification_click: 0.5%/day). Cleanup job runs periodically calling `applyTimeDecay()` and `cleanupExpiredMemories()`.
+    - **Dynamic Interests**: Real-time calculated user interests based on behavioral signals with 0.0-1.0 scoring
+    - **Analytics Dashboard**: Track CTR, open rates, dismiss rates, and notification performance by type
+    - **Security**: Click/dismiss routes validate notification ownership BEFORE recording analytics to prevent manipulation. Admin analytics requires `requireRole('admin')`.
+    - Database tables: `notification_memory`, `user_behavior_signals`, `user_dynamic_interests`, `notification_analytics`
+    - API endpoints: `/api/behavior/signal` (POST), `/api/behavior/interests` (GET), `/api/behavior/profile` (GET), `/api/notifications/:id/clicked` (POST), `/api/notifications/:id/dismissed` (POST), `/api/admin/notification-analytics` (GET)
+    - **KPI Targets**: CTR >15%, Open Rate >40%, Dismiss Rate <10%, Relevance Score >0.6
 -   **Social Media Integration:** Enterprise-grade viral distribution with click tracking, Social Crawler Middleware for Open Graph meta tags, and a Dynamic Metadata System.
 -   **Mobile Support:** Native mobile app support via Capacitor for iOS and Android.
 -   **Multilingual Support:** Locale-isolated user pages, trilingual related articles, and trilingual reporter profiles.
