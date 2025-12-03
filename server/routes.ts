@@ -7447,6 +7447,209 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Export article analytics to PDF with Arabic RTL support
+  app.get("/api/admin/article-analytics/:articleId/export", requireAuth, requirePermission("articles.view"), async (req: any, res) => {
+    try {
+      const { articleId } = req.params;
+
+      // Get article with basic info
+      const [article] = await db
+        .select({
+          id: articles.id,
+          title: articles.title,
+          subtitle: articles.subtitle,
+          slug: articles.slug,
+          excerpt: articles.excerpt,
+          content: articles.content,
+          imageUrl: articles.imageUrl,
+          status: articles.status,
+          views: articles.views,
+          publishedAt: articles.publishedAt,
+          createdAt: articles.createdAt,
+          categoryName: categories.name,
+          authorFirstName: users.firstName,
+          authorLastName: users.lastName,
+        })
+        .from(articles)
+        .leftJoin(categories, eq(articles.categoryId, categories.id))
+        .leftJoin(users, eq(articles.authorId, users.id))
+        .where(eq(articles.id, articleId))
+        .limit(1);
+
+      if (!article) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      // Get reactions count (likes)
+      const [likesResult] = await db
+        .select({ count: sql<number>`COUNT(*)::int` })
+        .from(reactions)
+        .where(and(eq(reactions.articleId, articleId), eq(reactions.type, 'like')));
+
+      // Get bookmarks count
+      const [bookmarksResult] = await db
+        .select({ count: sql<number>`COUNT(*)::int` })
+        .from(bookmarks)
+        .where(eq(bookmarks.articleId, articleId));
+
+      // Get shares count from shortLinks
+      const [sharesResult] = await db
+        .select({ count: sql<number>`COALESCE(SUM(click_count), 0)::int` })
+        .from(shortLinks)
+        .where(eq(shortLinks.articleId, articleId));
+
+      // Get comments count with breakdown
+      const commentsStats = await db
+        .select({
+          status: comments.status,
+          count: sql<number>`COUNT(*)::int`
+        })
+        .from(comments)
+        .where(eq(comments.articleId, articleId))
+        .groupBy(comments.status);
+
+      // Get reading stats
+      const [readingStats] = await db
+        .select({
+          avgReadingTime: sql<number>`COALESCE(AVG(${readingHistory.readDuration}) / 60.0, 0)`,
+          totalReaders: sql<number>`COUNT(DISTINCT ${readingHistory.userId})::int`,
+          avgScrollDepth: sql<number>`COALESCE(AVG(${readingHistory.scrollDepth}), 0)`,
+        })
+        .from(readingHistory)
+        .where(eq(readingHistory.articleId, articleId));
+
+      // Calculate word count from HTML content
+      const content = article.content || '';
+      const plainText = content.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ');
+      const wordCount = plainText.split(/\s+/).filter(Boolean).length;
+
+      // Build comments breakdown object
+      const commentsBreakdown: Record<string, number> = {};
+      commentsStats.forEach(stat => {
+        commentsBreakdown[stat.status] = stat.count;
+      });
+      const totalComments = Object.values(commentsBreakdown).reduce((a, b) => a + b, 0);
+
+      // Format date for display (Arabic months)
+      const formatDate = (date: Date | string | null) => {
+        if (!date) return 'غير متوفر';
+        const d = new Date(date);
+        const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+        return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+      };
+
+      // Use pdfmake for PDF generation
+      const PdfPrinter = require('pdfmake');
+      const fonts = {
+        Roboto: {
+          normal: 'Helvetica',
+          bold: 'Helvetica-Bold',
+          italics: 'Helvetica-Oblique',
+          bolditalics: 'Helvetica-BoldOblique'
+        }
+      };
+
+      const printer = new PdfPrinter(fonts);
+
+      // Create document definition
+      const docDefinition = {
+        pageSize: 'A4',
+        pageMargins: [40, 60, 40, 60],
+        defaultStyle: { font: 'Roboto', alignment: 'right' as const },
+        content: [
+          { text: 'تقرير تحليلات المقال', style: 'header', alignment: 'center' as const, margin: [0, 0, 0, 20] },
+          { text: `تاريخ التقرير: ${formatDate(new Date())}`, style: 'subheader', alignment: 'center' as const, margin: [0, 0, 0, 30] },
+          { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1, lineColor: '#e0e0e0' }], margin: [0, 0, 0, 20] },
+          { text: 'معلومات المقال', style: 'sectionHeader', margin: [0, 0, 0, 15] },
+          {
+            table: {
+              widths: ['35%', '65%'],
+              body: [
+                [{ text: 'العنوان', style: 'tableHeader', alignment: 'right' as const }, { text: article.title || 'غير متوفر', alignment: 'right' as const }],
+                [{ text: 'التصنيف', style: 'tableHeader', alignment: 'right' as const }, { text: article.categoryName || 'غير محدد', alignment: 'right' as const }],
+                [{ text: 'الكاتب', style: 'tableHeader', alignment: 'right' as const }, { text: [article.authorFirstName, article.authorLastName].filter(Boolean).join(' ') || 'غير محدد', alignment: 'right' as const }],
+                [{ text: 'الحالة', style: 'tableHeader', alignment: 'right' as const }, { text: article.status === 'published' ? 'منشور' : article.status === 'draft' ? 'مسودة' : 'مؤرشف', alignment: 'right' as const }],
+                [{ text: 'تاريخ النشر', style: 'tableHeader', alignment: 'right' as const }, { text: formatDate(article.publishedAt), alignment: 'right' as const }],
+                [{ text: 'عدد الكلمات', style: 'tableHeader', alignment: 'right' as const }, { text: wordCount.toLocaleString('ar-SA'), alignment: 'right' as const }],
+              ]
+            },
+            layout: { hLineWidth: () => 0.5, vLineWidth: () => 0.5, hLineColor: () => '#e0e0e0', vLineColor: () => '#e0e0e0', paddingLeft: () => 10, paddingRight: () => 10, paddingTop: () => 8, paddingBottom: () => 8 },
+            margin: [0, 0, 0, 25]
+          },
+          { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1, lineColor: '#e0e0e0' }], margin: [0, 0, 0, 20] },
+          { text: 'إحصائيات التفاعل', style: 'sectionHeader', margin: [0, 0, 0, 15] },
+          {
+            columns: [
+              { width: '*', stack: [{ text: 'المشاهدات', style: 'statLabel', alignment: 'center' as const }, { text: (article.views || 0).toLocaleString('ar-SA'), style: 'statValue', alignment: 'center' as const, color: '#3B82F6' }], margin: [0, 0, 10, 0] },
+              { width: '*', stack: [{ text: 'الإعجابات', style: 'statLabel', alignment: 'center' as const }, { text: (likesResult?.count || 0).toLocaleString('ar-SA'), style: 'statValue', alignment: 'center' as const, color: '#EC4899' }], margin: [0, 0, 10, 0] },
+              { width: '*', stack: [{ text: 'الحفظ', style: 'statLabel', alignment: 'center' as const }, { text: (bookmarksResult?.count || 0).toLocaleString('ar-SA'), style: 'statValue', alignment: 'center' as const, color: '#8B5CF6' }], margin: [0, 0, 10, 0] },
+              { width: '*', stack: [{ text: 'المشاركات', style: 'statLabel', alignment: 'center' as const }, { text: (sharesResult?.count || 0).toLocaleString('ar-SA'), style: 'statValue', alignment: 'center' as const, color: '#10B981' }] }
+            ],
+            margin: [0, 0, 0, 20]
+          },
+          {
+            columns: [
+              { width: '*', stack: [{ text: 'التعليقات', style: 'statLabel', alignment: 'center' as const }, { text: totalComments.toLocaleString('ar-SA'), style: 'statValue', alignment: 'center' as const, color: '#F97316' }], margin: [0, 0, 10, 0] },
+              { width: '*', stack: [{ text: 'متوسط وقت القراءة', style: 'statLabel', alignment: 'center' as const }, { text: readingStats?.avgReadingTime > 0 ? `${readingStats.avgReadingTime.toFixed(1)} دقيقة` : 'لا توجد بيانات', style: 'statValue', alignment: 'center' as const, color: '#6366F1' }], margin: [0, 0, 10, 0] },
+              { width: '*', stack: [{ text: 'إجمالي القراء', style: 'statLabel', alignment: 'center' as const }, { text: (readingStats?.totalReaders || 0).toLocaleString('ar-SA'), style: 'statValue', alignment: 'center' as const, color: '#0EA5E9' }] }
+            ],
+            margin: [0, 0, 0, 25]
+          },
+          { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1, lineColor: '#e0e0e0' }], margin: [0, 0, 0, 20] },
+          { text: 'تفصيل التعليقات', style: 'sectionHeader', margin: [0, 0, 0, 15] },
+          {
+            table: {
+              widths: ['*', '*', '*', '*'],
+              body: [
+                [
+                  { text: 'موافق عليها', style: 'tableHeader', alignment: 'center' as const, fillColor: '#D1FAE5' },
+                  { text: 'قيد المراجعة', style: 'tableHeader', alignment: 'center' as const, fillColor: '#FEF3C7' },
+                  { text: 'مرفوضة', style: 'tableHeader', alignment: 'center' as const, fillColor: '#FEE2E2' },
+                  { text: 'مُبلغ عنها', style: 'tableHeader', alignment: 'center' as const, fillColor: '#FFEDD5' }
+                ],
+                [
+                  { text: (commentsBreakdown['approved'] || 0).toLocaleString('ar-SA'), alignment: 'center' as const, color: '#059669' },
+                  { text: (commentsBreakdown['pending'] || 0).toLocaleString('ar-SA'), alignment: 'center' as const, color: '#D97706' },
+                  { text: (commentsBreakdown['rejected'] || 0).toLocaleString('ar-SA'), alignment: 'center' as const, color: '#DC2626' },
+                  { text: (commentsBreakdown['flagged'] || 0).toLocaleString('ar-SA'), alignment: 'center' as const, color: '#EA580C' }
+                ]
+              ]
+            },
+            layout: { hLineWidth: () => 0.5, vLineWidth: () => 0.5, hLineColor: () => '#e0e0e0', vLineColor: () => '#e0e0e0', paddingLeft: () => 10, paddingRight: () => 10, paddingTop: () => 10, paddingBottom: () => 10 },
+            margin: [0, 0, 0, 25]
+          },
+          { text: '---', alignment: 'center' as const, color: '#9CA3AF', margin: [0, 30, 0, 10] },
+          { text: 'تم إنشاء هذا التقرير تلقائياً من نظام سبق الذكي', style: 'footer', alignment: 'center' as const, color: '#6B7280' }
+        ],
+        styles: {
+          header: { fontSize: 22, bold: true, color: '#1F2937' },
+          subheader: { fontSize: 11, color: '#6B7280' },
+          sectionHeader: { fontSize: 14, bold: true, color: '#374151' },
+          tableHeader: { fontSize: 10, bold: true, color: '#4B5563' },
+          statLabel: { fontSize: 10, color: '#6B7280' },
+          statValue: { fontSize: 18, bold: true },
+          footer: { fontSize: 9 }
+        }
+      };
+
+      // Generate PDF
+      const pdfDoc = printer.createPdfKitDocument(docDefinition);
+      
+      // Set response headers
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="article-analytics-${article.slug}.pdf"`);
+
+      // Pipe PDF to response
+      pdfDoc.pipe(res);
+      pdfDoc.end();
+
+    } catch (error) {
+      console.error("Error exporting article analytics PDF:", error);
+      res.status(500).json({ message: "Failed to export article analytics" });
+    }
+  });
+
+
 
   // ============================================================
   // ADMIN ACTIVITY LOGS ROUTES
