@@ -7011,14 +7011,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const whereConditions = [];
 
       if (query) {
+        // Improved search - include title, excerpt, and content
+        const searchQuery = query.trim();
         whereConditions.push(
           or(
-            ilike(articles.title, `%${query}%`),
-            ilike(articles.excerpt, `%${query}%`)
+            ilike(articles.title, `%${searchQuery}%`),
+            ilike(articles.excerpt, `%${searchQuery}%`),
+            ilike(articles.content, `%${searchQuery}%`)
           )
         );
       }
-
       if (categoryId) {
         whereConditions.push(eq(articles.categoryId, categoryId));
       }
@@ -7212,17 +7214,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .select({ count: sql<number>`COUNT(*)::int` })
         .from(articles)
         .where(whereConditions.length > 0 ? and(...whereConditions) : undefined);
-
       res.json({
         articles: sortedArticles,
-        hasMore,
-        totalCount: totalCount || 0,
-        offset: offsetNum,
-        limit: limitNum
+        pagination: {
+          hasMore,
+          totalCount: totalCount || 0,
+          offset: offsetNum,
+          limit: limitNum
+        }
       });
 
     } catch (error) {
-      console.error("Error fetching article analytics:", error);
       res.status(500).json({ message: "Failed to fetch article analytics" });
     }
   });
@@ -7625,7 +7627,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Set response headers
       res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="article-analytics-${article.slug}.pdf"`);
+      res.setHeader('Content-Disposition', `attachment; filename="article-analytics-${article.slug || 'report'}.pdf"`);
+
+      // Handle PDF stream errors
+      pdfDoc.on('error', (err: Error) => {
+        console.error("PDF generation stream error:", err);
+        if (!res.headersSent) {
+          res.status(500).json({ message: "Failed to generate PDF" });
+        }
+      });
 
       // Pipe PDF to response
       pdfDoc.pipe(res);
@@ -7633,10 +7643,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error("Error exporting article analytics PDF:", error);
-      res.status(500).json({ message: "Failed to export article analytics" });
+      if (!res.headersSent) {
+        res.status(500).json({ message: "Failed to export article analytics" });
+      }
     }
   });
-
 
 
   // ============================================================
