@@ -42,6 +42,7 @@ import pLimit from 'p-limit';
 import { db } from "./db";
 import { eq, and, or, desc, asc, ilike, sql, inArray, gte, lt, lte, aliasedTable, isNull, ne, not, isNotNull } from "drizzle-orm";
 import bcrypt from "bcrypt";
+import path from "path";
 import passport from "passport";
 import multer from "multer";
 
@@ -7530,16 +7531,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       // Use pdfmake for PDF generation with Arabic font support
-      const PdfPrinter = require('pdfmake');
-      const path = require('path');
+      const { default: PdfPrinter } = await import('pdfmake');
+      
       
       // Use NotoSansArabic font for Arabic RTL support
       const fonts = {
         NotoSansArabic: {
-          normal: path.join(__dirname, 'fonts', 'NotoSansArabic-Regular.ttf'),
-          bold: path.join(__dirname, 'fonts', 'NotoSansArabic-Bold.ttf'),
-          italics: path.join(__dirname, 'fonts', 'NotoSansArabic-Regular.ttf'),
-          bolditalics: path.join(__dirname, 'fonts', 'NotoSansArabic-Bold.ttf')
+          normal: path.join(import.meta.dirname, 'fonts', 'NotoSansArabic-Regular.ttf'),
+          bold: path.join(import.meta.dirname, 'fonts', 'NotoSansArabic-Bold.ttf'),
+          italics: path.join(import.meta.dirname, 'fonts', 'NotoSansArabic-Regular.ttf'),
+          bolditalics: path.join(import.meta.dirname, 'fonts', 'NotoSansArabic-Bold.ttf')
         }
       };
       const printer = new PdfPrinter(fonts);

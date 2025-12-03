@@ -813,7 +813,7 @@ export default function ArticleAnalyticsDashboard() {
                     onExportPDF={handleExportPDF}
                   />
                 ) : (
-                  <div className="text-center py-12 text-muted-foreground">
+                  <div dir="rtl" className="text-center py-12 text-muted-foreground">
                     <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p>اختر مقالاً من القائمة</p>
                     <p className="text-sm">لعرض الإحصائيات التفصيلية</p>
