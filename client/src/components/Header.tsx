@@ -6,6 +6,7 @@ import { AccessibilitySettings } from "./AccessibilitySettings";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { AdSlot } from "./AdSlot";
 import HeaderMascot from "./HeaderMascot";
+import { NotificationBell } from "./NotificationBell";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -175,6 +176,9 @@ export function Header({ user, onMenuClick }: HeaderProps) {
               <AccessibilitySettings variant="mobile" />
               <LanguageSwitcher />
               <ThemeToggle />
+              
+              {/* Notification Bell - Mobile */}
+              {user && <NotificationBell />}
 
               {user ? (
                 <DropdownMenu>
@@ -266,6 +270,9 @@ export function Header({ user, onMenuClick }: HeaderProps) {
               <AccessibilitySettings variant="desktop" />
               <LanguageSwitcher />
               <ThemeToggle />
+              
+              {/* Notification Bell - Desktop */}
+              {user && <NotificationBell />}
 
               {user ? (
                 <DropdownMenu>
