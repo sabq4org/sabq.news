@@ -7637,7 +7637,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("[PDF Export] PDF document created, setting headers...");
       // Set response headers
       res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="article-analytics-${article.slug || 'report'}.pdf"`);
+      // Use ASCII-safe filename for HTTP headers
+      const safeFilename = (article.slug || "report").replace(/[^a-zA-Z0-9-_]/g, "_");
+      res.setHeader("Content-Disposition", `attachment; filename="article-analytics-${safeFilename}.pdf"`);
 
       // Handle PDF stream errors
       pdfDoc.on('error', (err: Error) => {
