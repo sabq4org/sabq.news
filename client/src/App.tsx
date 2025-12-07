@@ -199,6 +199,7 @@ import IFoxAITasks from "@/pages/admin/ifox/IFoxAITasks";
 import AIManagementDashboard from "@/pages/admin/ifox/ai-management";
 import ImageStudio from "@/pages/ifox/ImageStudio";
 import InfographicStudio from "@/pages/InfographicStudio";
+import LiteFeedPage from "@/pages/lite/LiteFeedPage";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -284,6 +285,7 @@ function Router() {
       <Route path="/opinion/:slug" component={OpinionDetailPage} />
       <Route path="/categories" component={CategoriesListPage} />
       <Route path="/shorts" component={ShortsPage} />
+      <Route path="/lite" component={LiteFeedPage} />
       <Route path="/login" component={Login} />
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/register" component={Register} />
