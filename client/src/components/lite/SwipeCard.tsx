@@ -78,7 +78,7 @@ export function SwipeCard({ article, onSwipeUp, onSwipeDown, isTop, canGoBack }:
       >
         <div className="h-full w-full overflow-hidden bg-black touch-pan-y relative">
           {imageUrl ? (
-            <div className="absolute top-0 left-0 right-0 h-[55%]">
+            <div className="absolute top-0 left-0 right-0 h-[45%]">
               <img
                 src={imageUrl}
                 alt={article.title}
@@ -89,7 +89,7 @@ export function SwipeCard({ article, onSwipeUp, onSwipeDown, isTop, canGoBack }:
               <div 
                 className="absolute inset-0" 
                 style={{ 
-                  background: 'linear-gradient(to bottom, transparent 0%, transparent 40%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,1) 100%)' 
+                  background: 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,0.7) 70%, rgba(0,0,0,1) 100%)' 
                 }} 
               />
             </div>
@@ -129,7 +129,7 @@ export function SwipeCard({ article, onSwipeUp, onSwipeDown, isTop, canGoBack }:
 
             <button
               onClick={() => setShowDetails(true)}
-              className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white font-medium rounded-full px-8 py-3 text-base transition-colors"
+              className="bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white/80 font-medium rounded-full px-8 py-3 text-base transition-colors"
               data-testid="button-read-details"
             >
               اقرأ التفاصيل
