@@ -61,19 +61,21 @@ export function SwipeCard({ article, onSwipeUp, onSwipeDown, isTop, canGoBack }:
       >
         <div className="h-full w-full overflow-hidden bg-black touch-pan-y">
           {imageUrl ? (
-            <img
-              src={imageUrl}
-              alt={article.title}
-              className="w-full h-full object-cover object-top"
-              draggable={false}
-            />
+            <div className="absolute inset-x-4 top-16 bottom-[55%] rounded-xl overflow-hidden">
+              <img
+                src={imageUrl}
+                alt={article.title}
+                className="w-full h-full object-cover object-center"
+                draggable={false}
+              />
+            </div>
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-800" />
+            <div className="absolute inset-x-4 top-16 bottom-[55%] rounded-xl overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800" />
           )}
           
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-black/20" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
 
-          <div className="absolute inset-x-0 bottom-32 p-6" dir="rtl">
+          <div className="absolute inset-x-0 top-[45%] bottom-0 p-6" dir="rtl">
             <div className="flex items-center gap-3 mb-4">
               {article.category && (
                 <span 
