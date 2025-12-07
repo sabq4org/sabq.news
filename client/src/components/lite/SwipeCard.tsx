@@ -1,5 +1,5 @@
 import { motion, useMotionValue, useTransform, PanInfo, AnimatePresence } from "framer-motion";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Clock, Eye, Share2, Bookmark, ChevronDown, ChevronLeft } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
@@ -12,6 +12,20 @@ type ArticleWithDetails = Article & {
   commentsCount?: number;
   reactionsCount?: number;
 };
+
+function getOptimizedImageUrl(url: string | null | undefined): string {
+  if (!url) return '';
+  
+  if (url.includes('/public-objects/')) {
+    const pathMatch = url.match(/\/public-objects\/(.+)/);
+    if (pathMatch) {
+      const imagePath = pathMatch[1];
+      return `/api/images/optimize?path=${encodeURIComponent(imagePath)}&w=1080&q=70&f=webp`;
+    }
+  }
+  
+  return url;
+}
 
 interface SwipeCardProps {
   article: ArticleWithDetails;
@@ -40,7 +54,8 @@ export function SwipeCard({ article, onSwipeUp, onSwipeDown, isTop, canGoBack }:
     [onSwipeUp, onSwipeDown, canGoBack]
   );
 
-  const imageUrl = article.imageUrl || article.thumbnailUrl;
+  const rawImageUrl = article.imageUrl || article.thumbnailUrl;
+  const imageUrl = useMemo(() => getOptimizedImageUrl(rawImageUrl), [rawImageUrl]);
   const publishedDate = article.publishedAt ? new Date(article.publishedAt) : new Date();
   const smartSummary = article.aiSummary || article.excerpt;
   
