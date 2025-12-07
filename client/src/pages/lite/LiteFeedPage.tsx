@@ -121,10 +121,6 @@ export default function LiteFeedPage() {
         />
       </div>
 
-      <div className="absolute top-4 left-4 z-20 text-white/60 text-sm">
-        {currentIndex + 1} / {sortedArticles.length}
-      </div>
-
       <div className="flex-1 relative">
         <AnimatePresence mode="popLayout">
           {visibleArticles.map((article, index) => (
