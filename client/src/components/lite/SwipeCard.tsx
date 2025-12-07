@@ -5,6 +5,7 @@ import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import type { Article, Category, User } from "@shared/schema";
+import sabqLogo from "@assets/sabq-logo.png";
 
 type ArticleWithDetails = Article & {
   category?: Category;
@@ -61,26 +62,63 @@ export function SwipeCard({ article, onSwipeUp, onSwipeDown, isTop, canGoBack }:
         transition={{ duration: 0 }}
         data-testid={`swipe-card-${article.id}`}
       >
-        <div className="h-full w-full overflow-hidden bg-black touch-pan-y">
-          {imageUrl ? (
-            <img
-              src={imageUrl}
-              alt={article.title}
-              className="w-full h-full object-cover"
-              draggable={false}
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-800" />
-          )}
+        <div className="h-full w-full overflow-hidden bg-black touch-pan-y flex flex-col">
+          {/* الصورة الأصلية في الأعلى */}
+          <div className="relative h-[45%] w-full flex-shrink-0">
+            {imageUrl ? (
+              <img
+                src={imageUrl}
+                alt={article.title}
+                className="w-full h-full object-cover"
+                draggable={false}
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-800" />
+            )}
+          </div>
           
-          <div 
-            className="absolute inset-0" 
-            style={{ 
-              background: 'linear-gradient(to bottom, transparent 32%, rgba(0,0,0,0.85) 58%, rgba(0,0,0,1) 100%)' 
-            }} 
+          {/* شعار سبق */}
+          <img 
+            src={sabqLogo} 
+            alt="Sabq" 
+            className="absolute top-4 right-4 h-8 w-auto z-20"
+            draggable={false}
           />
+          
+          {/* انعكاس الصورة */}
+          <div className="relative h-[20%] w-full flex-shrink-0 overflow-hidden">
+            {imageUrl ? (
+              <img
+                src={imageUrl}
+                alt=""
+                className="w-full h-full object-cover"
+                style={{ 
+                  transform: 'scaleY(-1)',
+                  transformOrigin: 'top',
+                  objectPosition: 'bottom'
+                }}
+                draggable={false}
+              />
+            ) : (
+              <div 
+                className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-800"
+                style={{ transform: 'scaleY(-1)' }}
+              />
+            )}
+            {/* تدرج فوق الانعكاس */}
+            <div 
+              className="absolute inset-0"
+              style={{
+                background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.9) 70%, rgba(0,0,0,1) 100%)'
+              }}
+            />
+          </div>
 
-          <div className="absolute inset-x-0 top-[42%] bottom-0 px-5" dir="rtl">
+          {/* خلفية سوداء للمحتوى */}
+          <div className="flex-1 bg-black" />
+
+          {/* المحتوى */}
+          <div className="absolute inset-x-0 top-[52%] bottom-0 px-5 flex flex-col" dir="rtl">
             <div className="flex items-center gap-2 mb-3">
               {article.category && (
                 <span 
