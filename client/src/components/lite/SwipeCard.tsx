@@ -73,7 +73,7 @@ export function SwipeCard({ article, onSwipeUp, onSwipeDown, isTop, canGoBack }:
             <div className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-800" />
           )}
           
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+          <div className="absolute inset-x-0 top-[35%] bottom-0 bg-gradient-to-b from-transparent via-black/80 to-black" />
 
           <div className="absolute inset-x-0 top-[42%] bottom-0 px-5" dir="rtl">
             <div className="flex items-center gap-2 mb-3">
