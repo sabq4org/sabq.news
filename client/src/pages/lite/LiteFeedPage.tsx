@@ -142,7 +142,9 @@ export default function LiteFeedPage() {
         {currentIndex >= sortedArticles.length - 1 && (
           <div className="absolute inset-0 flex items-center justify-center bg-black z-20" dir="rtl">
             <div className="text-center p-8">
-              <div className="text-6xl mb-4">🎉</div>
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-primary/20 flex items-center justify-center">
+                <Newspaper className="h-10 w-10 text-primary" />
+              </div>
               <h2 className="text-2xl text-white font-bold mb-2">أحسنت!</h2>
               <p className="text-white/70 mb-6">
                 لقد قرأت {sortedArticles.length} خبراً
