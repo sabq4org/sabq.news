@@ -28,7 +28,7 @@ export default function LiteFeedPage() {
   const [viewedIds, setViewedIds] = useState<Set<string>>(new Set());
 
   const { data: articles = [], isLoading, refetch, isFetching } = useQuery<ArticleWithDetails[]>({
-    queryKey: ["/api/articles", { status: "published", limit: 50, orderBy: "newest" }],
+    queryKey: ["/api/articles?status=published&limit=50&orderBy=newest"],
   });
 
   const sortedArticles = [...articles].sort((a, b) => {
