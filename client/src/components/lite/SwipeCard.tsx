@@ -110,13 +110,13 @@ export function SwipeCard({ article, onSwipeUp, onSwipeDown, isTop, canGoBack }:
               </p>
             )}
 
-            <Button
+            <button
               onClick={() => setShowDetails(true)}
-              className="bg-white/15 backdrop-blur-sm hover:bg-white/25 text-white border-0 rounded-full px-8 py-3 text-base"
+              className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white font-medium rounded-full px-8 py-3 text-base transition-colors"
               data-testid="button-read-details"
             >
               اقرأ التفاصيل
-            </Button>
+            </button>
           </div>
 
           {isTop && (
