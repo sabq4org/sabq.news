@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Article, Category, User } from "@shared/schema";
+import sabqLogo from "@assets/sabq-logo.png";
 
 type ArticleWithDetails = Article & {
   category?: Category;
@@ -111,7 +112,16 @@ export default function LiteFeedPage() {
         />
       </div>
 
-      <div className="absolute top-3 right-3 z-20 text-white/60 text-sm" dir="rtl">
+      <div className="absolute top-4 right-4 z-20">
+        <img 
+          src={sabqLogo} 
+          alt="سبق" 
+          className="h-8 w-auto"
+          data-testid="img-sabq-logo"
+        />
+      </div>
+
+      <div className="absolute top-4 left-4 z-20 text-white/60 text-sm">
         {currentIndex + 1} / {sortedArticles.length}
       </div>
 
