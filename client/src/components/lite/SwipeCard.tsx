@@ -1,6 +1,6 @@
 import { motion, useMotionValue, useTransform, PanInfo, AnimatePresence } from "framer-motion";
 import { useState, useCallback } from "react";
-import { Clock, Eye, X, Share2, Bookmark, ChevronDown } from "lucide-react";
+import { Clock, Eye, Share2, Bookmark, ChevronDown } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
@@ -15,32 +15,28 @@ type ArticleWithDetails = Article & {
 
 interface SwipeCardProps {
   article: ArticleWithDetails;
-  onSwipeLeft: () => void;
-  onSwipeRight: () => void;
+  onSwipeUp: () => void;
   isTop: boolean;
 }
 
-export function SwipeCard({ article, onSwipeLeft, onSwipeRight, isTop }: SwipeCardProps) {
+export function SwipeCard({ article, onSwipeUp, isTop }: SwipeCardProps) {
   const [showDetails, setShowDetails] = useState(false);
-  const [exitX, setExitX] = useState<number>(0);
-  const x = useMotionValue(0);
-  const rotate = useTransform(x, [-200, 200], [-8, 8]);
-  const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0.5, 1, 1, 1, 0.5]);
+  const [exitY, setExitY] = useState<number>(0);
+  const y = useMotionValue(0);
+  const scale = useTransform(y, [-200, 0], [0.95, 1]);
+  const opacity = useTransform(y, [-300, -150, 0], [0, 0.8, 1]);
 
   const handleDragEnd = useCallback(
     (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
       const swipeThreshold = 80;
       const swipeVelocity = 400;
 
-      if (info.offset.x > swipeThreshold || info.velocity.x > swipeVelocity) {
-        setExitX(400);
-        onSwipeRight();
-      } else if (info.offset.x < -swipeThreshold || info.velocity.x < -swipeVelocity) {
-        setExitX(-400);
-        onSwipeLeft();
+      if (info.offset.y < -swipeThreshold || info.velocity.y < -swipeVelocity) {
+        setExitY(-800);
+        onSwipeUp();
       }
     },
-    [onSwipeLeft, onSwipeRight]
+    [onSwipeUp]
   );
 
   const imageUrl = article.imageUrl || article.thumbnailUrl;
@@ -51,18 +47,18 @@ export function SwipeCard({ article, onSwipeLeft, onSwipeRight, isTop }: SwipeCa
     <>
       <motion.div
         className={`absolute inset-0 cursor-grab active:cursor-grabbing ${isTop ? 'z-10' : 'z-0'}`}
-        style={{ x, rotate, opacity }}
-        drag={isTop ? "x" : false}
-        dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.7}
+        style={{ y, scale, opacity }}
+        drag={isTop ? "y" : false}
+        dragConstraints={{ top: 0, bottom: 0 }}
+        dragElastic={0.5}
         onDragEnd={handleDragEnd}
-        initial={{ scale: isTop ? 1 : 0.95, y: isTop ? 0 : 20 }}
+        initial={{ scale: isTop ? 1 : 0.9, y: isTop ? 0 : 40, opacity: isTop ? 1 : 0.5 }}
         animate={{ 
-          scale: isTop ? 1 : 0.95, 
-          y: isTop ? 0 : 20,
-          x: exitX 
+          scale: isTop ? 1 : 0.9, 
+          y: exitY || (isTop ? 0 : 40),
+          opacity: isTop ? 1 : 0.5
         }}
-        exit={{ x: exitX, opacity: 0 }}
+        exit={{ y: exitY || -800, opacity: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         data-testid={`swipe-card-${article.id}`}
       >
@@ -114,6 +110,17 @@ export function SwipeCard({ article, onSwipeLeft, onSwipeRight, isTop }: SwipeCa
             >
               اقرأ التفاصيل
             </Button>
+          </div>
+
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+            <motion.div
+              className="text-white/30 text-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: isTop ? 1 : 0 }}
+            >
+              <ChevronDown className="h-8 w-8 mx-auto rotate-180 animate-bounce" />
+              <span className="text-xs">اسحب للأعلى</span>
+            </motion.div>
           </div>
         </div>
       </motion.div>

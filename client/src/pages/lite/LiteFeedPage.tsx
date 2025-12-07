@@ -2,15 +2,15 @@ import { useState, useCallback, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence } from "framer-motion";
 import { SwipeCard } from "@/components/lite/SwipeCard";
-import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Newspaper, 
   Bookmark, 
   Share2, 
-  ChevronLeft, 
-  ChevronRight,
+  ChevronUp, 
+  ChevronDown,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  Home
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
@@ -25,7 +25,6 @@ type ArticleWithDetails = Article & {
 
 export default function LiteFeedPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [viewedIds, setViewedIds] = useState<Set<string>>(new Set());
 
   const { data: articles = [], isLoading, refetch, isFetching } = useQuery<ArticleWithDetails[]>({
     queryKey: ["/api/articles?status=published&limit=50&orderBy=newest"],
@@ -37,25 +36,11 @@ export default function LiteFeedPage() {
     return dateB - dateA;
   });
 
-  const handleSwipeLeft = useCallback(() => {
+  const handleSwipeUp = useCallback(() => {
     if (currentIndex < sortedArticles.length - 1) {
-      const currentArticle = sortedArticles[currentIndex];
-      if (currentArticle) {
-        setViewedIds(prev => new Set(prev).add(currentArticle.id));
-      }
       setCurrentIndex(prev => prev + 1);
     }
-  }, [currentIndex, sortedArticles]);
-
-  const handleSwipeRight = useCallback(() => {
-    if (currentIndex < sortedArticles.length - 1) {
-      const currentArticle = sortedArticles[currentIndex];
-      if (currentArticle) {
-        setViewedIds(prev => new Set(prev).add(currentArticle.id));
-      }
-      setCurrentIndex(prev => prev + 1);
-    }
-  }, [currentIndex, sortedArticles]);
+  }, [currentIndex, sortedArticles.length]);
 
   const goToPrevious = useCallback(() => {
     if (currentIndex > 0) {
@@ -71,15 +56,14 @@ export default function LiteFeedPage() {
 
   const handleRefresh = useCallback(() => {
     setCurrentIndex(0);
-    setViewedIds(new Set());
     refetch();
   }, [refetch]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft") {
+      if (e.key === "ArrowUp") {
         goToNext();
-      } else if (e.key === "ArrowRight") {
+      } else if (e.key === "ArrowDown") {
         goToPrevious();
       }
     };
@@ -123,7 +107,12 @@ export default function LiteFeedPage() {
         <div 
           className="h-full bg-primary transition-all duration-300"
           style={{ width: `${progress}%` }}
+          data-testid="progress-bar"
         />
+      </div>
+
+      <div className="absolute top-3 right-3 z-20 text-white/60 text-sm" dir="rtl">
+        {currentIndex + 1} / {sortedArticles.length}
       </div>
 
       <div className="flex-1 relative">
@@ -132,8 +121,7 @@ export default function LiteFeedPage() {
             <SwipeCard
               key={article.id}
               article={article}
-              onSwipeLeft={handleSwipeLeft}
-              onSwipeRight={handleSwipeRight}
+              onSwipeUp={handleSwipeUp}
               isTop={index === 0}
             />
           ))}
@@ -158,14 +146,14 @@ export default function LiteFeedPage() {
         )}
       </div>
 
-      <div className="bg-black/90 backdrop-blur-sm border-t border-white/10 px-4 py-3 z-30">
-        <div className="flex items-center justify-between max-w-md mx-auto">
+      <div className="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm border-t border-white/10 z-20">
+        <div className="flex items-center justify-around py-3 px-4">
           <Link href="/">
             <button 
               className="p-3 text-white/70 hover:text-white transition-colors"
               data-testid="nav-home"
             >
-              <Newspaper className="h-6 w-6" />
+              <Home className="h-6 w-6" />
             </button>
           </Link>
           
@@ -175,37 +163,31 @@ export default function LiteFeedPage() {
           >
             <Bookmark className="h-6 w-6" />
           </button>
-          
+
           <button 
             className="p-3 text-white/70 hover:text-white transition-colors"
             data-testid="nav-share"
           >
             <Share2 className="h-6 w-6" />
           </button>
-          
-          <button 
+
+          <button
             onClick={goToPrevious}
             disabled={currentIndex === 0}
             className="p-3 text-white/70 hover:text-white transition-colors disabled:opacity-30"
             data-testid="nav-previous"
           >
-            <ChevronLeft className="h-6 w-6" />
+            <ChevronDown className="h-6 w-6" />
           </button>
-          
-          <button 
+
+          <button
             onClick={goToNext}
             disabled={currentIndex >= sortedArticles.length - 1}
             className="p-3 text-white/70 hover:text-white transition-colors disabled:opacity-30"
             data-testid="nav-next"
           >
-            <ChevronRight className="h-6 w-6" />
+            <ChevronUp className="h-6 w-6" />
           </button>
-        </div>
-
-        <div className="text-center mt-2">
-          <span className="text-white/50 text-xs">
-            {currentIndex + 1} / {sortedArticles.length}
-          </span>
         </div>
       </div>
     </div>
