@@ -1,6 +1,6 @@
 import { motion, useMotionValue, useTransform, PanInfo, AnimatePresence } from "framer-motion";
 import { useState, useCallback } from "react";
-import { Clock, Eye, Share2, Bookmark, ChevronDown, ChevronUp } from "lucide-react";
+import { Clock, Eye, Share2, Bookmark, ChevronDown } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
@@ -53,22 +53,10 @@ export function SwipeCard({ article, onSwipeUp, onSwipeDown, isTop, canGoBack }:
         dragConstraints={{ top: -200, bottom: canGoBack ? 200 : 50 }}
         dragElastic={0.2}
         onDragEnd={handleDragEnd}
-        initial={{ y: isTop ? 0 : 100, opacity: isTop ? 1 : 0 }}
-        animate={{ 
-          y: 0,
-          opacity: isTop ? 1 : 0.4,
-          scale: isTop ? 1 : 0.92
-        }}
-        exit={{ 
-          y: -window.innerHeight,
-          opacity: 0,
-          transition: { duration: 0.4, ease: [0.32, 0.72, 0, 1] }
-        }}
-        transition={{ 
-          type: "tween",
-          duration: 0.4,
-          ease: [0.32, 0.72, 0, 1]
-        }}
+        initial={{ opacity: isTop ? 1 : 0 }}
+        animate={{ opacity: isTop ? 1 : 0 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0 }}
         data-testid={`swipe-card-${article.id}`}
       >
         <div className="h-full w-full overflow-hidden bg-black touch-pan-y">
@@ -83,7 +71,7 @@ export function SwipeCard({ article, onSwipeUp, onSwipeDown, isTop, canGoBack }:
           
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
 
-          <div className="absolute inset-x-0 bottom-0 p-6 pb-12 mb-8" dir="rtl">
+          <div className="absolute inset-x-0 bottom-24 p-6" dir="rtl">
             <div className="flex items-center gap-3 mb-4">
               {article.category && (
                 <span 
@@ -122,17 +110,6 @@ export function SwipeCard({ article, onSwipeUp, onSwipeDown, isTop, canGoBack }:
             </Button>
           </div>
 
-          {isTop && (
-            <div className="absolute top-1/3 left-1/2 -translate-x-1/2 pointer-events-none">
-              <motion.div
-                className="text-white/40 text-center"
-                animate={{ y: [0, -10, 0] }}
-                transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-              >
-                <ChevronUp className="h-8 w-8 mx-auto" />
-              </motion.div>
-            </div>
-          )}
         </div>
       </motion.div>
 
