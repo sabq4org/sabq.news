@@ -1,4 +1,4 @@
-import { motion, useMotionValue, useTransform, PanInfo, AnimatePresence } from "framer-motion";
+import { motion, useMotionValue, PanInfo, AnimatePresence } from "framer-motion";
 import { useState, useCallback, useMemo } from "react";
 import { Clock, Eye, Share2, Bookmark, ChevronDown, ChevronLeft } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -38,12 +38,11 @@ interface SwipeCardProps {
 export function SwipeCard({ article, onSwipeUp, onSwipeDown, isTop, canGoBack }: SwipeCardProps) {
   const [showDetails, setShowDetails] = useState(false);
   const y = useMotionValue(0);
-  const opacity = useTransform(y, [-300, 0, 300], [0.3, 1, 0.3]);
 
   const handleDragEnd = useCallback(
     (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-      const swipeThreshold = 80;
-      const swipeVelocity = 400;
+      const swipeThreshold = 60;
+      const swipeVelocity = 300;
 
       if (info.offset.y < -swipeThreshold || info.velocity.y < -swipeVelocity) {
         onSwipeUp();
@@ -65,15 +64,11 @@ export function SwipeCard({ article, onSwipeUp, onSwipeDown, isTop, canGoBack }:
     <>
       <motion.div
         className={`absolute inset-0 ${isTop ? 'z-10' : 'z-0'}`}
-        style={{ y: isTop ? y : 0, opacity: isTop ? opacity : 0.4 }}
+        style={{ y: isTop ? y : 0 }}
         drag={isTop ? "y" : false}
-        dragConstraints={{ top: -200, bottom: canGoBack ? 200 : 50 }}
-        dragElastic={0.2}
+        dragConstraints={{ top: -150, bottom: canGoBack ? 150 : 30 }}
+        dragElastic={0}
         onDragEnd={handleDragEnd}
-        initial={{ opacity: isTop ? 1 : 0 }}
-        animate={{ opacity: isTop ? 1 : 0 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0 }}
         data-testid={`swipe-card-${article.id}`}
       >
         <div className="h-full w-full overflow-hidden bg-black touch-pan-y relative">
