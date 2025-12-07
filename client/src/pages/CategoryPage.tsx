@@ -346,9 +346,9 @@ export default function CategoryPage() {
           {/* Dark gradient overlay for text readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30" />
           
-          {/* Text Overlay Content */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="container mx-auto px-3 sm:px-6 lg:px-8 text-center">
+          {/* Text Overlay Content - Right aligned to match logo */}
+          <div className="absolute inset-0 flex items-end pb-12">
+            <div className="container mx-auto px-3 sm:px-6 lg:px-8">
               {/* Icon */}
               {category.icon && (
                 <span className="text-5xl sm:text-6xl mb-4 block">{category.icon}</span>
@@ -361,7 +361,7 @@ export default function CategoryPage() {
               
               {/* Description */}
               {category.description && (
-                <p className="text-base sm:text-lg md:text-xl text-white/90 max-w-3xl mx-auto leading-relaxed drop-shadow-md">
+                <p className="text-base sm:text-lg md:text-xl text-white/90 max-w-3xl leading-relaxed drop-shadow-md">
                   {category.description}
                 </p>
               )}
@@ -371,10 +371,10 @@ export default function CategoryPage() {
                 <motion.div
                   animate={{ opacity: [1, 0.7, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
-                  className="mt-4 inline-block"
+                  className="mt-4"
                 >
                   <Badge
-                    className="flex items-center gap-1.5 min-h-8 px-4 py-2 text-sm bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 shadow-lg"
+                    className="flex items-center gap-1.5 min-h-8 px-4 py-2 text-sm bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 shadow-lg w-fit"
                     data-testid="badge-category-type"
                   >
                     <Brain className="h-4 w-4" />
