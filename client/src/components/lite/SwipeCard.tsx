@@ -76,24 +76,26 @@ export function SwipeCard({ article, onSwipeUp, onSwipeDown, isTop, canGoBack }:
         transition={{ duration: 0 }}
         data-testid={`swipe-card-${article.id}`}
       >
-        <div className="h-full w-full overflow-hidden bg-black touch-pan-y">
+        <div className="h-full w-full overflow-hidden bg-black touch-pan-y relative">
           {imageUrl ? (
-            <img
-              src={imageUrl}
-              alt={article.title}
-              className="w-full h-full object-cover"
-              draggable={false}
-            />
+            <div className="absolute top-0 left-0 right-0 h-[55%]">
+              <img
+                src={imageUrl}
+                alt={article.title}
+                className="w-full h-full object-cover"
+                style={{ objectPosition: 'center center' }}
+                draggable={false}
+              />
+              <div 
+                className="absolute inset-0" 
+                style={{ 
+                  background: 'linear-gradient(to bottom, transparent 0%, transparent 40%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,1) 100%)' 
+                }} 
+              />
+            </div>
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-800" />
           )}
-          
-          <div 
-            className="absolute inset-0" 
-            style={{ 
-              background: 'linear-gradient(to bottom, transparent 32%, rgba(0,0,0,0.85) 58%, rgba(0,0,0,1) 100%)' 
-            }} 
-          />
 
           <div className="absolute inset-x-0 top-[42%] bottom-0 px-5" dir="rtl">
             <div className="flex items-center gap-2 mb-3">
