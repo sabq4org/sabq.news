@@ -36,6 +36,12 @@ export default function LiteFeedPage() {
     }
   }, [currentIndex, sortedArticles.length]);
 
+  const handleSwipeDown = useCallback(() => {
+    if (currentIndex > 0) {
+      setCurrentIndex(prev => prev - 1);
+    }
+  }, [currentIndex]);
+
   const goToPrevious = useCallback(() => {
     if (currentIndex > 0) {
       setCurrentIndex(prev => prev - 1);
@@ -116,7 +122,9 @@ export default function LiteFeedPage() {
               key={article.id}
               article={article}
               onSwipeUp={handleSwipeUp}
+              onSwipeDown={handleSwipeDown}
               isTop={index === 0}
+              canGoBack={currentIndex > 0}
             />
           ))}
         </AnimatePresence>

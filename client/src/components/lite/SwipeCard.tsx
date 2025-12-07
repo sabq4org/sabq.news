@@ -16,24 +16,28 @@ type ArticleWithDetails = Article & {
 interface SwipeCardProps {
   article: ArticleWithDetails;
   onSwipeUp: () => void;
+  onSwipeDown: () => void;
   isTop: boolean;
+  canGoBack: boolean;
 }
 
-export function SwipeCard({ article, onSwipeUp, isTop }: SwipeCardProps) {
+export function SwipeCard({ article, onSwipeUp, onSwipeDown, isTop, canGoBack }: SwipeCardProps) {
   const [showDetails, setShowDetails] = useState(false);
   const y = useMotionValue(0);
-  const opacity = useTransform(y, [-300, 0], [0.3, 1]);
+  const opacity = useTransform(y, [-300, 0, 300], [0.3, 1, 0.3]);
 
   const handleDragEnd = useCallback(
     (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-      const swipeThreshold = 100;
-      const swipeVelocity = 500;
+      const swipeThreshold = 80;
+      const swipeVelocity = 400;
 
       if (info.offset.y < -swipeThreshold || info.velocity.y < -swipeVelocity) {
         onSwipeUp();
+      } else if ((info.offset.y > swipeThreshold || info.velocity.y > swipeVelocity) && canGoBack) {
+        onSwipeDown();
       }
     },
-    [onSwipeUp]
+    [onSwipeUp, onSwipeDown, canGoBack]
   );
 
   const imageUrl = article.imageUrl || article.thumbnailUrl;
@@ -46,7 +50,7 @@ export function SwipeCard({ article, onSwipeUp, isTop }: SwipeCardProps) {
         className={`absolute inset-0 ${isTop ? 'z-10' : 'z-0'}`}
         style={{ y: isTop ? y : 0, opacity: isTop ? opacity : 0.4 }}
         drag={isTop ? "y" : false}
-        dragConstraints={{ top: -200, bottom: 50 }}
+        dragConstraints={{ top: -200, bottom: canGoBack ? 200 : 50 }}
         dragElastic={0.2}
         onDragEnd={handleDragEnd}
         initial={{ y: isTop ? 0 : 100, opacity: isTop ? 1 : 0 }}
@@ -79,7 +83,7 @@ export function SwipeCard({ article, onSwipeUp, isTop }: SwipeCardProps) {
           
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
 
-          <div className="absolute inset-x-0 bottom-0 p-6 pb-8" dir="rtl">
+          <div className="absolute inset-x-0 bottom-0 p-6 pb-12 mb-8" dir="rtl">
             <div className="flex items-center gap-3 mb-4">
               {article.category && (
                 <span 
