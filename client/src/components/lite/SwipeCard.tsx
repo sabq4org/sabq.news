@@ -175,13 +175,13 @@ export function SwipeCard({ article, onSwipeUp, onSwipeDown, isTop, canGoBack }:
 
                   <div className="absolute bottom-4 left-4 flex gap-2">
                     <button 
-                      className="p-3 bg-white/20 backdrop-blur-sm rounded-full text-white"
+                      className="p-3 bg-black/40 backdrop-blur-sm rounded-full text-white/90"
                       data-testid="button-share"
                     >
                       <Share2 className="h-5 w-5" />
                     </button>
                     <button 
-                      className="p-3 bg-white/20 backdrop-blur-sm rounded-full text-white"
+                      className="p-3 bg-black/40 backdrop-blur-sm rounded-full text-white/90"
                       data-testid="button-bookmark"
                     >
                       <Bookmark className="h-5 w-5" />
