@@ -1,6 +1,6 @@
 import { motion, useMotionValue, useTransform, PanInfo, AnimatePresence } from "framer-motion";
 import { useState, useCallback } from "react";
-import { Clock, Eye, Share2, Bookmark, ChevronDown } from "lucide-react";
+import { Clock, Eye, Share2, Bookmark, ChevronDown, ChevronLeft } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,8 @@ export function SwipeCard({ article, onSwipeUp, onSwipeDown, isTop, canGoBack }:
   const imageUrl = article.imageUrl || article.thumbnailUrl;
   const publishedDate = article.publishedAt ? new Date(article.publishedAt) : new Date();
   const smartSummary = article.aiSummary || article.excerpt;
+  
+  const timeAgo = formatDistanceToNow(publishedDate, { addSuffix: false, locale: arSA });
 
   return (
     <>
@@ -71,10 +73,10 @@ export function SwipeCard({ article, onSwipeUp, onSwipeDown, isTop, canGoBack }:
             <div className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-800" />
           )}
           
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
 
-          <div className="absolute inset-x-0 top-[50%] bottom-0 p-6" dir="rtl">
-            <div className="flex items-center gap-3 mb-4">
+          <div className="absolute inset-x-0 top-[42%] bottom-0 px-5" dir="rtl">
+            <div className="flex items-center gap-2 mb-3">
               {article.category && (
                 <span 
                   className="px-3 py-1 rounded-full text-white text-sm font-medium"
@@ -84,34 +86,40 @@ export function SwipeCard({ article, onSwipeUp, onSwipeDown, isTop, canGoBack }:
                   {article.category.nameAr}
                 </span>
               )}
-              <span className="text-white/70 text-sm flex items-center gap-1">
-                <Clock className="h-3.5 w-3.5" />
-                {formatDistanceToNow(publishedDate, { addSuffix: false, locale: arSA })}
+              <span className="text-white/60 text-sm flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {timeAgo}
               </span>
             </div>
 
             <h1 
-              className="text-2xl sm:text-3xl font-bold text-white leading-tight mb-4"
+              className="text-[26px] font-bold text-white leading-[1.4] mb-4"
               data-testid="text-article-title"
             >
               {article.title}
             </h1>
 
             {smartSummary && (
-              <p className="text-white/80 text-sm sm:text-base leading-relaxed line-clamp-3 mb-6">
+              <p className="text-white/75 text-[15px] leading-relaxed mb-6 line-clamp-4">
                 {smartSummary}
               </p>
             )}
 
             <Button
               onClick={() => setShowDetails(true)}
-              className="w-full bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white border border-white/30 rounded-full py-3"
+              className="bg-white/15 backdrop-blur-sm hover:bg-white/25 text-white border-0 rounded-full px-8 py-3 text-base"
               data-testid="button-read-details"
             >
               اقرأ التفاصيل
             </Button>
           </div>
 
+          {isTop && (
+            <div className="absolute bottom-24 left-5 flex items-center gap-2 text-white/50">
+              <ChevronLeft className="h-4 w-4" />
+              <span className="text-sm">اسحب</span>
+            </div>
+          )}
         </div>
       </motion.div>
 
