@@ -4,16 +4,10 @@ import { AnimatePresence } from "framer-motion";
 import { SwipeCard } from "@/components/lite/SwipeCard";
 import { 
   Newspaper, 
-  Bookmark, 
-  Share2, 
-  ChevronUp, 
-  ChevronDown,
   Loader2,
-  RefreshCw,
-  Home
+  RefreshCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "wouter";
 import type { Article, Category, User } from "@shared/schema";
 
 type ArticleWithDetails = Article & {
@@ -146,50 +140,6 @@ export default function LiteFeedPage() {
         )}
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm border-t border-white/10 z-20">
-        <div className="flex items-center justify-around py-3 px-4">
-          <Link href="/">
-            <button 
-              className="p-3 text-white/70 hover:text-white transition-colors"
-              data-testid="nav-home"
-            >
-              <Home className="h-6 w-6" />
-            </button>
-          </Link>
-          
-          <button 
-            className="p-3 text-white/70 hover:text-white transition-colors"
-            data-testid="nav-bookmarks"
-          >
-            <Bookmark className="h-6 w-6" />
-          </button>
-
-          <button 
-            className="p-3 text-white/70 hover:text-white transition-colors"
-            data-testid="nav-share"
-          >
-            <Share2 className="h-6 w-6" />
-          </button>
-
-          <button
-            onClick={goToPrevious}
-            disabled={currentIndex === 0}
-            className="p-3 text-white/70 hover:text-white transition-colors disabled:opacity-30"
-            data-testid="nav-previous"
-          >
-            <ChevronDown className="h-6 w-6" />
-          </button>
-
-          <button
-            onClick={goToNext}
-            disabled={currentIndex >= sortedArticles.length - 1}
-            className="p-3 text-white/70 hover:text-white transition-colors disabled:opacity-30"
-            data-testid="nav-next"
-          >
-            <ChevronUp className="h-6 w-6" />
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

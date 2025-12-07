@@ -1,6 +1,6 @@
 import { motion, useMotionValue, useTransform, PanInfo, AnimatePresence } from "framer-motion";
 import { useState, useCallback } from "react";
-import { Clock, Eye, Share2, Bookmark, ChevronDown } from "lucide-react";
+import { Clock, Eye, Share2, Bookmark, ChevronDown, ChevronUp } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
@@ -21,18 +21,15 @@ interface SwipeCardProps {
 
 export function SwipeCard({ article, onSwipeUp, isTop }: SwipeCardProps) {
   const [showDetails, setShowDetails] = useState(false);
-  const [exitY, setExitY] = useState<number>(0);
   const y = useMotionValue(0);
-  const scale = useTransform(y, [-200, 0], [0.95, 1]);
-  const opacity = useTransform(y, [-300, -150, 0], [0, 0.8, 1]);
+  const opacity = useTransform(y, [-300, 0], [0.3, 1]);
 
   const handleDragEnd = useCallback(
     (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-      const swipeThreshold = 80;
-      const swipeVelocity = 400;
+      const swipeThreshold = 100;
+      const swipeVelocity = 500;
 
       if (info.offset.y < -swipeThreshold || info.velocity.y < -swipeVelocity) {
-        setExitY(-800);
         onSwipeUp();
       }
     },
@@ -46,34 +43,43 @@ export function SwipeCard({ article, onSwipeUp, isTop }: SwipeCardProps) {
   return (
     <>
       <motion.div
-        className={`absolute inset-0 cursor-grab active:cursor-grabbing ${isTop ? 'z-10' : 'z-0'}`}
-        style={{ y, scale, opacity }}
+        className={`absolute inset-0 ${isTop ? 'z-10' : 'z-0'}`}
+        style={{ y: isTop ? y : 0, opacity: isTop ? opacity : 0.4 }}
         drag={isTop ? "y" : false}
-        dragConstraints={{ top: 0, bottom: 0 }}
-        dragElastic={0.5}
+        dragConstraints={{ top: -200, bottom: 50 }}
+        dragElastic={0.2}
         onDragEnd={handleDragEnd}
-        initial={{ scale: isTop ? 1 : 0.9, y: isTop ? 0 : 40, opacity: isTop ? 1 : 0.5 }}
+        initial={{ y: isTop ? 0 : 100, opacity: isTop ? 1 : 0 }}
         animate={{ 
-          scale: isTop ? 1 : 0.9, 
-          y: exitY || (isTop ? 0 : 40),
-          opacity: isTop ? 1 : 0.5
+          y: 0,
+          opacity: isTop ? 1 : 0.4,
+          scale: isTop ? 1 : 0.92
         }}
-        exit={{ y: exitY || -800, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        exit={{ 
+          y: -window.innerHeight,
+          opacity: 0,
+          transition: { duration: 0.4, ease: [0.32, 0.72, 0, 1] }
+        }}
+        transition={{ 
+          type: "tween",
+          duration: 0.4,
+          ease: [0.32, 0.72, 0, 1]
+        }}
         data-testid={`swipe-card-${article.id}`}
       >
-        <div className="h-full w-full overflow-hidden bg-black">
+        <div className="h-full w-full overflow-hidden bg-black touch-pan-y">
           {imageUrl && (
             <img
               src={imageUrl}
               alt={article.title}
               className="w-full h-full object-cover"
+              draggable={false}
             />
           )}
           
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
 
-          <div className="absolute inset-x-0 bottom-0 p-6 pb-24" dir="rtl">
+          <div className="absolute inset-x-0 bottom-0 p-6 pb-8" dir="rtl">
             <div className="flex items-center gap-3 mb-4">
               {article.category && (
                 <span 
@@ -112,16 +118,17 @@ export function SwipeCard({ article, onSwipeUp, isTop }: SwipeCardProps) {
             </Button>
           </div>
 
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-            <motion.div
-              className="text-white/30 text-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: isTop ? 1 : 0 }}
-            >
-              <ChevronDown className="h-8 w-8 mx-auto rotate-180 animate-bounce" />
-              <span className="text-xs">اسحب للأعلى</span>
-            </motion.div>
-          </div>
+          {isTop && (
+            <div className="absolute top-1/3 left-1/2 -translate-x-1/2 pointer-events-none">
+              <motion.div
+                className="text-white/40 text-center"
+                animate={{ y: [0, -10, 0] }}
+                transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+              >
+                <ChevronUp className="h-8 w-8 mx-auto" />
+              </motion.div>
+            </div>
+          )}
         </div>
       </motion.div>
 
@@ -132,7 +139,7 @@ export function SwipeCard({ article, onSwipeUp, isTop }: SwipeCardProps) {
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
-            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+            transition={{ type: "tween", duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
             dir="rtl"
           >
             <div className="h-full overflow-y-auto">
