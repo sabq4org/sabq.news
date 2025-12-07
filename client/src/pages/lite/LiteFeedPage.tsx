@@ -100,18 +100,9 @@ export default function LiteFeedPage() {
   }
 
   const visibleArticles = sortedArticles.slice(currentIndex, currentIndex + 2);
-  const progress = ((currentIndex + 1) / sortedArticles.length) * 100;
 
   return (
     <div className="h-screen w-screen bg-black overflow-hidden flex flex-col">
-      <div className="absolute top-0 left-0 right-0 h-1 bg-white/20 z-20">
-        <div 
-          className="h-full bg-primary transition-all duration-300"
-          style={{ width: `${progress}%` }}
-          data-testid="progress-bar"
-        />
-      </div>
-
       <div className="absolute top-4 right-4 z-20">
         <img 
           src={sabqLogo} 
