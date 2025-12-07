@@ -45,6 +45,24 @@ const app = express();
 // Trust proxy - important for rate limiting to work correctly behind proxies
 app.set("trust proxy", 1);
 
+// Health check endpoints BEFORE CORS - critical for deployment health probes
+app.get("/health", (_req, res) => {
+  res.status(200).json({ 
+    status: "ok", 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || "development",
+    database: process.env.DATABASE_URL ? "configured" : "missing"
+  });
+});
+
+app.get("/ready", (_req, res) => {
+  res.status(200).json({ 
+    status: "ready",
+    server: "running",
+    timestamp: new Date().toISOString()
+  });
+});
+
 // CORS Configuration
 const allowedOrigins = (process.env.ALLOWED_ORIGINS?.split(',') || [])
   .concat(
@@ -63,8 +81,13 @@ app.use(
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
       
-      // Strict origin matching - exact match only
-      const isAllowed = allowedOrigins.includes(origin);
+      // Normalize origin - remove port suffix for matching (handles :5000 suffix from health probes)
+      const normalizedOrigin = origin.replace(/:5000$/, '').replace(/:5001$/, '');
+      
+      // Check both exact match and normalized match (without port)
+      const isAllowed = allowedOrigins.includes(origin) || 
+                        allowedOrigins.includes(normalizedOrigin) ||
+                        allowedOrigins.some(allowed => allowed.replace(/:5000$/, '').replace(/:5001$/, '') === normalizedOrigin);
       
       if (isAllowed) {
         callback(null, true);
@@ -205,27 +228,6 @@ app.use((req, res, next) => {
 
 // Apply general rate limiter to all API routes
 app.use("/api", generalApiLimiter);
-
-// Health check endpoint - should be first to avoid middleware issues
-app.get("/health", (_req, res) => {
-  res.status(200).json({ 
-    status: "ok", 
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || "development",
-    database: process.env.DATABASE_URL ? "configured" : "missing"
-  });
-});
-
-// Readiness check - verifies server is running and can accept requests
-// IMPORTANT: This endpoint must respond QUICKLY for Autoscale deployments
-// Do NOT perform expensive database checks here
-app.get("/ready", (_req, res) => {
-  res.status(200).json({ 
-    status: "ready",
-    server: "running",
-    timestamp: new Date().toISOString()
-  });
-});
 
 app.use((req, res, next) => {
   const start = Date.now();
