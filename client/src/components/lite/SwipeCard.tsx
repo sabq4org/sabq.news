@@ -223,7 +223,7 @@ export function SwipeCard({
 
             <button
               onClick={() => setShowDetails(true)}
-              className="bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white/80 font-medium rounded-full px-8 py-3 text-base transition-colors"
+              className="bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white font-medium rounded-full px-8 py-3 text-base transition-colors"
               data-testid="button-read-details"
             >
               اقرأ التفاصيل
