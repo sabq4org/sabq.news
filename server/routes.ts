@@ -10204,6 +10204,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Track article view - no authentication required (for /lite swipe page)
+  app.post("/api/articles/:id/view", async (req: any, res) => {
+    try {
+      const articleId = req.params.id;
+      
+      if (!articleId) {
+        return res.status(400).json({ message: "معرف المقال مطلوب" });
+      }
+
+      // Increment views counter
+      await db.update(articles)
+        .set({ views: sql`${articles.views} + 1` })
+        .where(eq(articles.id, articleId));
+
+      // Also log for authenticated users
+      const userId = req.user?.id;
+      if (userId) {
+        try {
+          await storage.logBehavior({
+            userId,
+            eventType: "article_view",
+            metadata: { articleId },
+          });
+          
+          await trackUserEvent({
+            userId,
+            articleId,
+            eventType: "view",
+            metadata: {},
+          });
+        } catch (err) {
+          // Silent fail for behavior logging
+        }
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error tracking article view:", error);
+      res.status(500).json({ message: "فشل تسجيل المشاهدة" });
+    }
+  });
+
   app.post("/api/articles/:id/react", isAuthenticated, checkUserStatus(), async (req: any, res) => {
     try {
       const userId = req.user.id;

@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { useBehaviorTracking } from "@/hooks/useBehaviorTracking";
+import { apiRequest } from "@/lib/queryClient";
 import type { Article, Category, User } from "@shared/schema";
 import sabqLogo from "@assets/sabq-logo.png";
 
@@ -26,7 +26,6 @@ export default function LiteFeedPage() {
   const [isAnimating, setIsAnimating] = useState(false);
   const animationRef = useRef<number | null>(null);
   const viewDebounceRef = useRef<NodeJS.Timeout | null>(null);
-  const { logBehavior } = useBehaviorTracking();
 
   const { data: articles = [], isLoading, refetch } = useQuery<ArticleWithDetails[]>({
     queryKey: ["/api/articles?status=published&limit=50&orderBy=newest"],
@@ -163,7 +162,9 @@ export default function LiteFeedPage() {
     }
     
     viewDebounceRef.current = setTimeout(() => {
-      logBehavior("article_view", { articleId: String(currentArticleId) });
+      apiRequest(`/api/articles/${currentArticleId}/view`, {
+        method: "POST",
+      }).catch(() => {});
     }, 500);
     
     return () => {
@@ -171,7 +172,7 @@ export default function LiteFeedPage() {
         clearTimeout(viewDebounceRef.current);
       }
     };
-  }, [currentIndex, sortedArticles, logBehavior]);
+  }, [currentIndex, sortedArticles]);
 
   if (isLoading) {
     return (
