@@ -83,7 +83,6 @@ export function Header({ user, onMenuClick }: HeaderProps) {
     { name: "مقالات", href: "/opinion" },
     { name: "مُقترب", href: "/muqtarab" },
     { name: "لحظة بلحظة", href: "/moment-by-moment" },
-    { name: "تصفح سريع", href: "/lite", icon: Zap },
     { name: "SaudiSense", href: "https://saudisense.com", external: true },
     { name: "Riyadh X", href: "https://riyadhx.replit.app", external: true },
   ];
@@ -425,16 +424,6 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                 data-testid="link-mobile-muqtarab"
               >
                 مُقترب
-              </span>
-            </Link>
-            <Link href="/lite">
-              <span
-                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover-elevate active-elevate-2 cursor-pointer text-primary"
-                onClick={() => setMobileMenuOpen(false)}
-                data-testid="link-mobile-lite"
-              >
-                <Zap className="h-4 w-4" aria-hidden="true" />
-                تصفح سريع
               </span>
             </Link>
             <a
