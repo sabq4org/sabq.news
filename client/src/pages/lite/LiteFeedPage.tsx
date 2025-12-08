@@ -90,7 +90,7 @@ export default function LiteFeedPage() {
     sortedArticles.forEach((article, index) => {
       items.push({ type: 'article', data: article });
       
-      if ((index + 1) % 5 === 0 && index < sortedArticles.length - 1) {
+      if ((index + 1) % 4 === 0 && index < sortedArticles.length - 1) {
         const ad = activeAds[adIndex % activeAds.length];
         items.push({ type: 'ad', data: ad });
         adIndex++;
