@@ -25,6 +25,7 @@ Comprehensive on-demand image optimization for performance:
 - **OptimizedImage Component**: CSS gradient shimmer placeholders, automatic WebP detection, srcset/sizes support, IntersectionObserver lazy loading, preferSize hints for optimal delivery
 - **API Endpoints**: `/api/images/optimize?url=&w=&q=&f=` for on-demand optimization, `/api/images/srcset` for responsive sets
 - **Component Usage**: HeroCarousel uses large/medium/thumbnail, ArticleCard uses large/medium/small based on variant
+- **Lite Feed Pre-Optimization**: Automatic image optimization on article publish - generates 1080px WebP at quality 70, stored in `lite/` folder in Object Storage, path saved to `liteOptimizedImageUrl` field. SwipeCard component prefers pre-optimized image with fallback to on-demand optimization via `generateLiteOptimizedImage()` service.
 
 ### Feature Specifications
 -   **Authentication & Authorization:** Full Role-Based Access Control (RBAC) with 8 roles and hybrid authentication.
