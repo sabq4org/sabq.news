@@ -41,33 +41,17 @@ type LiteFeedAdsResponse = {
   fallback: boolean;
 };
 
+import alArabiyaOudAd from "@assets/Screenshot_2025-12-08_at_11.44.21_AM_1765183713294.png";
+
 const FALLBACK_ADS: AdData[] = [
   {
     id: "fallback-ad-1",
-    imageUrl: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1080&q=80",
-    title: "اكتشف عروضنا الحصرية",
-    description: "خصومات تصل إلى 50% على جميع المنتجات",
+    imageUrl: alArabiyaOudAd,
+    title: "عبق الشرق الأصيل",
+    description: "العربية للعود - Al-Arabiya Oud",
     ctaText: "تسوق الآن",
-    linkUrl: "#",
-    advertiser: "متجر الكتروني"
-  },
-  {
-    id: "fallback-ad-2", 
-    imageUrl: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=1080&q=80",
-    title: "سافر بأقل الأسعار",
-    description: "رحلات مميزة لأفضل الوجهات السياحية",
-    ctaText: "احجز رحلتك",
-    linkUrl: "#",
-    advertiser: "شركة سفر وسياحة"
-  },
-  {
-    id: "fallback-ad-3",
-    imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1080&q=80",
-    title: "استثمر في مستقبلك",
-    description: "حلول مالية ذكية لتحقيق أهدافك",
-    ctaText: "ابدأ الآن",
-    linkUrl: "#",
-    advertiser: "بنك الاستثمار"
+    linkUrl: "https://www.arabianoud.com",
+    advertiser: "العربية للعود"
   }
 ];
 
