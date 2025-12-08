@@ -132,7 +132,7 @@ export function AdCard({
       onMouseDown={handleMouseDown}
       data-testid={`ad-card-${ad.id}`}
     >
-      <div className="h-full w-full overflow-hidden bg-black relative flex items-center justify-center">
+      <div className="h-full w-full overflow-hidden bg-black relative flex items-start justify-center pt-16">
         <div className="relative w-[85%] max-w-[340px]" style={{ aspectRatio: '9/16' }}>
           <img
             src={ad.imageUrl}
