@@ -148,14 +148,18 @@ export function AdCard({
           </div>
 
           {ad.linkUrl && (
-            <button
-              onClick={handleAdClick}
-              className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-full px-6 py-2.5 text-sm transition-colors flex items-center gap-2"
-              data-testid="button-ad-cta"
-            >
-              {ad.ctaText || "اكتشف المزيد"}
-              <ExternalLink className="h-3.5 w-3.5" />
-            </button>
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <ExternalLink className="h-4 w-4 text-white" />
+              </div>
+              <button
+                onClick={handleAdClick}
+                className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white font-medium rounded-full px-4 py-1.5 text-xs transition-colors"
+                data-testid="button-ad-cta"
+              >
+                {ad.ctaText || "الموقع الرسمي"}
+              </button>
+            </div>
           )}
         </div>
       </div>
