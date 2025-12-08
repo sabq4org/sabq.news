@@ -112,8 +112,15 @@ export function SwipeCard({
     };
   }, [position, onDragMove, onDragEnd]);
 
-  const rawImageUrl = article.imageUrl || article.thumbnailUrl;
-  const imageUrl = useMemo(() => getOptimizedImageUrl(rawImageUrl), [rawImageUrl]);
+  const imageUrl = useMemo(() => {
+    // Prefer pre-optimized Lite image if available
+    if (article.liteOptimizedImageUrl) {
+      return article.liteOptimizedImageUrl;
+    }
+    // Fall back to on-demand optimization
+    const rawImageUrl = article.imageUrl || article.thumbnailUrl;
+    return getOptimizedImageUrl(rawImageUrl);
+  }, [article.liteOptimizedImageUrl, article.imageUrl, article.thumbnailUrl]);
   const publishedDate = article.publishedAt ? new Date(article.publishedAt) : new Date();
   const smartSummary = article.aiSummary || article.excerpt;
   const timeAgo = formatDistanceToNow(publishedDate, { addSuffix: false, locale: arSA });
