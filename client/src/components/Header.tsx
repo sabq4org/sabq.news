@@ -173,8 +173,18 @@ export function Header({ user, onMenuClick }: HeaderProps) {
             </Button>
 
             {/* Mobile Actions */}
-            <div className="md:hidden flex items-center gap-2">
-              <AccessibilitySettings variant="mobile" />
+            <div className="md:hidden flex items-center gap-1">
+              <Link href="/lite">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hover-elevate active-elevate-2"
+                  data-testid="button-quick-browse-mobile"
+                  aria-label="تصفح سريع"
+                >
+                  <Zap className="h-5 w-5" aria-hidden="true" />
+                </Button>
+              </Link>
               <LanguageSwitcher />
               <ThemeToggle />
               
@@ -460,6 +470,16 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                 </span>
               </Link>
             )}
+
+            {/* Accessibility Settings in Sidebar */}
+            <div className="pt-4 pb-2">
+              <h3 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                إعدادات الوصول
+              </h3>
+            </div>
+            <div className="px-3">
+              <AccessibilitySettings variant="mobile" />
+            </div>
 
             {/* Categories Section */}
             <div className="pt-4 pb-2">
