@@ -730,6 +730,7 @@ export const articles = pgTable("articles", {
   imageUrl: text("image_url"),
   thumbnailUrl: text("thumbnail_url"), // صورة الغلاف المصغرة 16:9 للعرض في القوائم
   thumbnailManuallyDeleted: boolean("thumbnail_manually_deleted").default(false), // Flag to prevent auto-generation after manual deletion
+  liteOptimizedImageUrl: text("lite_optimized_image_url"), // صورة محسّنة لعرض Lite Swipe (1080px WebP)
   albumImages: text("album_images").array().default(sql`ARRAY[]::text[]`), // مصفوفة صور الألبوم الإضافية
   imageFocalPoint: jsonb("image_focal_point").$type<{
     x: number; // percentage 0-100 from left

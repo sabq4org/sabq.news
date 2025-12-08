@@ -352,12 +352,69 @@ export function getBestFormat(acceptHeader: string | undefined): 'avif' | 'webp'
   return 'jpeg';
 }
 
+/**
+ * Generate optimized image for Lite Swipe feed
+ * Creates a 1080px WebP image optimized for mobile viewing
+ */
+export async function generateLiteOptimizedImage(
+  imageUrl: string
+): Promise<string | null> {
+  try {
+    if (!imageUrl) return null;
+    
+    // Normalize path - handle both /public-objects/ URLs and direct paths
+    let imagePath = imageUrl;
+    if (imageUrl.includes('/public-objects/')) {
+      imagePath = imageUrl.replace(/^\/public-objects\//, '');
+    }
+    
+    // Get original image
+    const file = await objectStorageService.searchPublicObject(imagePath);
+    if (!file) {
+      console.error(`[Lite Image] Original not found: ${imagePath}`);
+      return null;
+    }
+    
+    const [originalBuffer] = await file.download();
+    
+    // Optimize for Lite: 1080px width, WebP, quality 70
+    const result = await optimizeImage(originalBuffer, {
+      width: 1080,
+      format: 'webp',
+      quality: 70,
+      fit: 'cover'
+    });
+    
+    // Generate unique filename
+    const baseName = imagePath.split('/').pop()?.replace(/\.[^.]+$/, '') || 'image';
+    const timestamp = Date.now();
+    const liteImagePath = `lite/${baseName}_${timestamp}_lite.webp`;
+    
+    // Upload to object storage
+    await objectStorageService.uploadFile(
+      liteImagePath,
+      result.buffer,
+      'image/webp',
+      'public'
+    );
+    
+    const publicUrl = `/public-objects/${liteImagePath}`;
+    console.log(`[Lite Image] Generated: ${publicUrl} (${Math.round(result.size/1024)}KB)`);
+    
+    return publicUrl;
+  } catch (error) {
+    console.error(`[Lite Image] Optimization failed:`, error);
+    return null;
+  }
+}
+
 export default {
   optimizeImage,
   getOptimizedImage,
   generateSrcSet,
   generateBlurPlaceholder,
   optimizeArticleImages,
+  generateLiteOptimizedImage,
   supportsWebP,
   supportsAVIF,
   getBestFormat,

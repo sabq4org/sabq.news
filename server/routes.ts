@@ -13,7 +13,7 @@ import { startMessageAggregatorJob } from './services/whatsappMessageAggregator'
 import ifoxAiManagementRoutes from './routes/ifox/ai-management';
 import autoImageRoutes from './routes/autoImageRoutes';
 import { ObjectStorageService, ObjectNotFoundError, objectStorageClient } from "./objectStorage";
-import imageOptimizationService, { optimizeImage, getOptimizedImage, generateSrcSet, getBestFormat, supportsWebP, IMAGE_SIZES } from "./services/imageOptimizationService";
+import imageOptimizationService, { optimizeImage, getOptimizedImage, generateSrcSet, getBestFormat, supportsWebP, IMAGE_SIZES, generateLiteOptimizedImage } from "./services/imageOptimizationService";
 import sharp from "sharp";
 import { registerInfographicAiRoutes } from "./routes/infographicAi";
 import { getObjectAclPolicy, setObjectAclPolicy } from "./objectAcl";
@@ -6207,6 +6207,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error("❌ [CREATE ARTICLE] Error sending notifications for new article:", notificationError);
           // Don't fail the creation operation if notification fails
         }
+
+        // Generate Lite optimized image for swipe feed
+        if (newArticle.imageUrl) {
+          try {
+            const liteImageUrl = await generateLiteOptimizedImage(newArticle.imageUrl);
+            if (liteImageUrl) {
+              await storage.updateArticle(newArticle.id, { liteOptimizedImageUrl: liteImageUrl });
+              console.log(`[Lite Image] Generated for article: ${newArticle.id}`);
+            }
+          } catch (liteError) {
+            console.error(`[Lite Image] Failed for article ${newArticle.id}:`, liteError);
+          }
+        }
       } else {
         console.log(`⏸️ [CREATE ARTICLE] Article is NOT published (status: ${newArticle.status}) - skipping notifications`);
       }
@@ -6410,6 +6423,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } catch (notificationError) {
           console.error("❌ [UPDATE ARTICLE] Error creating notification:", notificationError);
           // Don't fail the update operation if notification fails
+        }
+
+        // Generate Lite optimized image for swipe feed
+        if (updatedArticle.imageUrl) {
+          try {
+            const liteImageUrl = await generateLiteOptimizedImage(updatedArticle.imageUrl);
+            if (liteImageUrl) {
+              await storage.updateArticle(updatedArticle.id, { liteOptimizedImageUrl: liteImageUrl });
+              console.log(`[Lite Image] Generated for article: ${updatedArticle.id}`);
+            }
+          } catch (liteError) {
+            console.error(`[Lite Image] Failed for article ${updatedArticle.id}:`, liteError);
+          }
         }
       } else {
         console.log(`⏸️ [UPDATE ARTICLE] No notification sent - Status unchanged or not published`);
