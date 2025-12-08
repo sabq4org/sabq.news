@@ -21,7 +21,7 @@ export default function LiteFeedPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const animationRef = useRef<number | null>(null);
 
   const { data: articles = [], isLoading, refetch } = useQuery<ArticleWithDetails[]>({
     queryKey: ["/api/articles?status=published&limit=50&orderBy=newest"],
@@ -33,81 +33,89 @@ export default function LiteFeedPage() {
     return dateB - dateA;
   });
 
-  const handleDrag = useCallback((offset: number) => {
-    if (!isAnimating) {
-      setDragOffset(offset);
+  const handleDragStart = useCallback(() => {
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
     }
-  }, [isAnimating]);
+    setIsAnimating(false);
+  }, []);
 
-  const handleDragEnd = useCallback((direction: 'up' | 'down' | 'none') => {
+  const handleDragMove = useCallback((offset: number) => {
+    if (!isAnimating) {
+      // Prevent scrolling up at first card or down at last card
+      if (currentIndex === 0 && offset > 0) {
+        setDragOffset(offset * 0.3); // Resistance effect
+      } else if (currentIndex >= sortedArticles.length - 1 && offset < 0) {
+        setDragOffset(offset * 0.3); // Resistance effect
+      } else {
+        setDragOffset(offset);
+      }
+    }
+  }, [isAnimating, currentIndex, sortedArticles.length]);
+
+  const handleDragEnd = useCallback(() => {
     if (isAnimating) return;
 
-    if (direction === 'up' && currentIndex < sortedArticles.length - 1) {
+    const threshold = 80;
+    const screenHeight = window.innerHeight;
+
+    // Swipe up to next
+    if (dragOffset < -threshold && currentIndex < sortedArticles.length - 1) {
       setIsAnimating(true);
-      const screenHeight = window.innerHeight;
       
-      const animate = () => {
+      const animateOut = () => {
         setDragOffset(prev => {
-          const next = prev - 80;
+          const next = prev - 60;
           if (next <= -screenHeight) {
             setCurrentIndex(i => i + 1);
             setDragOffset(0);
             setIsAnimating(false);
             return 0;
           }
-          requestAnimationFrame(animate);
+          animationRef.current = requestAnimationFrame(animateOut);
           return next;
         });
       };
-      requestAnimationFrame(animate);
+      animationRef.current = requestAnimationFrame(animateOut);
       
-    } else if (direction === 'down' && currentIndex > 0) {
+    // Swipe down to previous
+    } else if (dragOffset > threshold && currentIndex > 0) {
       setIsAnimating(true);
-      const screenHeight = window.innerHeight;
       
-      const animate = () => {
+      const animateOut = () => {
         setDragOffset(prev => {
-          const next = prev + 80;
+          const next = prev + 60;
           if (next >= screenHeight) {
             setCurrentIndex(i => i - 1);
             setDragOffset(0);
             setIsAnimating(false);
             return 0;
           }
-          requestAnimationFrame(animate);
+          animationRef.current = requestAnimationFrame(animateOut);
           return next;
         });
       };
-      requestAnimationFrame(animate);
+      animationRef.current = requestAnimationFrame(animateOut);
       
+    // Snap back
     } else {
       setIsAnimating(true);
-      const animate = () => {
+      
+      const animateBack = () => {
         setDragOffset(prev => {
-          const next = prev * 0.7;
-          if (Math.abs(next) < 1) {
+          const next = prev * 0.8;
+          if (Math.abs(next) < 2) {
             setIsAnimating(false);
             return 0;
           }
-          requestAnimationFrame(animate);
+          animationRef.current = requestAnimationFrame(animateBack);
           return next;
         });
       };
-      requestAnimationFrame(animate);
+      animationRef.current = requestAnimationFrame(animateBack);
     }
-  }, [isAnimating, currentIndex, sortedArticles.length]);
-
-  const goToPrevious = useCallback(() => {
-    if (currentIndex > 0 && !isAnimating) {
-      handleDragEnd('down');
-    }
-  }, [currentIndex, isAnimating, handleDragEnd]);
-
-  const goToNext = useCallback(() => {
-    if (currentIndex < sortedArticles.length - 1 && !isAnimating) {
-      handleDragEnd('up');
-    }
-  }, [currentIndex, sortedArticles.length, isAnimating, handleDragEnd]);
+  }, [isAnimating, dragOffset, currentIndex, sortedArticles.length]);
 
   const handleRefresh = useCallback(() => {
     setCurrentIndex(0);
@@ -117,15 +125,27 @@ export default function LiteFeedPage() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowUp") {
-        goToNext();
-      } else if (e.key === "ArrowDown") {
-        goToPrevious();
+      if (isAnimating) return;
+      
+      if (e.key === "ArrowUp" && currentIndex < sortedArticles.length - 1) {
+        setDragOffset(-100);
+        setTimeout(() => handleDragEnd(), 10);
+      } else if (e.key === "ArrowDown" && currentIndex > 0) {
+        setDragOffset(100);
+        setTimeout(() => handleDragEnd(), 10);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [goToNext, goToPrevious]);
+  }, [currentIndex, sortedArticles.length, isAnimating, handleDragEnd]);
+
+  useEffect(() => {
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
 
   if (isLoading) {
     return (
@@ -159,7 +179,7 @@ export default function LiteFeedPage() {
   const prevArticle = sortedArticles[currentIndex - 1];
 
   return (
-    <div className="h-screen w-screen bg-black overflow-hidden flex flex-col" ref={containerRef}>
+    <div className="h-screen w-screen bg-black overflow-hidden flex flex-col">
       <div className="absolute top-4 right-4 z-20">
         <img 
           src={sabqLogo} 
@@ -174,12 +194,11 @@ export default function LiteFeedPage() {
           <SwipeCard
             key={`prev-${prevArticle.id}`}
             article={prevArticle}
-            onSwipeUp={() => {}}
-            onSwipeDown={() => {}}
             position="previous"
             canGoBack={false}
             dragOffset={dragOffset}
-            onDrag={handleDrag}
+            onDragStart={handleDragStart}
+            onDragMove={handleDragMove}
             onDragEnd={handleDragEnd}
           />
         )}
@@ -188,12 +207,11 @@ export default function LiteFeedPage() {
           <SwipeCard
             key={`next-${nextArticle.id}`}
             article={nextArticle}
-            onSwipeUp={() => {}}
-            onSwipeDown={() => {}}
             position="next"
             canGoBack={false}
             dragOffset={dragOffset}
-            onDrag={handleDrag}
+            onDragStart={handleDragStart}
+            onDragMove={handleDragMove}
             onDragEnd={handleDragEnd}
           />
         )}
@@ -201,16 +219,15 @@ export default function LiteFeedPage() {
         <SwipeCard
           key={`current-${currentArticle.id}`}
           article={currentArticle}
-          onSwipeUp={() => {}}
-          onSwipeDown={() => {}}
           position="current"
           canGoBack={currentIndex > 0}
           dragOffset={dragOffset}
-          onDrag={handleDrag}
+          onDragStart={handleDragStart}
+          onDragMove={handleDragMove}
           onDragEnd={handleDragEnd}
         />
 
-        {currentIndex >= sortedArticles.length - 1 && dragOffset < -50 && (
+        {currentIndex >= sortedArticles.length - 1 && dragOffset < -100 && (
           <div className="absolute inset-0 flex items-center justify-center bg-black z-20" dir="rtl">
             <div className="text-center p-8">
               <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-primary/20 flex items-center justify-center">

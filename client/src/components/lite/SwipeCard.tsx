@@ -1,5 +1,5 @@
-import { motion, PanInfo } from "framer-motion";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import { motion } from "framer-motion";
 import { Clock, Eye, Share2, Bookmark, ChevronDown } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
@@ -28,13 +28,12 @@ function getOptimizedImageUrl(url: string | null | undefined): string {
 
 interface SwipeCardProps {
   article: ArticleWithDetails;
-  onSwipeUp: () => void;
-  onSwipeDown: () => void;
   position: 'current' | 'next' | 'previous';
   canGoBack: boolean;
   dragOffset: number;
-  onDrag: (offset: number) => void;
-  onDragEnd: (direction: 'up' | 'down' | 'none') => void;
+  onDragStart: () => void;
+  onDragMove: (offset: number) => void;
+  onDragEnd: (velocity: number) => void;
 }
 
 export function SwipeCard({ 
@@ -42,37 +41,76 @@ export function SwipeCard({
   position, 
   canGoBack, 
   dragOffset,
-  onDrag,
+  onDragStart,
+  onDragMove,
   onDragEnd 
 }: SwipeCardProps) {
   const [showDetails, setShowDetails] = useState(false);
+  const startYRef = useRef(0);
+  const lastYRef = useRef(0);
+  const lastTimeRef = useRef(0);
+  const isDraggingRef = useRef(false);
 
-  const handleDrag = useCallback(
-    (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-      if (position === 'current') {
-        onDrag(info.offset.y);
-      }
-    },
-    [position, onDrag]
-  );
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (position !== 'current') return;
+    startYRef.current = e.touches[0].clientY;
+    lastYRef.current = e.touches[0].clientY;
+    lastTimeRef.current = Date.now();
+    isDraggingRef.current = true;
+    onDragStart();
+  }, [position, onDragStart]);
 
-  const handleDragEnd = useCallback(
-    (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-      if (position !== 'current') return;
-      
-      const threshold = 100;
-      const velocity = 500;
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isDraggingRef.current || position !== 'current') return;
+    const currentY = e.touches[0].clientY;
+    const offset = currentY - startYRef.current;
+    lastYRef.current = currentY;
+    lastTimeRef.current = Date.now();
+    onDragMove(offset);
+  }, [position, onDragMove]);
 
-      if (info.offset.y < -threshold || info.velocity.y < -velocity) {
-        onDragEnd('up');
-      } else if ((info.offset.y > threshold || info.velocity.y > velocity) && canGoBack) {
-        onDragEnd('down');
-      } else {
-        onDragEnd('none');
-      }
-    },
-    [position, canGoBack, onDragEnd]
-  );
+  const handleTouchEnd = useCallback(() => {
+    if (!isDraggingRef.current || position !== 'current') return;
+    isDraggingRef.current = false;
+    const velocity = 0;
+    onDragEnd(velocity);
+  }, [position, onDragEnd]);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (position !== 'current') return;
+    startYRef.current = e.clientY;
+    lastYRef.current = e.clientY;
+    lastTimeRef.current = Date.now();
+    isDraggingRef.current = true;
+    onDragStart();
+  }, [position, onDragStart]);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDraggingRef.current || position !== 'current') return;
+      const currentY = e.clientY;
+      const offset = currentY - startYRef.current;
+      lastYRef.current = currentY;
+      lastTimeRef.current = Date.now();
+      onDragMove(offset);
+    };
+
+    const handleMouseUp = () => {
+      if (!isDraggingRef.current || position !== 'current') return;
+      isDraggingRef.current = false;
+      onDragEnd(0);
+    };
+
+    if (position === 'current') {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [position, onDragMove, onDragEnd]);
 
   const rawImageUrl = article.imageUrl || article.thumbnailUrl;
   const imageUrl = useMemo(() => getOptimizedImageUrl(rawImageUrl), [rawImageUrl]);
@@ -80,43 +118,43 @@ export function SwipeCard({
   const smartSummary = article.aiSummary || article.excerpt;
   const timeAgo = formatDistanceToNow(publishedDate, { addSuffix: false, locale: arSA });
 
-  const getTransform = () => {
+  const getTransformY = () => {
+    const screenHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
+    
     if (position === 'current') {
-      return `translateY(${dragOffset}px)`;
+      return dragOffset;
     } else if (position === 'next') {
-      const progress = Math.min(0, dragOffset);
-      const offset = 100 + (progress / window.innerHeight) * 100;
-      return `translateY(${Math.max(0, offset)}%)`;
+      // Next card starts at bottom (100%), moves up as current is dragged up
+      const baseOffset = screenHeight;
+      const movement = Math.min(0, dragOffset); // Only respond to upward drag
+      return baseOffset + movement;
     } else if (position === 'previous') {
-      const progress = Math.max(0, dragOffset);
-      const offset = -100 + (progress / window.innerHeight) * 100;
-      return `translateY(${Math.min(0, offset)}%)`;
+      // Previous card starts at top (-100%), moves down as current is dragged down
+      const baseOffset = -screenHeight;
+      const movement = Math.max(0, dragOffset); // Only respond to downward drag
+      return baseOffset + movement;
     }
-    return 'translateY(0)';
+    return 0;
   };
 
-  const getZIndex = () => {
-    if (position === 'current') return 10;
-    if (position === 'next') return 5;
-    return 5;
-  };
+  const transformY = getTransformY();
 
   return (
     <>
-      <motion.div
-        className="absolute inset-0"
+      <div
+        className="absolute inset-0 select-none"
         style={{ 
-          transform: getTransform(),
-          zIndex: getZIndex(),
+          transform: `translateY(${transformY}px)`,
+          zIndex: position === 'current' ? 10 : 5,
+          touchAction: 'none',
         }}
-        drag={position === 'current' ? "y" : false}
-        dragConstraints={{ top: 0, bottom: 0 }}
-        dragElastic={0}
-        onDrag={handleDrag}
-        onDragEnd={handleDragEnd}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
         data-testid={`swipe-card-${article.id}`}
       >
-        <div className="h-full w-full overflow-hidden bg-black touch-pan-y relative">
+        <div className="h-full w-full overflow-hidden bg-black relative">
           {imageUrl ? (
             <div className="absolute top-0 left-0 right-0 h-[45%]">
               <img
@@ -176,7 +214,7 @@ export function SwipeCard({
             </button>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {showDetails && (
         <motion.div
