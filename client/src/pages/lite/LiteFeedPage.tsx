@@ -6,12 +6,12 @@ import {
   Loader2,
   RefreshCw,
   ArrowRight,
-  Menu,
   Eye,
   Type,
   Waves,
   BookOpen,
-  X
+  X,
+  Zap
 } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -215,7 +215,7 @@ export default function LiteFeedPage() {
     <div className="h-screen w-screen bg-black overflow-hidden flex flex-col">
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 z-20 px-3 py-3 flex items-center justify-between">
-        {/* Left side - Back button & Menu */}
+        {/* Left side - Back button & Quick Browse indicator */}
         <div className="flex items-center gap-1">
           <Link href="/">
             <Button 
@@ -234,7 +234,7 @@ export default function LiteFeedPage() {
             onClick={() => setMenuOpen(true)}
             data-testid="button-lite-menu"
           >
-            <Menu className="h-4 w-4" />
+            <Zap className="h-4 w-4" />
           </Button>
         </div>
 
