@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Clock, Eye, Share2, Bookmark, ChevronDown } from "lucide-react";
+import { Clock, Eye, Share2, Bookmark, ChevronDown, Zap } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import type { Article, Category, User } from "@shared/schema";
@@ -184,6 +184,15 @@ export function SwipeCard({
 
           <div className="absolute inset-x-0 top-[42%] bottom-0 px-5" dir="rtl">
             <div className="flex items-center gap-2 mb-3">
+              {article.newsType === 'breaking' && (
+                <span 
+                  className="px-3 py-1 rounded-full text-white text-sm font-bold flex items-center gap-1 bg-red-600"
+                  data-testid="badge-breaking"
+                >
+                  <Zap className="h-3 w-3" />
+                  عاجل
+                </span>
+              )}
               {article.category && (
                 <span 
                   className="px-3 py-1 rounded-full text-white text-sm font-medium"
