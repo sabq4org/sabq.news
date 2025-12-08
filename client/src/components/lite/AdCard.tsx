@@ -132,52 +132,29 @@ export function AdCard({
       onMouseDown={handleMouseDown}
       data-testid={`ad-card-${ad.id}`}
     >
-      <div className="h-full w-full overflow-hidden bg-black relative">
-        <img
-          src={ad.imageUrl}
-          alt={ad.title}
-          className="w-full h-full object-cover"
-          draggable={false}
-        />
-        
-        <div 
-          className="absolute inset-0" 
-          style={{ 
-            background: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.85) 100%)' 
-          }} 
-        />
-
-        <div className="absolute top-4 left-4 z-20">
-          <span className="px-2 py-1 bg-white/20 backdrop-blur-sm rounded text-white/80 text-xs font-medium">
-            إعلان
-          </span>
-        </div>
-
-        <div className="absolute inset-x-0 bottom-0 p-6" dir="rtl">
-          {ad.advertiser && (
-            <p className="text-white/60 text-sm mb-2">
-              {ad.advertiser}
-            </p>
-          )}
+      <div className="h-full w-full overflow-hidden bg-black relative flex items-center justify-center">
+        <div className="relative w-[85%] max-w-[340px]" style={{ aspectRatio: '9/16' }}>
+          <img
+            src={ad.imageUrl}
+            alt={ad.title}
+            className="w-full h-full object-cover rounded-2xl"
+            draggable={false}
+          />
           
-          <h2 className="text-2xl font-bold text-white leading-tight mb-3">
-            {ad.title}
-          </h2>
-
-          {ad.description && (
-            <p className="text-white/75 text-base leading-relaxed mb-5 line-clamp-2">
-              {ad.description}
-            </p>
-          )}
+          <div className="absolute top-3 right-3 z-20">
+            <span className="px-2 py-1 bg-black/40 backdrop-blur-sm rounded text-white/90 text-[10px] font-medium">
+              إعلان
+            </span>
+          </div>
 
           {ad.linkUrl && (
             <button
               onClick={handleAdClick}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-full px-8 py-3 text-base transition-colors flex items-center gap-2 mx-auto"
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-full px-6 py-2.5 text-sm transition-colors flex items-center gap-2"
               data-testid="button-ad-cta"
             >
               {ad.ctaText || "اكتشف المزيد"}
-              <ExternalLink className="h-4 w-4" />
+              <ExternalLink className="h-3.5 w-3.5" />
             </button>
           )}
         </div>
