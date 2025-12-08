@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { useBehaviorTracking } from "@/hooks/useBehaviorTracking";
 import type { Article, Category, User } from "@shared/schema";
 import sabqLogo from "@assets/sabq-logo.png";
 
@@ -24,6 +25,9 @@ export default function LiteFeedPage() {
   const [dragOffset, setDragOffset] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const animationRef = useRef<number | null>(null);
+  const viewedArticles = useRef<Set<string>>(new Set());
+  const viewDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const { logBehavior } = useBehaviorTracking();
 
   const { data: articles = [], isLoading, refetch } = useQuery<ArticleWithDetails[]>({
     queryKey: ["/api/articles?status=published&limit=50&orderBy=newest"],
@@ -148,6 +152,30 @@ export default function LiteFeedPage() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (sortedArticles.length === 0) return;
+    
+    const currentArticleId = sortedArticles[currentIndex]?.id;
+    if (!currentArticleId) return;
+    
+    if (viewDebounceRef.current) {
+      clearTimeout(viewDebounceRef.current);
+    }
+    
+    viewDebounceRef.current = setTimeout(() => {
+      if (!viewedArticles.current.has(String(currentArticleId))) {
+        viewedArticles.current.add(String(currentArticleId));
+        logBehavior("article_view", { articleId: String(currentArticleId) });
+      }
+    }, 500);
+    
+    return () => {
+      if (viewDebounceRef.current) {
+        clearTimeout(viewDebounceRef.current);
+      }
+    };
+  }, [currentIndex, sortedArticles, logBehavior]);
 
   if (isLoading) {
     return (
