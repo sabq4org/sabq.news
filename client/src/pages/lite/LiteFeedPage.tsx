@@ -25,7 +25,6 @@ export default function LiteFeedPage() {
   const [dragOffset, setDragOffset] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const animationRef = useRef<number | null>(null);
-  const viewedArticles = useRef<Set<string>>(new Set());
   const viewDebounceRef = useRef<NodeJS.Timeout | null>(null);
   const { logBehavior } = useBehaviorTracking();
 
@@ -164,10 +163,7 @@ export default function LiteFeedPage() {
     }
     
     viewDebounceRef.current = setTimeout(() => {
-      if (!viewedArticles.current.has(String(currentArticleId))) {
-        viewedArticles.current.add(String(currentArticleId));
-        logBehavior("article_view", { articleId: String(currentArticleId) });
-      }
+      logBehavior("article_view", { articleId: String(currentArticleId) });
     }, 500);
     
     return () => {
