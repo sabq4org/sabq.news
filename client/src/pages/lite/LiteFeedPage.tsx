@@ -1,6 +1,7 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { SwipeCard } from "@/components/lite/SwipeCard";
+import { AdCard } from "@/components/lite/AdCard";
 import { 
   Newspaper, 
   Loader2,
@@ -20,6 +21,50 @@ type ArticleWithDetails = Article & {
   reactionsCount?: number;
 };
 
+type AdData = {
+  id: string;
+  imageUrl: string;
+  title: string;
+  description?: string;
+  ctaText?: string;
+  linkUrl?: string;
+  advertiser?: string;
+};
+
+type FeedItem = 
+  | { type: 'article'; data: ArticleWithDetails }
+  | { type: 'ad'; data: AdData };
+
+const SAMPLE_ADS: AdData[] = [
+  {
+    id: "ad-1",
+    imageUrl: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1080&q=80",
+    title: "اكتشف عروضنا الحصرية",
+    description: "خصومات تصل إلى 50% على جميع المنتجات",
+    ctaText: "تسوق الآن",
+    linkUrl: "#",
+    advertiser: "متجر الكتروني"
+  },
+  {
+    id: "ad-2", 
+    imageUrl: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=1080&q=80",
+    title: "سافر بأقل الأسعار",
+    description: "رحلات مميزة لأفضل الوجهات السياحية",
+    ctaText: "احجز رحلتك",
+    linkUrl: "#",
+    advertiser: "شركة سفر وسياحة"
+  },
+  {
+    id: "ad-3",
+    imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1080&q=80",
+    title: "استثمر في مستقبلك",
+    description: "حلول مالية ذكية لتحقيق أهدافك",
+    ctaText: "ابدأ الآن",
+    linkUrl: "#",
+    advertiser: "بنك الاستثمار"
+  }
+];
+
 export default function LiteFeedPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
@@ -37,6 +82,23 @@ export default function LiteFeedPage() {
     return dateB - dateA;
   });
 
+  const feedItems: FeedItem[] = useMemo(() => {
+    const items: FeedItem[] = [];
+    let adIndex = 0;
+    
+    sortedArticles.forEach((article, index) => {
+      items.push({ type: 'article', data: article });
+      
+      if ((index + 1) % 5 === 0 && index < sortedArticles.length - 1) {
+        const ad = SAMPLE_ADS[adIndex % SAMPLE_ADS.length];
+        items.push({ type: 'ad', data: ad });
+        adIndex++;
+      }
+    });
+    
+    return items;
+  }, [sortedArticles]);
+
   const handleDragStart = useCallback(() => {
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
@@ -47,16 +109,15 @@ export default function LiteFeedPage() {
 
   const handleDragMove = useCallback((offset: number) => {
     if (!isAnimating) {
-      // Prevent scrolling up at first card or down at last card
       if (currentIndex === 0 && offset > 0) {
-        setDragOffset(offset * 0.3); // Resistance effect
-      } else if (currentIndex >= sortedArticles.length - 1 && offset < 0) {
-        setDragOffset(offset * 0.3); // Resistance effect
+        setDragOffset(offset * 0.3);
+      } else if (currentIndex >= feedItems.length - 1 && offset < 0) {
+        setDragOffset(offset * 0.3);
       } else {
         setDragOffset(offset);
       }
     }
-  }, [isAnimating, currentIndex, sortedArticles.length]);
+  }, [isAnimating, currentIndex, feedItems.length]);
 
   const handleDragEnd = useCallback(() => {
     if (isAnimating) return;
@@ -64,8 +125,7 @@ export default function LiteFeedPage() {
     const threshold = 80;
     const screenHeight = window.innerHeight;
 
-    // Swipe up to next
-    if (dragOffset < -threshold && currentIndex < sortedArticles.length - 1) {
+    if (dragOffset < -threshold && currentIndex < feedItems.length - 1) {
       setIsAnimating(true);
       
       const animateOut = () => {
@@ -83,7 +143,6 @@ export default function LiteFeedPage() {
       };
       animationRef.current = requestAnimationFrame(animateOut);
       
-    // Swipe down to previous
     } else if (dragOffset > threshold && currentIndex > 0) {
       setIsAnimating(true);
       
@@ -102,7 +161,6 @@ export default function LiteFeedPage() {
       };
       animationRef.current = requestAnimationFrame(animateOut);
       
-    // Snap back
     } else {
       setIsAnimating(true);
       
@@ -119,7 +177,7 @@ export default function LiteFeedPage() {
       };
       animationRef.current = requestAnimationFrame(animateBack);
     }
-  }, [isAnimating, dragOffset, currentIndex, sortedArticles.length]);
+  }, [isAnimating, dragOffset, currentIndex, feedItems.length]);
 
   const handleRefresh = useCallback(() => {
     setCurrentIndex(0);
@@ -131,7 +189,7 @@ export default function LiteFeedPage() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isAnimating) return;
       
-      if (e.key === "ArrowUp" && currentIndex < sortedArticles.length - 1) {
+      if (e.key === "ArrowUp" && currentIndex < feedItems.length - 1) {
         setDragOffset(-100);
         setTimeout(() => handleDragEnd(), 10);
       } else if (e.key === "ArrowDown" && currentIndex > 0) {
@@ -141,7 +199,7 @@ export default function LiteFeedPage() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentIndex, sortedArticles.length, isAnimating, handleDragEnd]);
+  }, [currentIndex, feedItems.length, isAnimating, handleDragEnd]);
 
   useEffect(() => {
     return () => {
@@ -152,10 +210,12 @@ export default function LiteFeedPage() {
   }, []);
 
   useEffect(() => {
-    if (sortedArticles.length === 0) return;
+    if (feedItems.length === 0) return;
     
-    const currentArticleId = sortedArticles[currentIndex]?.id;
-    if (!currentArticleId) return;
+    const currentItem = feedItems[currentIndex];
+    if (!currentItem || currentItem.type !== 'article') return;
+    
+    const currentArticleId = currentItem.data.id;
     
     if (viewDebounceRef.current) {
       clearTimeout(viewDebounceRef.current);
@@ -172,7 +232,7 @@ export default function LiteFeedPage() {
         clearTimeout(viewDebounceRef.current);
       }
     };
-  }, [currentIndex, sortedArticles]);
+  }, [currentIndex, feedItems]);
 
   if (isLoading) {
     return (
@@ -201,9 +261,38 @@ export default function LiteFeedPage() {
     );
   }
 
-  const currentArticle = sortedArticles[currentIndex];
-  const nextArticle = sortedArticles[currentIndex + 1];
-  const prevArticle = sortedArticles[currentIndex - 1];
+  const currentItem = feedItems[currentIndex];
+  const nextItem = feedItems[currentIndex + 1];
+  const prevItem = feedItems[currentIndex - 1];
+
+  const renderFeedItem = (item: FeedItem, position: 'current' | 'next' | 'previous', key: string) => {
+    if (item.type === 'article') {
+      return (
+        <SwipeCard
+          key={key}
+          article={item.data}
+          position={position}
+          canGoBack={position === 'current' && currentIndex > 0}
+          dragOffset={dragOffset}
+          onDragStart={handleDragStart}
+          onDragMove={handleDragMove}
+          onDragEnd={handleDragEnd}
+        />
+      );
+    } else {
+      return (
+        <AdCard
+          key={key}
+          ad={item.data}
+          position={position}
+          dragOffset={dragOffset}
+          onDragStart={handleDragStart}
+          onDragMove={handleDragMove}
+          onDragEnd={handleDragEnd}
+        />
+      );
+    }
+  };
 
   return (
     <div className="h-screen w-screen bg-black overflow-hidden flex flex-col">
@@ -231,44 +320,13 @@ export default function LiteFeedPage() {
       </div>
 
       <div className="flex-1 relative">
-        {prevArticle && (
-          <SwipeCard
-            key={`prev-${prevArticle.id}`}
-            article={prevArticle}
-            position="previous"
-            canGoBack={false}
-            dragOffset={dragOffset}
-            onDragStart={handleDragStart}
-            onDragMove={handleDragMove}
-            onDragEnd={handleDragEnd}
-          />
-        )}
+        {prevItem && renderFeedItem(prevItem, 'previous', `prev-${prevItem.type}-${prevItem.data.id}`)}
 
-        {nextArticle && (
-          <SwipeCard
-            key={`next-${nextArticle.id}`}
-            article={nextArticle}
-            position="next"
-            canGoBack={false}
-            dragOffset={dragOffset}
-            onDragStart={handleDragStart}
-            onDragMove={handleDragMove}
-            onDragEnd={handleDragEnd}
-          />
-        )}
+        {nextItem && renderFeedItem(nextItem, 'next', `next-${nextItem.type}-${nextItem.data.id}`)}
 
-        <SwipeCard
-          key={`current-${currentArticle.id}`}
-          article={currentArticle}
-          position="current"
-          canGoBack={currentIndex > 0}
-          dragOffset={dragOffset}
-          onDragStart={handleDragStart}
-          onDragMove={handleDragMove}
-          onDragEnd={handleDragEnd}
-        />
+        {currentItem && renderFeedItem(currentItem, 'current', `current-${currentItem.type}-${currentItem.data.id}`)}
 
-        {currentIndex >= sortedArticles.length - 1 && dragOffset < -100 && (
+        {currentIndex >= feedItems.length - 1 && dragOffset < -100 && (
           <div className="absolute inset-0 flex items-center justify-center bg-black z-20" dir="rtl">
             <div className="text-center p-8">
               <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-primary/20 flex items-center justify-center">
