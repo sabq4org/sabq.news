@@ -63,6 +63,7 @@ const BANNER_SIZES = [
   { value: "970x250", label: "لوحة كبيرة (970x250)", width: 970, height: 250 },
   { value: "300x600", label: "نصف صفحة (300x600)", width: 300, height: 600 },
   { value: "320x50", label: "بانر موبايل (320x50)", width: 320, height: 50 },
+  { value: "340x604", label: "سويب موبايل 9:16 (340x604)", width: 340, height: 604 },
 ];
 
 // File validation
