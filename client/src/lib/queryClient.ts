@@ -30,6 +30,11 @@ async function throwIfResNotOk(res: Response) {
       handleSessionExpiration();
     }
     
+    // Handle 502/503/504 Gateway errors - server temporarily unavailable
+    if (res.status === 502 || res.status === 503 || res.status === 504) {
+      throw new Error("الخادم غير متاح مؤقتاً، يرجى المحاولة مرة أخرى");
+    }
+    
     // Handle 403 Forbidden - show user-friendly message
     if (res.status === 403) {
       try {
