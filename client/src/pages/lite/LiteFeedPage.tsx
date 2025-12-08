@@ -5,10 +5,8 @@ import { AdCard } from "@/components/lite/AdCard";
 import { 
   Newspaper, 
   Loader2,
-  RefreshCw,
-  ArrowRight
+  RefreshCw
 } from "lucide-react";
-import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
 import type { Article, Category, User } from "@shared/schema";
@@ -304,20 +302,6 @@ export default function LiteFeedPage() {
 
   return (
     <div className="h-screen w-screen bg-black overflow-hidden flex flex-col">
-      <div className="absolute top-4 left-4 z-20">
-        <Link href="/">
-          <Button 
-            variant="ghost" 
-            size="sm"
-            className="bg-white/10 text-white/90 hover:bg-white/20 gap-2"
-            data-testid="button-back-to-classic"
-          >
-            <ArrowRight className="h-4 w-4" />
-            <span className="text-sm">الموقع الرئيسي</span>
-          </Button>
-        </Link>
-      </div>
-
       <div className="absolute top-4 right-4 z-20">
         <img 
           src={sabqLogo} 
