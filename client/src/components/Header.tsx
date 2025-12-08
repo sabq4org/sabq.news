@@ -1,4 +1,4 @@
-import { Menu, User, LogOut, LayoutDashboard, Bell, Newspaper, Users, MessageSquare, Brain, Sparkles, ExternalLink } from "lucide-react";
+import { Menu, User, LogOut, LayoutDashboard, Bell, Newspaper, Users, MessageSquare, Brain, Sparkles, ExternalLink, Zap } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
@@ -75,7 +75,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
     return 'س';
   };
 
-  const mainSections: Array<{ name: string; href: string; external?: boolean }> = [
+  const mainSections: Array<{ name: string; href: string; external?: boolean; icon?: typeof Zap }> = [
     { name: "الأخبار", href: "/news" },
     { name: "التصنيفات", href: "/categories" },
     { name: "المساعد الذكي", href: "/chatbot" },
@@ -83,6 +83,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
     { name: "مقالات", href: "/opinion" },
     { name: "مُقترب", href: "/muqtarab" },
     { name: "لحظة بلحظة", href: "/moment-by-moment" },
+    { name: "تصفح سريع", href: "/lite", icon: Zap },
     { name: "SaudiSense", href: "https://saudisense.com", external: true },
     { name: "Riyadh X", href: "https://riyadhx.replit.app", external: true },
   ];
@@ -135,10 +136,11 @@ export function Header({ user, onMenuClick }: HeaderProps) {
               ) : (
                 <Link key={section.name} href={section.href}>
                   <span 
-                    className="text-sm font-medium text-foreground hover:text-primary transition-colors whitespace-nowrap cursor-pointer" 
+                    className="text-sm font-medium text-foreground hover:text-primary transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1" 
                     data-testid={`link-section-${section.name}`}
                     aria-current={location === section.href ? "page" : undefined}
                   >
+                    {section.icon && <section.icon className="h-3.5 w-3.5" />}
                     {section.name}
                   </span>
                 </Link>
@@ -423,6 +425,16 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                 data-testid="link-mobile-muqtarab"
               >
                 مُقترب
+              </span>
+            </Link>
+            <Link href="/lite">
+              <span
+                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover-elevate active-elevate-2 cursor-pointer text-primary"
+                onClick={() => setMobileMenuOpen(false)}
+                data-testid="link-mobile-lite"
+              >
+                <Zap className="h-4 w-4" aria-hidden="true" />
+                تصفح سريع
               </span>
             </Link>
             <a
