@@ -221,13 +221,15 @@ export function SwipeCard({
               </p>
             )}
 
-            <button
-              onClick={() => setShowDetails(true)}
-              className="bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white font-medium rounded-full px-8 py-3 text-base transition-colors"
-              data-testid="button-read-details"
-            >
-              اقرأ التفاصيل
-            </button>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowDetails(true)}
+                className="bg-white hover:bg-gray-100 text-black font-medium rounded-full px-8 py-3 text-base transition-colors"
+                data-testid="button-read-details"
+              >
+                اقرأ التفاصيل
+              </button>
+            </div>
           </div>
         </div>
       </div>
