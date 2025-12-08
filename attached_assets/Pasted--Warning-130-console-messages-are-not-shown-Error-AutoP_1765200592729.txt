@@ -1,0 +1,184 @@
+[Warning] 130 console messages are not shown.
+[Error] 📡 [AutoPublish] SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7909:139954)
+[Log] 📡 [AutoPublish] Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7909)
+[Log] 📡 Connecting to notification stream... (index-CuWWn2z7.js, line 7800)
+[Log] 📡 [AutoPublish] Connecting to notification stream... (index-CuWWn2z7.js, line 7909)
+[Error] 📡 SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7800:56483)
+[Log] 📡 Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7800)
+[Error] 📡 [AutoPublish] SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7909:139954)
+[Log] 📡 [AutoPublish] Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7909)
+[Log] 📡 Connecting to notification stream... (index-CuWWn2z7.js, line 7800)
+[Log] 📡 [AutoPublish] Connecting to notification stream... (index-CuWWn2z7.js, line 7909)
+[Error] 📡 [AutoPublish] SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7909:139954)
+[Log] 📡 [AutoPublish] Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7909)
+[Error] 📡 SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7800:56483)
+[Log] 📡 Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7800)
+[Log] 📡 [AutoPublish] Connecting to notification stream... (index-CuWWn2z7.js, line 7909)
+[Log] 📡 Connecting to notification stream... (index-CuWWn2z7.js, line 7800)
+[Error] 📡 SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7800:56483)
+[Log] 📡 Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7800)
+[Error] 📡 [AutoPublish] SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7909:139954)
+[Log] 📡 [AutoPublish] Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7909)
+[Log] 📡 Connecting to notification stream... (index-CuWWn2z7.js, line 7800)
+[Log] 📡 [AutoPublish] Connecting to notification stream... (index-CuWWn2z7.js, line 7909)
+[Error] 📡 SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7800:56483)
+[Log] 📡 Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7800)
+[Error] 📡 [AutoPublish] SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7909:139954)
+[Log] 📡 [AutoPublish] Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7909)
+[Log] 📡 Connecting to notification stream... (index-CuWWn2z7.js, line 7800)
+[Log] 📡 [AutoPublish] Connecting to notification stream... (index-CuWWn2z7.js, line 7909)
+[Error] 📡 SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7800:56483)
+[Log] 📡 Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7800)
+[Error] 📡 [AutoPublish] SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7909:139954)
+[Log] 📡 [AutoPublish] Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7909)
+[Log] 📡 Connecting to notification stream... (index-CuWWn2z7.js, line 7800)
+[Log] 📡 [AutoPublish] Connecting to notification stream... (index-CuWWn2z7.js, line 7909)
+[Error] 📡 SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7800:56483)
+[Log] 📡 Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7800)
+[Error] 📡 [AutoPublish] SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7909:139954)
+[Log] 📡 [AutoPublish] Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7909)
+[Log] 📡 Connecting to notification stream... (index-CuWWn2z7.js, line 7800)
+[Log] 📡 [AutoPublish] Connecting to notification stream... (index-CuWWn2z7.js, line 7909)
+[Error] 📡 SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7800:56483)
+[Log] 📡 Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7800)
+[Error] 📡 [AutoPublish] SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7909:139954)
+[Log] 📡 [AutoPublish] Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7909)
+[Log] 📡 Connecting to notification stream... (index-CuWWn2z7.js, line 7800)
+[Log] 📡 [AutoPublish] Connecting to notification stream... (index-CuWWn2z7.js, line 7909)
+[Error] 📡 [AutoPublish] SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7909:139954)
+[Log] 📡 [AutoPublish] Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7909)
+[Error] 📡 SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7800:56483)
+[Log] 📡 Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7800)
+[Log] 📡 [AutoPublish] Connecting to notification stream... (index-CuWWn2z7.js, line 7909)
+[Log] 📡 Connecting to notification stream... (index-CuWWn2z7.js, line 7800)
+[Error] 📡 [AutoPublish] SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7909:139954)
+[Log] 📡 [AutoPublish] Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7909)
+[Error] 📡 SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7800:56483)
+[Log] 📡 Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7800)
+[Log] 📡 [AutoPublish] Connecting to notification stream... (index-CuWWn2z7.js, line 7909)
+[Log] 📡 Connecting to notification stream... (index-CuWWn2z7.js, line 7800)
+[Error] 📡 SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7800:56483)
+[Log] 📡 Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7800)
+[Error] 📡 [AutoPublish] SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7909:139954)
+[Log] 📡 [AutoPublish] Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7909)
+[Log] 📡 Connecting to notification stream... (index-CuWWn2z7.js, line 7800)
+[Log] 📡 [AutoPublish] Connecting to notification stream... (index-CuWWn2z7.js, line 7909)
+[Error] 📡 SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7800:56483)
+[Log] 📡 Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7800)
+[Error] 📡 [AutoPublish] SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7909:139954)
+[Log] 📡 [AutoPublish] Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7909)
+[Log] 📡 Connecting to notification stream... (index-CuWWn2z7.js, line 7800)
+[Log] 📡 [AutoPublish] Connecting to notification stream... (index-CuWWn2z7.js, line 7909)
+[Error] 📡 [AutoPublish] SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7909:139954)
+[Log] 📡 [AutoPublish] Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7909)
+[Error] 📡 SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7800:56483)
+[Log] 📡 Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7800)
+[Log] 📡 [AutoPublish] Connecting to notification stream... (index-CuWWn2z7.js, line 7909)
+[Log] 📡 Connecting to notification stream... (index-CuWWn2z7.js, line 7800)
+[Error] 📡 SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7800:56483)
+[Log] 📡 Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7800)
+[Error] 📡 [AutoPublish] SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7909:139954)
+[Log] 📡 [AutoPublish] Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7909)
+[Log] App state changed. Is active? – true (index-CuWWn2z7.js, line 9332)
+[Log] 📡 Connecting to notification stream... (index-CuWWn2z7.js, line 7800)
+[Log] 📡 [AutoPublish] Connecting to notification stream... (index-CuWWn2z7.js, line 7909)
+[Error] 📡 SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7800:56483)
+[Log] 📡 Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7800)
+[Error] 📡 [AutoPublish] SSE connection error: – Event
+Event
+	(anonymous function) (index-CuWWn2z7.js:7909:139954)
+[Log] 📡 [AutoPublish] Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7909)
+[Error] Failed to load resource: the server responded with a status of 502 () (389128c5-fecf-44c9-973d-f8d837f117b5, line 0)
+[Error] [Delete Creative] خطأ: – SyntaxError: JSON Parse error: Unexpected identifier "The"
+SyntaxError: JSON Parse error: Unexpected identifier "The"
+	onError (index-CuWWn2z7.js:9200:139993)
+	execute (index-CuWWn2z7.js:48:21389)
+[Error] Failed to load resource: the server responded with a status of 502 () (track, line 0)
+[Log] 📡 Connecting to notification stream... (index-CuWWn2z7.js, line 7800)
+[Log] 📡 [AutoPublish] Connecting to notification stream... (index-CuWWn2z7.js, line 7909)
+> Selected Element
+< <div dir="rtl" data-orientation="horizontal" class="space-y-4">…</div>
+[Error] 📡 [AutoPublish] SSE connection error: – Event {isTrusted: true, type: "error", target: EventSource, …}
+Event {isTrusted: true, type: "error", target: EventSource, currentTarget: EventSource, eventPhase: 2, …}Event
+	(anonymous function) (index-CuWWn2z7.js:7909:139954)
+[Log] 📡 [AutoPublish] Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7909)
+[Error] 📡 SSE connection error: – Event {isTrusted: true, type: "error", target: EventSource, …}
+Event {isTrusted: true, type: "error", target: EventSource, currentTarget: EventSource, eventPhase: 2, …}Event
+	(anonymous function) (index-CuWWn2z7.js:7800:56483)
+[Log] 📡 Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7800)
+[Log] 📡 [AutoPublish] Connecting to notification stream... (index-CuWWn2z7.js, line 7909)
+[Log] 📡 Connecting to notification stream... (index-CuWWn2z7.js, line 7800)
+[Error] 📡 SSE connection error: – Event {isTrusted: true, type: "error", target: EventSource, …}
+Event {isTrusted: true, type: "error", target: EventSource, currentTarget: EventSource, eventPhase: 2, …}Event
+	(anonymous function) (index-CuWWn2z7.js:7800:56483)
+[Log] 📡 Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7800)
+[Error] 📡 [AutoPublish] SSE connection error: – Event {isTrusted: true, type: "error", target: EventSource, …}
+Event {isTrusted: true, type: "error", target: EventSource, currentTarget: EventSource, eventPhase: 2, …}Event
+	(anonymous function) (index-CuWWn2z7.js:7909:139954)
+[Log] 📡 [AutoPublish] Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7909)
+[Log] 📡 Connecting to notification stream... (index-CuWWn2z7.js, line 7800)
+[Log] 📡 [AutoPublish] Connecting to notification stream... (index-CuWWn2z7.js, line 7909)
+[Error] 📡 SSE connection error: – Event {isTrusted: true, type: "error", target: EventSource, …}
+Event {isTrusted: true, type: "error", target: EventSource, currentTarget: EventSource, eventPhase: 2, …}Event
+	(anonymous function) (index-CuWWn2z7.js:7800:56483)
+[Log] 📡 Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7800)
+[Error] 📡 [AutoPublish] SSE connection error: – Event {isTrusted: true, type: "error", target: EventSource, …}
+Event {isTrusted: true, type: "error", target: EventSource, currentTarget: EventSource, eventPhase: 2, …}Event
+	(anonymous function) (index-CuWWn2z7.js:7909:139954)
+[Log] 📡 [AutoPublish] Scheduling reconnection in 5 seconds... (index-CuWWn2z7.js, line 7909)
