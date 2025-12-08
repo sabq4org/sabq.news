@@ -5,10 +5,26 @@ import {
   Newspaper, 
   Loader2,
   RefreshCw,
-  ArrowRight
+  ArrowRight,
+  Menu,
+  Eye,
+  Type,
+  Waves,
+  BookOpen,
+  X
 } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useAccessibility } from "@/contexts/AccessibilityContext";
 import type { Article, Category, User } from "@shared/schema";
 import sabqLogo from "@assets/sabq-logo.png";
 
@@ -23,7 +39,22 @@ export default function LiteFeedPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const animationRef = useRef<number | null>(null);
+  
+  const {
+    settings,
+    setFontSize,
+    setHighContrast,
+    setReduceMotion,
+    setReadingMode,
+  } = useAccessibility();
+
+  const fontSizeOptions = [
+    { value: "normal", label: "عادي" },
+    { value: "large", label: "كبير" },
+    { value: "x-large", label: "كبير جداً" },
+  ];
 
   const { data: articles = [], isLoading, refetch } = useQuery<ArticleWithDetails[]>({
     queryKey: ["/api/articles?status=published&limit=50&orderBy=newest"],
@@ -182,21 +213,32 @@ export default function LiteFeedPage() {
 
   return (
     <div className="h-screen w-screen bg-black overflow-hidden flex flex-col">
-      <div className="absolute top-4 left-4 z-20">
-        <Link href="/">
+      {/* Header */}
+      <div className="absolute top-0 left-0 right-0 z-20 px-3 py-3 flex items-center justify-between">
+        {/* Left side - Back button & Menu */}
+        <div className="flex items-center gap-1">
+          <Link href="/">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="bg-white/10 text-white/90 hover:bg-white/20 h-9 w-9"
+              data-testid="button-back-to-classic"
+            >
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
           <Button 
             variant="ghost" 
-            size="sm"
-            className="bg-white/10 text-white/90 hover:bg-white/20 gap-2"
-            data-testid="button-back-to-classic"
+            size="icon"
+            className="bg-white/10 text-white/90 hover:bg-white/20 h-9 w-9"
+            onClick={() => setMenuOpen(true)}
+            data-testid="button-lite-menu"
           >
-            <ArrowRight className="h-4 w-4" />
-            <span className="text-sm">الموقع الرئيسي</span>
+            <Menu className="h-4 w-4" />
           </Button>
-        </Link>
-      </div>
+        </div>
 
-      <div className="absolute top-4 right-4 z-20">
+        {/* Right side - Logo */}
         <img 
           src={sabqLogo} 
           alt="سبق" 
@@ -204,6 +246,117 @@ export default function LiteFeedPage() {
           data-testid="img-sabq-logo"
         />
       </div>
+
+      {/* Sidebar Menu */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-50" dir="rtl">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setMenuOpen(false)}
+          />
+          
+          {/* Menu Panel */}
+          <div className="absolute top-0 right-0 h-full w-72 bg-zinc-900 shadow-2xl">
+            {/* Menu Header */}
+            <div className="flex items-center justify-between p-4 border-b border-white/10">
+              <h2 className="text-white font-bold text-lg">القائمة</h2>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white/70 hover:text-white hover:bg-white/10 h-8 w-8"
+                onClick={() => setMenuOpen(false)}
+                data-testid="button-close-lite-menu"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Menu Content - Accessibility Settings */}
+            <div className="p-4 space-y-6">
+              <div className="flex items-center gap-2 text-white/60 text-sm">
+                <Eye className="h-4 w-4" />
+                <span>إعدادات الوصول</span>
+              </div>
+
+              {/* Font Size */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Type className="h-4 w-4 text-white/60" />
+                  <Label className="text-white text-sm">حجم الخط</Label>
+                </div>
+                <Select
+                  value={settings.fontSize}
+                  onValueChange={(value) => setFontSize(value as "normal" | "large" | "x-large")}
+                >
+                  <SelectTrigger className="w-full bg-white/10 border-white/20 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fontSizeOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* High Contrast */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Eye className="h-4 w-4 text-white/60" />
+                  <Label className="text-white text-sm">تباين عالي</Label>
+                </div>
+                <Switch
+                  checked={settings.highContrast}
+                  onCheckedChange={setHighContrast}
+                  className="data-[state=checked]:bg-primary"
+                />
+              </div>
+
+              {/* Reduce Motion */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Waves className="h-4 w-4 text-white/60" />
+                  <Label className="text-white text-sm">تقليل الحركة</Label>
+                </div>
+                <Switch
+                  checked={settings.reduceMotion}
+                  onCheckedChange={setReduceMotion}
+                  className="data-[state=checked]:bg-primary"
+                />
+              </div>
+
+              {/* Reading Mode */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-white/60" />
+                  <Label className="text-white text-sm">وضع القراءة</Label>
+                </div>
+                <Switch
+                  checked={settings.readingMode}
+                  onCheckedChange={setReadingMode}
+                  className="data-[state=checked]:bg-primary"
+                />
+              </div>
+            </div>
+
+            {/* Back to Main Site Link */}
+            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10">
+              <Link href="/" onClick={() => setMenuOpen(false)}>
+                <Button 
+                  variant="outline" 
+                  className="w-full bg-white/5 border-white/20 text-white hover:bg-white/10 gap-2"
+                >
+                  <ArrowRight className="h-4 w-4" />
+                  الموقع الرئيسي
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="flex-1 relative">
         {prevArticle && (
