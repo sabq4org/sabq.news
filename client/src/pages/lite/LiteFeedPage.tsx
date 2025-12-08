@@ -29,15 +29,21 @@ type AdData = {
   ctaText?: string;
   linkUrl?: string;
   advertiser?: string;
+  impressionId?: string;
 };
 
 type FeedItem = 
   | { type: 'article'; data: ArticleWithDetails }
   | { type: 'ad'; data: AdData };
 
-const SAMPLE_ADS: AdData[] = [
+type LiteFeedAdsResponse = {
+  ads: AdData[];
+  fallback: boolean;
+};
+
+const FALLBACK_ADS: AdData[] = [
   {
-    id: "ad-1",
+    id: "fallback-ad-1",
     imageUrl: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1080&q=80",
     title: "اكتشف عروضنا الحصرية",
     description: "خصومات تصل إلى 50% على جميع المنتجات",
@@ -46,7 +52,7 @@ const SAMPLE_ADS: AdData[] = [
     advertiser: "متجر الكتروني"
   },
   {
-    id: "ad-2", 
+    id: "fallback-ad-2", 
     imageUrl: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=1080&q=80",
     title: "سافر بأقل الأسعار",
     description: "رحلات مميزة لأفضل الوجهات السياحية",
@@ -55,7 +61,7 @@ const SAMPLE_ADS: AdData[] = [
     advertiser: "شركة سفر وسياحة"
   },
   {
-    id: "ad-3",
+    id: "fallback-ad-3",
     imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1080&q=80",
     title: "استثمر في مستقبلك",
     description: "حلول مالية ذكية لتحقيق أهدافك",
@@ -76,6 +82,17 @@ export default function LiteFeedPage() {
     queryKey: ["/api/articles?status=published&limit=50&orderBy=newest"],
   });
 
+  const { data: adsResponse } = useQuery<LiteFeedAdsResponse>({
+    queryKey: ["/api/ads/lite-feed"],
+  });
+
+  const activeAds = useMemo(() => {
+    if (adsResponse?.ads && adsResponse.ads.length > 0 && !adsResponse.fallback) {
+      return adsResponse.ads;
+    }
+    return FALLBACK_ADS;
+  }, [adsResponse]);
+
   const sortedArticles = [...articles].sort((a, b) => {
     const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
     const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
@@ -90,14 +107,14 @@ export default function LiteFeedPage() {
       items.push({ type: 'article', data: article });
       
       if ((index + 1) % 5 === 0 && index < sortedArticles.length - 1) {
-        const ad = SAMPLE_ADS[adIndex % SAMPLE_ADS.length];
+        const ad = activeAds[adIndex % activeAds.length];
         items.push({ type: 'ad', data: ad });
         adIndex++;
       }
     });
     
     return items;
-  }, [sortedArticles]);
+  }, [sortedArticles, activeAds]);
 
   const handleDragStart = useCallback(() => {
     if (animationRef.current) {

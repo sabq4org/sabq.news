@@ -3091,6 +3091,80 @@ router.post("/track/impression/:impressionId", async (req, res) => {
   }
 });
 
+// Get ads for Lite Feed (PUBLIC - no auth required)
+// Returns multiple ads for rotation in the swipe feed
+router.get("/lite-feed", async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit as string) || 10, 20);
+    const now = new Date();
+    
+    // Find ALL active placements for lite-feed slot
+    const activePlacements = await db
+      .select({
+        placement: adCreativePlacements,
+        creative: creatives,
+        campaign: campaigns,
+        slot: inventorySlots,
+      })
+      .from(adCreativePlacements)
+      .innerJoin(creatives, eq(adCreativePlacements.creativeId, creatives.id))
+      .innerJoin(campaigns, eq(adCreativePlacements.campaignId, campaigns.id))
+      .innerJoin(inventorySlots, eq(adCreativePlacements.inventorySlotId, inventorySlots.id))
+      .where(and(
+        eq(inventorySlots.location, "lite-feed"),
+        eq(inventorySlots.isActive, true),
+        eq(adCreativePlacements.status, "active"),
+        eq(campaigns.status, "active"),
+        eq(creatives.status, "active"),
+        lte(adCreativePlacements.startDate, now),
+        sql`(${adCreativePlacements.endDate} IS NULL OR ${adCreativePlacements.endDate} >= ${now})`,
+        sql`${campaigns.spentBudget} < ${campaigns.totalBudget}`,
+        sql`${campaigns.spentToday} < ${campaigns.dailyBudget}`
+      ))
+      .orderBy(desc(adCreativePlacements.priority))
+      .limit(limit);
+    
+    if (activePlacements.length === 0) {
+      return res.json({ ads: [], fallback: true });
+    }
+    
+    // Create impression records and format ads
+    const ads = await Promise.all(
+      activePlacements.map(async ({ placement, creative, campaign, slot }) => {
+        // Create impression record
+        const [impression] = await db
+          .insert(impressions)
+          .values({
+            creativeId: creative.id,
+            campaignId: campaign.id,
+            slotId: slot.id,
+            userAgent: req.headers["user-agent"] || null,
+            ipAddress: req.ip || null,
+            pageUrl: "/lite",
+            referrer: req.headers.referer || null,
+          })
+          .returning();
+        
+        return {
+          id: `ad-${creative.id}`,
+          imageUrl: creative.content || "",
+          title: creative.title || creative.name,
+          description: creative.description || "",
+          ctaText: creative.callToAction || "اعرف المزيد",
+          linkUrl: creative.destinationUrl || "#",
+          advertiser: campaign.name,
+          impressionId: impression.id,
+        };
+      })
+    );
+    
+    res.json({ ads, fallback: false });
+  } catch (error) {
+    console.error("[Ads API] خطأ في جلب إعلانات Lite Feed:", error);
+    res.json({ ads: [], fallback: true, error: "حدث خطأ في جلب الإعلانات" });
+  }
+});
+
 // Track ad click (PUBLIC)
 router.post("/track/click/:impressionId", async (req, res) => {
   try {
