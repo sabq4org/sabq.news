@@ -233,7 +233,7 @@ export function SwipeCard({
                   alt={article.title}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                 
                 <button
                   onClick={() => setShowDetails(false)}
