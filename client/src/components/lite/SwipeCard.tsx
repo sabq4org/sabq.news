@@ -224,7 +224,7 @@ export function SwipeCard({
             <div className="flex justify-end">
               <button
                 onClick={() => setShowDetails(true)}
-                className="bg-white hover:bg-gray-100 text-black font-medium rounded-full px-8 py-3 text-base transition-colors"
+                className="bg-white hover:bg-gray-100 text-black font-medium rounded-full px-5 py-2 text-sm transition-colors"
                 data-testid="button-read-details"
               >
                 اقرأ التفاصيل
