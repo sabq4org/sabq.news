@@ -71,10 +71,17 @@ export default function LiteFeedPage() {
   });
 
   const activeAds = useMemo(() => {
+    let ads = FALLBACK_ADS;
     if (adsResponse?.ads && adsResponse.ads.length > 0 && !adsResponse.fallback) {
-      return adsResponse.ads;
+      ads = adsResponse.ads;
     }
-    return FALLBACK_ADS;
+    // Shuffle ads randomly for varied display
+    const shuffled = [...ads];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
   }, [adsResponse]);
 
   const sortedArticles = [...articles].sort((a, b) => {
