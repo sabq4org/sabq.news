@@ -260,7 +260,7 @@ export function SwipeCard({
               </div>
             )}
 
-            <div className="p-6 -mt-8 relative">
+            <div className="p-6 mt-2 relative">
               <div className="flex items-center gap-3 mb-4">
                 {article.category && (
                   <span 
