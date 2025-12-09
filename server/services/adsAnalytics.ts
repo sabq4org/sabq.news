@@ -496,7 +496,9 @@ export async function getOverviewStatsWithComparison(
   dateFrom?: Date,
   dateTo?: Date
 ): Promise<OverviewStatsWithComparison> {
+  console.log("[ADS V2 COMPARISON] 🔥 Called with:", { campaignId, dateFrom, dateTo });
   const currentStats = await getOverviewStats(campaignId, dateFrom, dateTo);
+  console.log("[ADS V2 COMPARISON] 📊 Current stats:", currentStats);
 
   let previousFrom: Date | undefined;
   let previousTo: Date | undefined;
