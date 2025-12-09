@@ -380,7 +380,7 @@ export default function LiteFeedPage() {
 
   return (
     <div className="h-screen w-screen bg-black overflow-hidden flex flex-col">
-      <div className="absolute top-4 right-4 z-20">
+      <div className="absolute top-4 right-4 z-30">
         <img 
           src={sabqLogo} 
           alt="سبق" 
@@ -390,7 +390,7 @@ export default function LiteFeedPage() {
       </div>
 
       {isAuthenticated && user && (
-        <div className="absolute top-4 left-4 z-20">
+        <div className="absolute top-4 left-4 z-30">
           {user.profileImageUrl ? (
             <img
               src={user.profileImageUrl}
