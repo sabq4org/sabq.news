@@ -5,7 +5,9 @@ import { AdCard } from "@/components/lite/AdCard";
 import { 
   Newspaper, 
   Loader2,
-  RefreshCw
+  RefreshCw,
+  RotateCcw,
+  User as UserIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
@@ -58,6 +60,7 @@ export default function LiteFeedPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [showBackToStart, setShowBackToStart] = useState(false);
   const animationRef = useRef<number | null>(null);
   const viewDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -154,6 +157,26 @@ export default function LiteFeedPage() {
             setCurrentIndex(i => i + 1);
             setDragOffset(0);
             setIsAnimating(false);
+            return 0;
+          }
+          animationRef.current = requestAnimationFrame(animateOut);
+          return next;
+        });
+      };
+      animationRef.current = requestAnimationFrame(animateOut);
+      
+    } else if (dragOffset < -threshold && currentIndex >= feedItems.length - 1) {
+      setIsAnimating(true);
+      setShowBackToStart(true);
+      
+      const animateOut = () => {
+        setDragOffset(prev => {
+          const next = prev - 60;
+          if (next <= -screenHeight) {
+            setCurrentIndex(0);
+            setDragOffset(0);
+            setIsAnimating(false);
+            setTimeout(() => setShowBackToStart(false), 1500);
             return 0;
           }
           animationRef.current = requestAnimationFrame(animateOut);
@@ -315,6 +338,15 @@ export default function LiteFeedPage() {
     }
   };
 
+  const articleOnlyIndex = useMemo(() => {
+    let count = 0;
+    for (let i = 0; i < currentIndex; i++) {
+      if (feedItems[i]?.type === 'article') count++;
+    }
+    if (feedItems[currentIndex]?.type === 'article') count++;
+    return count;
+  }, [currentIndex, feedItems]);
+
   return (
     <div className="h-screen w-screen bg-black overflow-hidden flex flex-col">
       <div className="absolute top-4 right-4 z-20">
@@ -326,6 +358,18 @@ export default function LiteFeedPage() {
         />
       </div>
 
+      {isAuthenticated && user && (
+        <div className="absolute top-4 left-4 z-20">
+          <div 
+            className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center border-2 border-white/30"
+            data-testid="avatar-user"
+            title={user.name || user.email || 'مستخدم'}
+          >
+            <UserIcon className="h-5 w-5 text-white" />
+          </div>
+        </div>
+      )}
+
       <div className="flex-1 relative">
         {prevItem && renderFeedItem(prevItem, 'previous', `prev-${prevItem.type}-${prevItem.data.id}`)}
 
@@ -333,23 +377,26 @@ export default function LiteFeedPage() {
 
         {currentItem && renderFeedItem(currentItem, 'current', `current-${currentItem.type}-${currentItem.data.id}`)}
 
-        {currentIndex >= feedItems.length - 1 && dragOffset < -100 && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black z-20" dir="rtl">
-            <div className="text-center p-8">
-              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-primary/20 flex items-center justify-center">
-                <Newspaper className="h-10 w-10 text-primary" />
+        {showBackToStart && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-30 pointer-events-none" dir="rtl">
+            <div className="text-center animate-pulse">
+              <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-primary/30 flex items-center justify-center">
+                <RotateCcw className="h-8 w-8 text-primary" />
               </div>
-              <h2 className="text-2xl text-white font-bold mb-2">أحسنت!</h2>
-              <p className="text-white/70 mb-6">
-                لقد قرأت {sortedArticles.length} خبراً
-              </p>
-              <Button onClick={handleRefresh} className="gap-2">
-                <RefreshCw className="h-4 w-4" />
-                تحديث الأخبار
-              </Button>
+              <p className="text-white text-lg font-medium">عدت للبداية</p>
             </div>
           </div>
         )}
+      </div>
+
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
+        <div 
+          className="bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 text-white/80 text-sm font-medium"
+          data-testid="text-article-counter"
+          dir="rtl"
+        >
+          {articleOnlyIndex} / {sortedArticles.length}
+        </div>
       </div>
     </div>
   );
