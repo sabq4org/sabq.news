@@ -3223,4 +3223,195 @@ router.post("/track/click/:impressionId", async (req, res) => {
   }
 });
 
+// ============================================
+// ANALYTICS ENDPOINTS - إحصائيات الإعلانات
+// ============================================
+
+import { adsAnalyticsService } from "./services/adsAnalytics";
+
+// نظرة عامة على الإحصائيات
+router.get("/analytics/overview", requireAdvertiser, async (req, res) => {
+  try {
+    const { campaignId, dateFrom, dateTo } = req.query;
+    
+    const fromDate = dateFrom ? new Date(dateFrom as string) : undefined;
+    const toDate = dateTo ? new Date(dateTo as string) : undefined;
+    
+    const stats = await adsAnalyticsService.getOverviewStats(
+      campaignId as string | undefined,
+      fromDate,
+      toDate
+    );
+    
+    res.json(stats);
+  } catch (error) {
+    console.error("[Analytics] خطأ في جلب الإحصائيات العامة:", error);
+    res.status(500).json({ error: "حدث خطأ في جلب الإحصائيات" });
+  }
+});
+
+// بيانات السلسلة الزمنية
+router.get("/analytics/timeseries", requireAdvertiser, async (req, res) => {
+  try {
+    const { period = 'daily', campaignId, dateFrom, dateTo } = req.query;
+    
+    const fromDate = dateFrom ? new Date(dateFrom as string) : undefined;
+    const toDate = dateTo ? new Date(dateTo as string) : undefined;
+    
+    const data = await adsAnalyticsService.getTimeSeriesData(
+      period as 'daily' | 'weekly' | 'monthly',
+      campaignId as string | undefined,
+      fromDate,
+      toDate
+    );
+    
+    res.json(data);
+  } catch (error) {
+    console.error("[Analytics] خطأ في جلب البيانات الزمنية:", error);
+    res.status(500).json({ error: "حدث خطأ في جلب البيانات" });
+  }
+});
+
+// تحليل الجمهور
+router.get("/analytics/audience", requireAdvertiser, async (req, res) => {
+  try {
+    const { campaignId, dateFrom, dateTo } = req.query;
+    
+    const fromDate = dateFrom ? new Date(dateFrom as string) : undefined;
+    const toDate = dateTo ? new Date(dateTo as string) : undefined;
+    
+    const audience = await adsAnalyticsService.getAudienceAnalytics(
+      campaignId as string | undefined,
+      fromDate,
+      toDate
+    );
+    
+    res.json(audience);
+  } catch (error) {
+    console.error("[Analytics] خطأ في تحليل الجمهور:", error);
+    res.status(500).json({ error: "حدث خطأ في تحليل الجمهور" });
+  }
+});
+
+// مقارنة الحملات
+router.get("/analytics/campaigns/compare", requireAdvertiser, async (req, res) => {
+  try {
+    const { campaignIds, dateFrom, dateTo } = req.query;
+    
+    const ids = campaignIds ? (campaignIds as string).split(',') : [];
+    const fromDate = dateFrom ? new Date(dateFrom as string) : undefined;
+    const toDate = dateTo ? new Date(dateTo as string) : undefined;
+    
+    const comparison = await adsAnalyticsService.getCampaignComparison(
+      ids,
+      fromDate,
+      toDate
+    );
+    
+    res.json(comparison);
+  } catch (error) {
+    console.error("[Analytics] خطأ في مقارنة الحملات:", error);
+    res.status(500).json({ error: "حدث خطأ في المقارنة" });
+  }
+});
+
+// مؤشرات الجودة
+router.get("/analytics/quality/:campaignId", requireAdvertiser, async (req, res) => {
+  try {
+    const { campaignId } = req.params;
+    
+    const quality = await adsAnalyticsService.getQualityMetrics(campaignId);
+    
+    res.json(quality);
+  } catch (error) {
+    console.error("[Analytics] خطأ في جلب مؤشرات الجودة:", error);
+    res.status(500).json({ error: "حدث خطأ في جلب مؤشرات الجودة" });
+  }
+});
+
+// قائمة الحملات مع الإحصائيات
+router.get("/analytics/campaigns", requireAdvertiser, async (req, res) => {
+  try {
+    const { dateFrom, dateTo, status } = req.query;
+    
+    const fromDate = dateFrom ? new Date(dateFrom as string) : undefined;
+    const toDate = dateTo ? new Date(dateTo as string) : undefined;
+    
+    // Get all campaigns
+    let campaignsQuery = db.select().from(campaigns);
+    
+    if (status) {
+      campaignsQuery = campaignsQuery.where(eq(campaigns.status, status as string)) as any;
+    }
+    
+    const allCampaigns = await campaignsQuery.orderBy(desc(campaigns.createdAt));
+    
+    // Get stats for each campaign
+    const campaignStats = await Promise.all(
+      allCampaigns.map(async (campaign) => {
+        const stats = await adsAnalyticsService.getOverviewStats(
+          campaign.id,
+          fromDate,
+          toDate
+        );
+        return {
+          ...campaign,
+          stats
+        };
+      })
+    );
+    
+    res.json(campaignStats);
+  } catch (error) {
+    console.error("[Analytics] خطأ في جلب الحملات:", error);
+    res.status(500).json({ error: "حدث خطأ في جلب الحملات" });
+  }
+});
+
+// تصدير التقارير (CSV)
+router.get("/analytics/export/csv", requireAdvertiser, async (req, res) => {
+  try {
+    const { campaignId, dateFrom, dateTo, type = 'overview' } = req.query;
+    
+    const fromDate = dateFrom ? new Date(dateFrom as string) : undefined;
+    const toDate = dateTo ? new Date(dateTo as string) : undefined;
+    
+    let data: any;
+    let filename: string;
+    
+    switch (type) {
+      case 'timeseries':
+        data = await adsAnalyticsService.getTimeSeriesData('daily', campaignId as string, fromDate, toDate);
+        filename = 'ad-analytics-timeseries.csv';
+        break;
+      case 'audience':
+        data = await adsAnalyticsService.getAudienceAnalytics(campaignId as string, fromDate, toDate);
+        filename = 'ad-analytics-audience.csv';
+        break;
+      default:
+        data = await adsAnalyticsService.getOverviewStats(campaignId as string, fromDate, toDate);
+        filename = 'ad-analytics-overview.csv';
+    }
+    
+    // Convert to CSV
+    let csv = '';
+    if (Array.isArray(data)) {
+      if (data.length > 0) {
+        csv = Object.keys(data[0]).join(',') + '\n';
+        csv += data.map(row => Object.values(row).join(',')).join('\n');
+      }
+    } else {
+      csv = Object.keys(data).join(',') + '\n';
+      csv += Object.values(data).join(',');
+    }
+    
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send('\uFEFF' + csv); // Add BOM for Arabic support
+  } catch (error) {
+    console.error("[Analytics] خطأ في تصدير التقرير:", error);
+    res.status(500).json({ error: "حدث خطأ في التصدير" });
+  }
+});
+
 export default router;
