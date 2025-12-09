@@ -159,10 +159,19 @@ function getDateRange(preset: string): { dateFrom: Date; dateTo: Date } {
 }
 
 function formatNumber(num: number): string {
+  if (num === null || num === undefined || isNaN(num)) return "0";
   return new Intl.NumberFormat("ar-SA").format(num);
 }
 
 function formatCurrency(num: number): string {
+  if (num === null || num === undefined || isNaN(num)) {
+    return new Intl.NumberFormat("ar-SA", {
+      style: "currency",
+      currency: "SAR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(0);
+  }
   return new Intl.NumberFormat("ar-SA", {
     style: "currency",
     currency: "SAR",
@@ -199,9 +208,10 @@ function KPICard({
     amber: "bg-amber-500/10 text-amber-500",
   };
 
-  const isPositive = delta !== undefined && delta > 0;
-  const isNegative = delta !== undefined && delta < 0;
-  const deltaText = delta !== undefined 
+  const validDelta = delta !== undefined && !isNaN(delta) && isFinite(delta);
+  const isPositive = validDelta && delta > 0;
+  const isNegative = validDelta && delta < 0;
+  const deltaText = validDelta
     ? `${isPositive ? "+" : ""}${delta.toFixed(1)}% مقارنة بالفترة السابقة`
     : null;
 
@@ -218,7 +228,7 @@ function KPICard({
               <p className="text-2xl font-bold" data-testid={`${testId}-value`}>
                 {value}
               </p>
-              {delta !== undefined && delta !== 0 && (
+              {validDelta && delta !== 0 && (
                 <span 
                   className={`flex items-center gap-0.5 text-xs font-medium ${
                     isPositive ? "text-green-500" : "text-red-500"
