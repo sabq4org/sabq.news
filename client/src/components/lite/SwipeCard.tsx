@@ -213,7 +213,7 @@ export function SwipeCard({
               <div 
                 className="absolute inset-0" 
                 style={{ 
-                  background: 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,0.7) 70%, rgba(0,0,0,1) 100%)' 
+                  background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.2) 30%, rgba(0,0,0,0.5) 70%, rgba(0,0,0,0.85) 100%)' 
                 }} 
               />
             </div>
@@ -227,7 +227,7 @@ export function SwipeCard({
               <div 
                 className="absolute inset-0 pointer-events-none"
                 style={{
-                  background: 'linear-gradient(to top, rgba(180,30,30,0.4) 0%, rgba(120,20,20,0.2) 40%, transparent 70%)'
+                  background: 'linear-gradient(to top, rgba(180,30,30,0.55) 0%, rgba(150,25,25,0.35) 50%, transparent 85%)'
                 }}
               />
             )}
