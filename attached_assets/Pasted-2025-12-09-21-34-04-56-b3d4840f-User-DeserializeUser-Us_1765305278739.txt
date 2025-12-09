@@ -1,0 +1,96 @@
+2025-12-09 21:34:04.56
+b3d4840f
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-09 21:34:04.63
+b3d4840f
+User
+6:34:04 PM [express] GET /api/ads/analytics/live-poll 200 in 136ms :: {"impressions":401,"clicks":5,…
+2025-12-09 21:34:05.76
+b3d4840f
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-09 21:34:05.79
+b3d4840f
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-09 21:34:05.95
+b3d4840f
+User
+1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome`) or
+2025-12-09 21:34:05.95
+b3d4840f
+User
+[Analytics] خطأ في تصدير تقرير PDF: Error: Could not find Chrome (ver. 143.0.7499.40). This can occur if either
+2025-12-09 21:34:05.95
+b3d4840f
+User
+at async ChromeLauncher.launch (file:///home/runner/workspace/node_modules/puppeteer-core/lib/esm/puppeteer/node/BrowserLauncher.js:49:28)
+2025-12-09 21:34:05.95
+b3d4840f
+User
+at ChromeLauncher.resolveExecutablePath (file:///home/runner/workspace/node_modules/puppeteer-core/lib/esm/puppeteer/node/BrowserLauncher.js:297:27)
+2025-12-09 21:34:05.95
+b3d4840f
+User
+2. your cache path is incorrectly configured (which is: /home/runner/.cache/puppeteer).
+2025-12-09 21:34:05.95
+b3d4840f
+User
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+2025-12-09 21:34:05.95
+b3d4840f
+User
+at ChromeLauncher.computeLaunchArguments (file:///home/runner/workspace/node_modules/puppeteer-core/lib/esm/puppeteer/node/ChromeLauncher.js:86:24)
+2025-12-09 21:34:05.95
+b3d4840f
+User
+at async file:///home/runner/workspace/dist/index.js:31351:21
+2025-12-09 21:34:05.99
+b3d4840f
+User
+6:34:05 PM [express] GET /api/ads/analytics/export/pdf 500 in 260ms :: {"error":"حدث خطأ في التصدير"}
+2025-12-09 21:34:06.41
+b3d4840f
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-09 21:34:06.45
+b3d4840f
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-09 21:34:06.52
+b3d4840f
+User
+6:34:06 PM [express] POST /api/accessibility/track 200 in 139ms :: {"success":true,"eventId":"cbe5e4…
+2025-12-09 21:34:09.43
+b3d4840f
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-09 21:34:09.46
+b3d4840f
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-09 21:34:09.55
+b3d4840f
+User
+6:34:09 PM [express] GET /api/ads/analytics/live-poll 200 in 149ms :: {"impressions":401,"clicks":5,…
+2025-12-09 21:34:14.61
+b3d4840f
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-09 21:34:14.65
+b3d4840f
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-09 21:34:14.72
+b3d4840f
+User
+6:34:14 PM [express] GET /api/ads/analytics/live-poll 200 in 137ms :: {"impressions":401,"clicks":5,…
+2025-12-09 21:34:19.84
+b3d4840f
+User
+6:34:19 PM [express] GET /api/ads/analytics/live-poll 200 in 134ms :: {"impressions":401,"clicks":5,…
+2025-12-09 21:34:19.84
+b3d4840f
+User
+6:34:19 PM [express] GET /api/ads/analytics/live-poll 200 in 134ms :: {"impressions":401,"clicks":5,…
