@@ -213,12 +213,21 @@ export function SwipeCard({
               <div 
                 className="absolute inset-0" 
                 style={{ 
-                  background: 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,0.7) 70%, rgba(0,0,0,1) 100%)' 
+                  background: article.newsType === 'breaking'
+                    ? 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.3) 30%, rgba(139,0,0,0.7) 70%, rgba(139,0,0,1) 100%)'
+                    : 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,0.7) 70%, rgba(0,0,0,1) 100%)' 
                 }} 
               />
             </div>
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-800" />
+            <div 
+              className="w-full h-full" 
+              style={{
+                background: article.newsType === 'breaking'
+                  ? 'linear-gradient(to bottom right, #1a0000, #4a0000)'
+                  : 'linear-gradient(to bottom right, #1a1a1a, #2d2d2d)'
+              }}
+            />
           )}
 
           <div className="absolute inset-x-0 top-[42%] bottom-0 px-5" dir="rtl">
@@ -306,11 +315,18 @@ export function SwipeCard({
                   alt={article.title}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                <div 
+                  className="absolute inset-0" 
+                  style={{
+                    background: article.newsType === 'breaking'
+                      ? 'linear-gradient(to top, rgba(139,0,0,0.7) 0%, transparent 100%)'
+                      : 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)'
+                  }}
+                />
                 
                 <button
                   onClick={() => setShowDetails(false)}
-                  className="absolute top-4 right-4 p-2 bg-black/50 backdrop-blur-sm rounded-full text-white"
+                  className={`absolute top-4 right-4 p-2 backdrop-blur-sm rounded-full text-white ${article.newsType === 'breaking' ? 'bg-red-900/50' : 'bg-black/50'}`}
                   data-testid="button-close-details"
                 >
                   <ChevronDown className="h-6 w-6" />
