@@ -9,6 +9,7 @@ interface AdData {
   ctaText?: string;
   linkUrl?: string;
   advertiser?: string;
+  impressionId?: string;
 }
 
 interface AdCardProps {
@@ -112,7 +113,19 @@ export function AdCard({
 
   const transformY = getTransformY();
 
-  const handleAdClick = () => {
+  const handleAdClick = async () => {
+    // Track click if impressionId exists
+    if (ad.impressionId) {
+      try {
+        await fetch(`/api/ads/track/click/${ad.impressionId}`, {
+          method: 'POST',
+          credentials: 'include',
+        });
+      } catch (error) {
+        console.error('[AdCard] Failed to track click:', error);
+      }
+    }
+    
     if (ad.linkUrl) {
       window.open(ad.linkUrl, '_blank', 'noopener,noreferrer');
     }
