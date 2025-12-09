@@ -12,6 +12,7 @@ export type User = {
   firstName?: string;
   lastName?: string;
   isProfileComplete?: boolean;
+  profileImageUrl?: string;
 };
 
 // Check if user has a specific permission
