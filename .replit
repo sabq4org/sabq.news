@@ -108,3 +108,8 @@ integrations = ["javascript_openai:1.0.0", "javascript_object_storage:1.0.0", "j
 
 [objectStorage]
 defaultBucketID = "replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138"
+
+[userenv]
+
+[userenv.shared]
+ALLOWED_ORIGINS = "https://sabq.news,https://www.sabq.news,https://sabq.life,https://www.sabq.life"
