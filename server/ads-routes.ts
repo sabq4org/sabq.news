@@ -95,13 +95,21 @@ const upload = multer({
 // التحقق من أن المستخدم معلن أو مشرف
 function requireAdvertiser(req: Request, res: Response, next: Function) {
   if (!req.isAuthenticated()) {
+    console.log('[Ads Auth] Rejected - not authenticated:', { 
+      path: req.path,
+      sessionID: req.sessionID?.slice(0, 10) + '...'
+    });
     return res.status(401).json({ error: "يجب تسجيل الدخول أولاً" });
   }
   
   const userRole = (req.user as any)?.role;
-  const allowedRoles = ["advertiser", "admin", "superadmin"];
+  const allowedRoles = ["advertiser", "admin", "superadmin", "editor", "reporter"];
   
   if (!allowedRoles.includes(userRole)) {
+    console.log('[Ads Auth] Rejected - role not allowed:', { 
+      path: req.path,
+      role: userRole 
+    });
     return res.status(403).json({ error: "ليس لديك صلاحية الوصول إلى نظام الإعلانات" });
   }
   
@@ -3721,6 +3729,9 @@ const activeLiveConnections = new Set<Response>();
 // SSE endpoint for real-time live data
 router.get("/analytics/live", requireAdvertiser, async (req, res) => {
   try {
+    const user = req.user as any;
+    console.log(`[SSE Live] Connection request from user: ${user?.id} (${user?.role})`);
+    
     // Set SSE headers
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
@@ -3729,7 +3740,7 @@ router.get("/analytics/live", requireAdvertiser, async (req, res) => {
     
     // Add to active connections
     activeLiveConnections.add(res);
-    console.log(`[SSE Live] New connection. Active: ${activeLiveConnections.size}`);
+    console.log(`[SSE Live] New connection established. Active: ${activeLiveConnections.size}`);
     
     // Function to get today's stats
     const getTodayStats = async () => {
