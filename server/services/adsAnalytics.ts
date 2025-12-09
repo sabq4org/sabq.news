@@ -119,39 +119,41 @@ export async function getOverviewStats(
   dateFrom?: Date,
   dateTo?: Date
 ): Promise<OverviewStats> {
-  const campaignConditions = campaignId
-    ? [eq(dailyStats.campaignId, campaignId)]
-    : [];
-  const dateConditions = buildDailyStatsDateFilters(dateFrom, dateTo);
-  const allConditions = [...campaignConditions, ...dateConditions];
+  // Query impressions directly
+  const impCampaignConditions = campaignId ? [eq(impressions.campaignId, campaignId)] : [];
+  const impDateConditions = buildDateFilters(impressions, dateFrom, dateTo);
+  const impAllConditions = [...impCampaignConditions, ...impDateConditions];
+  
+  const impQuery = db.select({ count: sql<number>`COUNT(*)::int` }).from(impressions);
+  const impResult = impAllConditions.length > 0
+    ? await impQuery.where(and(...impAllConditions))
+    : await impQuery;
+  
+  // Query clicks directly
+  const clickCampaignConditions = campaignId ? [eq(clicks.campaignId, campaignId)] : [];
+  const clickDateConditions = buildDateFilters(clicks, dateFrom, dateTo);
+  const clickAllConditions = [...clickCampaignConditions, ...clickDateConditions];
+  
+  const clickQuery = db.select({ count: sql<number>`COUNT(*)::int` }).from(clicks);
+  const clickResult = clickAllConditions.length > 0
+    ? await clickQuery.where(and(...clickAllConditions))
+    : await clickQuery;
+  
+  // Query conversions directly
+  const convCampaignConditions = campaignId ? [eq(conversions.campaignId, campaignId)] : [];
+  const convDateConditions = buildDateFilters(conversions, dateFrom, dateTo);
+  const convAllConditions = [...convCampaignConditions, ...convDateConditions];
+  
+  const convQuery = db.select({ count: sql<number>`COUNT(*)::int` }).from(conversions);
+  const convResult = convAllConditions.length > 0
+    ? await convQuery.where(and(...convAllConditions))
+    : await convQuery;
 
-  const query = db
-    .select({
-      totalImpressions: sql<number>`COALESCE(SUM(${dailyStats.impressions}), 0)::int`,
-      totalClicks: sql<number>`COALESCE(SUM(${dailyStats.clicks}), 0)::int`,
-      totalConversions: sql<number>`COALESCE(SUM(${dailyStats.conversions}), 0)::int`,
-      totalSpent: sql<number>`COALESCE(SUM(${dailyStats.spent}), 0)::int`,
-      totalRevenue: sql<number>`COALESCE(SUM(${dailyStats.revenue}), 0)::int`,
-    })
-    .from(dailyStats);
-
-  const statsResult = allConditions.length > 0
-    ? await query.where(and(...allConditions))
-    : await query;
-
-  const stats = statsResult[0] || {
-    totalImpressions: 0,
-    totalClicks: 0,
-    totalConversions: 0,
-    totalSpent: 0,
-    totalRevenue: 0,
-  };
-
-  const totalImpressions = Number(stats.totalImpressions) || 0;
-  const totalClicks = Number(stats.totalClicks) || 0;
-  const totalConversions = Number(stats.totalConversions) || 0;
-  const totalSpent = Number(stats.totalSpent) || 0;
-  const totalRevenue = Number(stats.totalRevenue) || 0;
+  const totalImpressions = Number(impResult[0]?.count) || 0;
+  const totalClicks = Number(clickResult[0]?.count) || 0;
+  const totalConversions = Number(convResult[0]?.count) || 0;
+  const totalSpent = 0; // Not tracked in individual tables
+  const totalRevenue = 0; // Not tracked in individual tables
 
   const ctr = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
   const cpc = totalClicks > 0 ? totalSpent / totalClicks : 0;
@@ -175,11 +177,6 @@ export async function getTimeSeriesData(
   dateFrom?: Date,
   dateTo?: Date
 ): Promise<TimeSeriesDataPoint[]> {
-  const campaignConditions = campaignId
-    ? [eq(dailyStats.campaignId, campaignId)]
-    : [];
-  const dateConditions = buildDailyStatsDateFilters(dateFrom, dateTo);
-
   let dateTrunc: string;
   switch (period) {
     case "weekly":
@@ -194,39 +191,67 @@ export async function getTimeSeriesData(
       break;
   }
 
-  const allConditions = [...campaignConditions, ...dateConditions];
+  // Query impressions grouped by date
+  const impCampaignConditions = campaignId ? [eq(impressions.campaignId, campaignId)] : [];
+  const impDateConditions = buildDateFilters(impressions, dateFrom, dateTo);
+  const impAllConditions = [...impCampaignConditions, ...impDateConditions];
   
-  const baseQuery = db
+  const impBaseQuery = db
     .select({
-      dateBucket: sql<string>`date_trunc('${sql.raw(dateTrunc)}', ${dailyStats.date})::date::text`,
-      impressions: sql<number>`COALESCE(SUM(${dailyStats.impressions}), 0)::int`,
-      clicks: sql<number>`COALESCE(SUM(${dailyStats.clicks}), 0)::int`,
-      conversions: sql<number>`COALESCE(SUM(${dailyStats.conversions}), 0)::int`,
-      spent: sql<number>`COALESCE(SUM(${dailyStats.spent}), 0)::int`,
+      dateBucket: sql<string>`date_trunc('${sql.raw(dateTrunc)}', ${impressions.timestamp})::date::text`,
+      count: sql<number>`COUNT(*)::int`,
     })
-    .from(dailyStats);
+    .from(impressions);
 
-  const result = allConditions.length > 0
-    ? await baseQuery
-        .where(and(...allConditions))
-        .groupBy(sql`date_trunc('${sql.raw(dateTrunc)}', ${dailyStats.date})`)
-        .orderBy(sql`date_trunc('${sql.raw(dateTrunc)}', ${dailyStats.date})`)
-    : await baseQuery
-        .groupBy(sql`date_trunc('${sql.raw(dateTrunc)}', ${dailyStats.date})`)
-        .orderBy(sql`date_trunc('${sql.raw(dateTrunc)}', ${dailyStats.date})`);
+  const impResult = impAllConditions.length > 0
+    ? await impBaseQuery
+        .where(and(...impAllConditions))
+        .groupBy(sql`date_trunc('${sql.raw(dateTrunc)}', ${impressions.timestamp})`)
+        .orderBy(sql`date_trunc('${sql.raw(dateTrunc)}', ${impressions.timestamp})`)
+    : await impBaseQuery
+        .groupBy(sql`date_trunc('${sql.raw(dateTrunc)}', ${impressions.timestamp})`)
+        .orderBy(sql`date_trunc('${sql.raw(dateTrunc)}', ${impressions.timestamp})`);
 
-  return result.map((row) => {
-    const imp = Number(row.impressions) || 0;
-    const clk = Number(row.clicks) || 0;
+  // Query clicks grouped by date
+  const clickCampaignConditions = campaignId ? [eq(clicks.campaignId, campaignId)] : [];
+  const clickDateConditions = buildDateFilters(clicks, dateFrom, dateTo);
+  const clickAllConditions = [...clickCampaignConditions, ...clickDateConditions];
+  
+  const clickBaseQuery = db
+    .select({
+      dateBucket: sql<string>`date_trunc('${sql.raw(dateTrunc)}', ${clicks.timestamp})::date::text`,
+      count: sql<number>`COUNT(*)::int`,
+    })
+    .from(clicks);
+
+  const clickResult = clickAllConditions.length > 0
+    ? await clickBaseQuery
+        .where(and(...clickAllConditions))
+        .groupBy(sql`date_trunc('${sql.raw(dateTrunc)}', ${clicks.timestamp})`)
+        .orderBy(sql`date_trunc('${sql.raw(dateTrunc)}', ${clicks.timestamp})`)
+    : await clickBaseQuery
+        .groupBy(sql`date_trunc('${sql.raw(dateTrunc)}', ${clicks.timestamp})`)
+        .orderBy(sql`date_trunc('${sql.raw(dateTrunc)}', ${clicks.timestamp})`);
+
+  // Merge impressions and clicks by date
+  const impMap = new Map(impResult.map(r => [r.dateBucket, Number(r.count) || 0]));
+  const clickMap = new Map(clickResult.map(r => [r.dateBucket, Number(r.count) || 0]));
+  
+  const allDates = new Set([...Array.from(impMap.keys()), ...Array.from(clickMap.keys())]);
+  const sortedDates = Array.from(allDates).sort();
+
+  return sortedDates.map((date) => {
+    const imp = impMap.get(date) || 0;
+    const clk = clickMap.get(date) || 0;
     const ctr = imp > 0 ? (clk / imp) * 100 : 0;
 
     return {
-      date: row.dateBucket,
+      date,
       impressions: imp,
       clicks: clk,
-      conversions: Number(row.conversions) || 0,
+      conversions: 0,
       ctr: parseFloat(ctr.toFixed(2)),
-      spent: Number(row.spent) || 0,
+      spent: 0,
     };
   });
 }
@@ -561,34 +586,39 @@ export async function getFunnelData(
   dateFrom?: Date,
   dateTo?: Date
 ): Promise<FunnelData> {
-  const campaignConditions = campaignId
-    ? [eq(dailyStats.campaignId, campaignId)]
-    : [];
-  const dateConditions = buildDailyStatsDateFilters(dateFrom, dateTo);
-
-  const allConditions = [...campaignConditions, ...dateConditions];
+  // Query impressions directly
+  const impCampaignConditions = campaignId ? [eq(impressions.campaignId, campaignId)] : [];
+  const impDateConditions = buildDateFilters(impressions, dateFrom, dateTo);
+  const impAllConditions = [...impCampaignConditions, ...impDateConditions];
   
-  const query = db
-    .select({
-      totalImpressions: sql<number>`COALESCE(SUM(${dailyStats.impressions}), 0)::int`,
-      totalClicks: sql<number>`COALESCE(SUM(${dailyStats.clicks}), 0)::int`,
-      totalConversions: sql<number>`COALESCE(SUM(${dailyStats.conversions}), 0)::int`,
-    })
-    .from(dailyStats);
+  const impQuery = db.select({ count: sql<number>`COUNT(*)::int` }).from(impressions);
+  const impResult = impAllConditions.length > 0
+    ? await impQuery.where(and(...impAllConditions))
+    : await impQuery;
+  
+  // Query clicks directly
+  const clickCampaignConditions = campaignId ? [eq(clicks.campaignId, campaignId)] : [];
+  const clickDateConditions = buildDateFilters(clicks, dateFrom, dateTo);
+  const clickAllConditions = [...clickCampaignConditions, ...clickDateConditions];
+  
+  const clickQuery = db.select({ count: sql<number>`COUNT(*)::int` }).from(clicks);
+  const clickResult = clickAllConditions.length > 0
+    ? await clickQuery.where(and(...clickAllConditions))
+    : await clickQuery;
+  
+  // Query conversions directly
+  const convCampaignConditions = campaignId ? [eq(conversions.campaignId, campaignId)] : [];
+  const convDateConditions = buildDateFilters(conversions, dateFrom, dateTo);
+  const convAllConditions = [...convCampaignConditions, ...convDateConditions];
+  
+  const convQuery = db.select({ count: sql<number>`COUNT(*)::int` }).from(conversions);
+  const convResult = convAllConditions.length > 0
+    ? await convQuery.where(and(...convAllConditions))
+    : await convQuery;
 
-  const statsResult = allConditions.length > 0
-    ? await query.where(and(...allConditions))
-    : await query;
-
-  const stats = statsResult[0] || {
-    totalImpressions: 0,
-    totalClicks: 0,
-    totalConversions: 0,
-  };
-
-  const totalImpressions = Number(stats.totalImpressions) || 0;
-  const totalClicks = Number(stats.totalClicks) || 0;
-  const totalConversions = Number(stats.totalConversions) || 0;
+  const totalImpressions = Number(impResult[0]?.count) || 0;
+  const totalClicks = Number(clickResult[0]?.count) || 0;
+  const totalConversions = Number(convResult[0]?.count) || 0;
   
   const loyaltyCount = Math.round(totalConversions * 0.3);
   const advocacyCount = Math.round(totalConversions * 0.1);
