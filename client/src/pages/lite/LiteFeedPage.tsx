@@ -276,6 +276,16 @@ export default function LiteFeedPage() {
     };
   }, [currentIndex, feedItems]);
 
+  const articleOnlyIndex = useMemo(() => {
+    if (feedItems.length === 0) return 0;
+    let count = 0;
+    for (let i = 0; i < currentIndex; i++) {
+      if (feedItems[i]?.type === 'article') count++;
+    }
+    if (feedItems[currentIndex]?.type === 'article') count++;
+    return count;
+  }, [currentIndex, feedItems]);
+
   if (isLoading) {
     return (
       <div className="h-screen w-screen bg-black flex items-center justify-center">
@@ -337,15 +347,6 @@ export default function LiteFeedPage() {
       );
     }
   };
-
-  const articleOnlyIndex = useMemo(() => {
-    let count = 0;
-    for (let i = 0; i < currentIndex; i++) {
-      if (feedItems[i]?.type === 'article') count++;
-    }
-    if (feedItems[currentIndex]?.type === 'article') count++;
-    return count;
-  }, [currentIndex, feedItems]);
 
   return (
     <div className="h-screen w-screen bg-black overflow-hidden flex flex-col">
