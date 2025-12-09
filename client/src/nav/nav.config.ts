@@ -243,6 +243,15 @@ export const navConfig: NavItem[] = [
         roles: ["admin", "advertiser"],
         permissions: ["ads.view", "ads.account"],
       },
+      {
+        id: "ad_analytics",
+        labelKey: "nav.ad_analytics",
+        labelAr: "تحليلات الإعلانات",
+        path: "/dashboard/ads/analytics",
+        icon: BarChart,
+        roles: ["admin", "advertiser"],
+        permissions: ["ads.view"],
+      },
     ],
   },
 
