@@ -63,10 +63,13 @@ export default function LiteFeedPage() {
   const [isAnimating, setIsAnimating] = useState(false);
   const [showBackToStart, setShowBackToStart] = useState(false);
   const [showDoubleTapHint, setShowDoubleTapHint] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const animationRef = useRef<number | null>(null);
   const viewDebounceRef = useRef<NodeJS.Timeout | null>(null);
   const lastTapRef = useRef<number>(0);
   const hintShownCountRef = useRef<number>(0);
+  
+  const PULL_TO_REFRESH_THRESHOLD = 100;
 
   const { user, isAuthenticated } = useAuth();
 
@@ -207,6 +210,29 @@ export default function LiteFeedPage() {
       };
       animationRef.current = requestAnimationFrame(animateOut);
       
+    } else if (dragOffset > PULL_TO_REFRESH_THRESHOLD && currentIndex === 0) {
+      // Pull-to-refresh when at first article
+      setIsRefreshing(true);
+      setIsAnimating(true);
+      
+      const animateBack = () => {
+        setDragOffset(prev => {
+          const next = prev * 0.8;
+          if (Math.abs(next) < 2) {
+            setDragOffset(0);
+            // Perform refresh
+            refetch().then(() => {
+              setIsRefreshing(false);
+              setIsAnimating(false);
+            });
+            return 0;
+          }
+          animationRef.current = requestAnimationFrame(animateBack);
+          return next;
+        });
+      };
+      animationRef.current = requestAnimationFrame(animateBack);
+      
     } else {
       setIsAnimating(true);
       
@@ -223,7 +249,7 @@ export default function LiteFeedPage() {
       };
       animationRef.current = requestAnimationFrame(animateBack);
     }
-  }, [isAnimating, dragOffset, currentIndex, feedItems.length]);
+  }, [isAnimating, dragOffset, currentIndex, feedItems.length, PULL_TO_REFRESH_THRESHOLD, refetch]);
 
   const handleRefresh = useCallback(() => {
     setCurrentIndex(0);
@@ -432,6 +458,36 @@ export default function LiteFeedPage() {
                 <RotateCcw className="h-8 w-8 text-primary" />
               </div>
               <p className="text-white text-lg font-medium">عدت للبداية</p>
+            </div>
+          </div>
+        )}
+
+        {/* Pull-to-refresh indicator */}
+        {currentIndex === 0 && dragOffset > 20 && (
+          <div 
+            className="absolute top-0 left-0 right-0 flex justify-center z-40 pointer-events-none"
+            style={{ 
+              transform: `translateY(${Math.min(dragOffset * 0.5, 80)}px)`,
+              opacity: Math.min(dragOffset / PULL_TO_REFRESH_THRESHOLD, 1)
+            }}
+          >
+            <div className="bg-white/20 backdrop-blur-sm rounded-full p-3">
+              <RefreshCw 
+                className={`h-6 w-6 text-white ${isRefreshing ? 'animate-spin' : ''}`}
+                style={{ 
+                  transform: `rotate(${Math.min(dragOffset * 2, 360)}deg)`,
+                  transition: isRefreshing ? 'none' : 'transform 0.1s'
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {isRefreshing && (
+          <div className="absolute top-4 left-0 right-0 flex justify-center z-40 pointer-events-none">
+            <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2">
+              <RefreshCw className="h-4 w-4 text-white animate-spin" />
+              <span className="text-white text-sm">جاري التحديث...</span>
             </div>
           </div>
         )}
