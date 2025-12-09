@@ -5944,7 +5944,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         query = query.where(and(...whereConditions));
       }
 
-      query = query.orderBy(desc(articles.displayOrder), desc(articles.createdAt));
+      query = query.orderBy(desc(articles.displayOrder), desc(articles.publishedAt), desc(articles.createdAt));
 
       const results = await query;
 
