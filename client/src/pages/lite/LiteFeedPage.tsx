@@ -354,20 +354,29 @@ export default function LiteFeedPage() {
         <img 
           src={sabqLogo} 
           alt="سبق" 
-          className="h-8 w-auto"
+          className="h-9 w-auto"
           data-testid="img-sabq-logo"
         />
       </div>
 
       {isAuthenticated && user && (
         <div className="absolute top-4 left-4 z-20">
-          <div 
-            className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center border-2 border-white/30"
-            data-testid="avatar-user"
-            title={user.name || user.email || 'مستخدم'}
-          >
-            <UserIcon className="h-5 w-5 text-white" />
-          </div>
+          {user.profileImageUrl ? (
+            <img
+              src={user.profileImageUrl}
+              alt={user.name || 'صورة المستخدم'}
+              className="w-9 h-9 rounded-full border-2 border-white/30 object-cover"
+              data-testid="avatar-user"
+            />
+          ) : (
+            <div 
+              className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center border-2 border-white/30"
+              data-testid="avatar-user"
+              title={user.name || user.email || 'مستخدم'}
+            >
+              <UserIcon className="h-5 w-5 text-white" />
+            </div>
+          )}
         </div>
       )}
 
