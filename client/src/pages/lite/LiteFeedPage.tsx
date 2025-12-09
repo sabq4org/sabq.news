@@ -7,7 +7,8 @@ import {
   Loader2,
   RefreshCw,
   RotateCcw,
-  User as UserIcon
+  User as UserIcon,
+  MousePointerClick
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
@@ -61,8 +62,11 @@ export default function LiteFeedPage() {
   const [dragOffset, setDragOffset] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showBackToStart, setShowBackToStart] = useState(false);
+  const [showDoubleTapHint, setShowDoubleTapHint] = useState(false);
   const animationRef = useRef<number | null>(null);
   const viewDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const lastTapRef = useRef<number>(0);
+  const hintShownCountRef = useRef<number>(0);
 
   const { user, isAuthenticated } = useAuth();
 
@@ -286,6 +290,32 @@ export default function LiteFeedPage() {
     return count;
   }, [currentIndex, feedItems]);
 
+  const handleDoubleTap = useCallback(() => {
+    const now = Date.now();
+    const timeSinceLastTap = now - lastTapRef.current;
+    
+    if (timeSinceLastTap < 300 && timeSinceLastTap > 0) {
+      if (currentIndex > 0) {
+        setShowBackToStart(true);
+        setCurrentIndex(0);
+        setDragOffset(0);
+        setTimeout(() => setShowBackToStart(false), 1500);
+      }
+      lastTapRef.current = 0;
+    } else {
+      lastTapRef.current = now;
+    }
+  }, [currentIndex]);
+
+  useEffect(() => {
+    if (articleOnlyIndex > 0 && articleOnlyIndex % 10 === 0 && hintShownCountRef.current < 3) {
+      setShowDoubleTapHint(true);
+      hintShownCountRef.current += 1;
+      const timer = setTimeout(() => setShowDoubleTapHint(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [articleOnlyIndex]);
+
   if (isLoading) {
     return (
       <div className="h-screen w-screen bg-black flex items-center justify-center">
@@ -380,7 +410,7 @@ export default function LiteFeedPage() {
         </div>
       )}
 
-      <div className="flex-1 relative">
+      <div className="flex-1 relative" onClick={handleDoubleTap}>
         {prevItem && renderFeedItem(prevItem, 'previous', `prev-${prevItem.type}-${prevItem.data.id}`)}
 
         {nextItem && renderFeedItem(nextItem, 'next', `next-${nextItem.type}-${nextItem.data.id}`)}
@@ -394,6 +424,15 @@ export default function LiteFeedPage() {
                 <RotateCcw className="h-8 w-8 text-primary" />
               </div>
               <p className="text-white text-lg font-medium">عدت للبداية</p>
+            </div>
+          </div>
+        )}
+
+        {showDoubleTapHint && (
+          <div className="absolute top-20 left-1/2 -translate-x-1/2 z-30 animate-bounce" dir="rtl">
+            <div className="bg-white/20 backdrop-blur-md rounded-full px-4 py-2 flex items-center gap-2">
+              <MousePointerClick className="h-4 w-4 text-white" />
+              <span className="text-white text-sm">اضغط مرتين للعودة للبداية</span>
             </div>
           </div>
         )}
