@@ -428,6 +428,9 @@ export default function AdAnalyticsPage() {
     }
     
     let eventSource: EventSource | null = null;
+    let retryCount = 0;
+    const maxRetries = 3;
+    let retryTimeout: NodeJS.Timeout | null = null;
     
     const connect = () => {
       eventSource = new EventSource('/api/ads/analytics/live', {
@@ -436,6 +439,7 @@ export default function AdAnalyticsPage() {
       
       eventSource.onopen = () => {
         setIsConnected(true);
+        retryCount = 0;
       };
       
       eventSource.onmessage = (event) => {
@@ -451,18 +455,24 @@ export default function AdAnalyticsPage() {
       eventSource.onerror = () => {
         setIsConnected(false);
         eventSource?.close();
-        // Try to reconnect after 3 seconds
-        setTimeout(() => {
-          if (liveEnabled) {
-            connect();
-          }
-        }, 3000);
+        
+        retryCount++;
+        if (retryCount <= maxRetries) {
+          retryTimeout = setTimeout(() => {
+            if (liveEnabled) {
+              connect();
+            }
+          }, 3000);
+        } else {
+          console.log('[SSE] Max retries reached, stopping reconnection attempts');
+        }
       };
     };
     
     connect();
     
     return () => {
+      if (retryTimeout) clearTimeout(retryTimeout);
       eventSource?.close();
       setIsConnected(false);
     };
