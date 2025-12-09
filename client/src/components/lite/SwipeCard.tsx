@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Clock, Eye, Share2, Bookmark, ChevronDown, Zap } from "lucide-react";
+import { Clock, Eye, Share2, Bookmark, ChevronDown, Zap, Sparkles } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import type { Article, Category, User } from "@shared/schema";
@@ -34,6 +34,7 @@ interface SwipeCardProps {
   onDragStart: () => void;
   onDragMove: (offset: number) => void;
   onDragEnd: (velocity: number) => void;
+  isPersonalized?: boolean;
 }
 
 export function SwipeCard({ 
@@ -43,7 +44,8 @@ export function SwipeCard({
   dragOffset,
   onDragStart,
   onDragMove,
-  onDragEnd 
+  onDragEnd,
+  isPersonalized = false
 }: SwipeCardProps) {
   const [showDetails, setShowDetails] = useState(false);
   const startYRef = useRef(0);
@@ -184,6 +186,15 @@ export function SwipeCard({
 
           <div className="absolute inset-x-0 top-[42%] bottom-0 px-5" dir="rtl">
             <div className="flex items-center gap-2 mb-3">
+              {isPersonalized && (
+                <span 
+                  className="px-3 py-1 rounded-full text-white text-sm font-bold flex items-center gap-1 bg-gradient-to-r from-purple-600 to-pink-500"
+                  data-testid="badge-personalized"
+                >
+                  <Sparkles className="h-3 w-3" />
+                  لك
+                </span>
+              )}
               {article.newsType === 'breaking' && (
                 <span 
                   className="px-3 py-1 rounded-full text-white text-sm font-bold flex items-center gap-1 bg-red-600"

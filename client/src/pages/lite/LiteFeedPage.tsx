@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/useAuth";
 import type { Article, Category, User } from "@shared/schema";
 import sabqLogo from "@assets/sabq-logo.png";
 
@@ -60,9 +61,21 @@ export default function LiteFeedPage() {
   const animationRef = useRef<number | null>(null);
   const viewDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
+  const { user, isAuthenticated } = useAuth();
+
   const { data: articles = [], isLoading, refetch } = useQuery<ArticleWithDetails[]>({
     queryKey: ["/api/articles?status=published&limit=50&orderBy=newest"],
   });
+
+  const { data: personalizedData } = useQuery<{ articles: ArticleWithDetails[] }>({
+    queryKey: ["/api/personal-feed"],
+    enabled: isAuthenticated,
+  });
+
+  const personalizedArticleIds = useMemo(() => {
+    if (!personalizedData?.articles) return new Set<string>();
+    return new Set(personalizedData.articles.map(a => a.id));
+  }, [personalizedData]);
 
   const { data: adsResponse } = useQuery<LiteFeedAdsResponse>({
     queryKey: ["/api/ads/lite-feed"],
@@ -273,6 +286,7 @@ export default function LiteFeedPage() {
 
   const renderFeedItem = (item: FeedItem, position: 'current' | 'next' | 'previous', key: string) => {
     if (item.type === 'article') {
+      const isPersonalized = isAuthenticated && personalizedArticleIds.has(item.data.id);
       return (
         <SwipeCard
           key={key}
@@ -283,6 +297,7 @@ export default function LiteFeedPage() {
           onDragStart={handleDragStart}
           onDragMove={handleDragMove}
           onDragEnd={handleDragEnd}
+          isPersonalized={isPersonalized}
         />
       );
     } else {
