@@ -37,6 +37,7 @@ import {
   RefreshCw,
   Smartphone,
   Globe,
+  FileText,
 } from "lucide-react";
 import { format, subDays, startOfMonth, startOfToday, endOfToday } from "date-fns";
 import { arSA } from "date-fns/locale";
@@ -367,6 +368,40 @@ export default function AdAnalyticsPage() {
       });
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
+
+  const handleExportPDF = async () => {
+    setIsExportingPDF(true);
+    try {
+      const url = `/api/ads/analytics/export/pdf?${dateParams}`;
+      const response = await fetch(url, { credentials: "include" });
+      if (!response.ok) throw new Error("فشل التصدير");
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = `ad-analytics-report-${format(new Date(), "yyyy-MM-dd")}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(downloadUrl);
+
+      toast({
+        title: "تم التصدير بنجاح",
+        description: "تم تحميل تقرير PDF بنجاح",
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ في التصدير",
+        description: "حدث خطأ أثناء تصدير التقرير",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExportingPDF(false);
     }
   };
 
@@ -710,6 +745,15 @@ export default function AdAnalyticsPage() {
             >
               <Download className="h-4 w-4 ml-2" />
               تصدير CSV
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleExportPDF}
+              disabled={isExportingPDF}
+              data-testid="button-export-pdf"
+            >
+              <FileText className="h-4 w-4 ml-2" />
+              {isExportingPDF ? "جاري التصدير..." : "تصدير PDF"}
             </Button>
           </div>
         </div>

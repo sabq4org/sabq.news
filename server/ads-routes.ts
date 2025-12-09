@@ -1,4 +1,5 @@
 import { Router, Request, Response } from "express";
+import { format } from "date-fns";
 import { db } from "./db";
 import { 
   adAccounts, 
@@ -3407,6 +3408,272 @@ router.get("/analytics/campaigns", requireAdvertiser, async (req, res) => {
   } catch (error) {
     console.error("[Analytics] خطأ في جلب الحملات:", error);
     res.status(500).json({ error: "حدث خطأ في جلب الحملات" });
+  }
+});
+
+// تصدير التقارير (PDF)
+router.get("/analytics/export/pdf", requireAdvertiser, async (req, res) => {
+  try {
+    const { campaignId, dateFrom, dateTo } = req.query;
+    
+    const fromDate = dateFrom ? new Date(dateFrom as string) : undefined;
+    const toDate = dateTo ? new Date(dateTo as string) : undefined;
+    
+    // Fetch all required data
+    const [overviewStats, funnelData] = await Promise.all([
+      adsAnalyticsService.getOverviewStats(campaignId as string | undefined, fromDate, toDate),
+      adsAnalyticsService.getFunnelData(campaignId as string | undefined, fromDate, toDate)
+    ]);
+    
+    // Format date range for display
+    const dateRangeText = fromDate && toDate 
+      ? `${format(fromDate, 'yyyy-MM-dd')} إلى ${format(toDate, 'yyyy-MM-dd')}`
+      : 'كافة الفترات';
+    
+    // Import pdfmake dynamically
+    const PdfPrinter = require('pdfmake');
+    
+    // Define fonts - use built-in fonts that support basic characters
+    const fonts = {
+      Roboto: {
+        normal: 'Helvetica',
+        bold: 'Helvetica-Bold',
+        italics: 'Helvetica-Oblique',
+        bolditalics: 'Helvetica-BoldOblique'
+      }
+    };
+    
+    const printer = new PdfPrinter(fonts);
+    
+    // Format numbers for display
+    const formatNum = (num: number) => new Intl.NumberFormat('ar-SA').format(num);
+    const formatCurr = (num: number) => new Intl.NumberFormat('ar-SA', {
+      style: 'currency',
+      currency: 'SAR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    }).format(num);
+    
+    // Build the document definition
+    const docDefinition: any = {
+      pageSize: 'A4',
+      pageOrientation: 'portrait',
+      pageMargins: [40, 60, 40, 60],
+      
+      content: [
+        // Header
+        {
+          text: 'تقرير تحليلات الإعلانات',
+          style: 'header',
+          alignment: 'right'
+        },
+        {
+          text: `الفترة: ${dateRangeText}`,
+          style: 'subheader',
+          alignment: 'right',
+          margin: [0, 5, 0, 20]
+        },
+        
+        // KPI Summary Section
+        {
+          text: 'ملخص مؤشرات الأداء الرئيسية',
+          style: 'sectionHeader',
+          alignment: 'right',
+          margin: [0, 0, 0, 10]
+        },
+        {
+          table: {
+            headerRows: 1,
+            widths: ['*', '*'],
+            body: [
+              [
+                { text: 'القيمة', style: 'tableHeader', alignment: 'center' },
+                { text: 'المؤشر', style: 'tableHeader', alignment: 'right' }
+              ],
+              [
+                { text: formatNum(overviewStats.impressions || 0), alignment: 'center' },
+                { text: 'المشاهدات', alignment: 'right' }
+              ],
+              [
+                { text: formatNum(overviewStats.clicks || 0), alignment: 'center' },
+                { text: 'النقرات', alignment: 'right' }
+              ],
+              [
+                { text: `${(overviewStats.ctr || 0).toFixed(2)}%`, alignment: 'center' },
+                { text: 'معدل النقر (CTR)', alignment: 'right' }
+              ],
+              [
+                { text: formatNum(overviewStats.conversions || 0), alignment: 'center' },
+                { text: 'التحويلات', alignment: 'right' }
+              ],
+              [
+                { text: formatCurr(overviewStats.spent || 0), alignment: 'center' },
+                { text: 'المصروف', alignment: 'right' }
+              ],
+              [
+                { text: formatCurr(overviewStats.cpc || 0), alignment: 'center' },
+                { text: 'تكلفة النقرة (CPC)', alignment: 'right' }
+              ],
+              [
+                { text: formatCurr(overviewStats.cpm || 0), alignment: 'center' },
+                { text: 'التكلفة لكل ألف ظهور (CPM)', alignment: 'right' }
+              ],
+              [
+                { text: formatCurr(overviewStats.revenue || 0), alignment: 'center' },
+                { text: 'الإيرادات', alignment: 'right' }
+              ]
+            ]
+          },
+          layout: {
+            hLineWidth: () => 1,
+            vLineWidth: () => 1,
+            hLineColor: () => '#e5e7eb',
+            vLineColor: () => '#e5e7eb',
+            paddingLeft: () => 8,
+            paddingRight: () => 8,
+            paddingTop: () => 6,
+            paddingBottom: () => 6
+          },
+          margin: [0, 0, 0, 30]
+        },
+        
+        // Funnel Data Section
+        {
+          text: 'بيانات قمع التسويق',
+          style: 'sectionHeader',
+          alignment: 'right',
+          margin: [0, 0, 0, 10]
+        },
+        {
+          table: {
+            headerRows: 1,
+            widths: ['auto', 'auto', '*', '*'],
+            body: [
+              [
+                { text: 'الانخفاض %', style: 'tableHeader', alignment: 'center' },
+                { text: 'النسبة %', style: 'tableHeader', alignment: 'center' },
+                { text: 'العدد', style: 'tableHeader', alignment: 'center' },
+                { text: 'المرحلة', style: 'tableHeader', alignment: 'right' }
+              ],
+              ...(funnelData?.stages || []).map((stage: any) => [
+                { text: `${stage.dropoff || 0}%`, alignment: 'center' },
+                { text: `${stage.percentage || 0}%`, alignment: 'center' },
+                { text: formatNum(stage.count || 0), alignment: 'center' },
+                { text: stage.stageAr || stage.stage || '', alignment: 'right' }
+              ])
+            ]
+          },
+          layout: {
+            hLineWidth: () => 1,
+            vLineWidth: () => 1,
+            hLineColor: () => '#e5e7eb',
+            vLineColor: () => '#e5e7eb',
+            paddingLeft: () => 8,
+            paddingRight: () => 8,
+            paddingTop: () => 6,
+            paddingBottom: () => 6
+          },
+          margin: [0, 0, 0, 30]
+        },
+        
+        // Conversion Rate Summary
+        {
+          text: `معدل التحويل الإجمالي: ${(funnelData?.totalConversionRate || 0).toFixed(2)}%`,
+          style: 'highlight',
+          alignment: 'right',
+          margin: [0, 0, 0, 30]
+        }
+      ],
+      
+      // Footer
+      footer: function(currentPage: number, pageCount: number) {
+        return {
+          columns: [
+            {
+              text: `صفحة ${currentPage} من ${pageCount}`,
+              alignment: 'left',
+              margin: [40, 0, 0, 0],
+              fontSize: 9,
+              color: '#6b7280'
+            },
+            {
+              text: `تم التوليد: ${format(new Date(), 'yyyy-MM-dd HH:mm:ss')}`,
+              alignment: 'right',
+              margin: [0, 0, 40, 0],
+              fontSize: 9,
+              color: '#6b7280'
+            }
+          ],
+          margin: [0, 20, 0, 0]
+        };
+      },
+      
+      // Styles
+      styles: {
+        header: {
+          fontSize: 22,
+          bold: true,
+          color: '#1f2937',
+          margin: [0, 0, 0, 5]
+        },
+        subheader: {
+          fontSize: 12,
+          color: '#6b7280'
+        },
+        sectionHeader: {
+          fontSize: 14,
+          bold: true,
+          color: '#374151'
+        },
+        tableHeader: {
+          bold: true,
+          fillColor: '#f3f4f6',
+          color: '#1f2937'
+        },
+        highlight: {
+          fontSize: 12,
+          bold: true,
+          color: '#059669'
+        }
+      },
+      
+      defaultStyle: {
+        font: 'Roboto',
+        fontSize: 10,
+        color: '#374151'
+      }
+    };
+    
+    // Generate PDF
+    const pdfDoc = printer.createPdfKitDocument(docDefinition);
+    
+    // Collect chunks
+    const chunks: Buffer[] = [];
+    
+    pdfDoc.on('data', (chunk: Buffer) => {
+      chunks.push(chunk);
+    });
+    
+    pdfDoc.on('end', () => {
+      const pdfBuffer = Buffer.concat(chunks);
+      
+      const filename = `ad-analytics-report-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Length', pdfBuffer.length);
+      res.send(pdfBuffer);
+    });
+    
+    pdfDoc.on('error', (err: Error) => {
+      console.error("[Analytics] خطأ في توليد PDF:", err);
+      res.status(500).json({ error: "حدث خطأ في توليد التقرير" });
+    });
+    
+    pdfDoc.end();
+  } catch (error) {
+    console.error("[Analytics] خطأ في تصدير تقرير PDF:", error);
+    res.status(500).json({ error: "حدث خطأ في التصدير" });
   }
 });
 
