@@ -96,6 +96,20 @@ interface CampaignWithStats {
   stats: OverviewStats;
 }
 
+interface FunnelStage {
+  stage: string;
+  stageAr: string;
+  count: number;
+  percentage: number;
+  dropoff: number;
+  color: string;
+}
+
+interface FunnelData {
+  stages: FunnelStage[];
+  totalConversionRate: number;
+}
+
 const dateRangePresets = [
   { value: "today", label: "اليوم" },
   { value: "7days", label: "آخر 7 أيام" },
@@ -318,6 +332,10 @@ export default function AdAnalyticsPage() {
     CampaignWithStats[]
   >({
     queryKey: ["/api/ads/analytics/campaigns", dateParams],
+  });
+
+  const { data: funnelData, isLoading: funnelLoading } = useQuery<FunnelData>({
+    queryKey: ["/api/ads/analytics/funnel", dateParams],
   });
 
   const handleExportCSV = async (type: string) => {
@@ -570,6 +588,80 @@ export default function AdAnalyticsPage() {
     [audience]
   );
 
+  const funnelChartOptions: ApexOptions = useMemo(
+    () => ({
+      chart: {
+        type: "bar",
+        toolbar: { show: true },
+        fontFamily: "inherit",
+      },
+      plotOptions: {
+        bar: {
+          horizontal: true,
+          barHeight: "70%",
+          borderRadius: 4,
+          distributed: true,
+        },
+      },
+      colors: funnelData?.stages?.map((s) => s.color) || ["#A855F7", "#3B82F6", "#22C55E", "#F97316", "#EF4444"],
+      xaxis: {
+        categories: funnelData?.stages?.map((s) => s.stageAr) || [],
+        labels: {
+          style: { fontFamily: "inherit" },
+          formatter: (val) => formatNumber(Number(val)),
+        },
+      },
+      yaxis: {
+        labels: {
+          style: { fontFamily: "inherit" },
+        },
+      },
+      legend: {
+        show: false,
+      },
+      dataLabels: {
+        enabled: true,
+        formatter: (val: number, opts: any) => {
+          const stage = funnelData?.stages?.[opts.dataPointIndex];
+          if (stage) {
+            return `${formatNumber(val)} (${stage.percentage}%)`;
+          }
+          return formatNumber(val);
+        },
+        style: {
+          fontFamily: "inherit",
+          colors: ["#fff"],
+        },
+      },
+      tooltip: {
+        y: {
+          formatter: (val: number, opts: any) => {
+            const stage = funnelData?.stages?.[opts.dataPointIndex];
+            if (stage) {
+              return `${formatNumber(val)} - الانخفاض: ${stage.dropoff}%`;
+            }
+            return formatNumber(val);
+          },
+        },
+        style: { fontFamily: "inherit" },
+      },
+      grid: {
+        borderColor: "hsl(var(--border))",
+      },
+    }),
+    [funnelData]
+  );
+
+  const funnelChartSeries = useMemo(
+    () => [
+      {
+        name: "قمع التسويق",
+        data: funnelData?.stages?.map((s) => s.count) || [],
+      },
+    ],
+    [funnelData]
+  );
+
   return (
     <DashboardLayout>
       <div className="space-y-6" dir="rtl">
@@ -722,6 +814,35 @@ export default function AdAnalyticsPage() {
                     options={lineChartOptions}
                     series={lineChartSeries}
                     type="line"
+                    height={350}
+                  />
+                ) : (
+                  <div className="h-[350px] flex items-center justify-center text-muted-foreground">
+                    لا توجد بيانات للفترة المحددة
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {funnelLoading ? (
+            <ChartSkeleton />
+          ) : (
+            <Card className="lg:col-span-2" data-testid="chart-funnel">
+              <CardHeader className="flex flex-row items-center justify-between gap-2">
+                <div>
+                  <CardTitle className="text-lg">قمع التسويق</CardTitle>
+                  <CardDescription>
+                    مراحل رحلة العميل من الوعي إلى التأييد - معدل التحويل الإجمالي: {funnelData?.totalConversionRate || 0}%
+                  </CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {funnelData?.stages && funnelData.stages.length > 0 ? (
+                  <Chart
+                    options={funnelChartOptions}
+                    series={funnelChartSeries}
+                    type="bar"
                     height={350}
                   />
                 ) : (

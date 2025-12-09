@@ -3293,6 +3293,27 @@ router.get("/analytics/timeseries", requireAdvertiser, async (req, res) => {
   }
 });
 
+// بيانات قمع التسويق
+router.get("/analytics/funnel", requireAdvertiser, async (req, res) => {
+  try {
+    const { campaignId, dateFrom, dateTo } = req.query;
+    
+    const fromDate = dateFrom ? new Date(dateFrom as string) : undefined;
+    const toDate = dateTo ? new Date(dateTo as string) : undefined;
+    
+    const funnel = await adsAnalyticsService.getFunnelData(
+      campaignId as string | undefined,
+      fromDate,
+      toDate
+    );
+    
+    res.json(funnel);
+  } catch (error) {
+    console.error("[Analytics] خطأ في جلب بيانات قمع التسويق:", error);
+    res.status(500).json({ error: "حدث خطأ في جلب البيانات" });
+  }
+});
+
 // تحليل الجمهور
 router.get("/analytics/audience", requireAdvertiser, async (req, res) => {
   try {
