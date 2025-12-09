@@ -160,19 +160,19 @@ function getDateRange(preset: string): { dateFrom: Date; dateTo: Date } {
 
 function formatNumber(num: number): string {
   if (num === null || num === undefined || isNaN(num)) return "0";
-  return new Intl.NumberFormat("ar-SA").format(num);
+  return new Intl.NumberFormat("en-US").format(num);
 }
 
 function formatCurrency(num: number): string {
   if (num === null || num === undefined || isNaN(num)) {
-    return new Intl.NumberFormat("ar-SA", {
+    return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "SAR",
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
     }).format(0);
   }
-  return new Intl.NumberFormat("ar-SA", {
+  return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "SAR",
     minimumFractionDigits: 0,
