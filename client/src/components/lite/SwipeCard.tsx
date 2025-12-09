@@ -213,25 +213,25 @@ export function SwipeCard({
               <div 
                 className="absolute inset-0" 
                 style={{ 
-                  background: article.newsType === 'breaking'
-                    ? 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.3) 30%, rgba(139,0,0,0.7) 70%, rgba(139,0,0,1) 100%)'
-                    : 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,0.7) 70%, rgba(0,0,0,1) 100%)' 
+                  background: 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,0.7) 70%, rgba(0,0,0,1) 100%)' 
                 }} 
               />
             </div>
           ) : (
-            <div 
-              className="w-full h-full" 
-              style={{
-                background: article.newsType === 'breaking'
-                  ? 'linear-gradient(to bottom right, #1a0000, #4a0000)'
-                  : 'linear-gradient(to bottom right, #1a1a1a, #2d2d2d)'
-              }}
-            />
+            <div className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-800" />
           )}
 
           <div className="absolute inset-x-0 top-[42%] bottom-0 px-5" dir="rtl">
-            <div className="flex items-center gap-2 mb-3">
+            {/* Red gradient from bottom for breaking news */}
+            {article.newsType === 'breaking' && (
+              <div 
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: 'linear-gradient(to top, rgba(180,30,30,0.4) 0%, rgba(120,20,20,0.2) 40%, transparent 70%)'
+                }}
+              />
+            )}
+            <div className="flex items-center gap-2 mb-3 relative">
               {isPersonalized && (
                 <span 
                   className="px-3 py-1 rounded-full text-white text-sm font-bold flex items-center gap-1 bg-gradient-to-r from-purple-600 to-pink-500"
@@ -315,18 +315,11 @@ export function SwipeCard({
                   alt={article.title}
                   className="w-full h-full object-cover"
                 />
-                <div 
-                  className="absolute inset-0" 
-                  style={{
-                    background: article.newsType === 'breaking'
-                      ? 'linear-gradient(to top, rgba(139,0,0,0.7) 0%, transparent 100%)'
-                      : 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)'
-                  }}
-                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                 
                 <button
                   onClick={() => setShowDetails(false)}
-                  className={`absolute top-4 right-4 p-2 backdrop-blur-sm rounded-full text-white ${article.newsType === 'breaking' ? 'bg-red-900/50' : 'bg-black/50'}`}
+                  className="absolute top-4 right-4 p-2 bg-black/50 backdrop-blur-sm rounded-full text-white"
                   data-testid="button-close-details"
                 >
                   <ChevronDown className="h-6 w-6" />
