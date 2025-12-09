@@ -410,6 +410,14 @@ export default function LiteFeedPage() {
         </div>
       )}
 
+      {/* Top shadow gradient */}
+      <div 
+        className="absolute top-0 left-0 right-0 h-24 z-10 pointer-events-none"
+        style={{
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 50%, transparent 100%)'
+        }}
+      />
+
       <div className="flex-1 relative" onClick={handleDoubleTap}>
         {prevItem && renderFeedItem(prevItem, 'previous', `prev-${prevItem.type}-${prevItem.data.id}`)}
 
