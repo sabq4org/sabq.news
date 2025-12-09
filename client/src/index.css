@@ -396,49 +396,78 @@ input, select, textarea {
 }
 
 /**
- * Dashboard Theme - Navy Blue Design
- * تصميم كحلي للوحة التحكم فقط
+ * Dashboard Theme - Altizam Style
+ * تصميم مستوحى من نظام التزام المالية
  */
 .dashboard-theme {
-  /* Light Mode Dashboard */
-  --background: 0 0% 100%;
-  --foreground: 0 0% 9%;
-  --border: 0 0% 90%;
-  --card: 0 0% 98%;
-  --card-foreground: 0 0% 9%;
-  --card-border: 0 0% 88%;
+  /* Light Mode Dashboard - Gray Background */
+  --background: 220 14% 96%;
+  --foreground: 220 20% 20%;
+  --border: 220 13% 91%;
+  --card: 0 0% 100%;
+  --card-foreground: 220 20% 20%;
+  --card-border: 220 14% 90%;
   
-  /* Navy Blue Sidebar */
-  --sidebar: 220 30% 20%;
-  --sidebar-foreground: 0 0% 98%;
-  --sidebar-border: 220 25% 25%;
-  --sidebar-primary: 210 70% 40%;
+  /* Gradient Purple/Blue Sidebar */
+  --sidebar: 245 40% 28%;
+  --sidebar-foreground: 0 0% 100%;
+  --sidebar-border: 245 35% 35%;
+  --sidebar-primary: 245 50% 65%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 220 25% 28%;
-  --sidebar-accent-foreground: 0 0% 95%;
-  --sidebar-ring: 210 70% 40%;
+  --sidebar-accent: 245 35% 35%;
+  --sidebar-accent-foreground: 0 0% 98%;
+  --sidebar-ring: 245 50% 65%;
   
-  /* Primary - Navy Blue */
-  --primary: 210 70% 40%;
-  --primary-foreground: 0 0% 98%;
+  /* Primary - Purple/Blue */
+  --primary: 245 50% 55%;
+  --primary-foreground: 0 0% 100%;
   
   /* Secondary */
-  --secondary: 210 6% 88%;
-  --secondary-foreground: 220 15% 25%;
+  --secondary: 220 14% 92%;
+  --secondary-foreground: 220 20% 30%;
+  
+  /* Muted */
+  --muted: 220 14% 94%;
+  --muted-foreground: 220 10% 50%;
+  
+  /* Accent */
+  --accent: 245 40% 94%;
+  --accent-foreground: 245 50% 45%;
   
   /* Destructive - Red */
-  --destructive: 0 75% 42%;
-  --destructive-foreground: 0 0% 98%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
   
-  /* Charts - Dashboard specific */
-  --chart-1: 210 70% 40%;
-  --chart-2: 200 65% 45%;
-  --chart-3: 25 85% 42%;
-  --chart-4: 280 70% 40%;
-  --chart-5: 340 75% 40%;
+  /* Success - Green for cards */
+  --success: 152 69% 45%;
+  --success-foreground: 0 0% 100%;
+  
+  /* Warning - Orange for cards */
+  --warning: 25 95% 53%;
+  --warning-foreground: 0 0% 100%;
+  
+  /* Info - Blue for cards */
+  --info: 199 89% 48%;
+  --info-foreground: 0 0% 100%;
+  
+  /* Charts */
+  --chart-1: 245 50% 55%;
+  --chart-2: 199 89% 48%;
+  --chart-3: 152 69% 45%;
+  --chart-4: 25 95% 53%;
+  --chart-5: 340 75% 55%;
+  
+  /* Popover */
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 20% 20%;
+  --popover-border: 220 14% 90%;
+  
+  /* Input */
+  --input: 220 13% 91%;
+  --ring: 245 50% 55%;
   
   /* Fonts */
-  --font-sans: 'Tajawal', 'IBM Plex Sans Arabic', sans-serif;
+  --font-sans: 'IBM Plex Sans Arabic', 'Tajawal', sans-serif;
   --font-serif: 'Tajawal', Georgia, serif;
   --font-mono: 'IBM Plex Sans Arabic', Menlo, monospace;
 }
@@ -446,39 +475,67 @@ input, select, textarea {
 /* Dashboard Dark Mode */
 .dashboard-theme.dark,
 .dark .dashboard-theme {
-  --background: 220 20% 10%;
-  --foreground: 210 6% 90%;
-  --border: 220 12% 20%;
-  --card: 220 18% 13%;
-  --card-foreground: 210 6% 90%;
-  --card-border: 220 15% 18%;
+  --background: 230 20% 10%;
+  --foreground: 220 14% 90%;
+  --border: 230 15% 18%;
+  --card: 230 18% 14%;
+  --card-foreground: 220 14% 90%;
+  --card-border: 230 15% 20%;
   
-  /* Navy Blue Sidebar - Dark */
-  --sidebar: 220 20% 12%;
+  /* Sidebar Dark */
+  --sidebar: 245 35% 18%;
   --sidebar-foreground: 0 0% 98%;
-  --sidebar-border: 220 15% 18%;
-  --sidebar-primary: 210 60% 48%;
+  --sidebar-border: 245 30% 22%;
+  --sidebar-primary: 245 50% 60%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 220 18% 18%;
+  --sidebar-accent: 245 30% 25%;
   --sidebar-accent-foreground: 0 0% 95%;
-  --sidebar-ring: 210 60% 48%;
+  --sidebar-ring: 245 50% 60%;
   
-  /* Primary - Navy Blue Dark */
-  --primary: 210 60% 48%;
+  /* Primary Dark */
+  --primary: 245 50% 60%;
   --primary-foreground: 0 0% 100%;
   
-  /* Secondary */
-  --secondary: 220 12% 20%;
-  --secondary-foreground: 210 6% 90%;
+  /* Secondary Dark */
+  --secondary: 230 15% 20%;
+  --secondary-foreground: 220 14% 85%;
   
-  /* Popover */
-  --popover: 220 18% 13%;
-  --popover-foreground: 210 6% 90%;
-  --popover-border: 220 15% 18%;
+  /* Muted Dark */
+  --muted: 230 15% 16%;
+  --muted-foreground: 220 10% 55%;
   
-  /* Muted */
-  --muted: 220 15% 15%;
-  --muted-foreground: 210 6% 60%;
+  /* Popover Dark */
+  --popover: 230 18% 14%;
+  --popover-foreground: 220 14% 90%;
+  --popover-border: 230 15% 20%;
+  
+  /* Input Dark */
+  --input: 230 15% 20%;
+}
+
+/* Dashboard Sidebar Gradient - Altizam Style */
+.dashboard-theme [data-sidebar="sidebar"] {
+  background: linear-gradient(180deg, 
+    hsl(245 40% 28%) 0%, 
+    hsl(260 35% 38%) 50%, 
+    hsl(270 30% 48%) 100%
+  ) !important;
+}
+
+.dark .dashboard-theme [data-sidebar="sidebar"],
+.dashboard-theme.dark [data-sidebar="sidebar"] {
+  background: linear-gradient(180deg, 
+    hsl(245 35% 18%) 0%, 
+    hsl(255 30% 25%) 50%, 
+    hsl(265 28% 32%) 100%
+  ) !important;
+}
+
+/* Dashboard Cards with rounded corners */
+.dashboard-theme .card,
+.dashboard-theme [data-slot="card"] {
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 @layer base {
