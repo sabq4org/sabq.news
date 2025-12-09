@@ -37,6 +37,17 @@ import { ObjectStorageService } from "./objectStorage";
 const router = Router();
 
 // ============================================
+// DEVICE DETECTION HELPER
+// ============================================
+function detectDeviceType(userAgent: string | null | undefined): string {
+  if (!userAgent) return "desktop";
+  const ua = userAgent.toLowerCase();
+  if (/mobile|android|iphone|ipod|blackberry|windows phone/i.test(ua)) return "mobile";
+  if (/tablet|ipad/i.test(ua)) return "tablet";
+  return "desktop";
+}
+
+// ============================================
 // STORAGE CONFIGURATION
 // ============================================
 
@@ -2979,17 +2990,22 @@ router.get("/slot/:slotId", async (req, res) => {
     
     const { placement, creative, campaign, slot } = selectedPlacement;
     
-    // Create impression record
+    // Create impression record with device detection
+    const userAgentHeader = req.headers["user-agent"] || null;
+    const detectedDevice = detectDeviceType(userAgentHeader);
+    
     const [impression] = await db
       .insert(impressions)
       .values({
         creativeId: creative.id,
         campaignId: campaign.id,
         slotId: slot.id,
-        userAgent: req.headers["user-agent"] || null,
+        userAgent: userAgentHeader,
         ipAddress: req.ip || null,
         pageUrl: req.headers.referer || null,
         referrer: req.headers.referer || null,
+        device: detectedDevice,
+        country: "SA",
       })
       .returning();
     
