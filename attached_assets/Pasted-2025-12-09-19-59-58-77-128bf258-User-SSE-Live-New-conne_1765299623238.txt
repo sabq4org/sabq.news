@@ -1,0 +1,128 @@
+2025-12-09 19:59:58.77
+128bf258
+User
+[SSE Live] New connection. Active: 1
+2025-12-09 20:00:00.08
+128bf258
+User
+📰 [DIGEST] Starting daily digest processing...
+2025-12-09 20:00:00.08
+128bf258
+User
+[Dynamic Categories] 🔄 Starting update cycle...
+2025-12-09 20:00:00.08
+128bf258
+User
+[Dynamic Categories] 🔥 Updating "الآن" category...
+2025-12-09 20:00:00.08
+128bf258
+User
+🔄 Checking for failed audio newsletters...
+2025-12-09 20:00:00.08
+128bf258
+User
+[NewsletterScheduler] Executing scheduled newsletter: evening_digest_1765299600088
+2025-12-09 20:00:00.09
+128bf258
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:95:21
+2025-12-09 20:00:00.09
+128bf258
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2025-12-09 20:00:00.09
+128bf258
+User
+at Array.map ()
+2025-12-09 20:00:00.09
+128bf258
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:95:21
+2025-12-09 20:00:00.09
+128bf258
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2025-12-09 20:00:00.09
+128bf258
+User
+at PgTimestamp.mapToDriverValue (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/columns/timestamp.js:34:18)
+2025-12-09 20:00:00.09
+128bf258
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:95:21
+2025-12-09 20:00:00.09
+128bf258
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:95:21
+2025-12-09 20:00:00.09
+128bf258
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2025-12-09 20:00:00.09
+128bf258
+User
+at Array.map ()
+2025-12-09 20:00:00.09
+128bf258
+User
+at Array.map ()
+2025-12-09 20:00:00.09
+128bf258
+User
+at Array.map ()
+2025-12-09 20:00:00.09
+128bf258
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2025-12-09 20:00:00.09
+128bf258
+User
+[NewsletterScheduler] Retrying evening_digest in 300s (attempt 1/3)
+2025-12-09 20:00:00.09
+128bf258
+User
+at Array.map ()
+2025-12-09 20:00:00.09
+128bf258
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:131:73
+2025-12-09 20:00:00.09
+128bf258
+User
+[NewsletterScheduler] Error executing evening_digest: TypeError: value.toISOString is not a function
+2025-12-09 20:00:00.09
+128bf258
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2025-12-09 20:00:00.09
+128bf258
+User
+[AI Tasks Cleanup] Checking for stuck tasks...
+2025-12-09 20:00:00.10
+128bf258
+User
+[NotificationWorker] Starting queue processing...
+2025-12-09 20:00:00.10
+128bf258
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-12-09 20:00:00.11
+128bf258
+User
+🔄 Checking for scheduled audio newsletters...
+2025-12-09 20:00:00.11
+128bf258
+User
+[AI Task Executor] Checking for pending tasks...
+2025-12-09 20:00:00.17
+128bf258
+User
+[Dynamic Categories] ✅ Update cycle complete
+2025-12-09 20:00:00.17
+128bf258
+User
+[Dynamic Categories] ⚠️ "الآن" category not found
+2025-12-09 20:00:00.17
+128bf258
+User
+Found 0 failed newsletters
