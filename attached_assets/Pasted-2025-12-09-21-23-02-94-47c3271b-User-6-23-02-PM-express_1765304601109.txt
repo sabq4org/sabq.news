@@ -1,0 +1,109 @@
+2025-12-09 21:23:02.94
+47c3271b
+User
+6:23:02 PM [express] POST /api/accessibility/track 200 in 90ms :: {"success":true,"eventId":"d49ea76…
+2025-12-09 21:23:02.94
+47c3271b
+User
+6:23:02 PM [express] POST /api/accessibility/track 200 in 90ms :: {"success":true,"eventId":"d49ea76…
+2025-12-09 21:23:04.41
+47c3271b
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-09 21:23:04.43
+47c3271b
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-09 21:23:04.47
+47c3271b
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-12-09 21:23:04.47
+47c3271b
+User
+[Analytics] خطأ في تصدير تقرير PDF: Error: Dynamic require of "puppeteer" is not supported
+2025-12-09 21:23:04.47
+47c3271b
+User
+at file:///home/runner/workspace/dist/index.js:31350:23
+2025-12-09 21:23:04.47
+47c3271b
+User
+at file:///home/runner/workspace/dist/index.js:7:9
+2025-12-09 21:23:04.49
+47c3271b
+User
+6:23:04 PM [express] GET /api/ads/analytics/export/pdf 500 in 102ms :: {"error":"حدث خطأ في التصدير"}
+2025-12-09 21:23:04.62
+47c3271b
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-09 21:23:04.65
+47c3271b
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-09 21:23:04.70
+47c3271b
+User
+6:23:04 PM [express] GET /api/ads/analytics/live-poll 200 in 229ms :: {"impressions":401,"clicks":5,…
+2025-12-09 21:23:04.87
+47c3271b
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-09 21:23:04.90
+47c3271b
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-09 21:23:04.95
+47c3271b
+User
+6:23:04 PM [express] POST /api/accessibility/track 200 in 91ms :: {"success":true,"eventId":"4d9ad80…
+2025-12-09 21:23:07.12
+47c3271b
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-09 21:23:07.15
+47c3271b
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-09 21:23:07.17
+47c3271b
+User
+[Analytics] خطأ في تصدير تقرير PDF: Error: Dynamic require of "puppeteer" is not supported
+2025-12-09 21:23:07.17
+47c3271b
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-12-09 21:23:07.17
+47c3271b
+User
+at file:///home/runner/workspace/dist/index.js:31350:23
+2025-12-09 21:23:07.17
+47c3271b
+User
+at file:///home/runner/workspace/dist/index.js:7:9
+2025-12-09 21:23:07.19
+47c3271b
+User
+6:23:07 PM [express] GET /api/ads/analytics/export/pdf 500 in 90ms :: {"error":"حدث خطأ في التصدير"}
+2025-12-09 21:23:07.47
+47c3271b
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-09 21:23:07.49
+47c3271b
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-09 21:23:07.54
+47c3271b
+User
+6:23:07 PM [express] POST /api/accessibility/track 200 in 90ms :: {"success":true,"eventId":"b13d96f…
+2025-12-09 21:23:07.54
+47c3271b
+User
+6:23:07 PM [express] POST /api/accessibility/track 200 in 90ms :: {"success":true,"eventId":"b13d96f…
+2025-12-09 21:23:09.48
+47c3271b
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-09 21:23:09.50

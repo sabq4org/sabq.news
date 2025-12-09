@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { format } from "date-fns";
+import puppeteer from "puppeteer";
 import { db } from "./db";
 import { 
   adAccounts, 
@@ -3724,7 +3725,6 @@ router.get("/analytics/export/pdf", requireAdvertiser, async (req, res) => {
     `;
     
     // Use Puppeteer to generate PDF
-    const puppeteer = require('puppeteer');
     const browser = await puppeteer.launch({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
