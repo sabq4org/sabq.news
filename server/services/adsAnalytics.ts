@@ -60,6 +60,20 @@ export interface QualityMetrics {
   avgTimeOnAd: number;
 }
 
+export interface OverviewStatsWithComparison extends OverviewStats {
+  previousPeriod: OverviewStats;
+  deltas: {
+    impressions: number;
+    clicks: number;
+    conversions: number;
+    ctr: number;
+    cpc: number;
+    cpm: number;
+    spent: number;
+    revenue: number;
+  };
+}
+
 function buildDateFilters(
   table: { timestamp: any },
   dateFrom?: Date,
@@ -414,6 +428,49 @@ export async function getCampaignComparison(
   });
 }
 
+function calculatePercentageDelta(current: number, previous: number): number {
+  if (previous === 0) {
+    return current > 0 ? 100 : 0;
+  }
+  return parseFloat((((current - previous) / previous) * 100).toFixed(2));
+}
+
+export async function getOverviewStatsWithComparison(
+  campaignId?: string,
+  dateFrom?: Date,
+  dateTo?: Date
+): Promise<OverviewStatsWithComparison> {
+  const currentStats = await getOverviewStats(campaignId, dateFrom, dateTo);
+
+  let previousFrom: Date | undefined;
+  let previousTo: Date | undefined;
+
+  if (dateFrom && dateTo) {
+    const periodLength = dateTo.getTime() - dateFrom.getTime();
+    previousTo = new Date(dateFrom.getTime() - 1);
+    previousFrom = new Date(previousTo.getTime() - periodLength);
+  }
+
+  const previousStats = await getOverviewStats(campaignId, previousFrom, previousTo);
+
+  const deltas = {
+    impressions: calculatePercentageDelta(currentStats.impressions, previousStats.impressions),
+    clicks: calculatePercentageDelta(currentStats.clicks, previousStats.clicks),
+    conversions: calculatePercentageDelta(currentStats.conversions, previousStats.conversions),
+    ctr: calculatePercentageDelta(currentStats.ctr, previousStats.ctr),
+    cpc: calculatePercentageDelta(currentStats.cpc, previousStats.cpc),
+    cpm: calculatePercentageDelta(currentStats.cpm, previousStats.cpm),
+    spent: calculatePercentageDelta(currentStats.spent, previousStats.spent),
+    revenue: calculatePercentageDelta(currentStats.revenue, previousStats.revenue),
+  };
+
+  return {
+    ...currentStats,
+    previousPeriod: previousStats,
+    deltas,
+  };
+}
+
 export async function getQualityMetrics(
   campaignId: string
 ): Promise<QualityMetrics> {
@@ -475,6 +532,7 @@ export async function getQualityMetrics(
 
 export const adsAnalyticsService = {
   getOverviewStats,
+  getOverviewStatsWithComparison,
   getTimeSeriesData,
   getAudienceAnalytics,
   getCampaignComparison,

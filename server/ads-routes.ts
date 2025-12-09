@@ -3250,6 +3250,27 @@ router.get("/analytics/overview", requireAdvertiser, async (req, res) => {
   }
 });
 
+// نظرة عامة مع المقارنة بالفترة السابقة
+router.get("/analytics/overview-comparison", requireAdvertiser, async (req, res) => {
+  try {
+    const { campaignId, dateFrom, dateTo } = req.query;
+    
+    const fromDate = dateFrom ? new Date(dateFrom as string) : undefined;
+    const toDate = dateTo ? new Date(dateTo as string) : undefined;
+    
+    const stats = await adsAnalyticsService.getOverviewStatsWithComparison(
+      campaignId as string | undefined,
+      fromDate,
+      toDate
+    );
+    
+    res.json(stats);
+  } catch (error) {
+    console.error("[Analytics] خطأ في جلب الإحصائيات مع المقارنة:", error);
+    res.status(500).json({ error: "حدث خطأ في جلب الإحصائيات" });
+  }
+});
+
 // بيانات السلسلة الزمنية
 router.get("/analytics/timeseries", requireAdvertiser, async (req, res) => {
   try {

@@ -31,6 +31,7 @@ import {
   CreditCard,
   BarChart3,
   TrendingUp,
+  TrendingDown,
   Download,
   Calendar,
   RefreshCw,
@@ -50,6 +51,20 @@ interface OverviewStats {
   cpm: number;
   spent: number;
   revenue: number;
+}
+
+interface OverviewStatsWithComparison extends OverviewStats {
+  previousPeriod: OverviewStats;
+  deltas: {
+    impressions: number;
+    clicks: number;
+    conversions: number;
+    ctr: number;
+    cpc: number;
+    cpm: number;
+    spent: number;
+    revenue: number;
+  };
 }
 
 interface TimeSeriesDataPoint {
@@ -140,6 +155,7 @@ function KPICard({
   subtitle,
   color = "primary",
   testId,
+  delta,
 }: {
   icon: any;
   title: string;
@@ -147,6 +163,7 @@ function KPICard({
   subtitle?: string;
   color?: string;
   testId: string;
+  delta?: number;
 }) {
   const colorClasses: Record<string, string> = {
     primary: "bg-primary/10 text-primary",
@@ -159,6 +176,12 @@ function KPICard({
     amber: "bg-amber-500/10 text-amber-500",
   };
 
+  const isPositive = delta !== undefined && delta > 0;
+  const isNegative = delta !== undefined && delta < 0;
+  const deltaText = delta !== undefined 
+    ? `${isPositive ? "+" : ""}${delta.toFixed(1)}% مقارنة بالفترة السابقة`
+    : null;
+
   return (
     <Card data-testid={testId}>
       <CardContent className="p-4">
@@ -168,10 +191,32 @@ function KPICard({
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm text-muted-foreground">{title}</p>
-            <p className="text-2xl font-bold" data-testid={`${testId}-value`}>
-              {value}
-            </p>
-            {subtitle && (
+            <div className="flex items-center gap-2">
+              <p className="text-2xl font-bold" data-testid={`${testId}-value`}>
+                {value}
+              </p>
+              {delta !== undefined && delta !== 0 && (
+                <span 
+                  className={`flex items-center gap-0.5 text-xs font-medium ${
+                    isPositive ? "text-green-500" : "text-red-500"
+                  }`}
+                  data-testid={`${testId}-delta`}
+                >
+                  {isPositive ? (
+                    <TrendingUp className="h-3 w-3" />
+                  ) : (
+                    <TrendingDown className="h-3 w-3" />
+                  )}
+                  {isPositive ? "+" : ""}{delta.toFixed(1)}%
+                </span>
+              )}
+            </div>
+            {deltaText && (
+              <p className={`text-xs ${isPositive ? "text-green-500" : isNegative ? "text-red-500" : "text-muted-foreground"}`}>
+                {deltaText}
+              </p>
+            )}
+            {subtitle && !deltaText && (
               <p className="text-xs text-muted-foreground">{subtitle}</p>
             )}
           </div>
@@ -254,8 +299,8 @@ export default function AdAnalyticsPage() {
     data: overview,
     isLoading: overviewLoading,
     refetch: refetchOverview,
-  } = useQuery<OverviewStats>({
-    queryKey: ["/api/ads/analytics/overview", dateParams],
+  } = useQuery<OverviewStatsWithComparison>({
+    queryKey: ["/api/ads/analytics/overview-comparison", dateParams],
   });
 
   const { data: timeseries, isLoading: timeseriesLoading } = useQuery<
@@ -587,6 +632,7 @@ export default function AdAnalyticsPage() {
               value={formatNumber(overview?.impressions || 0)}
               color="blue"
               testId="kpi-impressions"
+              delta={overview?.deltas?.impressions}
             />
             <KPICard
               icon={MousePointerClick}
@@ -594,6 +640,7 @@ export default function AdAnalyticsPage() {
               value={formatNumber(overview?.clicks || 0)}
               color="green"
               testId="kpi-clicks"
+              delta={overview?.deltas?.clicks}
             />
             <KPICard
               icon={Percent}
@@ -601,6 +648,7 @@ export default function AdAnalyticsPage() {
               value={`${overview?.ctr?.toFixed(2) || 0}%`}
               color="purple"
               testId="kpi-ctr"
+              delta={overview?.deltas?.ctr}
             />
             <KPICard
               icon={Target}
@@ -608,14 +656,15 @@ export default function AdAnalyticsPage() {
               value={formatNumber(overview?.conversions || 0)}
               color="orange"
               testId="kpi-conversions"
+              delta={overview?.deltas?.conversions}
             />
             <KPICard
               icon={Wallet}
               title="المصروف"
               value={formatCurrency(overview?.spent || 0)}
-              subtitle="ريال سعودي"
               color="pink"
               testId="kpi-spent"
+              delta={overview?.deltas?.spent}
             />
             <KPICard
               icon={CreditCard}
@@ -623,6 +672,7 @@ export default function AdAnalyticsPage() {
               value={formatCurrency(overview?.cpc || 0)}
               color="cyan"
               testId="kpi-cpc"
+              delta={overview?.deltas?.cpc}
             />
             <KPICard
               icon={BarChart3}
@@ -630,14 +680,15 @@ export default function AdAnalyticsPage() {
               value={formatCurrency(overview?.cpm || 0)}
               color="amber"
               testId="kpi-cpm"
+              delta={overview?.deltas?.cpm}
             />
             <KPICard
               icon={TrendingUp}
               title="الإيرادات"
               value={formatCurrency(overview?.revenue || 0)}
-              subtitle="ريال سعودي"
               color="primary"
               testId="kpi-revenue"
+              delta={overview?.deltas?.revenue}
             />
           </div>
         )}
