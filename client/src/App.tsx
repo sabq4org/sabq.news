@@ -171,6 +171,7 @@ import AdAccountPage from "@/pages/dashboard/ads/AdAccountPage";
 import CreativesManagement from "@/pages/dashboard/ads/CreativesManagement";
 import InventorySlotsManagement from "@/pages/dashboard/ads/InventorySlotsManagement";
 import PlacementsManagement from "@/pages/dashboard/ads/PlacementsManagement";
+import AdAnalyticsPage from "@/pages/dashboard/ads/AdAnalyticsPage";
 import ChatbotPage from "@/pages/ChatbotPage";
 import AccessibilityInsights from "@/pages/admin/AccessibilityInsights";
 import PublisherDashboard from "@/pages/publisher/PublisherDashboard";
@@ -426,6 +427,7 @@ function Router() {
       <Route path="/dashboard/ads/campaigns/:id" component={CampaignDetail} />
       <Route path="/dashboard/ads/creatives" component={CreativesManagement} />
       <Route path="/dashboard/ads/inventory-slots" component={InventorySlotsManagement} />
+      <Route path="/dashboard/ads/analytics" component={AdAnalyticsPage} />
       <Route path="/dashboard/ads/account" component={AdAccountPage} />
       <Route path="/dashboard/themes/switcher" component={ThemeSwitcher} />
       <Route path="/dashboard/themes/:id" component={ThemeEditor} />
