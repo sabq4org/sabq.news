@@ -40,6 +40,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { QuickActionsSection } from "@/components/QuickActionsSection";
 import { OnlineModeratorsWidget } from "@/components/OnlineModeratorsWidget";
+import { MonthlyEntitlementsSection, QuickStatsRow, BalanceWidget } from "@/components/dashboard/GradientStatsCards";
 import { formatDistanceToNow, formatDistance } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
@@ -287,6 +288,14 @@ function Dashboard() {
 
         {/* Urgent Reminder Banner */}
         <UrgentReminderBanner />
+
+        {/* Monthly Entitlements Section - Gradient Cards */}
+        <MonthlyEntitlementsSection 
+          totalViews={stats?.articles.totalViews || 0}
+          totalArticles={stats?.articles.total || 0}
+          todayViews={stats?.articles.viewsToday || 0}
+          isLoading={isLoading}
+        />
 
         {/* Quick Actions Section - Staff Only (hidden for comments_moderator) */}
         {user?.role !== 'comments_moderator' && (
