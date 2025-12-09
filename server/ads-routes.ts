@@ -3453,7 +3453,7 @@ router.get("/analytics/campaigns", requireAdvertiser, async (req, res) => {
   }
 });
 
-// تصدير التقارير (PDF)
+// تصدير التقارير (PDF) باستخدام Puppeteer
 router.get("/analytics/export/pdf", requireAdvertiser, async (req, res) => {
   try {
     const { campaignId, dateFrom, dateTo } = req.query;
@@ -3472,247 +3472,282 @@ router.get("/analytics/export/pdf", requireAdvertiser, async (req, res) => {
       ? `${format(fromDate, 'yyyy-MM-dd')} إلى ${format(toDate, 'yyyy-MM-dd')}`
       : 'كافة الفترات';
     
-    // Import pdfmake dynamically
-    const PdfPrinter = require('pdfmake');
-    
-    // Define fonts - use built-in fonts that support basic characters
-    const fonts = {
-      Roboto: {
-        normal: 'Helvetica',
-        bold: 'Helvetica-Bold',
-        italics: 'Helvetica-Oblique',
-        bolditalics: 'Helvetica-BoldOblique'
-      }
-    };
-    
-    const printer = new PdfPrinter(fonts);
-    
     // Format numbers for display
-    const formatNum = (num: number) => new Intl.NumberFormat('ar-SA').format(num);
+    const formatNum = (num: number) => new Intl.NumberFormat('ar-SA').format(num || 0);
     const formatCurr = (num: number) => new Intl.NumberFormat('ar-SA', {
       style: 'currency',
       currency: 'SAR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 2
-    }).format(num);
+    }).format(num || 0);
     
-    // Build the document definition
-    const docDefinition: any = {
-      pageSize: 'A4',
-      pageOrientation: 'portrait',
-      pageMargins: [40, 60, 40, 60],
-      
-      content: [
-        // Header
-        {
-          text: 'تقرير تحليلات الإعلانات',
-          style: 'header',
-          alignment: 'right'
-        },
-        {
-          text: `الفترة: ${dateRangeText}`,
-          style: 'subheader',
-          alignment: 'right',
-          margin: [0, 5, 0, 20]
-        },
-        
-        // KPI Summary Section
-        {
-          text: 'ملخص مؤشرات الأداء الرئيسية',
-          style: 'sectionHeader',
-          alignment: 'right',
-          margin: [0, 0, 0, 10]
-        },
-        {
-          table: {
-            headerRows: 1,
-            widths: ['*', '*'],
-            body: [
-              [
-                { text: 'القيمة', style: 'tableHeader', alignment: 'center' },
-                { text: 'المؤشر', style: 'tableHeader', alignment: 'right' }
-              ],
-              [
-                { text: formatNum(overviewStats.impressions || 0), alignment: 'center' },
-                { text: 'المشاهدات', alignment: 'right' }
-              ],
-              [
-                { text: formatNum(overviewStats.clicks || 0), alignment: 'center' },
-                { text: 'النقرات', alignment: 'right' }
-              ],
-              [
-                { text: `${(overviewStats.ctr || 0).toFixed(2)}%`, alignment: 'center' },
-                { text: 'معدل النقر (CTR)', alignment: 'right' }
-              ],
-              [
-                { text: formatNum(overviewStats.conversions || 0), alignment: 'center' },
-                { text: 'التحويلات', alignment: 'right' }
-              ],
-              [
-                { text: formatCurr(overviewStats.spent || 0), alignment: 'center' },
-                { text: 'المصروف', alignment: 'right' }
-              ],
-              [
-                { text: formatCurr(overviewStats.cpc || 0), alignment: 'center' },
-                { text: 'تكلفة النقرة (CPC)', alignment: 'right' }
-              ],
-              [
-                { text: formatCurr(overviewStats.cpm || 0), alignment: 'center' },
-                { text: 'التكلفة لكل ألف ظهور (CPM)', alignment: 'right' }
-              ],
-              [
-                { text: formatCurr(overviewStats.revenue || 0), alignment: 'center' },
-                { text: 'الإيرادات', alignment: 'right' }
-              ]
-            ]
-          },
-          layout: {
-            hLineWidth: () => 1,
-            vLineWidth: () => 1,
-            hLineColor: () => '#e5e7eb',
-            vLineColor: () => '#e5e7eb',
-            paddingLeft: () => 8,
-            paddingRight: () => 8,
-            paddingTop: () => 6,
-            paddingBottom: () => 6
-          },
-          margin: [0, 0, 0, 30]
-        },
-        
-        // Funnel Data Section
-        {
-          text: 'بيانات قمع التسويق',
-          style: 'sectionHeader',
-          alignment: 'right',
-          margin: [0, 0, 0, 10]
-        },
-        {
-          table: {
-            headerRows: 1,
-            widths: ['auto', 'auto', '*', '*'],
-            body: [
-              [
-                { text: 'الانخفاض %', style: 'tableHeader', alignment: 'center' },
-                { text: 'النسبة %', style: 'tableHeader', alignment: 'center' },
-                { text: 'العدد', style: 'tableHeader', alignment: 'center' },
-                { text: 'المرحلة', style: 'tableHeader', alignment: 'right' }
-              ],
-              ...(funnelData?.stages || []).map((stage: any) => [
-                { text: `${stage.dropoff || 0}%`, alignment: 'center' },
-                { text: `${stage.percentage || 0}%`, alignment: 'center' },
-                { text: formatNum(stage.count || 0), alignment: 'center' },
-                { text: stage.stageAr || stage.stage || '', alignment: 'right' }
-              ])
-            ]
-          },
-          layout: {
-            hLineWidth: () => 1,
-            vLineWidth: () => 1,
-            hLineColor: () => '#e5e7eb',
-            vLineColor: () => '#e5e7eb',
-            paddingLeft: () => 8,
-            paddingRight: () => 8,
-            paddingTop: () => 6,
-            paddingBottom: () => 6
-          },
-          margin: [0, 0, 0, 30]
-        },
-        
-        // Conversion Rate Summary
-        {
-          text: `معدل التحويل الإجمالي: ${(funnelData?.totalConversionRate || 0).toFixed(2)}%`,
-          style: 'highlight',
-          alignment: 'right',
-          margin: [0, 0, 0, 30]
-        }
-      ],
-      
-      // Footer
-      footer: function(currentPage: number, pageCount: number) {
-        return {
-          columns: [
-            {
-              text: `صفحة ${currentPage} من ${pageCount}`,
-              alignment: 'left',
-              margin: [40, 0, 0, 0],
-              fontSize: 9,
-              color: '#6b7280'
-            },
-            {
-              text: `تم التوليد: ${format(new Date(), 'yyyy-MM-dd HH:mm:ss')}`,
-              alignment: 'right',
-              margin: [0, 0, 40, 0],
-              fontSize: 9,
-              color: '#6b7280'
-            }
-          ],
-          margin: [0, 20, 0, 0]
-        };
-      },
-      
-      // Styles
-      styles: {
-        header: {
-          fontSize: 22,
-          bold: true,
-          color: '#1f2937',
-          margin: [0, 0, 0, 5]
-        },
-        subheader: {
-          fontSize: 12,
-          color: '#6b7280'
-        },
-        sectionHeader: {
-          fontSize: 14,
-          bold: true,
-          color: '#374151'
-        },
-        tableHeader: {
-          bold: true,
-          fillColor: '#f3f4f6',
-          color: '#1f2937'
-        },
-        highlight: {
-          fontSize: 12,
-          bold: true,
-          color: '#059669'
-        }
-      },
-      
-      defaultStyle: {
-        font: 'Roboto',
-        fontSize: 10,
-        color: '#374151'
-      }
-    };
+    // Funnel colors
+    const funnelColors = ['#A855F7', '#3B82F6', '#22C55E', '#F97316', '#EF4444'];
     
-    // Generate PDF
-    const pdfDoc = printer.createPdfKitDocument(docDefinition);
+    // Build HTML template
+    const htmlContent = `
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Tajawal', sans-serif;
+      direction: rtl;
+      padding: 40px;
+      background: #fff;
+      color: #1f2937;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding-bottom: 20px;
+      border-bottom: 3px solid #3B82F6;
+    }
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 10px;
+    }
+    .header .date-range {
+      font-size: 14px;
+      color: #6b7280;
+    }
+    .section {
+      margin-bottom: 40px;
+    }
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #374151;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    th, td {
+      padding: 12px 16px;
+      text-align: right;
+      border: 1px solid #e5e7eb;
+    }
+    th {
+      background: #f3f4f6;
+      font-weight: 700;
+      color: #374151;
+    }
+    tr:nth-child(even) {
+      background: #f9fafb;
+    }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+    .kpi-card {
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .kpi-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1e40af;
+      margin-bottom: 8px;
+    }
+    .kpi-label {
+      font-size: 12px;
+      color: #64748b;
+    }
+    .funnel-container {
+      margin: 30px 0;
+    }
+    .funnel-stage {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .funnel-bar {
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      color: white;
+      font-weight: 600;
+      min-width: 100px;
+    }
+    .funnel-info {
+      margin-right: 16px;
+      font-size: 13px;
+      color: #6b7280;
+    }
+    .highlight-box {
+      background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #9ca3af;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>تقرير تحليلات الإعلانات</h1>
+    <div class="date-range">الفترة: ${dateRangeText}</div>
+  </div>
+  
+  <div class="section">
+    <h2 class="section-title">مؤشرات الأداء الرئيسية</h2>
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-value">${formatNum(overviewStats.impressions)}</div>
+        <div class="kpi-label">المشاهدات</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-value">${formatNum(overviewStats.clicks)}</div>
+        <div class="kpi-label">النقرات</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-value">${(overviewStats.ctr || 0).toFixed(2)}%</div>
+        <div class="kpi-label">معدل النقر</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-value">${formatNum(overviewStats.conversions)}</div>
+        <div class="kpi-label">التحويلات</div>
+      </div>
+    </div>
     
-    // Collect chunks
-    const chunks: Buffer[] = [];
+    <table>
+      <thead>
+        <tr>
+          <th>المؤشر</th>
+          <th>القيمة</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>المشاهدات</td>
+          <td>${formatNum(overviewStats.impressions)}</td>
+        </tr>
+        <tr>
+          <td>النقرات</td>
+          <td>${formatNum(overviewStats.clicks)}</td>
+        </tr>
+        <tr>
+          <td>معدل النقر (CTR)</td>
+          <td>${(overviewStats.ctr || 0).toFixed(2)}%</td>
+        </tr>
+        <tr>
+          <td>التحويلات</td>
+          <td>${formatNum(overviewStats.conversions)}</td>
+        </tr>
+        <tr>
+          <td>المصروف</td>
+          <td>${formatCurr(overviewStats.spent)}</td>
+        </tr>
+        <tr>
+          <td>تكلفة النقرة (CPC)</td>
+          <td>${formatCurr(overviewStats.cpc)}</td>
+        </tr>
+        <tr>
+          <td>التكلفة لكل ألف ظهور (CPM)</td>
+          <td>${formatCurr(overviewStats.cpm)}</td>
+        </tr>
+        <tr>
+          <td>الإيرادات</td>
+          <td>${formatCurr(overviewStats.revenue)}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
+  <div class="section">
+    <h2 class="section-title">قمع التسويق</h2>
+    <div class="funnel-container">
+      ${(funnelData?.stages || []).map((stage: any, index: number) => {
+        const width = Math.max(stage.percentage || 0, 20);
+        const color = funnelColors[index % funnelColors.length];
+        return `
+          <div class="funnel-stage">
+            <div class="funnel-bar" style="width: ${width}%; background: ${color};">
+              <span>${stage.stageAr || stage.stage}</span>
+              <span>${formatNum(stage.count)}</span>
+            </div>
+            <div class="funnel-info">
+              ${stage.percentage}% | انخفاض: ${stage.dropoff}%
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
     
-    pdfDoc.on('data', (chunk: Buffer) => {
-      chunks.push(chunk);
+    <div class="highlight-box">
+      معدل التحويل الإجمالي: ${(funnelData?.totalConversionRate || 0).toFixed(2)}%
+    </div>
+  </div>
+  
+  <div class="footer">
+    <span>تم التوليد: ${format(new Date(), 'yyyy-MM-dd HH:mm:ss')}</span>
+    <span>منصة سبق - نظام تحليلات الإعلانات</span>
+  </div>
+</body>
+</html>
+    `;
+    
+    // Use Puppeteer to generate PDF
+    const puppeteer = require('puppeteer');
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
     });
     
-    pdfDoc.on('end', () => {
-      const pdfBuffer = Buffer.concat(chunks);
-      
-      const filename = `ad-analytics-report-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
-      
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-      res.setHeader('Content-Length', pdfBuffer.length);
-      res.send(pdfBuffer);
+    const page = await browser.newPage();
+    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+    
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: { top: '15mm', bottom: '15mm', left: '10mm', right: '10mm' }
     });
     
-    pdfDoc.on('error', (err: Error) => {
-      console.error("[Analytics] خطأ في توليد PDF:", err);
-      res.status(500).json({ error: "حدث خطأ في توليد التقرير" });
-    });
+    await browser.close();
     
-    pdfDoc.end();
+    const filename = `ad-analytics-report-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+    
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    res.send(pdfBuffer);
+    
   } catch (error) {
     console.error("[Analytics] خطأ في تصدير تقرير PDF:", error);
     res.status(500).json({ error: "حدث خطأ في التصدير" });
