@@ -3677,6 +3677,79 @@ router.get("/analytics/export/pdf", requireAdvertiser, async (req, res) => {
   }
 });
 
+// ============================================
+// SSE LIVE DATA - البيانات اللحظية
+// ============================================
+
+// Track active SSE connections
+const activeLiveConnections = new Set<Response>();
+
+// SSE endpoint for real-time live data
+router.get("/analytics/live", requireAdvertiser, async (req, res) => {
+  try {
+    // Set SSE headers
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    
+    // Add to active connections
+    activeLiveConnections.add(res);
+    console.log(`[SSE Live] New connection. Active: ${activeLiveConnections.size}`);
+    
+    // Function to get today's stats
+    const getTodayStats = async () => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const stats = await db
+        .select({
+          impressions: sql<number>`COALESCE(COUNT(DISTINCT ${impressions.id}), 0)::int`,
+          clicks: sql<number>`COALESCE(COUNT(DISTINCT ${clicks.id}), 0)::int`,
+        })
+        .from(impressions)
+        .leftJoin(clicks, eq(clicks.impressionId, impressions.id))
+        .where(gte(impressions.timestamp, today));
+      
+      return {
+        impressions: stats[0]?.impressions || 0,
+        clicks: stats[0]?.clicks || 0,
+        timestamp: new Date().toISOString()
+      };
+    };
+    
+    // Send initial data
+    const initialData = await getTodayStats();
+    res.write(`data: ${JSON.stringify(initialData)}\n\n`);
+    
+    // Send data every 5 seconds
+    const intervalId = setInterval(async () => {
+      try {
+        const data = await getTodayStats();
+        res.write(`data: ${JSON.stringify(data)}\n\n`);
+      } catch (error) {
+        console.error('[SSE Live] Error fetching stats:', error);
+      }
+    }, 5000);
+    
+    // Handle client disconnect
+    req.on('close', () => {
+      clearInterval(intervalId);
+      activeLiveConnections.delete(res);
+      console.log(`[SSE Live] Connection closed. Active: ${activeLiveConnections.size}`);
+    });
+    
+    req.on('error', () => {
+      clearInterval(intervalId);
+      activeLiveConnections.delete(res);
+    });
+    
+  } catch (error) {
+    console.error('[SSE Live] Error setting up SSE:', error);
+    res.status(500).json({ error: 'خطأ في الاتصال بالبيانات اللحظية' });
+  }
+});
+
 // تصدير التقارير (CSV)
 router.get("/analytics/export/csv", requireAdvertiser, async (req, res) => {
   try {

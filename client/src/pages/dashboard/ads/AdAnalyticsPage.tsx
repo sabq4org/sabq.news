@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Chart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
@@ -38,10 +38,18 @@ import {
   Smartphone,
   Globe,
   FileText,
+  Radio,
+  Power,
 } from "lucide-react";
 import { format, subDays, startOfMonth, startOfToday, endOfToday } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
+
+interface LiveData {
+  impressions: number;
+  clicks: number;
+  timestamp: string;
+}
 
 interface OverviewStats {
   impressions: number;
@@ -297,10 +305,154 @@ function TableSkeleton() {
   );
 }
 
+function LiveDataCard({
+  isEnabled,
+  onToggle,
+  liveData,
+  isConnected,
+}: {
+  isEnabled: boolean;
+  onToggle: () => void;
+  liveData: LiveData | null;
+  isConnected: boolean;
+}) {
+  return (
+    <Card data-testid="card-live-data">
+      <CardContent className="p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <div className={`p-3 rounded-lg ${isEnabled && isConnected ? 'bg-green-500/10' : 'bg-muted'}`}>
+                <Radio className={`h-5 w-5 ${isEnabled && isConnected ? 'text-green-500' : 'text-muted-foreground'}`} />
+              </div>
+              {isEnabled && isConnected && (
+                <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                </span>
+              )}
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg">البيانات اللحظية</h3>
+              <div className="flex items-center gap-2 text-sm">
+                {isEnabled ? (
+                  <>
+                    <span 
+                      className={`inline-flex items-center gap-1.5 ${isConnected ? 'text-green-500' : 'text-red-500'}`}
+                      data-testid="status-live-connection"
+                    >
+                      <span className={`h-2 w-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                      {isConnected ? 'متصل' : 'غير متصل'}
+                    </span>
+                    {liveData?.timestamp && (
+                      <span className="text-muted-foreground">
+                        • آخر تحديث: {format(new Date(liveData.timestamp), 'HH:mm:ss', { locale: arSA })}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <span className="text-muted-foreground">البث المباشر متوقف</span>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            {isEnabled && liveData && (
+              <div className="flex items-center gap-6">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-blue-500" data-testid="live-impressions">
+                    {formatNumber(liveData.impressions)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">المشاهدات اليوم</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-green-500" data-testid="live-clicks">
+                    {formatNumber(liveData.clicks)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">النقرات اليوم</p>
+                </div>
+              </div>
+            )}
+            
+            <Button
+              variant={isEnabled ? "default" : "outline"}
+              size="sm"
+              onClick={onToggle}
+              data-testid="button-toggle-live"
+              className="min-w-[100px]"
+            >
+              <Power className="h-4 w-4 ml-2" />
+              {isEnabled ? 'إيقاف' : 'تشغيل'}
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function AdAnalyticsPage() {
   const { toast } = useToast();
   const [dateRange, setDateRange] = useState("30days");
   const [isExporting, setIsExporting] = useState(false);
+  
+  // Live data state
+  const [liveEnabled, setLiveEnabled] = useState(false);
+  const [liveData, setLiveData] = useState<LiveData | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  
+  // SSE connection effect
+  useEffect(() => {
+    if (!liveEnabled) {
+      setIsConnected(false);
+      return;
+    }
+    
+    let eventSource: EventSource | null = null;
+    
+    const connect = () => {
+      eventSource = new EventSource('/api/ads/analytics/live', {
+        withCredentials: true
+      });
+      
+      eventSource.onopen = () => {
+        setIsConnected(true);
+      };
+      
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data) as LiveData;
+          setLiveData(data);
+          setIsConnected(true);
+        } catch (e) {
+          console.error('[SSE] Error parsing data:', e);
+        }
+      };
+      
+      eventSource.onerror = () => {
+        setIsConnected(false);
+        eventSource?.close();
+        // Try to reconnect after 3 seconds
+        setTimeout(() => {
+          if (liveEnabled) {
+            connect();
+          }
+        }, 3000);
+      };
+    };
+    
+    connect();
+    
+    return () => {
+      eventSource?.close();
+      setIsConnected(false);
+    };
+  }, [liveEnabled]);
+  
+  const toggleLive = useCallback(() => {
+    setLiveEnabled(prev => !prev);
+  }, []);
 
   const { dateFrom, dateTo } = useMemo(() => getDateRange(dateRange), [dateRange]);
 
@@ -757,6 +909,13 @@ export default function AdAnalyticsPage() {
             </Button>
           </div>
         </div>
+
+        <LiveDataCard
+          isEnabled={liveEnabled}
+          onToggle={toggleLive}
+          liveData={liveData}
+          isConnected={isConnected}
+        />
 
         {overviewLoading ? (
           <KPICardsSkeleton />
