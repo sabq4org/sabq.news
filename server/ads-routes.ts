@@ -3740,7 +3740,7 @@ router.get("/analytics/export/pdf", requireAdvertiser, async (req, res) => {
     // Small delay to ensure rendering is complete
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    const pdfBuffer = await page.pdf({
+    const pdfData = await page.pdf({
       format: 'A4',
       printBackground: true,
       margin: { top: '15mm', bottom: '15mm', left: '10mm', right: '10mm' },
@@ -3749,12 +3749,15 @@ router.get("/analytics/export/pdf", requireAdvertiser, async (req, res) => {
     
     await browser.close();
     
+    // Convert Uint8Array to Buffer for proper sending
+    const pdfBuffer = Buffer.from(pdfData);
+    
     const filename = `ad-analytics-report-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
     
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Length', pdfBuffer.length);
-    res.send(pdfBuffer);
+    res.end(pdfBuffer);
     
   } catch (error) {
     console.error("[Analytics] خطأ في تصدير تقرير PDF:", error);
