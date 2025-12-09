@@ -3278,6 +3278,8 @@ router.get("/analytics/overview", requireAdvertiser, async (req, res) => {
   try {
     const { campaignId, dateFrom, dateTo } = req.query;
     
+    console.log("[Analytics Overview] Request params:", { campaignId, dateFrom, dateTo });
+    
     const fromDate = dateFrom ? new Date(dateFrom as string) : undefined;
     const toDate = dateTo ? new Date(dateTo as string) : undefined;
     
@@ -3286,6 +3288,8 @@ router.get("/analytics/overview", requireAdvertiser, async (req, res) => {
       fromDate,
       toDate
     );
+    
+    console.log("[Analytics Overview] Result:", stats);
     
     res.json(stats);
   } catch (error) {
