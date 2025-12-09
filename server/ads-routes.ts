@@ -3067,23 +3067,40 @@ router.post("/track/impression/:impressionId", async (req, res) => {
     // Update daily stats
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
     
-    await db
-      .insert(dailyStats)
-      .values({
+    // Check if daily stats exist for this campaign and date
+    const existingStats = await db
+      .select({ id: dailyStats.id })
+      .from(dailyStats)
+      .where(and(
+        eq(dailyStats.campaignId, impression.campaignId),
+        gte(dailyStats.date, today),
+        lte(dailyStats.date, tomorrow)
+      ))
+      .limit(1);
+    
+    if (existingStats.length > 0) {
+      // Update existing stats
+      await db
+        .update(dailyStats)
+        .set({
+          impressions: sql`${dailyStats.impressions} + 1`,
+          updatedAt: new Date(),
+        })
+        .where(eq(dailyStats.id, existingStats[0].id));
+    } else {
+      // Insert new stats
+      await db.insert(dailyStats).values({
         campaignId: impression.campaignId,
         date: today,
         impressions: 1,
         clicks: 0,
         conversions: 0,
         spent: 0,
-      })
-      .onConflictDoUpdate({
-        target: [dailyStats.campaignId, dailyStats.date],
-        set: {
-          impressions: sql`${dailyStats.impressions} + 1`,
-        },
       });
+    }
     
     res.json({ success: true });
   } catch (error) {
@@ -3199,23 +3216,40 @@ router.post("/track/click/:impressionId", async (req, res) => {
     // Update daily stats
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
     
-    await db
-      .insert(dailyStats)
-      .values({
+    // Check if daily stats exist for this campaign and date
+    const existingStats = await db
+      .select({ id: dailyStats.id })
+      .from(dailyStats)
+      .where(and(
+        eq(dailyStats.campaignId, impression.campaignId),
+        gte(dailyStats.date, today),
+        lte(dailyStats.date, tomorrow)
+      ))
+      .limit(1);
+    
+    if (existingStats.length > 0) {
+      // Update existing stats
+      await db
+        .update(dailyStats)
+        .set({
+          clicks: sql`${dailyStats.clicks} + 1`,
+          updatedAt: new Date(),
+        })
+        .where(eq(dailyStats.id, existingStats[0].id));
+    } else {
+      // Insert new stats
+      await db.insert(dailyStats).values({
         campaignId: impression.campaignId,
         date: today,
         impressions: 0,
         clicks: 1,
         conversions: 0,
         spent: 0,
-      })
-      .onConflictDoUpdate({
-        target: [dailyStats.campaignId, dailyStats.date],
-        set: {
-          clicks: sql`${dailyStats.clicks} + 1`,
-        },
       });
+    }
     
     res.json({ success: true });
   } catch (error) {
