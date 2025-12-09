@@ -1,0 +1,144 @@
+2025-12-10 01:28:52.93
+b8c348be
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-10 01:28:52.93
+b8c348be
+User
+📡 SSE connection opened for user: admin-sabq
+2025-12-10 01:28:52.93
+b8c348be
+User
+📡 User admin-sabq subscribed to notification stream
+2025-12-10 01:28:53.03
+b8c348be
+User
+10:28:53 PM [express] GET /api/announcements/active 304 in 172ms :: []
+2025-12-10 01:28:53.06
+b8c348be
+User
+10:28:53 PM [express] GET /api/notifications 304 in 198ms :: {"notifications":[{"id":"26cfc3e1-e12c-4…
+2025-12-10 01:28:56.62
+b8c348be
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-10 01:28:56.65
+b8c348be
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-10 01:28:56.72
+b8c348be
+User
+10:28:56 PM [express] GET /api/ads/analytics/live-poll 200 in 134ms :: {"impressions":514,"clicks":33…
+2025-12-10 01:29:00.04
+b8c348be
+User
+[NotificationWorker] Starting queue processing...
+2025-12-10 01:29:00.04
+b8c348be
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-12-10 01:29:00.06
+b8c348be
+User
+🔄 Checking for scheduled audio newsletters...
+2025-12-10 01:29:00.06
+b8c348be
+User
+[AI Task Executor] Checking for pending tasks...
+2025-12-10 01:29:00.09
+b8c348be
+User
+[NotificationWorker] Found 0 notifications to process
+2025-12-10 01:29:00.09
+b8c348be
+User
+[NotificationWorker] Queue processing completed
+2025-12-10 01:29:00.22
+b8c348be
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-12-10 01:29:00.23
+b8c348be
+User
+Found 0 scheduled newsletters to process
+2025-12-10 01:29:01.71
+b8c348be
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-10 01:29:01.74
+b8c348be
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-10 01:29:01.81
+b8c348be
+User
+10:29:01 PM [express] GET /api/ads/analytics/live-poll 200 in 134ms :: {"impressions":514,"clicks":33…
+2025-12-10 01:29:06.70
+b8c348be
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-10 01:29:06.73
+b8c348be
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-10 01:29:06.80
+b8c348be
+User
+10:29:06 PM [express] GET /api/ads/analytics/live-poll 200 in 134ms :: {"impressions":514,"clicks":33…
+2025-12-10 01:29:11.79
+b8c348be
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-10 01:29:11.82
+b8c348be
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-10 01:29:11.89
+b8c348be
+User
+10:29:11 PM [express] GET /api/ads/analytics/live-poll 200 in 133ms :: {"impressions":514,"clicks":33…
+2025-12-10 01:29:16.90
+b8c348be
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-10 01:29:16.94
+b8c348be
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-10 01:29:17.00
+b8c348be
+User
+10:29:17 PM [express] GET /api/ads/analytics/live-poll 200 in 134ms :: {"impressions":514,"clicks":33…
+2025-12-10 01:29:22.00
+b8c348be
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-10 01:29:22.04
+b8c348be
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-10 01:29:22.10
+b8c348be
+User
+10:29:22 PM [express] GET /api/ads/analytics/live-poll 200 in 134ms :: {"impressions":514,"clicks":33…
+2025-12-10 01:29:22.10
+b8c348be
+User
+10:29:22 PM [express] GET /api/ads/analytics/live-poll 200 in 134ms :: {"impressions":514,"clicks":33…
+2025-12-10 01:29:22.10
+b8c348be
+User
+10:29:22 PM [express] GET /api/ads/analytics/live-poll 200 in 134ms :: {"impressions":514,"clicks":33…
+2025-12-10 01:29:27.49
+b8c348be
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-10 01:29:27.52
+b8c348be
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-10 01:29:27.59
+b8c348be
+User
+10:29:27 PM [express] GET /api/ads/analytics/live-poll 200 in 130ms :: {"impressions":514,"clicks":33…
