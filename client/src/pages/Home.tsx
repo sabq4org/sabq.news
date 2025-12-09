@@ -438,9 +438,6 @@ export default function Home() {
           )}
 
 
-          {/* Continue Reading Widget - Personalized unfinished articles */}
-          <ContinueReadingWidget />
-
           {/* Ad Banner Slot - Below Featured News */}
           <div className="mb-8">
             <AdSlot slotId="header-banner" className="w-full" />
@@ -514,6 +511,9 @@ export default function Home() {
           <div className="scroll-fade-in">
             <MuqtarabHomeBlock />
           </div>
+
+          {/* Continue Reading Widget - Personalized unfinished articles */}
+          <ContinueReadingWidget />
         </div>
 
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 py-8">
