@@ -119,6 +119,9 @@ export async function getOverviewStats(
   dateFrom?: Date,
   dateTo?: Date
 ): Promise<OverviewStats> {
+  console.log("[ADS ANALYTICS V2] 🚀 Using DIRECT table queries - NOT daily_stats");
+  console.log("[ADS ANALYTICS V2] Params:", { campaignId, dateFrom, dateTo });
+  
   // Query impressions directly
   const impCampaignConditions = campaignId ? [eq(impressions.campaignId, campaignId)] : [];
   const impDateConditions = buildDateFilters(impressions, dateFrom, dateTo);
@@ -154,6 +157,8 @@ export async function getOverviewStats(
   const totalConversions = Number(convResult[0]?.count) || 0;
   const totalSpent = 0; // Not tracked in individual tables
   const totalRevenue = 0; // Not tracked in individual tables
+
+  console.log("[ADS ANALYTICS V2] 📊 Results:", { totalImpressions, totalClicks, totalConversions });
 
   const ctr = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
   const cpc = totalClicks > 0 ? totalSpent / totalClicks : 0;
