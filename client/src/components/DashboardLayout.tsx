@@ -267,7 +267,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen w-full" dir="rtl">
+      <div className="dashboard-theme flex h-screen w-full" dir="rtl">
         <Sidebar side="right" collapsible="offcanvas">
           <SidebarContent>
             <SidebarGroup>

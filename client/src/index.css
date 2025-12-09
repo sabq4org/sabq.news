@@ -395,6 +395,92 @@ input, select, textarea {
   --card-foreground: var(--ifox-text-primary);
 }
 
+/**
+ * Dashboard Theme - Navy Blue Design
+ * تصميم كحلي للوحة التحكم فقط
+ */
+.dashboard-theme {
+  /* Light Mode Dashboard */
+  --background: 0 0% 100%;
+  --foreground: 0 0% 9%;
+  --border: 0 0% 90%;
+  --card: 0 0% 98%;
+  --card-foreground: 0 0% 9%;
+  --card-border: 0 0% 88%;
+  
+  /* Navy Blue Sidebar */
+  --sidebar: 220 30% 20%;
+  --sidebar-foreground: 0 0% 98%;
+  --sidebar-border: 220 25% 25%;
+  --sidebar-primary: 210 70% 40%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 220 25% 28%;
+  --sidebar-accent-foreground: 0 0% 95%;
+  --sidebar-ring: 210 70% 40%;
+  
+  /* Primary - Navy Blue */
+  --primary: 210 70% 40%;
+  --primary-foreground: 0 0% 98%;
+  
+  /* Secondary */
+  --secondary: 210 6% 88%;
+  --secondary-foreground: 220 15% 25%;
+  
+  /* Destructive - Red */
+  --destructive: 0 75% 42%;
+  --destructive-foreground: 0 0% 98%;
+  
+  /* Charts - Dashboard specific */
+  --chart-1: 210 70% 40%;
+  --chart-2: 200 65% 45%;
+  --chart-3: 25 85% 42%;
+  --chart-4: 280 70% 40%;
+  --chart-5: 340 75% 40%;
+  
+  /* Fonts */
+  --font-sans: 'Tajawal', 'IBM Plex Sans Arabic', sans-serif;
+  --font-serif: 'Tajawal', Georgia, serif;
+  --font-mono: 'IBM Plex Sans Arabic', Menlo, monospace;
+}
+
+/* Dashboard Dark Mode */
+.dashboard-theme.dark,
+.dark .dashboard-theme {
+  --background: 220 20% 10%;
+  --foreground: 210 6% 90%;
+  --border: 220 12% 20%;
+  --card: 220 18% 13%;
+  --card-foreground: 210 6% 90%;
+  --card-border: 220 15% 18%;
+  
+  /* Navy Blue Sidebar - Dark */
+  --sidebar: 220 20% 12%;
+  --sidebar-foreground: 0 0% 98%;
+  --sidebar-border: 220 15% 18%;
+  --sidebar-primary: 210 60% 48%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 220 18% 18%;
+  --sidebar-accent-foreground: 0 0% 95%;
+  --sidebar-ring: 210 60% 48%;
+  
+  /* Primary - Navy Blue Dark */
+  --primary: 210 60% 48%;
+  --primary-foreground: 0 0% 100%;
+  
+  /* Secondary */
+  --secondary: 220 12% 20%;
+  --secondary-foreground: 210 6% 90%;
+  
+  /* Popover */
+  --popover: 220 18% 13%;
+  --popover-foreground: 210 6% 90%;
+  --popover-border: 220 15% 18%;
+  
+  /* Muted */
+  --muted: 220 15% 15%;
+  --muted-foreground: 210 6% 60%;
+}
+
 @layer base {
   * {
     @apply border-border;
