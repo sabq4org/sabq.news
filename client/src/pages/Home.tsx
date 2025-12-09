@@ -438,9 +438,10 @@ export default function Home() {
           )}
 
 
-          {/* Ad Banner Slot - Below Featured News */}
-          <div className="mb-8">
+          {/* Ad Banner Slots - Below Featured News */}
+          <div className="mb-8 space-y-4">
             <AdSlot slotId="header-banner" className="w-full" />
+            <AdSlot slotId="header" className="w-full" />
           </div>
 
           {/* Smart Blocks: below_featured */}
