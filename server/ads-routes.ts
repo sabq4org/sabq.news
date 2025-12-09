@@ -3728,16 +3728,23 @@ router.get("/analytics/export/pdf", requireAdvertiser, async (req, res) => {
     const browser = await puppeteer.launch({
       headless: true,
       executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/nix/store/zi4f80l169xlmivz8vja8wlphq74qqk0-chromium-125.0.6422.141/bin/chromium',
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--font-render-hinting=none']
     });
     
     const page = await browser.newPage();
     await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
     
+    // Wait for fonts to load
+    await page.evaluateHandle('document.fonts.ready');
+    
+    // Small delay to ensure rendering is complete
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
-      margin: { top: '15mm', bottom: '15mm', left: '10mm', right: '10mm' }
+      margin: { top: '15mm', bottom: '15mm', left: '10mm', right: '10mm' },
+      preferCSSPageSize: false
     });
     
     await browser.close();
