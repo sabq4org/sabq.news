@@ -123,8 +123,9 @@ export async function getOverviewStats(
     ? [eq(dailyStats.campaignId, campaignId)]
     : [];
   const dateConditions = buildDailyStatsDateFilters(dateFrom, dateTo);
+  const allConditions = [...campaignConditions, ...dateConditions];
 
-  const statsResult = await db
+  const query = db
     .select({
       totalImpressions: sql<number>`COALESCE(SUM(${dailyStats.impressions}), 0)::int`,
       totalClicks: sql<number>`COALESCE(SUM(${dailyStats.clicks}), 0)::int`,
@@ -132,8 +133,11 @@ export async function getOverviewStats(
       totalSpent: sql<number>`COALESCE(SUM(${dailyStats.spent}), 0)::int`,
       totalRevenue: sql<number>`COALESCE(SUM(${dailyStats.revenue}), 0)::int`,
     })
-    .from(dailyStats)
-    .where(and(...campaignConditions, ...dateConditions));
+    .from(dailyStats);
+
+  const statsResult = allConditions.length > 0
+    ? await query.where(and(...allConditions))
+    : await query;
 
   const stats = statsResult[0] || {
     totalImpressions: 0,
@@ -190,7 +194,9 @@ export async function getTimeSeriesData(
       break;
   }
 
-  const result = await db
+  const allConditions = [...campaignConditions, ...dateConditions];
+  
+  const baseQuery = db
     .select({
       dateBucket: sql<string>`date_trunc('${sql.raw(dateTrunc)}', ${dailyStats.date})::date::text`,
       impressions: sql<number>`COALESCE(SUM(${dailyStats.impressions}), 0)::int`,
@@ -198,10 +204,16 @@ export async function getTimeSeriesData(
       conversions: sql<number>`COALESCE(SUM(${dailyStats.conversions}), 0)::int`,
       spent: sql<number>`COALESCE(SUM(${dailyStats.spent}), 0)::int`,
     })
-    .from(dailyStats)
-    .where(and(...campaignConditions, ...dateConditions))
-    .groupBy(sql`date_trunc('${sql.raw(dateTrunc)}', ${dailyStats.date})`)
-    .orderBy(sql`date_trunc('${sql.raw(dateTrunc)}', ${dailyStats.date})`);
+    .from(dailyStats);
+
+  const result = allConditions.length > 0
+    ? await baseQuery
+        .where(and(...allConditions))
+        .groupBy(sql`date_trunc('${sql.raw(dateTrunc)}', ${dailyStats.date})`)
+        .orderBy(sql`date_trunc('${sql.raw(dateTrunc)}', ${dailyStats.date})`)
+    : await baseQuery
+        .groupBy(sql`date_trunc('${sql.raw(dateTrunc)}', ${dailyStats.date})`)
+        .orderBy(sql`date_trunc('${sql.raw(dateTrunc)}', ${dailyStats.date})`);
 
   return result.map((row) => {
     const imp = Number(row.impressions) || 0;
@@ -554,14 +566,19 @@ export async function getFunnelData(
     : [];
   const dateConditions = buildDailyStatsDateFilters(dateFrom, dateTo);
 
-  const statsResult = await db
+  const allConditions = [...campaignConditions, ...dateConditions];
+  
+  const query = db
     .select({
       totalImpressions: sql<number>`COALESCE(SUM(${dailyStats.impressions}), 0)::int`,
       totalClicks: sql<number>`COALESCE(SUM(${dailyStats.clicks}), 0)::int`,
       totalConversions: sql<number>`COALESCE(SUM(${dailyStats.conversions}), 0)::int`,
     })
-    .from(dailyStats)
-    .where(and(...campaignConditions, ...dateConditions));
+    .from(dailyStats);
+
+  const statsResult = allConditions.length > 0
+    ? await query.where(and(...allConditions))
+    : await query;
 
   const stats = statsResult[0] || {
     totalImpressions: 0,
