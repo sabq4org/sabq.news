@@ -407,10 +407,18 @@ export default function AdAnalyticsPage() {
   const [dateRange, setDateRange] = useState("30days");
   const [isExporting, setIsExporting] = useState(false);
   
-  // Live data state
-  const [liveEnabled, setLiveEnabled] = useState(false);
+  // Live data state - persist in localStorage
+  const [liveEnabled, setLiveEnabled] = useState(() => {
+    const saved = localStorage.getItem('adAnalytics_liveEnabled');
+    return saved === 'true';
+  });
   const [liveData, setLiveData] = useState<LiveData | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  
+  // Persist live toggle state
+  useEffect(() => {
+    localStorage.setItem('adAnalytics_liveEnabled', String(liveEnabled));
+  }, [liveEnabled]);
   
   // SSE connection effect
   useEffect(() => {
