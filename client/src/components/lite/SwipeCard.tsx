@@ -48,10 +48,47 @@ export function SwipeCard({
   isPersonalized = false
 }: SwipeCardProps) {
   const [showDetails, setShowDetails] = useState(false);
+  const [detailDragOffset, setDetailDragOffset] = useState(0);
   const startYRef = useRef(0);
   const lastYRef = useRef(0);
   const lastTimeRef = useRef(0);
   const isDraggingRef = useRef(false);
+  const detailScrollRef = useRef<HTMLDivElement>(null);
+  const detailStartYRef = useRef(0);
+  const isDetailDraggingRef = useRef(false);
+
+  const handleDetailTouchStart = useCallback((e: React.TouchEvent) => {
+    const scrollTop = detailScrollRef.current?.scrollTop || 0;
+    if (scrollTop <= 0) {
+      detailStartYRef.current = e.touches[0].clientY;
+      isDetailDraggingRef.current = true;
+    }
+  }, []);
+
+  const handleDetailTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isDetailDraggingRef.current) return;
+    const scrollTop = detailScrollRef.current?.scrollTop || 0;
+    const currentY = e.touches[0].clientY;
+    const offset = currentY - detailStartYRef.current;
+    
+    if (scrollTop <= 0 && offset > 0) {
+      e.preventDefault();
+      setDetailDragOffset(offset * 0.6);
+    } else {
+      isDetailDraggingRef.current = false;
+      setDetailDragOffset(0);
+    }
+  }, []);
+
+  const handleDetailTouchEnd = useCallback(() => {
+    if (!isDetailDraggingRef.current) return;
+    isDetailDraggingRef.current = false;
+    
+    if (detailDragOffset > 120) {
+      setShowDetails(false);
+    }
+    setDetailDragOffset(0);
+  }, [detailDragOffset]);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (position !== 'current') return;
@@ -249,12 +286,19 @@ export function SwipeCard({
         <motion.div
           className="fixed inset-0 z-50 bg-background"
           initial={{ y: "100%" }}
-          animate={{ y: 0 }}
+          animate={{ y: detailDragOffset }}
           exit={{ y: "100%" }}
-          transition={{ type: "tween", duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+          transition={{ type: "tween", duration: detailDragOffset > 0 ? 0 : 0.3, ease: [0.32, 0.72, 0, 1] }}
           dir="rtl"
         >
-          <div className="h-full overflow-y-auto">
+          <div 
+            ref={detailScrollRef}
+            className="h-full overflow-y-auto"
+            style={{ overscrollBehaviorY: 'contain' }}
+            onTouchStart={handleDetailTouchStart}
+            onTouchMove={handleDetailTouchMove}
+            onTouchEnd={handleDetailTouchEnd}
+          >
             {imageUrl && (
               <div className="relative h-72 sm:h-96">
                 <img
