@@ -3720,13 +3720,39 @@ router.get("/analytics/export/pdf", requireAdvertiser, async (req, res) => {
 });
 
 // ============================================
-// SSE LIVE DATA - البيانات اللحظية
+// LIVE DATA - البيانات اللحظية
 // ============================================
+
+// Polling endpoint for live data (more reliable with auth)
+router.get("/analytics/live-poll", requireAdvertiser, async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const stats = await db
+      .select({
+        impressions: sql<number>`COALESCE(COUNT(DISTINCT ${impressions.id}), 0)::int`,
+        clicks: sql<number>`COALESCE(COUNT(DISTINCT ${clicks.id}), 0)::int`,
+      })
+      .from(impressions)
+      .leftJoin(clicks, eq(clicks.impressionId, impressions.id))
+      .where(gte(impressions.timestamp, today));
+    
+    res.json({
+      impressions: stats[0]?.impressions || 0,
+      clicks: stats[0]?.clicks || 0,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('[Live Poll] Error:', error);
+    res.status(500).json({ error: "حدث خطأ في جلب البيانات اللحظية" });
+  }
+});
 
 // Track active SSE connections
 const activeLiveConnections = new Set<Response>();
 
-// SSE endpoint for real-time live data
+// SSE endpoint for real-time live data (legacy)
 router.get("/analytics/live", requireAdvertiser, async (req, res) => {
   try {
     const user = req.user as any;

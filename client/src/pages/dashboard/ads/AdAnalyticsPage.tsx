@@ -420,60 +420,51 @@ export default function AdAnalyticsPage() {
     localStorage.setItem('adAnalytics_liveEnabled', String(liveEnabled));
   }, [liveEnabled]);
   
-  // SSE connection effect
+  // Polling for live data (more reliable than SSE with auth)
   useEffect(() => {
     if (!liveEnabled) {
       setIsConnected(false);
       return;
     }
     
-    let eventSource: EventSource | null = null;
-    let retryCount = 0;
-    const maxRetries = 3;
-    let retryTimeout: NodeJS.Timeout | null = null;
+    let isActive = true;
+    let errorCount = 0;
+    const maxErrors = 3;
     
-    const connect = () => {
-      eventSource = new EventSource('/api/ads/analytics/live', {
-        withCredentials: true
-      });
-      
-      eventSource.onopen = () => {
-        setIsConnected(true);
-        retryCount = 0;
-      };
-      
-      eventSource.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data) as LiveData;
+    const fetchLiveData = async () => {
+      try {
+        const response = await fetch('/api/ads/analytics/live-poll', {
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json() as LiveData;
+        if (isActive) {
           setLiveData(data);
           setIsConnected(true);
-        } catch (e) {
-          console.error('[SSE] Error parsing data:', e);
+          errorCount = 0;
         }
-      };
-      
-      eventSource.onerror = () => {
-        setIsConnected(false);
-        eventSource?.close();
-        
-        retryCount++;
-        if (retryCount <= maxRetries) {
-          retryTimeout = setTimeout(() => {
-            if (liveEnabled) {
-              connect();
-            }
-          }, 3000);
-        } else {
-          console.log('[SSE] Max retries reached, stopping reconnection attempts');
+      } catch (error) {
+        console.error('[Live] Error fetching data:', error);
+        errorCount++;
+        if (errorCount >= maxErrors && isActive) {
+          setIsConnected(false);
         }
-      };
+      }
     };
     
-    connect();
+    // Initial fetch
+    fetchLiveData();
+    
+    // Poll every 5 seconds
+    const intervalId = setInterval(fetchLiveData, 5000);
     
     return () => {
-      if (retryTimeout) clearTimeout(retryTimeout);
-      eventSource?.close();
+      isActive = false;
+      clearInterval(intervalId);
       setIsConnected(false);
     };
   }, [liveEnabled]);
