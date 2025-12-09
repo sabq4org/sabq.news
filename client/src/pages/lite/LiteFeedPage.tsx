@@ -438,15 +438,17 @@ export default function LiteFeedPage() {
         )}
       </div>
 
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
-        <div 
-          className="bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 text-white/80 text-sm font-medium"
-          data-testid="text-article-counter"
-          dir="rtl"
-        >
-          {articleOnlyIndex} / {sortedArticles.length}
+      {currentItem?.type === 'article' && (
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
+          <div 
+            className="bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 text-white/80 text-sm font-medium"
+            data-testid="text-article-counter"
+            dir="rtl"
+          >
+            {articleOnlyIndex} / {sortedArticles.length}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
