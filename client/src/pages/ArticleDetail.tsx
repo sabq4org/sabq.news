@@ -2,6 +2,7 @@ import { useParams } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { MobileOptimizedKpiCard } from "@/components/MobileOptimizedKpiCard";
+import { useStatsVisibility } from "@/hooks/useStatsVisibility";
 import { CommentSection } from "@/components/CommentSection";
 import { RecommendationsWidget } from "@/components/RecommendationsWidget";
 import { AIRecommendationsBlock } from "@/components/AIRecommendationsBlock";
@@ -56,6 +57,7 @@ export default function ArticleDetail() {
   const { slug } = useParams<{ slug: string }>();
   const { toast } = useToast();
   const { logBehavior } = useBehaviorTracking();
+  const { showStats } = useStatsVisibility();
   const [, setLocation] = useLocation();
   
   // Audio player state
@@ -900,6 +902,7 @@ export default function ArticleDetail() {
       </div>
 
       {/* Statistics Cards Section - Compact Single Row (Same as Homepage) */}
+      {showStats && (
       <div className="bg-muted/30 border-b mb-0">
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
           <div className="grid grid-cols-4 gap-2">
@@ -945,6 +948,7 @@ export default function ArticleDetail() {
           </div>
         </div>
       </div>
+      )}
 
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
 

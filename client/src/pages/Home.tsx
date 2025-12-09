@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { MobileOptimizedKpiCard } from "@/components/MobileOptimizedKpiCard";
 import { NavigationBar } from "@/components/NavigationBar";
+import { useStatsVisibility } from "@/hooks/useStatsVisibility";
 import { Footer } from "@/components/Footer";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { AIInsightsBlock } from "@/components/AIInsightsBlock";
@@ -222,6 +223,7 @@ interface HomepageData {
 }
 
 export default function Home() {
+  const { showStats } = useStatsVisibility();
   const { data: user } = useQuery<User | null>({
     queryKey: ["/api/auth/user"],
     retry: false,
@@ -381,7 +383,7 @@ export default function Home() {
 
       <main className="flex-1">
         {/* Statistics Cards Section - Compact Single Row */}
-        {stats && (
+        {showStats && stats && (
           <div className="bg-muted/30 border-b">
             <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
               <div className="grid grid-cols-4 gap-2">

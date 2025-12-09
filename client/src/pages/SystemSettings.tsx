@@ -13,7 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { Settings, Info, CheckCircle, AlertTriangle, AlertCircle, Calendar, Clock } from "lucide-react";
+import { Settings, Info, CheckCircle, AlertTriangle, AlertCircle, Calendar, Clock, BarChart3, Eye, EyeOff } from "lucide-react";
+import { useStatsVisibility } from "@/hooks/useStatsVisibility";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 
@@ -37,6 +38,7 @@ type AnnouncementFormData = z.infer<typeof announcementSchema>;
 
 export default function SystemSettings() {
   const { toast } = useToast();
+  const { showStats, setShowStats } = useStatsVisibility();
 
   const { data: announcement, isLoading } = useQuery<AnnouncementData>({
     queryKey: ["/api/system/announcement"],
@@ -163,6 +165,41 @@ export default function SystemSettings() {
             إدارة إعدادات النظام والإعلانات الداخلية
           </p>
         </div>
+
+        {/* Statistics Visibility Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              إعدادات الإحصائيات
+            </CardTitle>
+            <CardDescription>
+              التحكم في إظهار أو إخفاء شريط الإحصائيات
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+              <div className="flex items-center gap-3">
+                {showStats ? (
+                  <Eye className="h-5 w-5 text-green-500" />
+                ) : (
+                  <EyeOff className="h-5 w-5 text-muted-foreground" />
+                )}
+                <div>
+                  <p className="font-medium">إظهار الإحصائيات</p>
+                  <p className="text-sm text-muted-foreground">
+                    شريط الإحصائيات في الصفحة الرئيسية وتفاصيل المقال
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={showStats}
+                onCheckedChange={setShowStats}
+                data-testid="switch-stats-visibility"
+              />
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Current Announcement Status */}
         {announcement?.isActive && announcement?.message && (
