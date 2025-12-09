@@ -6449,7 +6449,7 @@ export class DatabaseStorage implements IStorage {
           )
         )
       )
-      .orderBy(desc(articles.displayOrder), desc(articles.publishedAt))
+      .orderBy(desc(articles.publishedAt), desc(articles.createdAt))
       .limit(limit)
       .offset(offset);
 
