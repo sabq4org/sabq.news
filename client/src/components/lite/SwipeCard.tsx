@@ -156,9 +156,13 @@ export function SwipeCard({
     if (article.liteOptimizedImageUrl) {
       return article.liteOptimizedImageUrl;
     }
-    // Fall back to on-demand optimization
+    // Fall back to original image directly (skip optimization if it fails)
     const rawImageUrl = article.imageUrl || article.thumbnailUrl;
-    return getOptimizedImageUrl(rawImageUrl);
+    // Only try optimization for public-objects URLs, otherwise use original
+    if (rawImageUrl && rawImageUrl.includes('/public-objects/')) {
+      return getOptimizedImageUrl(rawImageUrl);
+    }
+    return rawImageUrl || '';
   }, [article.liteOptimizedImageUrl, article.imageUrl, article.thumbnailUrl]);
   const publishedDate = article.publishedAt ? new Date(article.publishedAt) : new Date();
   const smartSummary = article.aiSummary || article.excerpt;
