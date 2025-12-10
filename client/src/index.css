@@ -1363,4 +1363,133 @@ input, select, textarea {
     white-space: nowrap;
     border-width: 0;
   }
+
+  /* ============================================
+   * ELEGANT DASHBOARD STYLES
+   * ============================================ */
+
+  /* Elegant fade up animation */
+  @keyframes elegantFadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-up {
+    animation: elegantFadeUp 0.5s ease-out forwards;
+  }
+
+  .animate-fade-up-delay-1 {
+    animation: elegantFadeUp 0.5s ease-out 0.1s forwards;
+    opacity: 0;
+  }
+
+  .animate-fade-up-delay-2 {
+    animation: elegantFadeUp 0.5s ease-out 0.2s forwards;
+    opacity: 0;
+  }
+
+  /* Glassmorphism card styles */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .dark .glass-card {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Premium gradient backgrounds */
+  .premium-gradient {
+    background: linear-gradient(135deg, 
+      hsl(220, 84%, 97%) 0%, 
+      hsl(243, 75%, 97%) 50%, 
+      hsl(220, 84%, 97%) 100%
+    );
+  }
+
+  .dark .premium-gradient {
+    background: linear-gradient(135deg, 
+      hsl(220, 30%, 8%) 0%, 
+      hsl(243, 40%, 12%) 50%, 
+      hsl(220, 30%, 8%) 100%
+    );
+  }
+
+  /* Hero welcome gradient */
+  .hero-welcome-gradient {
+    background: linear-gradient(135deg, 
+      hsl(220, 84%, 53%, 0.08) 0%, 
+      hsl(243, 75%, 59%, 0.05) 50%,
+      hsl(195, 75%, 50%, 0.03) 100%
+    );
+  }
+
+  .dark .hero-welcome-gradient {
+    background: linear-gradient(135deg, 
+      hsl(220, 84%, 53%, 0.15) 0%, 
+      hsl(243, 75%, 59%, 0.1) 50%,
+      hsl(220, 30%, 15%, 0.8) 100%
+    );
+  }
+
+  /* Stat card accent glow */
+  .stat-card-glow {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card-glow::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, 
+      hsl(var(--primary) / 0.1) 0%, 
+      transparent 70%
+    );
+    border-radius: 50%;
+    transform: translate(30%, -30%);
+    pointer-events: none;
+  }
+
+  /* Elegant icon wrapper */
+  .icon-wrapper-elegant {
+    background: linear-gradient(135deg, 
+      hsl(var(--primary) / 0.15) 0%, 
+      hsl(var(--primary) / 0.05) 100%
+    );
+    border: 1px solid hsl(var(--primary) / 0.2);
+  }
+
+  /* Shimmer effect for loading */
+  .elegant-shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 0%,
+      hsl(var(--muted) / 0.5) 50%,
+      hsl(var(--muted)) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-fade-up,
+    .animate-fade-up-delay-1,
+    .animate-fade-up-delay-2 {
+      animation: none;
+      opacity: 1;
+    }
+  }
 }
