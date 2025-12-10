@@ -339,6 +339,19 @@ export function SwipeCard({
                     <Bookmark className="h-5 w-5" />
                   </button>
                 </div>
+                
+                {/* AI-Generated Image Badge */}
+                {(article as any).isAiGeneratedImage && (
+                  <div className="absolute bottom-4 right-4">
+                    <div 
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/90 backdrop-blur-sm rounded-full text-white text-xs font-medium shadow-lg"
+                      data-testid="badge-ai-generated-image"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      <span>مولدة بالذكاء الاصطناعي</span>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
