@@ -30,6 +30,7 @@ import Dashboard from "@/pages/Dashboard";
 import AnalyticsDashboard from "@/pages/AnalyticsDashboard";
 import ArticleEditor from "@/pages/ArticleEditor";
 import ArticlesManagement from "@/pages/ArticlesManagement";
+import QuizManagement from "@/pages/dashboard/QuizManagement";
 import CategoriesManagement from "@/pages/CategoriesManagement";
 import UsersManagement from "@/pages/UsersManagement";
 import RolesManagement from "@/pages/RolesManagement";
@@ -410,6 +411,7 @@ function Router() {
       <Route path="/dashboard/article/new" component={ArticleEditor} />
       <Route path="/dashboard/articles/:id" component={ArticleEditor} />
       <Route path="/dashboard/articles" component={ArticlesManagement} />
+      <Route path="/dashboard/quizzes" component={QuizManagement} />
       <Route path="/dashboard/opinion" component={OpinionManagement} />
       <Route path="/dashboard/categories" component={CategoriesManagement} />
       <Route path="/dashboard/media-library" component={MediaLibrary} />
