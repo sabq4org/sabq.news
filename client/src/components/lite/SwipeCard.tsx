@@ -356,7 +356,16 @@ export function SwipeCard({
             )}
 
             <div className="p-6 mt-2 relative">
-              <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-3 mb-4 flex-wrap">
+                {article.newsType === 'breaking' && (
+                  <span 
+                    className="px-3 py-1.5 rounded-full text-white text-sm font-bold flex items-center gap-1 bg-red-600"
+                    data-testid="badge-breaking-details"
+                  >
+                    <Zap className="h-3.5 w-3.5" />
+                    عاجل
+                  </span>
+                )}
                 {article.category && (
                   <span 
                     className="px-3 py-1.5 rounded-full text-white text-sm font-medium"
