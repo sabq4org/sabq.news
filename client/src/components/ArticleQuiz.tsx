@@ -281,7 +281,7 @@ export function ArticleQuiz({ articleId, className }: ArticleQuizProps) {
 
         {quiz.allowRetake && (
           <CardFooter>
-            <Button onClick={handleRetake} className="w-full" variant="outline">
+            <Button onClick={handleRetake} className="w-full" variant="outline" data-testid="button-retake-quiz">
               <RefreshCw className="h-4 w-4 ml-2" />
               إعادة الاختبار
             </Button>
@@ -321,6 +321,7 @@ export function ArticleQuiz({ articleId, className }: ArticleQuizProps) {
             value={answers[currentQ.id]?.toString()}
             onValueChange={(value) => handleAnswer(currentQ.id, parseInt(value))}
             className="space-y-3"
+            data-testid="quiz-answer-group"
           >
             {currentQ.choices.map((choice, idx) => (
               <div
@@ -332,12 +333,17 @@ export function ArticleQuiz({ articleId, className }: ArticleQuizProps) {
                     : "border-border hover:border-primary/50"
                 )}
                 onClick={() => handleAnswer(currentQ.id, idx)}
+                data-testid={`option-quiz-choice-${idx}`}
               >
-                <RadioGroupItem value={idx.toString()} id={`choice-${currentQ.id}-${idx}`} />
+                <RadioGroupItem 
+                  value={idx.toString()} 
+                  id={`choice-${currentQ.id}-${idx}`}
+                  data-testid={`input-quiz-choice-${idx}`}
+                />
                 <Label 
                   htmlFor={`choice-${currentQ.id}-${idx}`} 
                   className="flex-1 cursor-pointer text-base"
-                  data-testid={`quiz-choice-${idx}`}
+                  data-testid={`label-quiz-choice-${idx}`}
                 >
                   {choice}
                 </Label>
