@@ -4,6 +4,7 @@ import { Clock, Eye, Share2, Bookmark, ChevronDown, Zap, Sparkles } from "lucide
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import type { Article, Category, User } from "@shared/schema";
+import { ArticleQuiz } from "@/components/ArticleQuiz";
 
 type ArticleWithDetails = Article & {
   category?: Category;
@@ -399,6 +400,11 @@ export function SwipeCard({
                 className="prose prose-lg dark:prose-invert max-w-none text-foreground leading-relaxed"
                 dangerouslySetInnerHTML={{ __html: article.content || smartSummary || '' }}
               />
+              
+              {/* Quiz Section */}
+              <div className="mt-8 pt-6 border-t">
+                <ArticleQuiz articleId={article.id} />
+              </div>
             </div>
           </div>
         </motion.div>
