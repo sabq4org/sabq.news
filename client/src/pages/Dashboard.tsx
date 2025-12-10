@@ -249,54 +249,48 @@ function Dashboard() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8">
-        {/* Welcome Section with Greeting - Elegant Design */}
-        <div className="animate-fade-up">
-          <Card className="hero-welcome-gradient glass-card border-0 shadow-lg shadow-primary/5 dark:shadow-primary/10 overflow-hidden" data-testid="card-welcome">
-            <CardContent className="pt-8 pb-8 px-8 relative">
-              <div className="absolute top-0 left-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl"></div>
-              <div className="absolute bottom-0 right-0 w-40 h-40 bg-chart-2/5 rounded-full blur-3xl"></div>
-              
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
-                <div className="flex-1 space-y-4">
-                  <div className="flex items-center gap-4">
-                    <div className="relative p-3 rounded-2xl icon-wrapper-elegant">
-                      <Sparkles className="h-7 w-7 text-primary" data-testid="icon-sparkles" />
-                    </div>
-                    <div>
-                      <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground" data-testid="text-greeting">
-                        {greeting}، <span className="bg-gradient-to-l from-primary via-chart-2 to-primary bg-clip-text text-transparent">{user?.firstName || user?.email?.split('@')[0] || "عزيزي"}</span>
-                      </h2>
-                    </div>
+      <div className="space-y-6">
+        {/* Welcome Section with Greeting */}
+        <Card className="bg-gradient-to-r from-indigo-50 via-blue-50 to-indigo-50 dark:from-indigo-950/20 dark:via-blue-950/20 dark:to-indigo-950/20 border-primary/20 shadow-sm shadow-indigo-50 dark:shadow-none" data-testid="card-welcome">
+          <CardContent className="pt-6">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <Sparkles className="h-6 w-6 text-primary animate-pulse" data-testid="icon-sparkles" />
+                    <div className="absolute -inset-1 bg-primary/20 rounded-full blur-md animate-pulse"></div>
                   </div>
-                  <p className="text-muted-foreground text-lg leading-relaxed max-w-2xl pr-4" data-testid="text-motivational-quote">
-                    {motivationalQuote}
-                  </p>
+                  <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-l from-primary to-accent-foreground bg-clip-text text-transparent" data-testid="text-greeting">
+                    {greeting} يا {user?.firstName || user?.email?.split('@')[0] || "عزيزي"}
+                  </h2>
                 </div>
-                <div className="flex flex-col items-start md:items-end gap-3">
-                  <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-muted/50 dark:bg-muted/20">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium text-muted-foreground" data-testid="text-current-time">
-                      {new Date().toLocaleString('ar-SA', { 
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </span>
-                  </div>
+                <p className="text-muted-foreground text-lg leading-relaxed max-w-2xl" data-testid="text-motivational-quote">
+                  {motivationalQuote}
+                </p>
+              </div>
+              <div className="flex flex-col items-start md:items-end gap-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  <span data-testid="text-current-time">
+                    {new Date().toLocaleString('ar-SA', { 
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </span>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Urgent Reminder Banner */}
         <UrgentReminderBanner />
 
         {/* Quick Actions Section - Staff Only (hidden for comments_moderator) */}
         {user?.role !== 'comments_moderator' && (
-          <div className="animate-fade-up-delay-1 grid grid-cols-1 lg:grid-cols-4 gap-5 md:gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
             <div className="lg:col-span-3">
               <QuickActionsSection />
             </div>
@@ -306,26 +300,26 @@ function Dashboard() {
           </div>
         )}
 
-        {/* Main Stats Cards - Elegant Design with glassmorphism */}
-        <div className="animate-fade-up-delay-2 grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+        {/* Main Stats Cards - 2 columns on mobile for better space utilization */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6">
           {/* Articles Stats */}
-          <Card className="stat-card-glow glass-card border-0 shadow-md shadow-primary/5 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-0.5 transition-all duration-300" data-testid="card-articles-stats">
-            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-3">
-              <CardTitle className="text-sm font-semibold tracking-wide text-muted-foreground">المقالات</CardTitle>
-              <div className="p-2.5 rounded-xl bg-primary/10 dark:bg-primary/20">
-                <FileText className="h-5 w-5 text-primary" data-testid="icon-articles" />
+          <Card className="shadow-sm shadow-indigo-50 dark:shadow-none hover-elevate transition-all" data-testid="card-articles-stats">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">المقالات</CardTitle>
+              <div className="p-2 rounded-md bg-accent-blue/30">
+                <FileText className="h-4 w-4 text-primary" data-testid="icon-articles" />
               </div>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent>
               {isLoading ? (
-                <Skeleton className="h-9 w-24 elegant-shimmer" />
+                <Skeleton className="h-8 w-20" />
               ) : (
                 <>
-                  <div className="text-3xl font-bold tracking-tight" data-testid="text-articles-total">
-                    {(stats?.articles.total || 0).toLocaleString('ar-SA')}
+                  <div className="text-2xl font-bold" data-testid="text-articles-total">
+                    {stats?.articles.total || 0}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2 leading-relaxed" data-testid="text-articles-breakdown">
-                    <span className="text-primary font-medium">{stats?.articles.published || 0}</span> منشور · <span className="text-chart-2 font-medium">{stats?.articles.draft || 0}</span> مسودة
+                  <p className="text-xs text-muted-foreground" data-testid="text-articles-breakdown">
+                    {stats?.articles.published || 0} منشور · {stats?.articles.draft || 0} مسودة · {stats?.articles.scheduled || 0} مجدولة
                   </p>
                 </>
               )}
@@ -333,23 +327,23 @@ function Dashboard() {
           </Card>
 
           {/* Users Stats */}
-          <Card className="stat-card-glow glass-card border-0 shadow-md shadow-chart-2/5 hover:shadow-lg hover:shadow-chart-2/10 hover:-translate-y-0.5 transition-all duration-300" data-testid="card-users-stats">
-            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-3">
-              <CardTitle className="text-sm font-semibold tracking-wide text-muted-foreground">المستخدمون</CardTitle>
-              <div className="p-2.5 rounded-xl bg-chart-2/10 dark:bg-chart-2/20">
-                <Users className="h-5 w-5 text-chart-2" data-testid="icon-users" />
+          <Card className="shadow-sm shadow-indigo-50 dark:shadow-none hover-elevate transition-all" data-testid="card-users-stats">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">المستخدمون</CardTitle>
+              <div className="p-2 rounded-md bg-accent-purple/30">
+                <Users className="h-4 w-4 text-accent-foreground" data-testid="icon-users" />
               </div>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent>
               {isLoading ? (
-                <Skeleton className="h-9 w-24 elegant-shimmer" />
+                <Skeleton className="h-8 w-20" />
               ) : (
                 <>
-                  <div className="text-3xl font-bold tracking-tight" data-testid="text-users-total">
-                    {(stats?.users.total || 0).toLocaleString('ar-SA')}
+                  <div className="text-2xl font-bold" data-testid="text-users-total">
+                    {stats?.users.total || 0}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2 leading-relaxed" data-testid="text-users-breakdown">
-                    <span className="text-chart-2 font-medium">{stats?.users.active24h || 0}</span> نشط · <span className="text-chart-3 font-medium">{stats?.users.newThisWeek || 0}</span> جديد
+                  <p className="text-xs text-muted-foreground" data-testid="text-users-breakdown">
+                    {stats?.users.active24h || 0} نشط اليوم · {stats?.users.newThisWeek || 0} جديد هذا الأسبوع
                   </p>
                 </>
               )}
@@ -357,23 +351,23 @@ function Dashboard() {
           </Card>
 
           {/* Comments Stats */}
-          <Card className="stat-card-glow glass-card border-0 shadow-md shadow-chart-3/5 hover:shadow-lg hover:shadow-chart-3/10 hover:-translate-y-0.5 transition-all duration-300" data-testid="card-comments-stats">
-            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-3">
-              <CardTitle className="text-sm font-semibold tracking-wide text-muted-foreground">التعليقات</CardTitle>
-              <div className="p-2.5 rounded-xl bg-chart-3/10 dark:bg-chart-3/20">
-                <MessageSquare className="h-5 w-5 text-chart-3" data-testid="icon-comments" />
+          <Card className="shadow-sm shadow-indigo-50 dark:shadow-none hover-elevate transition-all" data-testid="card-comments-stats">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">التعليقات</CardTitle>
+              <div className="p-2 rounded-md bg-accent-green/30">
+                <MessageSquare className="h-4 w-4 text-green-600 dark:text-green-400" data-testid="icon-comments" />
               </div>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent>
               {isLoading ? (
-                <Skeleton className="h-9 w-24 elegant-shimmer" />
+                <Skeleton className="h-8 w-20" />
               ) : (
                 <>
-                  <div className="text-3xl font-bold tracking-tight" data-testid="text-comments-total">
-                    {(stats?.comments.total || 0).toLocaleString('ar-SA')}
+                  <div className="text-2xl font-bold" data-testid="text-comments-total">
+                    {stats?.comments.total || 0}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2 leading-relaxed" data-testid="text-comments-breakdown">
-                    <span className="text-chart-5 font-medium">{stats?.comments.pending || 0}</span> قيد المراجعة · <span className="text-chart-3 font-medium">{stats?.comments.approved || 0}</span> موافق
+                  <p className="text-xs text-muted-foreground" data-testid="text-comments-breakdown">
+                    {stats?.comments.pending || 0} قيد المراجعة · {stats?.comments.approved || 0} موافق عليه
                   </p>
                 </>
               )}
@@ -381,22 +375,22 @@ function Dashboard() {
           </Card>
 
           {/* Views Stats */}
-          <Card className="stat-card-glow glass-card border-0 shadow-md shadow-chart-4/5 hover:shadow-lg hover:shadow-chart-4/10 hover:-translate-y-0.5 transition-all duration-300" data-testid="card-views-stats">
-            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-3">
-              <CardTitle className="text-sm font-semibold tracking-wide text-muted-foreground">المشاهدات الكلية</CardTitle>
-              <div className="p-2.5 rounded-xl bg-chart-4/10 dark:bg-chart-4/20">
-                <Eye className="h-5 w-5 text-chart-4" data-testid="icon-views" />
+          <Card className="shadow-sm shadow-indigo-50 dark:shadow-none hover-elevate transition-all" data-testid="card-views-stats">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">المشاهدات الكلية</CardTitle>
+              <div className="p-2 rounded-md bg-accent-blue/30">
+                <Eye className="h-4 w-4 text-primary" data-testid="icon-views" />
               </div>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent>
               {isLoading ? (
-                <Skeleton className="h-9 w-24 elegant-shimmer" />
+                <Skeleton className="h-8 w-20" />
               ) : (
                 <>
-                  <div className="text-3xl font-bold tracking-tight" data-testid="text-views-total">
-                    {(stats?.articles.totalViews || 0).toLocaleString('ar-SA')}
+                  <div className="text-2xl font-bold" data-testid="text-views-total">
+                    {stats?.articles.totalViews || 0}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2" data-testid="text-views-description">
+                  <p className="text-xs text-muted-foreground" data-testid="text-views-description">
                     إجمالي مشاهدات المقالات
                   </p>
                 </>
@@ -405,163 +399,174 @@ function Dashboard() {
           </Card>
         </div>
 
-        {/* Today's Activity Stats - Elegant compact design */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
-          <Card data-testid="card-views-today-stats" className="bg-gradient-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/5 border-0 shadow-sm hover:shadow-md transition-all duration-300">
+        {/* Today's Activity Stats - 2 columns on mobile */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6">
+          <Card data-testid="card-views-today-stats" className="border-l-4 border-l-primary/50">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground">المشاهدات اليوم</CardTitle>
-              <div className="p-1.5 rounded-lg bg-primary/15">
-                <Activity className="h-3.5 w-3.5 text-primary" data-testid="icon-views-today" />
-              </div>
+              <CardTitle className="text-sm font-medium">المشاهدات اليوم</CardTitle>
+              <Activity className="h-4 w-4 text-primary" data-testid="icon-views-today" />
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent>
               {isLoading ? (
-                <Skeleton className="h-7 w-16 elegant-shimmer" />
-              ) : (
-                <div className="text-2xl font-bold text-primary tracking-tight" data-testid="text-views-today">
-                  {(stats?.articles.viewsToday || 0).toLocaleString('ar-SA')}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card data-testid="card-active-today-stats" className="bg-gradient-to-br from-chart-2/5 to-chart-2/10 dark:from-chart-2/10 dark:to-chart-2/5 border-0 shadow-sm hover:shadow-md transition-all duration-300">
-            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground">القراء النشطون</CardTitle>
-              <div className="p-1.5 rounded-lg bg-chart-2/15">
-                <Users className="h-3.5 w-3.5 text-chart-2" data-testid="icon-active-today" />
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              {isLoading ? (
-                <Skeleton className="h-7 w-16 elegant-shimmer" />
-              ) : (
-                <div className="text-2xl font-bold text-chart-2 tracking-tight" data-testid="text-active-today">
-                  {(stats?.users.activeToday || 0).toLocaleString('ar-SA')}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card data-testid="card-reads-today-stats" className="bg-gradient-to-br from-chart-3/5 to-chart-3/10 dark:from-chart-3/10 dark:to-chart-3/5 border-0 shadow-sm hover:shadow-md transition-all duration-300">
-            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground">القراءات اليوم</CardTitle>
-              <div className="p-1.5 rounded-lg bg-chart-3/15">
-                <FileText className="h-3.5 w-3.5 text-chart-3" data-testid="icon-reads-today" />
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              {isLoading ? (
-                <Skeleton className="h-7 w-16 elegant-shimmer" />
-              ) : (
-                <div className="text-2xl font-bold text-chart-3 tracking-tight" data-testid="text-reads-today">
-                  {(stats?.engagement.readsToday || 0).toLocaleString('ar-SA')}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card data-testid="card-engagement-today-stats" className="bg-gradient-to-br from-chart-4/5 to-chart-4/10 dark:from-chart-4/10 dark:to-chart-4/5 border-0 shadow-sm hover:shadow-md transition-all duration-300">
-            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground">التفاعل اليوم</CardTitle>
-              <div className="p-1.5 rounded-lg bg-chart-4/15">
-                <Heart className="h-3.5 w-3.5 text-chart-4" data-testid="icon-engagement-today" />
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              {isLoading ? (
-                <Skeleton className="h-7 w-16 elegant-shimmer" />
-              ) : (
-                <div className="text-2xl font-bold text-chart-4 tracking-tight" data-testid="text-engagement-today">
-                  {(stats?.reactions.todayCount || 0).toLocaleString('ar-SA')}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Secondary Stats - Elegant minimal design */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
-          <Card data-testid="card-categories-stats" className="glass-card border-0 shadow-sm hover:shadow-md transition-all duration-300">
-            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground">التصنيفات</CardTitle>
-              <div className="p-1.5 rounded-lg bg-muted/50">
-                <FolderTree className="h-3.5 w-3.5 text-muted-foreground" />
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              {isLoading ? (
-                <Skeleton className="h-7 w-14 elegant-shimmer" />
-              ) : (
-                <div className="text-2xl font-bold tracking-tight" data-testid="text-categories-total">
-                  {(stats?.categories.total || 0).toLocaleString('ar-SA')}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card data-testid="card-abtests-stats" className="glass-card border-0 shadow-sm hover:shadow-md transition-all duration-300">
-            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground">اختبارات A/B</CardTitle>
-              <div className="p-1.5 rounded-lg bg-muted/50">
-                <FlaskConical className="h-3.5 w-3.5 text-muted-foreground" />
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              {isLoading ? (
-                <Skeleton className="h-7 w-14 elegant-shimmer" />
+                <Skeleton className="h-8 w-20" />
               ) : (
                 <>
-                  <div className="text-2xl font-bold tracking-tight" data-testid="text-abtests-total">
-                    {(stats?.abTests.total || 0).toLocaleString('ar-SA')}
+                  <div className="text-2xl font-bold text-primary" data-testid="text-views-today">
+                    {stats?.articles.viewsToday || 0}
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-1" data-testid="text-abtests-running">
-                    <span className="text-chart-3 font-medium">{stats?.abTests.running || 0}</span> قيد التشغيل
+                  <p className="text-xs text-muted-foreground" data-testid="text-views-today-description">
+                    مشاهدة جديدة اليوم
                   </p>
                 </>
               )}
             </CardContent>
           </Card>
 
-          <Card data-testid="card-avg-time-stats" className="glass-card border-0 shadow-sm hover:shadow-md transition-all duration-300">
+          <Card data-testid="card-active-today-stats" className="border-l-4 border-l-chart-2/50">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground">متوسط وقت القراءة</CardTitle>
-              <div className="p-1.5 rounded-lg bg-muted/50">
-                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-              </div>
+              <CardTitle className="text-sm font-medium">القراء النشطون اليوم</CardTitle>
+              <Users className="h-4 w-4 text-chart-2" data-testid="icon-active-today" />
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent>
               {isLoading ? (
-                <Skeleton className="h-7 w-14 elegant-shimmer" />
+                <Skeleton className="h-8 w-20" />
               ) : (
-                <div className="text-2xl font-bold tracking-tight" data-testid="text-avg-time">
-                  {(stats?.engagement.averageTimeOnSite || 0) > 0 ? `${Math.floor((stats?.engagement.averageTimeOnSite || 0) / 60)}:${String((stats?.engagement.averageTimeOnSite || 0) % 60).padStart(2, '0')}` : '—'}
-                </div>
+                <>
+                  <div className="text-2xl font-bold text-chart-2" data-testid="text-active-today">
+                    {stats?.users.activeToday || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground" data-testid="text-active-today-description">
+                    زائر نشط حالياً
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card data-testid="card-reads-today-stats" className="border-l-4 border-l-chart-3/50">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">القراءات اليوم</CardTitle>
+              <FileText className="h-4 w-4 text-chart-3" data-testid="icon-reads-today" />
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <Skeleton className="h-8 w-20" />
+              ) : (
+                <>
+                  <div className="text-2xl font-bold text-chart-3" data-testid="text-reads-today">
+                    {stats?.engagement.readsToday || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground" data-testid="text-reads-today-description">
+                    من {stats?.engagement.totalReads || 0} إجمالي
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card data-testid="card-engagement-today-stats" className="border-l-4 border-l-chart-4/50">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">التفاعل اليوم</CardTitle>
+              <Heart className="h-4 w-4 text-chart-4" data-testid="icon-engagement-today" />
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <Skeleton className="h-8 w-20" />
+              ) : (
+                <>
+                  <div className="text-2xl font-bold text-chart-4" data-testid="text-engagement-today">
+                    {stats?.reactions.todayCount || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground" data-testid="text-engagement-today-description">
+                    من {stats?.reactions.total || 0} إجمالي
+                  </p>
+                </>
               )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Platform Services Stats - Elegant design */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
-          {/* Audio Newsletters */}
-          <Card data-testid="card-audio-newsletters-stats" className="glass-card border-0 shadow-sm hover:shadow-md transition-all duration-300">
+        {/* Secondary Stats - 2 columns on mobile */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4 md:gap-6">
+          <Card data-testid="card-categories-stats">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground">النشرات الصوتية</CardTitle>
-              <div className="p-2 rounded-xl bg-purple-500/10 dark:bg-purple-500/20">
+              <CardTitle className="text-sm font-medium">التصنيفات</CardTitle>
+              <FolderTree className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <Skeleton className="h-8 w-20" />
+              ) : (
+                <div className="text-2xl font-bold" data-testid="text-categories-total">
+                  {stats?.categories.total || 0}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card data-testid="card-abtests-stats">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">اختبارات A/B</CardTitle>
+              <FlaskConical className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <Skeleton className="h-8 w-20" />
+              ) : (
+                <>
+                  <div className="text-2xl font-bold" data-testid="text-abtests-total">
+                    {stats?.abTests.total || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground" data-testid="text-abtests-running">
+                    {stats?.abTests.running || 0} قيد التشغيل
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card data-testid="card-avg-time-stats">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">متوسط وقت القراءة</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <Skeleton className="h-8 w-20" />
+              ) : (
+                <>
+                  <div className="text-2xl font-bold" data-testid="text-avg-time">
+                    {(stats?.engagement.averageTimeOnSite || 0) > 0 ? `${Math.floor((stats?.engagement.averageTimeOnSite || 0) / 60)}:${String((stats?.engagement.averageTimeOnSite || 0) % 60).padStart(2, '0')}` : 'غير متاح'}
+                  </div>
+                  <p className="text-xs text-muted-foreground" data-testid="text-avg-time-description">
+                    {(stats?.engagement.averageTimeOnSite || 0) > 0 ? 'دقيقة:ثانية لكل مقال' : 'سيتم التحديث عند توفر بيانات'}
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Platform Services Stats - 2 columns on mobile */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6">
+          {/* Audio Newsletters */}
+          <Card data-testid="card-audio-newsletters-stats" className="border-t-4 border-t-purple-500/50">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">النشرات الصوتية</CardTitle>
+              <div className="p-2 rounded-md bg-purple-500/20">
                 <Headphones className="h-4 w-4 text-purple-500" data-testid="icon-audio-newsletters" />
               </div>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent>
               {isLoading ? (
-                <Skeleton className="h-7 w-16 elegant-shimmer" />
+                <Skeleton className="h-8 w-20" />
               ) : (
                 <>
-                  <div className="text-2xl font-bold tracking-tight" data-testid="text-audio-newsletters-total">
-                    {(stats?.audioNewsletters?.total || 0).toLocaleString('ar-SA')}
+                  <div className="text-2xl font-bold" data-testid="text-audio-newsletters-total">
+                    {stats?.audioNewsletters?.total || 0}
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-1" data-testid="text-audio-newsletters-breakdown">
-                    <span className="text-purple-500 font-medium">{stats?.audioNewsletters?.published || 0}</span> منشورة
+                  <p className="text-xs text-muted-foreground" data-testid="text-audio-newsletters-breakdown">
+                    {stats?.audioNewsletters?.published || 0} منشورة · {stats?.audioNewsletters?.totalListens || 0} استماع
                   </p>
                 </>
               )}
@@ -569,23 +574,23 @@ function Dashboard() {
           </Card>
 
           {/* Deep Analyses */}
-          <Card data-testid="card-deep-analyses-stats" className="glass-card border-0 shadow-sm hover:shadow-md transition-all duration-300">
+          <Card data-testid="card-deep-analyses-stats" className="border-t-4 border-t-indigo-500/50">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground">التحليلات العميقة</CardTitle>
-              <div className="p-2 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20">
+              <CardTitle className="text-sm font-medium">التحليلات العميقة</CardTitle>
+              <div className="p-2 rounded-md bg-indigo-500/20">
                 <Brain className="h-4 w-4 text-indigo-500" data-testid="icon-deep-analyses" />
               </div>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent>
               {isLoading ? (
-                <Skeleton className="h-7 w-16 elegant-shimmer" />
+                <Skeleton className="h-8 w-20" />
               ) : (
                 <>
-                  <div className="text-2xl font-bold tracking-tight" data-testid="text-deep-analyses-total">
-                    {(stats?.deepAnalyses?.total || 0).toLocaleString('ar-SA')}
+                  <div className="text-2xl font-bold" data-testid="text-deep-analyses-total">
+                    {stats?.deepAnalyses?.total || 0}
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-1" data-testid="text-deep-analyses-breakdown">
-                    <span className="text-indigo-500 font-medium">{stats?.deepAnalyses?.published || 0}</span> منشور
+                  <p className="text-xs text-muted-foreground" data-testid="text-deep-analyses-breakdown">
+                    {stats?.deepAnalyses?.published || 0} تحليل منشور
                   </p>
                 </>
               )}
@@ -593,23 +598,23 @@ function Dashboard() {
           </Card>
 
           {/* Publishers */}
-          <Card data-testid="card-publishers-stats" className="glass-card border-0 shadow-sm hover:shadow-md transition-all duration-300">
+          <Card data-testid="card-publishers-stats" className="border-t-4 border-t-amber-500/50">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground">الناشرون</CardTitle>
-              <div className="p-2 rounded-xl bg-amber-500/10 dark:bg-amber-500/20">
+              <CardTitle className="text-sm font-medium">الناشرون</CardTitle>
+              <div className="p-2 rounded-md bg-amber-500/20">
                 <Building2 className="h-4 w-4 text-amber-500" data-testid="icon-publishers" />
               </div>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent>
               {isLoading ? (
-                <Skeleton className="h-7 w-16 elegant-shimmer" />
+                <Skeleton className="h-8 w-20" />
               ) : (
                 <>
-                  <div className="text-2xl font-bold tracking-tight" data-testid="text-publishers-total">
-                    {(stats?.publishers?.total || 0).toLocaleString('ar-SA')}
+                  <div className="text-2xl font-bold" data-testid="text-publishers-total">
+                    {stats?.publishers?.total || 0}
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-1" data-testid="text-publishers-breakdown">
-                    <span className="text-amber-500 font-medium">{stats?.publishers?.active || 0}</span> نشط
+                  <p className="text-xs text-muted-foreground" data-testid="text-publishers-breakdown">
+                    {stats?.publishers?.active || 0} ناشر نشط
                   </p>
                 </>
               )}
@@ -617,23 +622,23 @@ function Dashboard() {
           </Card>
 
           {/* Media Library */}
-          <Card data-testid="card-media-library-stats" className="glass-card border-0 shadow-sm hover:shadow-md transition-all duration-300">
+          <Card data-testid="card-media-library-stats" className="border-t-4 border-t-cyan-500/50">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground">مكتبة الوسائط</CardTitle>
-              <div className="p-2 rounded-xl bg-cyan-500/10 dark:bg-cyan-500/20">
+              <CardTitle className="text-sm font-medium">مكتبة الوسائط</CardTitle>
+              <div className="p-2 rounded-md bg-cyan-500/20">
                 <HardDrive className="h-4 w-4 text-cyan-500" data-testid="icon-media-library" />
               </div>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent>
               {isLoading ? (
-                <Skeleton className="h-7 w-16 elegant-shimmer" />
+                <Skeleton className="h-8 w-20" />
               ) : (
                 <>
-                  <div className="text-2xl font-bold tracking-tight" data-testid="text-media-library-total">
-                    {(stats?.mediaLibrary?.totalFiles || 0).toLocaleString('ar-SA')}
+                  <div className="text-2xl font-bold" data-testid="text-media-library-total">
+                    {stats?.mediaLibrary?.totalFiles || 0}
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-1" data-testid="text-media-library-breakdown">
-                    <span className="text-cyan-500 font-medium">{((stats?.mediaLibrary?.totalSize || 0) / (1024 * 1024)).toFixed(1)}</span> MB
+                  <p className="text-xs text-muted-foreground" data-testid="text-media-library-breakdown">
+                    {((stats?.mediaLibrary?.totalSize || 0) / (1024 * 1024)).toFixed(1)} MB حجم إجمالي
                   </p>
                 </>
               )}
@@ -641,26 +646,26 @@ function Dashboard() {
           </Card>
         </div>
 
-        {/* AI & Smart Features Stats - Elegant design */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
+        {/* AI & Smart Features Stats - 2 columns on mobile */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4 md:gap-6">
           {/* AI Tasks */}
-          <Card data-testid="card-ai-tasks-stats" className="glass-card border-0 shadow-sm hover:shadow-md transition-all duration-300">
+          <Card data-testid="card-ai-tasks-stats">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground">مهام الذكاء الاصطناعي</CardTitle>
-              <div className="p-2 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20">
+              <CardTitle className="text-sm font-medium">مهام الذكاء الاصطناعي</CardTitle>
+              <div className="p-2 rounded-md bg-emerald-500/20">
                 <Bot className="h-4 w-4 text-emerald-500" data-testid="icon-ai-tasks" />
               </div>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent>
               {isLoading ? (
-                <Skeleton className="h-7 w-16 elegant-shimmer" />
+                <Skeleton className="h-8 w-20" />
               ) : (
                 <>
-                  <div className="text-2xl font-bold tracking-tight" data-testid="text-ai-tasks-total">
-                    {(stats?.aiTasks?.total || 0).toLocaleString('ar-SA')}
+                  <div className="text-2xl font-bold" data-testid="text-ai-tasks-total">
+                    {stats?.aiTasks?.total || 0}
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-1" data-testid="text-ai-tasks-breakdown">
-                    <span className="text-chart-5 font-medium">{stats?.aiTasks?.pending || 0}</span> معلقة · <span className="text-emerald-500 font-medium">{stats?.aiTasks?.completed || 0}</span> مكتملة
+                  <p className="text-xs text-muted-foreground" data-testid="text-ai-tasks-breakdown">
+                    {stats?.aiTasks?.pending || 0} معلقة · {stats?.aiTasks?.completed || 0} مكتملة
                   </p>
                 </>
               )}
@@ -668,23 +673,23 @@ function Dashboard() {
           </Card>
 
           {/* AI Generated Images */}
-          <Card data-testid="card-ai-images-stats" className="glass-card border-0 shadow-sm hover:shadow-md transition-all duration-300">
+          <Card data-testid="card-ai-images-stats">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground">صور الذكاء الاصطناعي</CardTitle>
-              <div className="p-2 rounded-xl bg-rose-500/10 dark:bg-rose-500/20">
+              <CardTitle className="text-sm font-medium">صور الذكاء الاصطناعي</CardTitle>
+              <div className="p-2 rounded-md bg-rose-500/20">
                 <Image className="h-4 w-4 text-rose-500" data-testid="icon-ai-images" />
               </div>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent>
               {isLoading ? (
-                <Skeleton className="h-7 w-16 elegant-shimmer" />
+                <Skeleton className="h-8 w-20" />
               ) : (
                 <>
-                  <div className="text-2xl font-bold tracking-tight" data-testid="text-ai-images-total">
-                    {(stats?.aiImages?.total || 0).toLocaleString('ar-SA')}
+                  <div className="text-2xl font-bold" data-testid="text-ai-images-total">
+                    {stats?.aiImages?.total || 0}
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-1" data-testid="text-ai-images-breakdown">
-                    <span className="text-rose-500 font-medium">{stats?.aiImages?.thisWeek || 0}</span> هذا الأسبوع
+                  <p className="text-xs text-muted-foreground" data-testid="text-ai-images-breakdown">
+                    {stats?.aiImages?.thisWeek || 0} هذا الأسبوع
                   </p>
                 </>
               )}
@@ -692,36 +697,41 @@ function Dashboard() {
           </Card>
 
           {/* Smart Blocks */}
-          <Card data-testid="card-smart-blocks-stats" className="glass-card border-0 shadow-sm hover:shadow-md transition-all duration-300">
+          <Card data-testid="card-smart-blocks-stats">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground">القوالب الذكية</CardTitle>
-              <div className="p-2 rounded-xl bg-sky-500/10 dark:bg-sky-500/20">
+              <CardTitle className="text-sm font-medium">القوالب الذكية</CardTitle>
+              <div className="p-2 rounded-md bg-sky-500/20">
                 <Blocks className="h-4 w-4 text-sky-500" data-testid="icon-smart-blocks" />
               </div>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent>
               {isLoading ? (
-                <Skeleton className="h-7 w-16 elegant-shimmer" />
+                <Skeleton className="h-8 w-20" />
               ) : (
-                <div className="text-2xl font-bold tracking-tight" data-testid="text-smart-blocks-total">
-                  {(stats?.smartBlocks?.total || 0).toLocaleString('ar-SA')}
-                </div>
+                <>
+                  <div className="text-2xl font-bold" data-testid="text-smart-blocks-total">
+                    {stats?.smartBlocks?.total || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground" data-testid="text-smart-blocks-description">
+                    قالب ذكي نشط
+                  </p>
+                </>
               )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Charts Section - Elegant design */}
+        {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Articles Distribution */}
-          <Card data-testid="card-articles-chart" className="glass-card border-0 shadow-md">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-semibold">توزيع المقالات</CardTitle>
-              <CardDescription className="text-xs">حسب الحالة</CardDescription>
+          <Card data-testid="card-articles-chart">
+            <CardHeader>
+              <CardTitle>توزيع المقالات</CardTitle>
+              <CardDescription>حسب الحالة</CardDescription>
             </CardHeader>
             <CardContent>
               {isLoading ? (
-                <Skeleton className="h-[200px] w-full elegant-shimmer" />
+                <Skeleton className="h-[200px] w-full" />
               ) : (
                 <ResponsiveContainer width="100%" height={200}>
                   <PieChart>
@@ -747,22 +757,22 @@ function Dashboard() {
           </Card>
 
           {/* Comments Distribution */}
-          <Card data-testid="card-comments-chart" className="glass-card border-0 shadow-md">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-semibold">توزيع التعليقات</CardTitle>
-              <CardDescription className="text-xs">حسب الحالة</CardDescription>
+          <Card data-testid="card-comments-chart">
+            <CardHeader>
+              <CardTitle>توزيع التعليقات</CardTitle>
+              <CardDescription>حسب الحالة</CardDescription>
             </CardHeader>
             <CardContent>
               {isLoading ? (
-                <Skeleton className="h-[200px] w-full elegant-shimmer" />
+                <Skeleton className="h-[200px] w-full" />
               ) : (
                 <ResponsiveContainer width="100%" height={200}>
                   <BarChart data={commentChartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
                     <Tooltip />
-                    <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="value" fill="hsl(var(--primary))" />
                   </BarChart>
                 </ResponsiveContainer>
               )}
