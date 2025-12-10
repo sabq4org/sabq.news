@@ -9430,3 +9430,119 @@ export type InsertUserDynamicInterest = z.infer<typeof insertUserDynamicInterest
 
 export type NotificationAnalytics = typeof notificationAnalytics.$inferSelect;
 export type InsertNotificationAnalytics = z.infer<typeof insertNotificationAnalyticsSchema>;
+
+// ============================================
+// ARTICLE QUIZ SYSTEM - اختبارات الفهم
+// ============================================
+
+// جدول الاختبارات المرتبطة بالمقالات
+export const articleQuizzes = pgTable("article_quizzes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "cascade" }).notNull().unique(),
+  title: text("title").notNull(), // عنوان الاختبار
+  description: text("description"), // وصف الاختبار
+  isEnabled: boolean("is_enabled").default(true).notNull(), // تفعيل/إيقاف الاختبار
+  passingScore: integer("passing_score").default(70).notNull(), // النسبة المئوية للنجاح
+  showCorrectAnswers: boolean("show_correct_answers").default(true).notNull(), // إظهار الإجابات الصحيحة
+  allowRetake: boolean("allow_retake").default(true).notNull(), // السماح بإعادة المحاولة
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_article_quizzes_article").on(table.articleId),
+  index("idx_article_quizzes_enabled").on(table.isEnabled),
+]);
+
+// جدول أسئلة الاختبار
+export const quizQuestions = pgTable("quiz_questions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  quizId: varchar("quiz_id").references(() => articleQuizzes.id, { onDelete: "cascade" }).notNull(),
+  question: text("question").notNull(), // نص السؤال
+  choices: jsonb("choices").notNull().$type<string[]>(), // الخيارات
+  correctIndex: integer("correct_index").notNull(), // فهرس الإجابة الصحيحة
+  explanation: text("explanation"), // شرح الإجابة الصحيحة
+  order: integer("order").default(0).notNull(), // ترتيب السؤال
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_quiz_questions_quiz").on(table.quizId),
+  index("idx_quiz_questions_order").on(table.quizId, table.order),
+]);
+
+// جدول إجابات المستخدمين
+export const quizResponses = pgTable("quiz_responses", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  quizId: varchar("quiz_id").references(() => articleQuizzes.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
+  sessionId: varchar("session_id", { length: 255 }), // للزوار غير المسجلين
+  answers: jsonb("answers").notNull().$type<{ questionId: string; selectedIndex: number }[]>(),
+  score: integer("score").notNull(), // النتيجة كنسبة مئوية
+  correctCount: integer("correct_count").notNull(), // عدد الإجابات الصحيحة
+  totalQuestions: integer("total_questions").notNull(), // إجمالي الأسئلة
+  passed: boolean("passed").default(false).notNull(), // هل نجح في الاختبار
+  timeSpent: integer("time_spent"), // الوقت المستغرق بالثواني
+  completedAt: timestamp("completed_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_quiz_responses_quiz").on(table.quizId),
+  index("idx_quiz_responses_user").on(table.userId),
+  index("idx_quiz_responses_session").on(table.sessionId),
+  index("idx_quiz_responses_completed").on(table.completedAt),
+]);
+
+// Relations for Quiz System
+export const articleQuizzesRelations = relations(articleQuizzes, ({ one, many }) => ({
+  article: one(articles, {
+    fields: [articleQuizzes.articleId],
+    references: [articles.id],
+  }),
+  createdByUser: one(users, {
+    fields: [articleQuizzes.createdBy],
+    references: [users.id],
+  }),
+  questions: many(quizQuestions),
+  responses: many(quizResponses),
+}));
+
+export const quizQuestionsRelations = relations(quizQuestions, ({ one }) => ({
+  quiz: one(articleQuizzes, {
+    fields: [quizQuestions.quizId],
+    references: [articleQuizzes.id],
+  }),
+}));
+
+export const quizResponsesRelations = relations(quizResponses, ({ one }) => ({
+  quiz: one(articleQuizzes, {
+    fields: [quizResponses.quizId],
+    references: [articleQuizzes.id],
+  }),
+  user: one(users, {
+    fields: [quizResponses.userId],
+    references: [users.id],
+  }),
+}));
+
+// Insert schemas for Quiz System
+export const insertArticleQuizSchema = createInsertSchema(articleQuizzes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertQuizQuestionSchema = createInsertSchema(quizQuestions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertQuizResponseSchema = createInsertSchema(quizResponses).omit({
+  id: true,
+  completedAt: true,
+});
+
+// Select types for Quiz System
+export type ArticleQuiz = typeof articleQuizzes.$inferSelect;
+export type InsertArticleQuiz = z.infer<typeof insertArticleQuizSchema>;
+
+export type QuizQuestion = typeof quizQuestions.$inferSelect;
+export type InsertQuizQuestion = z.infer<typeof insertQuizQuestionSchema>;
+
+export type QuizResponse = typeof quizResponses.$inferSelect;
+export type InsertQuizResponse = z.infer<typeof insertQuizResponseSchema>;
