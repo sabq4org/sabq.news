@@ -8,6 +8,7 @@ import notebookLmRoutes from "./routes/notebookLmRoutes";
 import rssFeedRoutes from "./routes/rssFeedRoutes";
 import aiTasksRoutes from "./routes/aiTasksRoutes";
 import advancedAnalyticsRoutes from "./routes/advancedAnalytics";
+import quizRoutes from "./quiz-routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { startNotificationWorker } from "./notificationWorker";
 import { startSeasonalCategoriesJob } from "./jobs/seasonalCategoriesJob";
@@ -328,6 +329,10 @@ app.use((req, res, next) => {
     // Register Advanced Analytics routes
     app.use("/api/advanced-analytics", advancedAnalyticsRoutes);
     console.log("[Server] ✅ Advanced Analytics routes registered");
+    
+    // Register Quiz routes
+    app.use(quizRoutes);
+    console.log("[Server] ✅ Quiz routes registered");
 
     // Social media crawler middleware - MUST come before Vite/static setup
     // This intercepts crawler requests and serves static HTML with proper meta tags
