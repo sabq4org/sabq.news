@@ -79,36 +79,28 @@ export function QuickActionsSection() {
 
   return (
     <Card data-testid="quick-actions-card">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg" data-testid="title-quick-actions">
-          <Zap className="h-5 w-5 text-primary" />
+      <CardHeader className="py-2 px-3">
+        <CardTitle className="flex items-center gap-2 text-sm font-medium" data-testid="title-quick-actions">
+          <Zap className="h-4 w-4 text-primary" />
           إجراءات سريعة
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2">
-        {visibleActions.map((action) => {
-          const Icon = action.icon;
-          return (
-            <Link key={action.id} href={action.href} data-testid={action.testId}>
-              <div className="p-3 border rounded-lg hover-elevate active-elevate-2 transition-all bg-card cursor-pointer group">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg shrink-0 ${action.colorClass}`}>
-                    <Icon className="h-4 w-4" data-testid={`icon-${action.id}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-sm" data-testid={`text-${action.id}-title`}>
-                      {action.title}
-                    </h4>
-                    <p className="text-xs text-muted-foreground line-clamp-1" data-testid={`text-${action.id}-desc`}>
-                      {action.description}
-                    </p>
-                  </div>
-                  <ArrowLeft className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+      <CardContent className="px-3 pb-3 pt-0">
+        <div className="flex flex-wrap gap-2">
+          {visibleActions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <Link key={action.id} href={action.href} data-testid={action.testId}>
+                <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border hover-elevate active-elevate-2 transition-all cursor-pointer ${action.colorClass}`}>
+                  <Icon className="h-4 w-4" data-testid={`icon-${action.id}`} />
+                  <span className="text-sm font-medium whitespace-nowrap" data-testid={`text-${action.id}-title`}>
+                    {action.title}
+                  </span>
                 </div>
-              </div>
-            </Link>
-          );
-        })}
+              </Link>
+            );
+          })}
+        </div>
       </CardContent>
     </Card>
   );
