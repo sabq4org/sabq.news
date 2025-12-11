@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 
 interface AdSlotProps {
   slotId: string;
@@ -19,10 +19,16 @@ interface AdData {
     id: string;
     name: string;
   };
-  impressionId?: string;
+  impressionId: string;
+  priority: number;
 }
 
-// Detect device type based on screen width
+interface AdSlotResponse {
+  ads: AdData[];
+  rotationIntervalMs: number;
+  totalAds: number;
+}
+
 function getDeviceType(): "desktop" | "mobile" | "tablet" {
   if (typeof window === "undefined") return "desktop";
   
@@ -38,85 +44,111 @@ function getDeviceType(): "desktop" | "mobile" | "tablet" {
 }
 
 export function AdSlot({ slotId, className = "" }: AdSlotProps) {
-  // Detect device type
   const deviceType = useMemo(() => getDeviceType(), []);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [trackedImpressions, setTrackedImpressions] = useState<Set<string>>(new Set());
 
-  const { data: ad, isLoading, error } = useQuery<AdData>({
+  const { data: response, isLoading, error } = useQuery<AdSlotResponse>({
     queryKey: ["/api/ads/slot", slotId, deviceType],
     queryFn: async () => {
-      const response = await fetch(`/api/ads/slot/${slotId}?deviceType=${deviceType}`, {
+      const res = await fetch(`/api/ads/slot/${slotId}?deviceType=${deviceType}`, {
         credentials: "include",
       });
       
-      // Handle 204 No Content (no ad available for this slot/device)
-      if (response.status === 204) {
+      if (res.status === 204) {
         return null;
       }
       
-      if (!response.ok) {
-        throw new Error("Failed to fetch ad");
+      if (!res.ok) {
+        throw new Error("Failed to fetch ads");
       }
       
-      return response.json();
+      return res.json();
     },
     enabled: !!slotId,
-    refetchInterval: 60000, // Refresh every minute
+    refetchInterval: 300000, // Refresh every 5 minutes
     retry: false,
   });
 
-  // Track impression
-  useEffect(() => {
-    if (ad?.impressionId) {
-      // Send impression tracking
-      fetch(`/api/ads/track/impression/${ad.impressionId}`, {
-        method: "POST",
-        credentials: "include",
-      }).catch(console.error);
-    }
-  }, [ad?.impressionId]);
+  const ads = response?.ads || [];
+  const rotationInterval = response?.rotationIntervalMs || 10000;
+  const currentAd = ads[currentIndex];
 
-  const handleClick = () => {
-    if (ad?.impressionId) {
-      // Track click
-      fetch(`/api/ads/track/click/${ad.impressionId}`, {
+  // Track impression when ad is displayed
+  const trackImpression = useCallback((impressionId: string) => {
+    if (trackedImpressions.has(impressionId)) return;
+    
+    fetch(`/api/ads/track/impression/${impressionId}`, {
+      method: "POST",
+      credentials: "include",
+    }).catch(console.error);
+    
+    setTrackedImpressions(prev => new Set(prev).add(impressionId));
+  }, [trackedImpressions]);
+
+  // Track impression for current ad
+  useEffect(() => {
+    if (currentAd?.impressionId) {
+      trackImpression(currentAd.impressionId);
+    }
+  }, [currentAd?.impressionId, trackImpression]);
+
+  // Rotate ads automatically
+  useEffect(() => {
+    if (ads.length <= 1) return;
+    
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % ads.length);
+    }, rotationInterval);
+    
+    return () => clearInterval(timer);
+  }, [ads.length, rotationInterval]);
+
+  // Reset index when ads change
+  useEffect(() => {
+    setCurrentIndex(0);
+    setTrackedImpressions(new Set());
+  }, [slotId]);
+
+  const handleClick = useCallback(() => {
+    if (!currentAd) return;
+    
+    // Track click
+    if (currentAd.impressionId) {
+      fetch(`/api/ads/track/click/${currentAd.impressionId}`, {
         method: "POST",
         credentials: "include",
       }).catch(console.error);
     }
 
     // Open ad URL
-    if (ad?.creative?.destinationUrl) {
-      window.open(ad.creative.destinationUrl, "_blank", "noopener,noreferrer");
+    if (currentAd.creative?.destinationUrl) {
+      window.open(currentAd.creative.destinationUrl, "_blank", "noopener,noreferrer");
     }
-  };
+  }, [currentAd]);
 
   if (isLoading) {
     return (
-      <div className={`bg-muted animate-pulse rounded ${className}`} data-testid={`ad-slot-loading-${slotId}`}>
-        {/* Loading skeleton */}
-      </div>
+      <div className={`bg-muted animate-pulse rounded ${className}`} data-testid={`ad-slot-loading-${slotId}`} />
     );
   }
 
-  if (error || !ad) {
-    // No ad to show or error - return empty div
+  if (error || !currentAd) {
     return null;
   }
 
-  const { creative } = ad;
-
-  // Parse size (e.g., "728x90" -> width: 728, height: 90)
-  // Validate and provide fallback for malformed sizes
+  const { creative } = currentAd;
   const parsedSize = creative.size?.split('x')?.map(Number) ?? [728, 90];
   const width = isNaN(parsedSize[0]) ? 728 : parsedSize[0];
   const height = isNaN(parsedSize[1]) ? 90 : parsedSize[1];
 
   return (
     <div 
-      className={`ad-slot ${className}`} 
+      className={`ad-slot relative ${className}`} 
       data-testid={`ad-slot-${slotId}`}
-      data-campaign-id={ad.campaign.id}
+      data-campaign-id={currentAd.campaign.id}
       data-creative-id={creative.id}
+      data-total-ads={ads.length}
     >
       {creative.type === "image" && (
         <a
@@ -136,7 +168,7 @@ export function AdSlot({ slotId, className = "" }: AdSlotProps) {
             alt={creative.name}
             width={width}
             height={height}
-            className="w-full h-auto"
+            className="w-full h-auto transition-opacity duration-500"
             loading="lazy"
             data-testid={`ad-image-${creative.id}`}
           />
@@ -171,6 +203,25 @@ export function AdSlot({ slotId, className = "" }: AdSlotProps) {
           dangerouslySetInnerHTML={{ __html: creative.content }}
           data-testid={`ad-html-${creative.id}`}
         />
+      )}
+
+      {/* Rotation indicator dots */}
+      {ads.length > 1 && (
+        <div className="flex justify-center gap-1.5 mt-2" data-testid="ad-rotation-dots">
+          {ads.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentIndex(index)}
+              className={`w-2 h-2 rounded-full transition-all ${
+                index === currentIndex 
+                  ? "bg-primary scale-110" 
+                  : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+              }`}
+              aria-label={`عرض الإعلان ${index + 1}`}
+              data-testid={`ad-dot-${index}`}
+            />
+          ))}
+        </div>
       )}
     </div>
   );
