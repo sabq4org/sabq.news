@@ -341,13 +341,15 @@ export default function LiteFeedPage() {
   }, [currentIndex]);
 
   useEffect(() => {
-    if (articleOnlyIndex > 0 && articleOnlyIndex % 10 === 0 && hintShownCountRef.current < 3) {
+    // Only show hint after viewing at least 10 articles (not at start)
+    // currentIndex > 0 ensures we're not at the beginning
+    if (currentIndex > 0 && articleOnlyIndex >= 10 && articleOnlyIndex % 10 === 0 && hintShownCountRef.current < 3) {
       setShowDoubleTapHint(true);
       hintShownCountRef.current += 1;
       const timer = setTimeout(() => setShowDoubleTapHint(false), 3000);
       return () => clearTimeout(timer);
     }
-  }, [articleOnlyIndex]);
+  }, [articleOnlyIndex, currentIndex]);
 
   if (isLoading) {
     return (

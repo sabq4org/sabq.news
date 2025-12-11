@@ -1,10 +1,11 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Clock, Eye, Share2, Bookmark, ChevronDown, Zap, Sparkles } from "lucide-react";
+import { Clock, Eye, Share2, Bookmark, BookmarkCheck, ChevronDown, Zap, Sparkles, Check } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import type { Article, Category, User } from "@shared/schema";
 import { ArticleQuiz } from "@/components/ArticleQuiz";
+import { useToast } from "@/hooks/use-toast";
 
 type ArticleWithDetails = Article & {
   category?: Category;
@@ -36,6 +37,8 @@ interface SwipeCardProps {
   onDragMove: (offset: number) => void;
   onDragEnd: (velocity: number) => void;
   isPersonalized?: boolean;
+  isBookmarked?: boolean;
+  onBookmark?: (articleId: string) => void;
 }
 
 export function SwipeCard({ 
@@ -46,10 +49,14 @@ export function SwipeCard({
   onDragStart,
   onDragMove,
   onDragEnd,
-  isPersonalized = false
+  isPersonalized = false,
+  isBookmarked = false,
+  onBookmark
 }: SwipeCardProps) {
+  const { toast } = useToast();
   const [showDetails, setShowDetails] = useState(false);
   const [detailDragOffset, setDetailDragOffset] = useState(0);
+  const [localBookmarked, setLocalBookmarked] = useState(isBookmarked);
   const startYRef = useRef(0);
   const lastYRef = useRef(0);
   const lastTimeRef = useRef(0);
@@ -90,6 +97,75 @@ export function SwipeCard({
     }
     setDetailDragOffset(0);
   }, [detailDragOffset]);
+
+  // Update local bookmark state when prop changes
+  useEffect(() => {
+    setLocalBookmarked(isBookmarked);
+  }, [isBookmarked]);
+
+  const handleBookmarkClick = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/articles/${article.id}/bookmark`, {
+        method: "POST",
+        credentials: "include",
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setLocalBookmarked(data.bookmarked);
+        toast({
+          title: data.bookmarked ? "تم الحفظ" : "تم إلغاء الحفظ",
+          description: data.bookmarked ? "تمت إضافة المقال للمحفوظات" : "تمت إزالة المقال من المحفوظات",
+        });
+        onBookmark?.(article.id);
+      }
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "يرجى تسجيل الدخول لحفظ المقالات",
+        variant: "destructive",
+      });
+    }
+  }, [article.id, onBookmark, toast]);
+
+  const handleShareClick = useCallback(async () => {
+    try {
+      // First try to get/create short link
+      let shareUrl = `https://sabq.news/article/${article.slug}`;
+      
+      try {
+        const response = await fetch(`/api/shortlinks/article/${article.id}`, {
+          credentials: "include",
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.shortCode) {
+            shareUrl = `https://sabq.news/s/${data.shortCode}`;
+          }
+        }
+      } catch {
+        // Fallback to regular URL if short link fails
+      }
+
+      // Use native share if available
+      if (navigator.share) {
+        await navigator.share({
+          title: article.title,
+          text: article.aiSummary || article.excerpt || "",
+          url: shareUrl,
+        });
+      } else {
+        // Fallback to clipboard
+        await navigator.clipboard.writeText(shareUrl);
+        toast({
+          title: "تم النسخ",
+          description: "تم نسخ الرابط المختصر إلى الحافظة",
+        });
+      }
+    } catch (error) {
+      // User cancelled or error
+    }
+  }, [article.id, article.slug, article.title, article.aiSummary, article.excerpt, toast]);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (position !== 'current') return;
@@ -327,16 +403,18 @@ export function SwipeCard({
 
                 <div className="absolute bottom-4 left-4 flex gap-2">
                   <button 
-                    className="p-3 bg-black/40 backdrop-blur-sm rounded-full text-white/90"
+                    className="p-3 bg-black/40 backdrop-blur-sm rounded-full text-white/90 active:bg-white/20 transition-colors"
+                    onClick={handleShareClick}
                     data-testid="button-share"
                   >
                     <Share2 className="h-5 w-5" />
                   </button>
                   <button 
-                    className="p-3 bg-black/40 backdrop-blur-sm rounded-full text-white/90"
+                    className={`p-3 backdrop-blur-sm rounded-full transition-colors active:bg-white/20 ${localBookmarked ? 'bg-primary text-white' : 'bg-black/40 text-white/90'}`}
+                    onClick={handleBookmarkClick}
                     data-testid="button-bookmark"
                   >
-                    <Bookmark className="h-5 w-5" />
+                    {localBookmarked ? <BookmarkCheck className="h-5 w-5" /> : <Bookmark className="h-5 w-5" />}
                   </button>
                 </div>
                 
