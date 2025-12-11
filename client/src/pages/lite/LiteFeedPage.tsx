@@ -285,18 +285,25 @@ export default function LiteFeedPage() {
     if (feedItems.length === 0) return;
     
     const currentItem = feedItems[currentIndex];
-    if (!currentItem || currentItem.type !== 'article') return;
-    
-    const currentArticleId = currentItem.data.id;
+    if (!currentItem) return;
     
     if (viewDebounceRef.current) {
       clearTimeout(viewDebounceRef.current);
     }
     
     viewDebounceRef.current = setTimeout(() => {
-      apiRequest(`/api/articles/${currentArticleId}/view`, {
-        method: "POST",
-      }).catch(() => {});
+      if (currentItem.type === 'article') {
+        // Track article view
+        apiRequest(`/api/articles/${currentItem.data.id}/view`, {
+          method: "POST",
+        }).catch(() => {});
+      } else if (currentItem.type === 'ad' && currentItem.data.impressionId) {
+        // Track ad impression for budget consumption
+        fetch(`/api/ads/track/impression/${currentItem.data.impressionId}`, {
+          method: "POST",
+          credentials: "include",
+        }).catch(() => {});
+      }
     }, 500);
     
     return () => {
