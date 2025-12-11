@@ -10755,6 +10755,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Decision Dashboard - Smart Insights API
+  app.get("/api/dashboard/decision-insights", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+
+      if (!user) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      // Require staff role - check both legacy and RBAC roles
+      const allowedRoles = ['admin', 'superadmin', 'editor', 'chief_editor', 'system_admin', 'moderator', 'reporter', 'comments_moderator', 'content_manager', 'publisher', 'writer', 'content_creator', 'opinion_author'];
+      const hasLegacyRole = allowedRoles.includes(user.role);
+      
+      let hasRbacRole = false;
+      try {
+        const userRoles = await storage.getUserRoles(userId);
+        hasRbacRole = userRoles.some(r => allowedRoles.includes(r.name) || r.name !== 'reader');
+      } catch (e) {
+        // Ignore RBAC check errors
+      }
+
+      if (!hasLegacyRole && !hasRbacRole) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const { dashboardInsightsService } = await import("./services/dashboardInsights");
+      const userName = user.firstName || user.email?.split('@')[0];
+      const insights = await dashboardInsightsService.getDecisionDashboard(userName);
+      res.json(insights);
+    } catch (error) {
+      console.error("Error fetching decision dashboard insights:", error);
+      res.status(500).json({ message: "Failed to fetch decision dashboard insights" });
+    }
+  });
+
   // Online moderators - Get currently active moderators
   app.get("/api/admin/online-moderators", isAuthenticated, async (req: any, res) => {
     try {

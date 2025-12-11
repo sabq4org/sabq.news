@@ -1,4 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
+import { ExecutiveSummaryBar } from "@/components/dashboard/ExecutiveSummaryBar";
+import { ActionRecommendations } from "@/components/dashboard/ActionRecommendations";
+import { DailyBriefCard } from "@/components/dashboard/DailyBriefCard";
+import { TeamActivityCard } from "@/components/dashboard/TeamActivityCard";
+import { TopArticlesCard } from "@/components/dashboard/TopArticlesCard";
+import type { DecisionDashboardResponse } from "@shared/schema";
 import { Link } from "wouter";
 import { useAuth, hasRole } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -183,6 +189,14 @@ function Dashboard() {
     enabled: !!user && hasRole(user, "admin", "system_admin", "editor"),
   });
 
+  // Decision Dashboard Insights - Smart AI-powered dashboard
+  const { data: decisionInsights, isLoading: isInsightsLoading } = useQuery<DecisionDashboardResponse>({
+    queryKey: ["/api/dashboard/decision-insights"],
+    enabled: !!user && hasRole(user, "admin", "system_admin", "editor"),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  
+  });
+
   // Get greeting (memoized to avoid recalculation during re-renders)
   const greeting = useMemo(() => getTimeBasedGreeting(), []);
   
@@ -287,6 +301,25 @@ function Dashboard() {
 
         {/* Urgent Reminder Banner */}
         <UrgentReminderBanner />
+
+        {/* === Smart Decision Dashboard === */}
+        {/* Executive Summary Bar - الملخص التنفيذي */}
+        <ExecutiveSummaryBar data={decisionInsights?.executiveSummary} isLoading={isInsightsLoading} />
+
+        {/* Daily Brief Card - صباح سبق */}
+        <DailyBriefCard data={decisionInsights?.dailyBrief} isLoading={isInsightsLoading} />
+
+        {/* Action Recommendations + Team Activity Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+          <ActionRecommendations recommendations={decisionInsights?.actionRecommendations} isLoading={isInsightsLoading} />
+          <TeamActivityCard data={decisionInsights?.teamActivity} isLoading={isInsightsLoading} />
+        </div>
+
+        {/* Top Articles + Underperforming Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+          <TopArticlesCard articles={decisionInsights?.topArticles} isLoading={isInsightsLoading} title="أفضل المقالات اليوم" />
+          <TopArticlesCard articles={decisionInsights?.underperformingArticles} isLoading={isInsightsLoading} title="مقالات تحتاج مراجعة" showUnderperforming />
+        </div>
 
         {/* Quick Actions Section - Staff Only (hidden for comments_moderator) */}
         {user?.role !== 'comments_moderator' && (
