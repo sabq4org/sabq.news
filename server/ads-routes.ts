@@ -2963,56 +2963,64 @@ router.get("/slot/:slotId", async (req, res) => {
       return res.status(204).send(); // No ad available
     }
     
-    // Limit to max 5 ads for rotation
-    const MAX_ADS_PER_SLOT = 5;
-    const limitedPlacements = activePlacements.slice(0, MAX_ADS_PER_SLOT);
+    // Weighted selection: Higher priority = more impressions
+    let selectedPlacement;
+    const totalWeight = activePlacements.reduce((sum, p) => sum + p.placement.priority, 0);
     
-    // Prepare ads array with impression IDs for rotation
+    if (totalWeight <= 0) {
+      // Fallback to random selection if all priorities are 0
+      const randomIndex = Math.floor(Math.random() * activePlacements.length);
+      selectedPlacement = activePlacements[randomIndex];
+    } else {
+      // Weighted random selection based on priority
+      let random = Math.random() * totalWeight;
+      selectedPlacement = activePlacements[0];
+      
+      for (const placement of activePlacements) {
+        random -= placement.placement.priority;
+        if (random <= 0) {
+          selectedPlacement = placement;
+          break;
+        }
+      }
+    }
+    
+    const { placement, creative, campaign, slot } = selectedPlacement;
+    
+    // Create impression record
     const userAgentHeader = req.headers["user-agent"] || null;
     const detectedDevice = detectDeviceType(userAgentHeader);
     
-    const adsWithImpressions = await Promise.all(
-      limitedPlacements.map(async ({ placement, creative, campaign, slot }) => {
-        // Create impression record for each ad
-        const [impression] = await db
-          .insert(impressions)
-          .values({
-            creativeId: creative.id,
-            campaignId: campaign.id,
-            slotId: slot.id,
-            userAgent: userAgentHeader,
-            ipAddress: req.ip || null,
-            pageUrl: req.headers.referer || null,
-            referrer: req.headers.referer || null,
-            device: detectedDevice,
-            country: "SA",
-          })
-          .returning();
-        
-        return {
-          creative: {
-            id: creative.id,
-            name: creative.name,
-            type: creative.type,
-            content: creative.content,
-            size: creative.size,
-            destinationUrl: creative.destinationUrl,
-          },
-          campaign: {
-            id: campaign.id,
-            name: campaign.name,
-          },
-          impressionId: impression.id,
-          priority: placement.priority,
-        };
+    const [impression] = await db
+      .insert(impressions)
+      .values({
+        creativeId: creative.id,
+        campaignId: campaign.id,
+        slotId: slot.id,
+        userAgent: userAgentHeader,
+        ipAddress: req.ip || null,
+        pageUrl: req.headers.referer || null,
+        referrer: req.headers.referer || null,
+        device: detectedDevice,
+        country: "SA",
       })
-    );
+      .returning();
     
-    // Return array of ads with rotation settings
+    // Return single ad
     res.json({
-      ads: adsWithImpressions,
-      rotationIntervalMs: 10000, // Rotate every 10 seconds
-      totalAds: adsWithImpressions.length,
+      creative: {
+        id: creative.id,
+        name: creative.name,
+        type: creative.type,
+        content: creative.content,
+        size: creative.size,
+        destinationUrl: creative.destinationUrl,
+      },
+      campaign: {
+        id: campaign.id,
+        name: campaign.name,
+      },
+      impressionId: impression.id,
     });
   } catch (error) {
     console.error("[Ads API] خطأ في جلب إعلان:", error);
