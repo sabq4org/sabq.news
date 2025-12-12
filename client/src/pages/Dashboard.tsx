@@ -263,309 +263,255 @@ function Dashboard() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Welcome Section with Greeting */}
-        <Card className="bg-gradient-to-r from-indigo-50 via-blue-50 to-indigo-50 dark:from-indigo-950/20 dark:via-blue-950/20 dark:to-indigo-950/20 border-primary/20 shadow-sm shadow-indigo-50 dark:shadow-none" data-testid="card-welcome">
-          <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-              <div className="flex-1 space-y-2">
+      <div className="space-y-4">
+        {/* Hero Section: Welcome + Executive Summary */}
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-3">
+          {/* Welcome Card - Compact */}
+          <Card className="xl:col-span-8 bg-gradient-to-r from-indigo-50 via-blue-50 to-indigo-50 dark:from-indigo-950/20 dark:via-blue-950/20 dark:to-indigo-950/20 border-primary/20" data-testid="card-welcome">
+            <CardContent className="py-3 px-4">
+              <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <Sparkles className="h-6 w-6 text-primary animate-pulse" data-testid="icon-sparkles" />
-                    <div className="absolute -inset-1 bg-primary/20 rounded-full blur-md animate-pulse"></div>
-                  </div>
-                  <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-l from-primary to-accent-foreground bg-clip-text text-transparent" data-testid="text-greeting">
+                  <Sparkles className="h-5 w-5 text-primary animate-pulse" data-testid="icon-sparkles" />
+                  <h2 className="text-xl font-bold bg-gradient-to-l from-primary to-accent-foreground bg-clip-text text-transparent" data-testid="text-greeting">
                     {greeting} يا {user?.firstName || user?.email?.split('@')[0] || "عزيزي"}
                   </h2>
                 </div>
-                <p className="text-muted-foreground text-lg leading-relaxed max-w-2xl" data-testid="text-motivational-quote">
-                  {motivationalQuote}
-                </p>
-              </div>
-              <div className="flex flex-col items-start md:items-end gap-2 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Clock className="h-3 w-3" />
                   <span data-testid="text-current-time">
-                    {new Date().toLocaleString('ar-SA', { 
-                      weekday: 'long',
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
+                    {new Date().toLocaleString('ar-SA', { weekday: 'long', month: 'long', day: 'numeric' })}
                   </span>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+              <p className="text-sm text-muted-foreground mt-1 line-clamp-1" data-testid="text-motivational-quote">
+                {motivationalQuote}
+              </p>
+            </CardContent>
+          </Card>
+          
+          {/* Urgent Reminder - Inline */}
+          <div className="xl:col-span-4">
+            <UrgentReminderBanner />
+          </div>
+        </div>
 
-        {/* Urgent Reminder Banner */}
-        <UrgentReminderBanner />
-
-        {/* === Smart Decision Dashboard === */}
-        {/* Executive Summary Bar - الملخص التنفيذي */}
+        {/* Executive Summary Bar - Full Width */}
         <ExecutiveSummaryBar data={decisionInsights?.executiveSummary} isLoading={isInsightsLoading} />
 
-        {/* Daily Brief Card - صباح سبق */}
-        <DailyBriefCard data={decisionInsights?.dailyBrief} isLoading={isInsightsLoading} />
-
-        {/* Action Recommendations + Team Activity Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+        {/* Decision Intelligence Grid - 3 columns on large screens */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+          <DailyBriefCard data={decisionInsights?.dailyBrief} isLoading={isInsightsLoading} />
           <ActionRecommendations recommendations={decisionInsights?.actionRecommendations} isLoading={isInsightsLoading} />
           <TeamActivityCard data={decisionInsights?.teamActivity} isLoading={isInsightsLoading} />
         </div>
 
-        {/* Top Articles + Underperforming Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+        {/* Top Articles Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           <TopArticlesCard articles={decisionInsights?.topArticles} isLoading={isInsightsLoading} title="أفضل المقالات اليوم" />
           <TopArticlesCard articles={decisionInsights?.underperformingArticles} isLoading={isInsightsLoading} title="مقالات تحتاج مراجعة" showUnderperforming />
         </div>
 
-        {/* Quick Actions Section - Staff Only (hidden for comments_moderator) */}
+        {/* Quick Actions + Stats Combined Row */}
         {user?.role !== 'comments_moderator' && (
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
-            <div className="lg:col-span-3">
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-3">
+            <div className="xl:col-span-5">
               <QuickActionsSection />
             </div>
-            <div className="lg:col-span-1">
+            <div className="xl:col-span-2">
               <OnlineModeratorsWidget />
+            </div>
+            <div className="xl:col-span-5 h-full">
+              {/* Main Stats Inline */}
+              <Card data-testid="card-main-stats" className="border-l-4 border-l-primary/50 h-full">
+                <CardHeader className="py-2 px-3">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2" data-testid="title-main-stats">
+                    <Activity className="h-4 w-4 text-primary" />
+                    الإحصائيات الرئيسية
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="px-3 pb-3 pt-0">
+                  {isLoading ? (
+                    <div className="flex flex-wrap gap-2">
+                      {[1, 2, 3, 4].map((i) => (
+                        <Skeleton key={i} className="h-8 w-24" />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md border bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 text-xs" data-testid="card-articles-stats">
+                        <FileText className="h-3 w-3 shrink-0" data-testid="icon-articles" />
+                        <span className="font-medium" data-testid="text-articles-total">{stats?.articles.total || 0}</span>
+                        <span className="text-blue-600/70 dark:text-blue-400/70">مقال</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md border bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800 text-xs" data-testid="card-users-stats">
+                        <Users className="h-3 w-3 shrink-0" data-testid="icon-users" />
+                        <span className="font-medium" data-testid="text-users-total">{stats?.users.total || 0}</span>
+                        <span className="text-purple-600/70 dark:text-purple-400/70">مستخدم</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md border bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800 text-xs" data-testid="card-comments-stats">
+                        <MessageSquare className="h-3 w-3 shrink-0" data-testid="icon-comments" />
+                        <span className="font-medium" data-testid="text-comments-total">{stats?.comments.total || 0}</span>
+                        <span className="text-green-600/70 dark:text-green-400/70">تعليق</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md border bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800 text-xs" data-testid="card-views-stats">
+                        <Eye className="h-3 w-3 shrink-0" data-testid="icon-views" />
+                        <span className="font-medium" data-testid="text-views-total">{(stats?.articles.totalViews || 0).toLocaleString('ar-SA')}</span>
+                        <span className="text-amber-600/70 dark:text-amber-400/70">مشاهدة</span>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           </div>
         )}
 
-        {/* Main Stats Cards - Compact horizontal layout with pills */}
-        <Card data-testid="card-main-stats" className="border-l-4 border-l-primary/50">
-          <CardHeader className="py-2 px-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2" data-testid="title-main-stats">
-              <Activity className="h-4 w-4 text-primary" />
-              الإحصائيات الرئيسية
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-3 pt-0">
-            {isLoading ? (
-              <div className="flex flex-wrap gap-2">
-                {[1, 2, 3, 4].map((i) => (
-                  <Skeleton key={i} className="h-10 w-32" />
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800" data-testid="card-articles-stats">
-                  <FileText className="h-4 w-4 shrink-0" data-testid="icon-articles" />
-                  <span className="text-sm font-medium" data-testid="text-articles-total">{stats?.articles.total || 0} مقال</span>
-                  <Badge variant="secondary" className="text-xs bg-blue-100 dark:bg-blue-800/50" data-testid="text-articles-breakdown">
-                    {stats?.articles.published || 0} منشور · {stats?.articles.draft || 0} مسودة
-                  </Badge>
+        {/* All Stats in 2-Column Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          {/* Today's Activity */}
+          <Card data-testid="card-today-activity" className="border-l-4 border-l-chart-2/50">
+            <CardHeader className="py-2 px-3">
+              <CardTitle className="text-xs font-medium flex items-center gap-2" data-testid="title-today-activity">
+                <TrendingUp className="h-3 w-3 text-chart-2" />
+                نشاط اليوم
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-3 pb-2 pt-0">
+              {isLoading ? (
+                <Skeleton className="h-6 w-full" />
+              ) : (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-md border bg-primary/10 text-primary border-primary/30 text-xs" data-testid="card-views-today-stats">
+                    <Activity className="h-3 w-3" data-testid="icon-views-today" />
+                    <span className="font-bold" data-testid="text-views-today">{stats?.articles.viewsToday || 0}</span>
+                    <span className="text-[10px] opacity-70" data-testid="text-views-today-description">مشاهدة</span>
+                  </div>
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-md border bg-chart-2/10 text-chart-2 border-chart-2/30 text-xs" data-testid="card-active-today-stats">
+                    <Users className="h-3 w-3" data-testid="icon-active-today" />
+                    <span className="font-bold" data-testid="text-active-today">{stats?.users.activeToday || 0}</span>
+                    <span className="text-[10px] opacity-70" data-testid="text-active-today-description">نشط</span>
+                  </div>
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-md border bg-chart-3/10 text-chart-3 border-chart-3/30 text-xs" data-testid="card-reads-today-stats">
+                    <FileText className="h-3 w-3" data-testid="icon-reads-today" />
+                    <span className="font-bold" data-testid="text-reads-today">{stats?.engagement.readsToday || 0}</span>
+                    <span className="text-[10px] opacity-70" data-testid="text-reads-today-description">قراءة</span>
+                  </div>
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-md border bg-chart-4/10 text-chart-4 border-chart-4/30 text-xs" data-testid="card-engagement-today-stats">
+                    <Heart className="h-3 w-3" data-testid="icon-engagement-today" />
+                    <span className="font-bold" data-testid="text-engagement-today">{stats?.reactions.todayCount || 0}</span>
+                    <span className="text-[10px] opacity-70" data-testid="text-engagement-today-description">تفاعل</span>
+                  </div>
                 </div>
-                
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800" data-testid="card-users-stats">
-                  <Users className="h-4 w-4 shrink-0" data-testid="icon-users" />
-                  <span className="text-sm font-medium" data-testid="text-users-total">{stats?.users.total || 0} مستخدم</span>
-                  <Badge variant="secondary" className="text-xs bg-purple-100 dark:bg-purple-800/50" data-testid="text-users-breakdown">
-                    {stats?.users.active24h || 0} نشط
-                  </Badge>
-                </div>
-                
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800" data-testid="card-comments-stats">
-                  <MessageSquare className="h-4 w-4 shrink-0" data-testid="icon-comments" />
-                  <span className="text-sm font-medium" data-testid="text-comments-total">{stats?.comments.total || 0} تعليق</span>
-                  <Badge variant="secondary" className="text-xs bg-green-100 dark:bg-green-800/50" data-testid="text-comments-breakdown">
-                    {stats?.comments.pending || 0} معلق
-                  </Badge>
-                </div>
-                
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800" data-testid="card-views-stats">
-                  <Eye className="h-4 w-4 shrink-0" data-testid="icon-views" />
-                  <span className="text-sm font-medium" data-testid="text-views-total">{(stats?.articles.totalViews || 0).toLocaleString('ar-SA')} مشاهدة</span>
-                  <Badge variant="secondary" className="text-xs bg-amber-100 dark:bg-amber-800/50" data-testid="text-views-description">إجمالي</Badge>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
 
-        {/* Today's Activity Stats - Compact with border-l-4 */}
-        <Card data-testid="card-today-activity" className="border-l-4 border-l-chart-2/50">
-          <CardHeader className="py-2 px-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2" data-testid="title-today-activity">
-              <TrendingUp className="h-4 w-4 text-chart-2" />
-              نشاط اليوم
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-3 pt-0">
-            {isLoading ? (
-              <div className="flex flex-wrap gap-2">
-                {[1, 2, 3, 4].map((i) => (
-                  <Skeleton key={i} className="h-10 w-28" />
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-primary/10 text-primary border-primary/30" data-testid="card-views-today-stats">
-                  <Activity className="h-4 w-4 shrink-0" data-testid="icon-views-today" />
-                  <span className="text-sm font-bold" data-testid="text-views-today">{stats?.articles.viewsToday || 0}</span>
-                  <span className="text-xs opacity-80" data-testid="text-views-today-description">مشاهدة اليوم</span>
+          {/* Secondary Stats */}
+          <Card data-testid="card-secondary-stats" className="border-l-4 border-l-muted-foreground/30">
+            <CardHeader className="py-2 px-3">
+              <CardTitle className="text-xs font-medium flex items-center gap-2" data-testid="title-secondary-stats">
+                <FolderTree className="h-3 w-3 text-muted-foreground" />
+                إحصائيات إضافية
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-3 pb-2 pt-0">
+              {isLoading ? (
+                <Skeleton className="h-6 w-full" />
+              ) : (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-md border bg-muted/50 text-xs" data-testid="card-categories-stats">
+                    <FolderTree className="h-3 w-3 text-muted-foreground" />
+                    <span className="font-medium" data-testid="text-categories-total">{stats?.categories.total || 0}</span>
+                    <span className="text-[10px] text-muted-foreground">تصنيف</span>
+                  </div>
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-md border bg-muted/50 text-xs" data-testid="card-abtests-stats">
+                    <FlaskConical className="h-3 w-3 text-muted-foreground" />
+                    <span className="font-medium" data-testid="text-abtests-total">{stats?.abTests.total || 0}</span>
+                    <span className="text-[10px] text-muted-foreground">اختبار</span>
+                  </div>
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-md border bg-muted/50 text-xs" data-testid="card-avg-time-stats">
+                    <Clock className="h-3 w-3 text-muted-foreground" />
+                    <span className="font-medium" data-testid="text-avg-time">
+                      {(stats?.engagement.averageTimeOnSite || 0) > 0 ? `${Math.floor((stats?.engagement.averageTimeOnSite || 0) / 60)}:${String((stats?.engagement.averageTimeOnSite || 0) % 60).padStart(2, '0')}` : '-'}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground" data-testid="text-avg-time-description">متوسط</span>
+                  </div>
                 </div>
-                
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-chart-2/10 text-chart-2 border-chart-2/30" data-testid="card-active-today-stats">
-                  <Users className="h-4 w-4 shrink-0" data-testid="icon-active-today" />
-                  <span className="text-sm font-bold" data-testid="text-active-today">{stats?.users.activeToday || 0}</span>
-                  <span className="text-xs opacity-80" data-testid="text-active-today-description">زائر نشط</span>
-                </div>
-                
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-chart-3/10 text-chart-3 border-chart-3/30" data-testid="card-reads-today-stats">
-                  <FileText className="h-4 w-4 shrink-0" data-testid="icon-reads-today" />
-                  <span className="text-sm font-bold" data-testid="text-reads-today">{stats?.engagement.readsToday || 0}</span>
-                  <span className="text-xs opacity-80" data-testid="text-reads-today-description">قراءة</span>
-                </div>
-                
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-chart-4/10 text-chart-4 border-chart-4/30" data-testid="card-engagement-today-stats">
-                  <Heart className="h-4 w-4 shrink-0" data-testid="icon-engagement-today" />
-                  <span className="text-sm font-bold" data-testid="text-engagement-today">{stats?.reactions.todayCount || 0}</span>
-                  <span className="text-xs opacity-80" data-testid="text-engagement-today-description">تفاعل</span>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
 
-        {/* Secondary Stats - Combined into single Card with metric pills */}
-        <Card data-testid="card-secondary-stats" className="border-l-4 border-l-muted-foreground/30">
-          <CardHeader className="py-2 px-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2" data-testid="title-secondary-stats">
-              <FolderTree className="h-4 w-4 text-muted-foreground" />
-              إحصائيات إضافية
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-3 pt-0">
-            {isLoading ? (
-              <div className="flex flex-wrap gap-2">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-10 w-28" />
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-muted/50" data-testid="card-categories-stats">
-                  <FolderTree className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <span className="text-sm font-medium" data-testid="text-categories-total">{stats?.categories.total || 0} تصنيف</span>
+          {/* Platform Services */}
+          <Card data-testid="card-platform-services" className="border-l-4 border-l-purple-500/50">
+            <CardHeader className="py-2 px-3">
+              <CardTitle className="text-xs font-medium flex items-center gap-2" data-testid="title-platform-services">
+                <Headphones className="h-3 w-3 text-purple-500" />
+                خدمات المنصة
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-3 pb-2 pt-0">
+              {isLoading ? (
+                <Skeleton className="h-6 w-full" />
+              ) : (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-md border bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800 text-xs" data-testid="card-audio-newsletters-stats">
+                    <Headphones className="h-3 w-3" data-testid="icon-audio-newsletters" />
+                    <span className="font-medium" data-testid="text-audio-newsletters-total">{stats?.audioNewsletters?.total || 0}</span>
+                    <span className="text-[10px] opacity-70">نشرة</span>
+                  </div>
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-md border bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800 text-xs" data-testid="card-deep-analyses-stats">
+                    <Brain className="h-3 w-3" data-testid="icon-deep-analyses" />
+                    <span className="font-medium" data-testid="text-deep-analyses-total">{stats?.deepAnalyses?.total || 0}</span>
+                    <span className="text-[10px] opacity-70">تحليل</span>
+                  </div>
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-md border bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800 text-xs" data-testid="card-publishers-stats">
+                    <Building2 className="h-3 w-3" data-testid="icon-publishers" />
+                    <span className="font-medium" data-testid="text-publishers-total">{stats?.publishers?.total || 0}</span>
+                    <span className="text-[10px] opacity-70">ناشر</span>
+                  </div>
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-md border bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800 text-xs" data-testid="card-media-library-stats">
+                    <HardDrive className="h-3 w-3" data-testid="icon-media-library" />
+                    <span className="font-medium" data-testid="text-media-library-total">{stats?.mediaLibrary?.totalFiles || 0}</span>
+                    <span className="text-[10px] opacity-70">ملف</span>
+                  </div>
                 </div>
-                
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-muted/50" data-testid="card-abtests-stats">
-                  <FlaskConical className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <span className="text-sm font-medium" data-testid="text-abtests-total">{stats?.abTests.total || 0} اختبار</span>
-                  <Badge variant="outline" className="text-xs" data-testid="text-abtests-running">
-                    {stats?.abTests.running || 0} نشط
-                  </Badge>
-                </div>
-                
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-muted/50" data-testid="card-avg-time-stats">
-                  <Clock className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <span className="text-sm font-medium" data-testid="text-avg-time">
-                    {(stats?.engagement.averageTimeOnSite || 0) > 0 ? `${Math.floor((stats?.engagement.averageTimeOnSite || 0) / 60)}:${String((stats?.engagement.averageTimeOnSite || 0) % 60).padStart(2, '0')}` : 'غير متاح'}
-                  </span>
-                  <span className="text-xs text-muted-foreground" data-testid="text-avg-time-description">متوسط القراءة</span>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
 
-        {/* Platform Services Stats - Combined with inline metrics */}
-        <Card data-testid="card-platform-services" className="border-l-4 border-l-purple-500/50">
-          <CardHeader className="py-2 px-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2" data-testid="title-platform-services">
-              <Headphones className="h-4 w-4 text-purple-500" />
-              خدمات المنصة
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-3 pt-0">
-            {isLoading ? (
-              <div className="flex flex-wrap gap-2">
-                {[1, 2, 3, 4].map((i) => (
-                  <Skeleton key={i} className="h-10 w-32" />
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800" data-testid="card-audio-newsletters-stats">
-                  <Headphones className="h-4 w-4 shrink-0" data-testid="icon-audio-newsletters" />
-                  <span className="text-sm font-medium" data-testid="text-audio-newsletters-total">{stats?.audioNewsletters?.total || 0} نشرة</span>
-                  <Badge variant="secondary" className="text-xs bg-purple-100 dark:bg-purple-800/50" data-testid="text-audio-newsletters-breakdown">
-                    {stats?.audioNewsletters?.totalListens || 0} استماع
-                  </Badge>
+          {/* AI Features */}
+          <Card data-testid="card-ai-features" className="border-l-4 border-l-emerald-500/50">
+            <CardHeader className="py-2 px-3">
+              <CardTitle className="text-xs font-medium flex items-center gap-2" data-testid="title-ai-features">
+                <Bot className="h-3 w-3 text-emerald-500" />
+                الذكاء الاصطناعي
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-3 pb-2 pt-0">
+              {isLoading ? (
+                <Skeleton className="h-6 w-full" />
+              ) : (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-md border bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 text-xs" data-testid="card-ai-tasks-stats">
+                    <Bot className="h-3 w-3" data-testid="icon-ai-tasks" />
+                    <span className="font-medium" data-testid="text-ai-tasks-total">{stats?.aiTasks?.total || 0}</span>
+                    <span className="text-[10px] opacity-70">مهمة</span>
+                  </div>
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-md border bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800 text-xs" data-testid="card-ai-images-stats">
+                    <Image className="h-3 w-3" data-testid="icon-ai-images" />
+                    <span className="font-medium" data-testid="text-ai-images-total">{stats?.aiImages?.total || 0}</span>
+                    <span className="text-[10px] opacity-70">صورة</span>
+                  </div>
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-md border bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800 text-xs" data-testid="card-smart-blocks-stats">
+                    <Blocks className="h-3 w-3" data-testid="icon-smart-blocks" />
+                    <span className="font-medium" data-testid="text-smart-blocks-total">{stats?.smartBlocks?.total || 0}</span>
+                    <span className="text-[10px] opacity-70">قالب</span>
+                  </div>
                 </div>
-                
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800" data-testid="card-deep-analyses-stats">
-                  <Brain className="h-4 w-4 shrink-0" data-testid="icon-deep-analyses" />
-                  <span className="text-sm font-medium" data-testid="text-deep-analyses-total">{stats?.deepAnalyses?.total || 0} تحليل</span>
-                  <Badge variant="secondary" className="text-xs bg-indigo-100 dark:bg-indigo-800/50" data-testid="text-deep-analyses-breakdown">
-                    {stats?.deepAnalyses?.published || 0} منشور
-                  </Badge>
-                </div>
-                
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800" data-testid="card-publishers-stats">
-                  <Building2 className="h-4 w-4 shrink-0" data-testid="icon-publishers" />
-                  <span className="text-sm font-medium" data-testid="text-publishers-total">{stats?.publishers?.total || 0} ناشر</span>
-                  <Badge variant="secondary" className="text-xs bg-amber-100 dark:bg-amber-800/50" data-testid="text-publishers-breakdown">
-                    {stats?.publishers?.active || 0} نشط
-                  </Badge>
-                </div>
-                
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800" data-testid="card-media-library-stats">
-                  <HardDrive className="h-4 w-4 shrink-0" data-testid="icon-media-library" />
-                  <span className="text-sm font-medium" data-testid="text-media-library-total">{stats?.mediaLibrary?.totalFiles || 0} ملف</span>
-                  <Badge variant="secondary" className="text-xs bg-cyan-100 dark:bg-cyan-800/50" data-testid="text-media-library-breakdown">
-                    {((stats?.mediaLibrary?.totalSize || 0) / (1024 * 1024)).toFixed(1)} MB
-                  </Badge>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* AI & Smart Features Stats - Combined with inline metrics */}
-        <Card data-testid="card-ai-features" className="border-l-4 border-l-emerald-500/50">
-          <CardHeader className="py-2 px-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2" data-testid="title-ai-features">
-              <Bot className="h-4 w-4 text-emerald-500" />
-              الذكاء الاصطناعي والميزات الذكية
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-3 pt-0">
-            {isLoading ? (
-              <div className="flex flex-wrap gap-2">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-10 w-32" />
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800" data-testid="card-ai-tasks-stats">
-                  <Bot className="h-4 w-4 shrink-0" data-testid="icon-ai-tasks" />
-                  <span className="text-sm font-medium" data-testid="text-ai-tasks-total">{stats?.aiTasks?.total || 0} مهمة</span>
-                  <Badge variant="secondary" className="text-xs bg-emerald-100 dark:bg-emerald-800/50" data-testid="text-ai-tasks-breakdown">
-                    {stats?.aiTasks?.pending || 0} معلقة
-                  </Badge>
-                </div>
-                
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800" data-testid="card-ai-images-stats">
-                  <Image className="h-4 w-4 shrink-0" data-testid="icon-ai-images" />
-                  <span className="text-sm font-medium" data-testid="text-ai-images-total">{stats?.aiImages?.total || 0} صورة</span>
-                  <Badge variant="secondary" className="text-xs bg-rose-100 dark:bg-rose-800/50" data-testid="text-ai-images-breakdown">
-                    {stats?.aiImages?.thisWeek || 0} هذا الأسبوع
-                  </Badge>
-                </div>
-                
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800" data-testid="card-smart-blocks-stats">
-                  <Blocks className="h-4 w-4 shrink-0" data-testid="icon-smart-blocks" />
-                  <span className="text-sm font-medium" data-testid="text-smart-blocks-total">{stats?.smartBlocks?.total || 0} قالب</span>
-                  <span className="text-xs opacity-80" data-testid="text-smart-blocks-description">ذكي نشط</span>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
