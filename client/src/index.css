@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');
 
 /* OpenDyslexic font for Reading Mode - Production-ready via Fontsource (WOFF2, bundled) */
 @import '@fontsource/opendyslexic/400.css'; /* Regular */
@@ -28,7 +28,7 @@ input, select, textarea {
   }
 }
 
-/* LIGHT MODE */
+/* LIGHT MODE - Enterprise Newsroom Dashboard */
 :root {
   --button-outline: rgba(0,0,0, .10);
   --badge-outline: rgba(0,0,0, .05);
@@ -40,51 +40,55 @@ input, select, textarea {
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
 
-  --background: 60deg 6.67% 97.06%;
+  /* Enterprise Off-white background #F7F8FA */
+  --background: 220 20% 98%;
 
-  --foreground: 220deg 19.48% 15.1%;
+  /* Dark Navy text for headings */
+  --foreground: 224 30% 18%;
 
-  --border: 220deg 13.04% 90.98%;
+  --border: 220 15% 91%;
 
-  --card: 0deg 0% 100%;
+  --card: 0 0% 100%;
 
-  --card-foreground: 220deg 19.48% 15.1%;
+  --card-foreground: 224 30% 18%;
 
-  --card-border: 220 24% 88%;
+  --card-border: 220 20% 90%;
 
-  --sidebar: 229 49.59% 24.12%;
+  /* Navy/Indigo Sidebar - Dark gradient base */
+  --sidebar: 226 47% 20%;
 
-  --sidebar-foreground: 0 0% 95%;
+  --sidebar-foreground: 220 15% 95%;
 
-  --sidebar-border: 205.0000 25.0000% 90.5882%;
+  --sidebar-border: 226 40% 25%;
 
-  --sidebar-primary: 203.8863 88.2845% 53.1373%;
+  --sidebar-primary: 220 85% 55%;
 
   --sidebar-primary-foreground: 0 0% 100%;
 
-  --sidebar-accent: 211.5789 51.3514% 92.7451%;
+  --sidebar-accent: 226 40% 28%;
 
-  --sidebar-accent-foreground: 203.8863 88.2845% 53.1373%;
+  --sidebar-accent-foreground: 220 15% 95%;
 
-  --sidebar-ring: 202.8169 89.1213% 53.1373%;
+  --sidebar-ring: 220 85% 55%;
 
-  --popover: 0deg 0% 100%;
+  --popover: 0 0% 100%;
 
-  --popover-foreground: 220deg 19.48% 15.1%;
+  --popover-foreground: 224 30% 18%;
 
-  --popover-border: 220 24% 88%;
+  --popover-border: 220 20% 90%;
 
-  --primary: 219.8deg 84.17% 52.94%;
+  /* Navy/Indigo Primary */
+  --primary: 224 65% 40%;
 
-  --primary-foreground: 0deg 0% 98.04%;
+  --primary-foreground: 0 0% 99%;
 
-  --secondary: 220deg 9.68% 93.92%;
+  --secondary: 220 15% 95%;
 
-  --secondary-foreground: 217.89deg 14.96% 24.9%;
+  --secondary-foreground: 224 30% 25%;
 
-  --muted: 220deg 100% 97.06%;
+  --muted: 220 20% 96%;
 
-  --muted-foreground: 220deg 9.8% 70%;
+  --muted-foreground: 220 12% 55%;
 
   --footer: 220 15% 30%;
 
