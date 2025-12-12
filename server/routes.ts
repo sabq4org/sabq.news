@@ -9602,9 +9602,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/articles", async (req: any, res) => {
     try {
-      const { category, search, status, author } = req.query;
+      const { category, search, status, author, limit, orderBy } = req.query;
       const userRole = req.user?.role;
-      const articles = await storage.getArticles({
+      let articles = await storage.getArticles({
         categoryId: category as string,
         searchQuery: search as string,
         status: status as string,
@@ -9612,6 +9612,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userRole: userRole,
         includeAI: false, // Exclude AI articles from main feed
       });
+      
+      // Apply ordering if specified
+      if (orderBy === 'newest') {
+        articles = articles.sort((a, b) => {
+          const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+          const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+          return dateB - dateA;
+        });
+      }
+      
+      // Apply limit if specified (for Lite/Swipe performance optimization)
+      const limitNum = limit ? parseInt(limit as string, 10) : null;
+      if (limitNum && limitNum > 0) {
+        articles = articles.slice(0, limitNum);
+      }
+      
       res.json(articles);
     } catch (error) {
       console.error("Error fetching articles:", error);
