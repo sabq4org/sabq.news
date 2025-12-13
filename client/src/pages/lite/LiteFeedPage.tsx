@@ -75,6 +75,7 @@ export default function LiteFeedPage() {
   const lastTapRef = useRef<number>(0);
   const hintShownCountRef = useRef<number>(0);
   const logoLongPressRef = useRef<NodeJS.Timeout | null>(null);
+  const prevIndexRef = useRef<number>(0);
   
   const PULL_TO_REFRESH_THRESHOLD = 100;
 
@@ -385,9 +386,17 @@ export default function LiteFeedPage() {
   }, [currentIndex]);
 
   useEffect(() => {
-    // Only show hint after viewing at least 10 articles (not at start)
-    // currentIndex > 0 ensures we're not at the beginning
-    if (currentIndex > 0 && articleOnlyIndex >= 10 && articleOnlyIndex % 10 === 0 && hintShownCountRef.current < 3) {
+    // Track swipe direction: only show hint when swiping forward (index increasing)
+    const isSwipingForward = currentIndex > prevIndexRef.current;
+    prevIndexRef.current = currentIndex;
+    
+    // Only show hint when:
+    // - Not at first article (currentIndex > 0)
+    // - At least 7 articles viewed
+    // - Every 7 articles (7, 14, 21...)
+    // - Swiping forward (not going back)
+    // - Max 3 times total
+    if (isSwipingForward && currentIndex > 0 && articleOnlyIndex >= 7 && articleOnlyIndex % 7 === 0 && hintShownCountRef.current < 3) {
       setShowDoubleTapHint(true);
       hintShownCountRef.current += 1;
       const timer = setTimeout(() => setShowDoubleTapHint(false), 3000);
