@@ -8,8 +8,10 @@ import {
   RefreshCw,
   RotateCcw,
   User as UserIcon,
-  MousePointerClick
+  MousePointerClick,
+  ChevronUp
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
@@ -64,6 +66,7 @@ export default function LiteFeedPage() {
   const [showBackToStart, setShowBackToStart] = useState(false);
   const [showDoubleTapHint, setShowDoubleTapHint] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const animationRef = useRef<number | null>(null);
   const viewDebounceRef = useRef<NodeJS.Timeout | null>(null);
   const lastTapRef = useRef<number>(0);
@@ -373,6 +376,17 @@ export default function LiteFeedPage() {
     }
   }, [articleOnlyIndex, currentIndex]);
 
+  // Show onboarding on first visit
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem('hasSeenSwipeOnboarding');
+    if (!hasSeenOnboarding) {
+      setShowOnboarding(true);
+      localStorage.setItem('hasSeenSwipeOnboarding', 'true');
+      const timer = setTimeout(() => setShowOnboarding(false), 2500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
   if (isLoading) {
     return (
       <div className="h-screen w-screen bg-black flex items-center justify-center">
@@ -492,6 +506,32 @@ export default function LiteFeedPage() {
             </div>
           </div>
         )}
+
+        {/* Onboarding overlay - shows on first visit */}
+        <AnimatePresence>
+          {showOnboarding && (
+            <motion.div 
+              initial={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5 }}
+              className="absolute inset-0 flex items-center justify-center bg-black/80 z-50 pointer-events-none"
+              dir="rtl"
+              data-testid="overlay-onboarding"
+            >
+              <div className="text-center">
+                <motion.div
+                  animate={{ y: [0, -30, 0] }}
+                  transition={{ repeat: 3, duration: 0.6 }}
+                  className="mb-4"
+                >
+                  <ChevronUp className="h-20 w-20 text-white mx-auto" />
+                </motion.div>
+                <p className="text-white text-2xl font-bold mb-2">اسحب للأعلى</p>
+                <p className="text-white/70 text-base">لقراءة المزيد من الأخبار</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Pull-to-refresh indicator */}
         {currentIndex === 0 && dragOffset > 20 && (
