@@ -57,6 +57,7 @@ export function SwipeCard({
   const [showDetails, setShowDetails] = useState(false);
   const [detailDragOffset, setDetailDragOffset] = useState(0);
   const [localBookmarked, setLocalBookmarked] = useState(isBookmarked);
+  const [cachedShortUrl, setCachedShortUrl] = useState<string | null>(null);
   const startYRef = useRef(0);
   const lastYRef = useRef(0);
   const lastTimeRef = useRef(0);
@@ -103,6 +104,20 @@ export function SwipeCard({
     setLocalBookmarked(isBookmarked);
   }, [isBookmarked]);
 
+  // Pre-fetch short URL when details are opened
+  useEffect(() => {
+    if (showDetails && !cachedShortUrl) {
+      fetch(`/api/shortlinks/article/${article.id}`, { credentials: "include" })
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data?.shortCode) {
+            setCachedShortUrl(`https://sabq.news/s/${data.shortCode}`);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [showDetails, article.id, cachedShortUrl]);
+
   const handleBookmarkClick = useCallback(async () => {
     try {
       const response = await fetch(`/api/articles/${article.id}/bookmark`, {
@@ -128,44 +143,27 @@ export function SwipeCard({
     }
   }, [article.id, onBookmark, toast]);
 
-  const handleShareClick = useCallback(async () => {
-    try {
-      // First try to get/create short link
-      let shareUrl = `https://sabq.news/article/${article.slug}`;
-      
-      try {
-        const response = await fetch(`/api/shortlinks/article/${article.id}`, {
-          credentials: "include",
-        });
-        if (response.ok) {
-          const data = await response.json();
-          if (data.shortCode) {
-            shareUrl = `https://sabq.news/s/${data.shortCode}`;
-          }
-        }
-      } catch {
-        // Fallback to regular URL if short link fails
-      }
+  const handleShareClick = useCallback(() => {
+    // Use cached short URL if available, otherwise use slug URL
+    const shareUrl = cachedShortUrl || `https://sabq.news/s/${article.slug}`;
 
-      // Use native share if available
-      if (navigator.share) {
-        await navigator.share({
-          title: article.title,
-          text: article.aiSummary || article.excerpt || "",
-          url: shareUrl,
-        });
-      } else {
-        // Fallback to clipboard
-        await navigator.clipboard.writeText(shareUrl);
+    // Use native share if available - no async wait needed
+    if (navigator.share) {
+      navigator.share({
+        title: article.title,
+        text: article.aiSummary || article.excerpt || "",
+        url: shareUrl,
+      }).catch(() => {});
+    } else {
+      // Fallback to clipboard
+      navigator.clipboard.writeText(shareUrl).then(() => {
         toast({
           title: "تم النسخ",
           description: "تم نسخ الرابط المختصر إلى الحافظة",
         });
-      }
-    } catch (error) {
-      // User cancelled or error
+      }).catch(() => {});
     }
-  }, [article.id, article.slug, article.title, article.aiSummary, article.excerpt, toast]);
+  }, [cachedShortUrl, article.slug, article.title, article.aiSummary, article.excerpt, toast]);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (position !== 'current') return;
