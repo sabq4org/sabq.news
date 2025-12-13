@@ -454,10 +454,6 @@ export function SwipeCard({
                     {article.category.nameAr}
                   </span>
                 )}
-                <span className="text-muted-foreground text-xs flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  {formatDistanceToNow(publishedDate, { addSuffix: true, locale: arSA })}
-                </span>
                 {article.views !== undefined && (
                   <span className="text-muted-foreground text-xs flex items-center gap-1">
                     <Eye className="h-3 w-3" />
