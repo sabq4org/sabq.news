@@ -129,11 +129,13 @@ export default function LiteFeedPage() {
     return shuffled;
   }, [adsResponse]);
 
-  const sortedArticles = [...articles].sort((a, b) => {
-    const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
-    const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
-    return dateB - dateA;
-  });
+  const sortedArticles = useMemo(() => {
+    return [...articles].sort((a, b) => {
+      const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+      const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+      return dateB - dateA;
+    });
+  }, [articles]);
 
   const feedItems: FeedItem[] = useMemo(() => {
     const items: FeedItem[] = [];
