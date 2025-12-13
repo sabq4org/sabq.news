@@ -8,6 +8,7 @@ const config: CapacitorConfig = {
     androidScheme: 'https',
     iosScheme: 'https',
     hostname: 'sabq.life',
+    url: 'https://sabq.life/lite',
   },
   plugins: {
     SplashScreen: {
