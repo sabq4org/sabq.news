@@ -313,32 +313,6 @@ export default function LiteFeedPage() {
     };
   }, [currentIndex, feedItems]);
 
-  // Update browser URL with short link when navigating
-  useEffect(() => {
-    if (feedItems.length === 0) return;
-    
-    const currentItem = feedItems[currentIndex];
-    if (!currentItem || currentItem.type !== 'article') {
-      // For ads, keep current URL
-      return;
-    }
-    
-    const article = currentItem.data;
-    
-    // Fetch short link and update URL (same as share button)
-    fetch(`/api/shortlinks/article/${article.id}`, {
-      credentials: "include",
-    })
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (data?.shortCode) {
-          // Use full short link URL
-          window.history.replaceState(null, '', `https://sabq.news/link/${data.shortCode}`);
-        }
-      })
-      .catch(() => {});
-  }, [currentIndex, feedItems]);
-
   const articleOnlyIndex = useMemo(() => {
     if (feedItems.length === 0) return 0;
     let count = 0;

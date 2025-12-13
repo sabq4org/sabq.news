@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Clock, Eye, Share2, Bookmark, BookmarkCheck, ChevronDown, Zap, Sparkles, Check, ExternalLink } from "lucide-react";
+import { Clock, Eye, Share2, Bookmark, BookmarkCheck, ChevronDown, Zap, Sparkles, Check } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import type { Article, Category, User } from "@shared/schema";
@@ -140,7 +140,7 @@ export function SwipeCard({
         if (response.ok) {
           const data = await response.json();
           if (data.shortCode) {
-            shareUrl = `https://sabq.news/link/${data.shortCode}`;
+            shareUrl = `https://sabq.news/s/${data.shortCode}`;
           }
         }
       } catch {

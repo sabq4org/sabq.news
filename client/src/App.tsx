@@ -287,7 +287,7 @@ function Router() {
       <Route path="/opinion/:slug" component={OpinionDetailPage} />
       <Route path="/categories" component={CategoriesListPage} />
       <Route path="/shorts" component={ShortsPage} />
-      <Route path="/lite/:slug?" component={LiteFeedPage} />
+      <Route path="/lite" component={LiteFeedPage} />
       <Route path="/login" component={Login} />
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/register" component={Register} />
