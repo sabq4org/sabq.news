@@ -328,17 +328,22 @@ export function SwipeCard({
               )}
               {article.category && (
                 <span 
-                  className="px-3 py-1 rounded-full text-white text-sm font-medium"
-                  style={{ backgroundColor: article.category.color || 'hsl(var(--primary))' }}
+                  className="px-2.5 py-1 rounded-md bg-white/20 backdrop-blur-sm text-white text-xs font-medium"
                   data-testid="badge-category"
                 >
                   {article.category.nameAr}
                 </span>
               )}
-              <span className="text-white/60 text-sm flex items-center gap-1">
+              <span className="text-white/60 text-xs flex items-center gap-1">
                 <Clock className="h-3 w-3" />
                 {timeAgo}
               </span>
+              {article.views !== undefined && article.views > 0 && (
+                <span className="text-white/60 text-xs flex items-center gap-1">
+                  <Eye className="h-3 w-3" />
+                  {article.views.toLocaleString('en-US')}
+                </span>
+              )}
             </div>
 
             <h1 
@@ -446,20 +451,19 @@ export function SwipeCard({
                 )}
                 {article.category && (
                   <span 
-                    className="px-3 py-1.5 rounded-full text-white text-sm font-medium"
-                    style={{ backgroundColor: article.category.color || 'hsl(var(--primary))' }}
+                    className="px-2.5 py-1 rounded-md bg-muted text-muted-foreground text-xs font-medium"
                   >
                     {article.category.nameAr}
                   </span>
                 )}
-                <span className="text-muted-foreground text-sm flex items-center gap-1">
-                  <Clock className="h-3.5 w-3.5" />
+                <span className="text-muted-foreground text-xs flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
                   {formatDistanceToNow(publishedDate, { addSuffix: true, locale: arSA })}
                 </span>
                 {article.views !== undefined && (
-                  <span className="text-muted-foreground text-sm flex items-center gap-1">
-                    <Eye className="h-3.5 w-3.5" />
-                    {article.views.toLocaleString('ar-EG')}
+                  <span className="text-muted-foreground text-xs flex items-center gap-1">
+                    <Eye className="h-3 w-3" />
+                    {article.views.toLocaleString('en-US')}
                   </span>
                 )}
               </div>
