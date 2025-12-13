@@ -74,12 +74,15 @@ export default function LiteFeedPage() {
   const { user, isAuthenticated } = useAuth();
 
   const { data: articles = [], isLoading, refetch } = useQuery<ArticleWithDetails[]>({
-    queryKey: ["/api/articles?status=published&limit=50&orderBy=newest"],
+    queryKey: ["/api/articles?status=published&limit=30&orderBy=newest"],
+    staleTime: 2 * 60 * 1000, // Cache for 2 minutes
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
 
   const { data: personalizedData } = useQuery<{ articles: ArticleWithDetails[] }>({
     queryKey: ["/api/personal-feed"],
     enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000,
   });
 
   const personalizedArticleIds = useMemo(() => {
@@ -89,6 +92,7 @@ export default function LiteFeedPage() {
 
   const { data: adsResponse } = useQuery<LiteFeedAdsResponse>({
     queryKey: ["/api/ads/lite-feed"],
+    staleTime: 10 * 60 * 1000, // Cache ads for 10 minutes
   });
 
   const activeAds = useMemo(() => {
@@ -127,6 +131,24 @@ export default function LiteFeedPage() {
     
     return items;
   }, [sortedArticles, activeAds]);
+
+  // Preload next 2 images for smoother swiping
+  useEffect(() => {
+    const preloadCount = 2;
+    for (let i = 1; i <= preloadCount; i++) {
+      const nextIndex = currentIndex + i;
+      if (nextIndex < feedItems.length) {
+        const item = feedItems[nextIndex];
+        if (item.type === 'article' && item.data.featuredImage) {
+          const img = new Image();
+          img.src = item.data.liteOptimizedImageUrl || item.data.featuredImage;
+        } else if (item.type === 'ad' && item.data.imageUrl) {
+          const img = new Image();
+          img.src = item.data.imageUrl;
+        }
+      }
+    }
+  }, [currentIndex, feedItems]);
 
   const handleDragStart = useCallback(() => {
     if (animationRef.current) {
