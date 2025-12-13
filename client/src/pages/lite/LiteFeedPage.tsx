@@ -333,7 +333,7 @@ export default function LiteFeedPage() {
       .then(data => {
         if (data?.shortCode) {
           // Use full short link URL
-          window.history.replaceState(null, '', `https://sabq.news/s/${data.shortCode}`);
+          window.history.replaceState(null, '', `https://sabq.news/link/${data.shortCode}`);
         }
       })
       .catch(() => {});

@@ -46,6 +46,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import passport from "passport";
 import multer from "multer";
+import * as UAParser from "ua-parser-js";
 
 // إعداد multer للتعامل مع رفع الملفات في الذاكرة
 const upload = multer({
@@ -27842,6 +27843,133 @@ Allow: /
     } catch (error) {
       console.error("Error fetching short link by article:", error);
       res.status(500).json({ message: "فشل جلب الرابط القصير" });
+    }
+  });
+
+
+  // GET /link/:code - Smart redirect based on device type
+  app.get("/link/:code", async (req, res) => {
+    try {
+      const { code } = req.params;
+      const forceView = req.query.view as string | undefined;
+      
+      const shortLink = await storage.getShortLinkByCode(code);
+      
+      if (!shortLink) {
+        return res.status(404).send("الرابط غير موجود");
+      }
+
+      if (!shortLink.isActive) {
+        return res.status(410).send("هذا الرابط غير نشط");
+      }
+
+      if (shortLink.expiresAt && new Date(shortLink.expiresAt) < new Date()) {
+        return res.status(410).send("انتهت صلاحية هذا الرابط");
+      }
+
+      // Track click
+      const clickData: InsertShortLinkClick = {
+        shortLinkId: shortLink.id,
+        ipAddress: req.ip,
+        userAgent: req.get("user-agent"),
+        referer: req.get("referer"),
+        userId: (req as any).user?.id,
+      };
+      await storage.incrementShortLinkClick(shortLink.id, clickData);
+
+      // Detect device type
+      const userAgent = req.get("user-agent") || "";
+      const parser = new UAParser(userAgent);
+      const deviceType = parser.getDevice().type; // mobile, tablet, or undefined (desktop)
+      const isMobile = deviceType === "mobile";
+
+      // Get article for redirect
+      let article = null;
+      if (shortLink.articleId) {
+        try {
+          article = await storage.getArticleById(shortLink.articleId);
+        } catch (err) {
+          console.error("Error fetching article for smart link:", err);
+        }
+      }
+
+      if (!article) {
+        // Fallback to original URL if no article
+        return res.redirect(shortLink.originalUrl);
+      }
+
+      // Determine redirect URL based on device type and force view
+      let redirectUrl: string;
+      if (forceView === "lite" || (isMobile && forceView !== "full")) {
+        redirectUrl = `/lite?article=${article.slug}`;
+      } else {
+        redirectUrl = `/article/${article.slug}`;
+      }
+
+      // Add UTM params
+      const urlObj = new URL(redirectUrl, "https://sabq.news");
+      if (shortLink.utmSource) urlObj.searchParams.set("utm_source", shortLink.utmSource);
+      if (shortLink.utmMedium) urlObj.searchParams.set("utm_medium", shortLink.utmMedium);
+      if (shortLink.utmCampaign) urlObj.searchParams.set("utm_campaign", shortLink.utmCampaign);
+      if (shortLink.utmContent) urlObj.searchParams.set("utm_content", shortLink.utmContent);
+      urlObj.searchParams.set("from", "smartlink");
+
+      // HTML escape function
+      const escapeHtml = (text: string): string => {
+        if (!text) return '';
+        return text
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      };
+
+      // Prepare Open Graph data
+      const ogTitle = escapeHtml(article.title || 'سبق الذكية - منصة الأخبار الذكية');
+      const ogDescription = escapeHtml(article.excerpt || 'أخبار محدثة مع تلخيص تلقائي بالذكاء الاصطناعي');
+      const ogImage = escapeHtml(article.imageUrl || 'https://sabq.news/default-og-image.jpg');
+      const ogUrl = escapeHtml(`https://sabq.news/link/${code}`);
+      const safeRedirectUrl = escapeHtml(urlObj.pathname + urlObj.search);
+
+      const html = `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${ogTitle}</title>
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="${ogUrl}">
+  <meta property="og:title" content="${ogTitle}">
+  <meta property="og:description" content="${ogDescription}">
+  <meta property="og:image" content="${ogImage}">
+  <meta property="og:site_name" content="صحيفة سبق الإلكترونية">
+  <meta property="og:locale" content="ar_SA">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="${ogUrl}">
+  <meta name="twitter:title" content="${ogTitle}">
+  <meta name="twitter:description" content="${ogDescription}">
+  <meta name="twitter:image" content="${ogImage}">
+  
+  <!-- Instant redirect -->
+  <meta http-equiv="refresh" content="0;url=${safeRedirectUrl}">
+  <script>window.location.href="${safeRedirectUrl}";</script>
+</head>
+<body style="font-family: Arial, sans-serif; text-align: center; padding: 50px; direction: rtl;">
+  <h1>جارٍ التوجيه...</h1>
+  <p>إذا لم يتم التوجيه تلقائياً، <a href="${safeRedirectUrl}">اضغط هنا</a></p>
+</body>
+</html>`;
+
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.send(html);
+    } catch (error) {
+      console.error("Error in smart link redirect:", error);
+      res.status(500).send("حدث خطأ");
     }
   });
 
