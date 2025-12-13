@@ -1,13 +1,14 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.sabq.smart',
-  appName: 'سبق الذكية',
+  appId: 'com.sabq.lite',
+  appName: 'سبق Lite',
   webDir: 'dist/public',
   server: {
     androidScheme: 'https',
     iosScheme: 'https',
     hostname: 'sabq.life',
+    // Load directly from live server - swipe news feed
     url: 'https://sabq.life/lite',
   },
   plugins: {
@@ -37,11 +38,11 @@ const config: CapacitorConfig = {
   },
   ios: {
     contentInset: 'always',
-    allowsLinkPreview: true,
+    allowsLinkPreview: false,
     scrollEnabled: true,
     limitsNavigationsToAppBoundDomains: false,
     preferredContentMode: 'mobile',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#000000',
   },
   android: {
     allowMixedContent: false,
