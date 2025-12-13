@@ -483,26 +483,38 @@ export default function LiteFeedPage() {
         />
       </div>
 
-      {isAuthenticated && user && (
-        <div className="absolute top-4 left-4 z-30">
-          {user.profileImageUrl ? (
-            <img
-              src={user.profileImageUrl}
-              alt={user.name || 'صورة المستخدم'}
-              className="w-9 h-9 rounded-full border-2 border-white/30 object-cover"
-              data-testid="avatar-user"
-            />
-          ) : (
-            <div 
-              className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center border-2 border-white/30"
-              data-testid="avatar-user"
-              title={user.name || user.email || 'مستخدم'}
-            >
-              <UserIcon className="h-5 w-5 text-white" />
-            </div>
-          )}
-        </div>
-      )}
+      <div className="absolute top-4 left-4 z-30 flex items-center gap-2">
+        {/* Button to go to full version */}
+        <button
+          onClick={() => setLocation('/')}
+          className="w-9 h-9 flex items-center justify-center bg-white/10 backdrop-blur-sm rounded-full text-white/50 hover:text-white hover:bg-white/20 transition-all"
+          data-testid="button-full-version"
+          title="النسخة الكاملة"
+        >
+          <LayoutGrid className="h-4 w-4" />
+        </button>
+        
+        {isAuthenticated && user && (
+          <>
+            {user.profileImageUrl ? (
+              <img
+                src={user.profileImageUrl}
+                alt={user.name || 'صورة المستخدم'}
+                className="w-9 h-9 rounded-full border-2 border-white/30 object-cover"
+                data-testid="avatar-user"
+              />
+            ) : (
+              <div 
+                className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center border-2 border-white/30"
+                data-testid="avatar-user"
+                title={user.name || user.email || 'مستخدم'}
+              >
+                <UserIcon className="h-5 w-5 text-white" />
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
       {/* Top shadow gradient */}
       <div 
@@ -608,15 +620,6 @@ export default function LiteFeedPage() {
         </div>
       )}
 
-      {/* Button to go to full version */}
-      <button
-        onClick={() => setLocation('/')}
-        className="absolute bottom-6 left-6 z-20 p-2.5 bg-white/10 backdrop-blur-sm rounded-full text-white/50 hover:text-white hover:bg-white/20 transition-all"
-        data-testid="button-full-version"
-        title="النسخة الكاملة"
-      >
-        <LayoutGrid className="h-4 w-4" />
-      </button>
     </div>
   );
 }
