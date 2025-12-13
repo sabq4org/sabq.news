@@ -313,6 +313,22 @@ export default function LiteFeedPage() {
     };
   }, [currentIndex, feedItems]);
 
+  // Update browser URL with article slug when navigating
+  useEffect(() => {
+    if (feedItems.length === 0) return;
+    
+    const currentItem = feedItems[currentIndex];
+    if (!currentItem || currentItem.type !== 'article') {
+      // For ads, just show /lite
+      window.history.replaceState(null, '', '/lite');
+      return;
+    }
+    
+    const article = currentItem.data;
+    // Update URL to show current article slug
+    window.history.replaceState(null, '', `/lite/${article.slug}`);
+  }, [currentIndex, feedItems]);
+
   const articleOnlyIndex = useMemo(() => {
     if (feedItems.length === 0) return 0;
     let count = 0;
