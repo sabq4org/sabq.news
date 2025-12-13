@@ -3096,6 +3096,8 @@ export class DatabaseStorage implements IStorage {
     searchQuery?: string;
     userRole?: string;
     includeAI?: boolean; // New parameter to explicitly include AI articles
+    limit?: number;
+    orderBy?: string;
   }): Promise<ArticleWithDetails[]> {
     // Security: Check authorization BEFORE applying status filter
     const isAuthorized = filters?.userRole === 'system_admin' || 
@@ -3173,7 +3175,8 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(users, eq(articles.authorId, users.id))
       .leftJoin(reporterAlias, eq(articles.reporterId, reporterAlias.id))
       .where(conditions.length > 0 ? and(...conditions) : undefined)
-      .orderBy(desc(articles.displayOrder), desc(articles.publishedAt), desc(articles.createdAt));
+      .orderBy(desc(articles.displayOrder), desc(articles.publishedAt), desc(articles.createdAt))
+      .limit(filters?.limit || 500);
 
     return results.map((r) => ({
       ...r.article,
@@ -8888,7 +8891,8 @@ export class DatabaseStorage implements IStorage {
           )
         )
       )
-      .orderBy(desc(articles.displayOrder), desc(articles.publishedAt), desc(articles.createdAt));
+      .orderBy(desc(articles.displayOrder), desc(articles.publishedAt), desc(articles.createdAt))
+      .limit(filters?.limit || 500);
 
     if (limit) {
       query = query.limit(limit) as any;

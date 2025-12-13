@@ -9444,7 +9444,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI Articles endpoint - fetches only AI articles
   app.get("/api/ai/articles", async (req: any, res) => {
     try {
-      const { category, search, status, author } = req.query;
+      const { category, search, status, author, limit, orderBy } = req.query;
       const userRole = req.user?.role;
       
       // Get AI category IDs
@@ -9602,7 +9602,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/articles", async (req: any, res) => {
     try {
-      const { category, search, status, author } = req.query;
+      const { category, search, status, author, limit, orderBy } = req.query;
       const userRole = req.user?.role;
       const articles = await storage.getArticles({
         categoryId: category as string,
@@ -9611,6 +9611,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         authorId: author as string,
         userRole: userRole,
         includeAI: false, // Exclude AI articles from main feed
+        limit: limit ? parseInt(limit as string) : undefined,
+        orderBy: orderBy as string,
       });
       res.json(articles);
     } catch (error) {
