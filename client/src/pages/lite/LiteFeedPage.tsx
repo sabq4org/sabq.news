@@ -313,20 +313,30 @@ export default function LiteFeedPage() {
     };
   }, [currentIndex, feedItems]);
 
-  // Update browser URL with article slug when navigating
+  // Update browser URL with short link when navigating
   useEffect(() => {
     if (feedItems.length === 0) return;
     
     const currentItem = feedItems[currentIndex];
     if (!currentItem || currentItem.type !== 'article') {
-      // For ads, just show /lite
-      window.history.replaceState(null, '', '/lite');
+      // For ads, keep current URL
       return;
     }
     
     const article = currentItem.data;
-    // Update URL to show current article slug
-    window.history.replaceState(null, '', `/lite/${article.slug}`);
+    
+    // Fetch short link and update URL (same as share button)
+    fetch(`/api/shortlinks/article/${article.id}`, {
+      credentials: "include",
+    })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data?.shortCode) {
+          // Use full short link URL
+          window.history.replaceState(null, '', `https://sabq.news/s/${data.shortCode}`);
+        }
+      })
+      .catch(() => {});
   }, [currentIndex, feedItems]);
 
   const articleOnlyIndex = useMemo(() => {
