@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { SwipeCard } from "@/components/lite/SwipeCard";
 import { AdCard } from "@/components/lite/AdCard";
 import { 
@@ -9,7 +10,8 @@ import {
   RotateCcw,
   User as UserIcon,
   MousePointerClick,
-  ChevronUp
+  ChevronUp,
+  LayoutGrid
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -60,6 +62,7 @@ const FALLBACK_ADS: AdData[] = [
 ];
 
 export default function LiteFeedPage() {
+  const [, setLocation] = useLocation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -71,10 +74,24 @@ export default function LiteFeedPage() {
   const viewDebounceRef = useRef<NodeJS.Timeout | null>(null);
   const lastTapRef = useRef<number>(0);
   const hintShownCountRef = useRef<number>(0);
+  const logoLongPressRef = useRef<NodeJS.Timeout | null>(null);
   
   const PULL_TO_REFRESH_THRESHOLD = 100;
 
   const { user, isAuthenticated } = useAuth();
+
+  const handleLogoTouchStart = useCallback(() => {
+    logoLongPressRef.current = setTimeout(() => {
+      setLocation('/');
+    }, 800);
+  }, [setLocation]);
+
+  const handleLogoTouchEnd = useCallback(() => {
+    if (logoLongPressRef.current) {
+      clearTimeout(logoLongPressRef.current);
+      logoLongPressRef.current = null;
+    }
+  }, []);
 
   const { data: articles = [], isLoading, refetch } = useQuery<ArticleWithDetails[]>({
     queryKey: ["/api/articles?status=published&limit=30&orderBy=newest"],
@@ -455,8 +472,14 @@ export default function LiteFeedPage() {
         <img 
           src={sabqLogo} 
           alt="سبق" 
-          className="h-9 w-auto"
+          className="h-9 w-auto cursor-pointer select-none"
           data-testid="img-sabq-logo"
+          onTouchStart={handleLogoTouchStart}
+          onTouchEnd={handleLogoTouchEnd}
+          onMouseDown={handleLogoTouchStart}
+          onMouseUp={handleLogoTouchEnd}
+          onMouseLeave={handleLogoTouchEnd}
+          draggable={false}
         />
       </div>
 
@@ -584,6 +607,16 @@ export default function LiteFeedPage() {
           </div>
         </div>
       )}
+
+      {/* Button to go to full version */}
+      <button
+        onClick={() => setLocation('/')}
+        className="absolute bottom-6 left-6 z-20 p-2.5 bg-white/10 backdrop-blur-sm rounded-full text-white/50 hover:text-white hover:bg-white/20 transition-all"
+        data-testid="button-full-version"
+        title="النسخة الكاملة"
+      >
+        <LayoutGrid className="h-4 w-4" />
+      </button>
     </div>
   );
 }
