@@ -19230,35 +19230,67 @@ export class DatabaseStorage implements IStorage {
     if (!application) throw new Error("Application not found");
     if (application.status !== 'pending') throw new Error("Application already processed");
     
-    // Generate random password
-    const temporaryPassword = nanoid(12);
-    const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
+    // Check if user with this email already exists
+    const [existingUser] = await db.select().from(users).where(eq(users.email, application.email));
     
-    // Create user
-    const [newUser] = await db.insert(users).values({
-      id: nanoid(),
-      email: application.email,
-      firstName: application.arabicName.split(' ')[0] || application.arabicName,
-      lastName: application.arabicName.split(' ').slice(1).join(' ') || '',
-      profileImageUrl: application.profilePhotoUrl,
-      status: 'active',
-      password: hashedPassword,
-      emailVerified: true,
-      role: 'reporter',
-      jobTitle: application.jobTitle,
-      bio: application.bio,
-      city: application.city,
-      isProfileComplete: true,
-    }).returning();
+    let finalUser: User;
+    let temporaryPassword = '';
     
-    // Assign reporter role
-    const [reporterRole] = await db.select().from(roles).where(eq(roles.name, 'reporter'));
-    if (reporterRole) {
-      await db.insert(userRoles).values({
-        userId: newUser.id,
-        roleId: reporterRole.id,
-        assignedBy: reviewerId,
-      }).onConflictDoNothing();
+    if (existingUser) {
+      // User already exists - update their role to reporter and link to application
+      const [updatedUser] = await db.update(users)
+        .set({
+          role: 'reporter',
+          jobTitle: application.jobTitle || existingUser.jobTitle,
+          bio: application.bio || existingUser.bio,
+          city: application.city || existingUser.city,
+          profileImageUrl: application.profilePhotoUrl || existingUser.profileImageUrl,
+          isProfileComplete: true,
+        })
+        .where(eq(users.id, existingUser.id))
+        .returning();
+      finalUser = updatedUser;
+      
+      // Assign reporter role via RBAC
+      const [reporterRole] = await db.select().from(roles).where(eq(roles.name, 'reporter'));
+      if (reporterRole) {
+        await db.insert(userRoles).values({
+          userId: existingUser.id,
+          roleId: reporterRole.id,
+          assignedBy: reviewerId,
+        }).onConflictDoNothing();
+      }
+    } else {
+      // Create new user
+      temporaryPassword = nanoid(12);
+      const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
+      
+      const [newUser] = await db.insert(users).values({
+        id: nanoid(),
+        email: application.email,
+        firstName: application.arabicName.split(' ')[0] || application.arabicName,
+        lastName: application.arabicName.split(' ').slice(1).join(' ') || '',
+        profileImageUrl: application.profilePhotoUrl,
+        status: 'active',
+        password: hashedPassword,
+        emailVerified: true,
+        role: 'reporter',
+        jobTitle: application.jobTitle,
+        bio: application.bio,
+        city: application.city,
+        isProfileComplete: true,
+      }).returning();
+      finalUser = newUser;
+      
+      // Assign reporter role via RBAC
+      const [reporterRole] = await db.select().from(roles).where(eq(roles.name, 'reporter'));
+      if (reporterRole) {
+        await db.insert(userRoles).values({
+          userId: newUser.id,
+          roleId: reporterRole.id,
+          assignedBy: reviewerId,
+        }).onConflictDoNothing();
+      }
     }
     
     // Update application
@@ -19268,12 +19300,12 @@ export class DatabaseStorage implements IStorage {
         reviewedBy: reviewerId,
         reviewedAt: new Date(),
         reviewNotes: notes,
-        createdUserId: newUser.id,
+        createdUserId: finalUser.id,
       })
       .where(eq(correspondentApplications.id, id))
       .returning();
     
-    return { application: updatedApplication, user: newUser, temporaryPassword };
+    return { application: updatedApplication, user: finalUser, temporaryPassword };
   }
 
   async rejectCorrespondentApplication(id: string, reviewerId: string, reason: string): Promise<CorrespondentApplication> {
