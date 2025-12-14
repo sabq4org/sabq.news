@@ -1,0 +1,148 @@
+2025-12-14 20:41:47.77
+9e546815
+User
+'transfer-encoding': 'chunked',
+2025-12-14 20:41:47.77
+9e546815
+User
+statusCode: 422
+2025-12-14 20:41:47.77
+9e546815
+User
+message: 'The recipient domain gmail.com must be one of the verified domains. #MS42212',
+2025-12-14 20:41:47.77
+9e546815
+User
+'x-ratelimit-limit': '10',
+2025-12-14 20:41:47.77
+9e546815
+User
+},
+2025-12-14 20:41:47.77
+9e546815
+User
+server: 'cloudflare',
+2025-12-14 20:41:47.77
+9e546815
+User
+connection: 'keep-alive',
+2025-12-14 20:41:47.77
+9e546815
+User
+'cf-ray': '9adf7e7c6b5b10bb-ORD',
+2025-12-14 20:41:47.77
+9e546815
+User
+errors: { 'to.0.email': [Array] }
+2025-12-14 20:41:47.77
+9e546815
+User
+},
+2025-12-14 20:41:47.77
+9e546815
+User
+❌ Failed to send correspondent rejection email to: sabq4u@gmail.com Failed to send email
+2025-12-14 20:41:47.77
+9e546815
+User
+'cf-cache-status': 'DYNAMIC',
+2025-12-14 20:41:47.77
+9e546815
+User
+date: 'Sun, 14 Dec 2025 17:41:47 GMT',
+2025-12-14 20:41:47.77
+9e546815
+User
+}
+2025-12-14 20:41:47.77
+9e546815
+User
+headers: {
+2025-12-14 20:41:47.77
+9e546815
+User
+'content-type': 'application/json',
+2025-12-14 20:41:47.77
+9e546815
+User
+'strict-transport-security': 'max-age=31536000; includeSubDomains',
+2025-12-14 20:41:47.80
+9e546815
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-14 20:41:47.82
+9e546815
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-14 20:41:47.82
+9e546815
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-14 20:41:47.82
+9e546815
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-14 20:41:47.87
+9e546815
+User
+5:41:47 PM [express] POST /api/accessibility/track 200 in 93ms :: {"success":true,"eventId":"069b4f1…
+2025-12-14 20:41:48.01
+9e546815
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-14 20:41:48.01
+9e546815
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-14 20:41:48.03
+9e546815
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-14 20:41:48.06
+9e546815
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin,system_admin, user has: system_admin, admin
+2025-12-14 20:41:48.15
+9e546815
+User
+5:41:48 PM [express] GET /api/admin/correspondent-applications 200 in 299ms :: {"applications":[{"id…
+2025-12-14 20:41:48.15
+9e546815
+User
+5:41:48 PM [express] GET /api/admin/correspondent-applications 200 in 299ms :: {"applications":[{"id…
+2025-12-14 20:42:00.03
+9e546815
+User
+[NotificationWorker] Starting queue processing...
+2025-12-14 20:42:00.04
+9e546815
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-12-14 20:42:00.05
+9e546815
+User
+[AI Task Executor] Checking for pending tasks...
+2025-12-14 20:42:00.05
+9e546815
+User
+🔄 Checking for scheduled audio newsletters...
+2025-12-14 20:42:00.16
+9e546815
+User
+[NotificationWorker] Found 0 notifications to process
+2025-12-14 20:42:00.16
+9e546815
+User
+[NotificationWorker] Queue processing completed
+2025-12-14 20:42:00.16
+9e546815
+User
+Found 0 scheduled newsletters to process
+2025-12-14 20:42:00.17
+9e546815
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-12-14 20:42:00.17
+9e546815
+User
+[ScheduledPublisher] Found 0 articles ready to publish
