@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { 
   Users, 
   Clock, 
@@ -18,7 +19,9 @@ import {
   X,
   Loader2,
   RefreshCw,
-  Copy
+  Copy,
+  ChevronRight,
+  ChevronLeft
 } from "lucide-react";
 import {
   Table,
