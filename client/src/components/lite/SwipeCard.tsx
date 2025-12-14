@@ -360,7 +360,7 @@ export function SwipeCard({
             <div className="flex justify-end">
               <button
                 onClick={() => setShowDetails(true)}
-                className="bg-white hover:bg-gray-100 text-black font-medium rounded-full px-4 py-2 text-sm transition-colors"
+                className="bg-white hover:bg-gray-100 text-black font-medium rounded-full px-3 py-1.5 text-xs transition-colors"
                 data-testid="button-read-details"
               >
                 اقرأ التفاصيل
