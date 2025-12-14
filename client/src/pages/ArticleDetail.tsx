@@ -14,6 +14,7 @@ import { AiArticleStats } from "@/components/AiArticleStats";
 import { AdSlot } from "@/components/AdSlot";
 import { SocialShareBar } from "@/components/SocialShareBar";
 import { ImageWithCaption } from "@/components/ImageWithCaption";
+import { VideoPlayer } from "@/components/VideoPlayer";
 import { InfographicDetail } from "@/components/InfographicDetail";
 import { RelatedInfographics } from "@/components/RelatedInfographics";
 import { Badge } from "@/components/ui/badge";
@@ -1074,8 +1075,15 @@ export default function ArticleDetail() {
               )}
             </div>
 
-            {/* Featured Image - Clean TailAdmin Style */}
-            {article.imageUrl && (() => {
+            {/* Featured Image or Video - Clean TailAdmin Style */}
+            {(article as any).isVideoTemplate && (article as any).videoUrl ? (
+              <VideoPlayer
+                videoUrl={(article as any).videoUrl}
+                thumbnailUrl={(article as any).videoThumbnailUrl || article.imageUrl}
+                title={article.title}
+                className="rounded-lg"
+              />
+            ) : article.imageUrl && (() => {
               // Find caption data for hero image (if exists)
               const heroImageAsset = mediaAssets?.find(
                 (asset: any) => asset.displayOrder === 0

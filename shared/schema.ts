@@ -818,6 +818,11 @@ export const articles = pgTable("articles", {
   publisherApprovedAt: timestamp("publisher_approved_at"), // When admin approved it
   publisherApprovedBy: varchar("publisher_approved_by").references(() => users.id), // Admin who approved
   
+  // Video Template fields
+  isVideoTemplate: boolean("is_video_template").default(false), // Show video instead of hero image
+  videoUrl: text("video_url"), // YouTube/Dailymotion URL or direct video path
+  videoThumbnailUrl: text("video_thumbnail_url"), // Custom thumbnail for video
+  
   publishedAt: timestamp("published_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -2419,6 +2424,20 @@ export const updateArticleSchema = z.object({
     ]).optional(),
     keywords: z.array(z.string()).optional(),
   }).optional(),
+  // Video Template fields
+  isVideoTemplate: z.boolean().optional(),
+  videoUrl: z.union([
+    z.string().url("رابط الفيديو غير صحيح"),
+    z.string().startsWith("/", "رابط الفيديو غير صحيح"),
+    z.literal(""),
+    z.null()
+  ]).optional(),
+  videoThumbnailUrl: z.union([
+    z.string().url("رابط صورة الفيديو غير صحيح"),
+    z.string().startsWith("/", "رابط صورة الفيديو غير صحيح"),
+    z.literal(""),
+    z.null()
+  ]).optional(),
 });
 
 export const adminArticleFiltersSchema = z.object({

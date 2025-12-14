@@ -53,6 +53,7 @@ import {
   ImageDown,
   Download,
   ExternalLink,
+  Play,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -147,6 +148,11 @@ export default function ArticleEditor() {
   const [publishType, setPublishType] = useState<"instant" | "scheduled">("instant");
   const [scheduledAt, setScheduledAt] = useState("");
   const [hideFromHomepage, setHideFromHomepage] = useState(false);
+  
+  // Video Template fields
+  const [isVideoTemplate, setIsVideoTemplate] = useState(false);
+  const [videoUrl, setVideoUrl] = useState("");
+  const [videoThumbnailUrl, setVideoThumbnailUrl] = useState("");
   
   // SEO fields
   const [metaTitle, setMetaTitle] = useState("");
@@ -354,6 +360,10 @@ export default function ArticleEditor() {
       setPublishType((article.publishType as any) || "instant");
       setScheduledAt(article.scheduledAt ? new Date(article.scheduledAt).toISOString().slice(0, 16) : "");
       setHideFromHomepage(article.hideFromHomepage || false);
+      // Video template fields
+      setIsVideoTemplate((article as any).isVideoTemplate || false);
+      setVideoUrl((article as any).videoUrl || "");
+      setVideoThumbnailUrl((article as any).videoThumbnailUrl || "");
       // Validate SEO fields - truncate if too long (legacy data cleanup)
       const validMetaTitle = article.seo?.metaTitle 
         ? article.seo.metaTitle.substring(0, 70) 
@@ -398,6 +408,9 @@ export default function ArticleEditor() {
       publishType,
       scheduledAt,
       hideFromHomepage,
+      isVideoTemplate,
+      videoUrl,
+      videoThumbnailUrl,
       metaTitle,
       metaDescription,
       savedAt: new Date().toISOString(),
@@ -415,7 +428,7 @@ export default function ArticleEditor() {
     autoSaveKey, title, subtitle, slug, content, excerpt, categoryId, 
     reporterId, opinionAuthorId, articleType, imageUrl, thumbnailUrl, 
     imageFocalPoint, keywords, newsType, publishType, scheduledAt, 
-    hideFromHomepage, metaTitle, metaDescription
+    hideFromHomepage, isVideoTemplate, videoUrl, videoThumbnailUrl, metaTitle, metaDescription
   ]);
 
   // Function to clear draft from localStorage
@@ -448,6 +461,9 @@ export default function ArticleEditor() {
     if (draft.publishType) setPublishType(draft.publishType);
     if (draft.scheduledAt) setScheduledAt(draft.scheduledAt);
     if (draft.hideFromHomepage !== undefined) setHideFromHomepage(draft.hideFromHomepage);
+    if (draft.isVideoTemplate !== undefined) setIsVideoTemplate(draft.isVideoTemplate);
+    if (draft.videoUrl) setVideoUrl(draft.videoUrl);
+    if (draft.videoThumbnailUrl) setVideoThumbnailUrl(draft.videoThumbnailUrl);
     if (draft.metaTitle) setMetaTitle(draft.metaTitle);
     if (draft.metaDescription) setMetaDescription(draft.metaDescription);
     
@@ -754,6 +770,9 @@ export default function ArticleEditor() {
         publishType,
         scheduledAt: publishType === "scheduled" && scheduledAt ? new Date(scheduledAt).toISOString() : null,
         hideFromHomepage,
+        isVideoTemplate,
+        videoUrl: videoUrl || null,
+        videoThumbnailUrl: videoThumbnailUrl || null,
         status: publishNow 
           ? (publishType === "scheduled" ? "scheduled" : "published")
           : "draft",
@@ -2531,6 +2550,67 @@ const generateSlug = (text: string) => {
                 </CardContent>
               </Card>
             )}
+
+            {/* Video Template */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Play className="h-4 w-4" />
+                  قالب فيديو
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center space-x-2 space-x-reverse">
+                  <Checkbox 
+                    id="isVideoTemplate"
+                    checked={isVideoTemplate}
+                    onCheckedChange={(checked) => setIsVideoTemplate(checked as boolean)}
+                    data-testid="checkbox-video-template"
+                  />
+                  <Label htmlFor="isVideoTemplate" className="flex items-center gap-2 cursor-pointer text-sm">
+                    <div>
+                      <div className="font-medium">تفعيل قالب الفيديو</div>
+                      <div className="text-xs text-muted-foreground">
+                        عرض فيديو بدلاً من الصورة الرئيسية
+                      </div>
+                    </div>
+                  </Label>
+                </div>
+                
+                {isVideoTemplate && (
+                  <div className="space-y-3 pt-3 border-t">
+                    <div className="space-y-2">
+                      <Label htmlFor="videoUrl" className="text-sm">رابط الفيديو</Label>
+                      <Input
+                        id="videoUrl"
+                        value={videoUrl}
+                        onChange={(e) => setVideoUrl(e.target.value)}
+                        placeholder="رابط YouTube أو Dailymotion أو رابط مباشر للفيديو"
+                        className="text-sm"
+                        dir="ltr"
+                        data-testid="input-video-url"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        يدعم: YouTube, Dailymotion, أو رابط مباشر (mp4)
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="videoThumbnailUrl" className="text-sm">صورة مصغرة للفيديو (اختياري)</Label>
+                      <Input
+                        id="videoThumbnailUrl"
+                        value={videoThumbnailUrl}
+                        onChange={(e) => setVideoThumbnailUrl(e.target.value)}
+                        placeholder="رابط الصورة المصغرة (سيتم استخدام صورة المقال إذا تركت فارغة)"
+                        className="text-sm"
+                        dir="ltr"
+                        data-testid="input-video-thumbnail"
+                      />
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Category */}
             <Card>
