@@ -9621,3 +9621,41 @@ export type CorrespondentApplicationWithDetails = CorrespondentApplication & {
     email: string;
   } | null;
 };
+
+// ============================================
+// نظام إشعارات البريد الإلكتروني للموظفين - Employee Email Notification System
+// ============================================
+
+export const employeeEmailTemplates = pgTable("employee_email_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  type: text("type").notNull().unique(), // 'correspondent_approved', 'correspondent_rejected', 'article_published', 'article_rejected', 'motivational'
+  nameAr: text("name_ar").notNull(), // Arabic name for the template
+  subject: text("subject").notNull(), // Email subject
+  bodyHtml: text("body_html").notNull(), // HTML email body with placeholders
+  bodyText: text("body_text").notNull(), // Plain text version
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_employee_email_templates_type").on(table.type),
+  index("idx_employee_email_templates_active").on(table.isActive),
+]);
+
+// Insert schema for Employee Email Templates
+export const insertEmployeeEmailTemplateSchema = createInsertSchema(employeeEmailTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const updateEmployeeEmailTemplateSchema = createInsertSchema(employeeEmailTemplates).omit({
+  id: true,
+  type: true,
+  createdAt: true,
+  updatedAt: true,
+}).partial();
+
+// Select types for Employee Email Templates
+export type EmployeeEmailTemplate = typeof employeeEmailTemplates.$inferSelect;
+export type InsertEmployeeEmailTemplate = z.infer<typeof insertEmployeeEmailTemplateSchema>;
+export type UpdateEmployeeEmailTemplate = z.infer<typeof updateEmployeeEmailTemplateSchema>;

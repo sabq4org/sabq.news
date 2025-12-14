@@ -32,6 +32,7 @@ import { findSimilarArticles, getPersonalizedRecommendations } from "./similarit
 import { recommendationService } from "./services/recommendationService";
 import { sendSMSOTP, verifySMSOTP } from "./twilio";
 import { sendVerificationEmail, verifyEmailToken, resendVerificationEmail } from "./services/email";
+import { sendCorrespondentApprovalEmail, sendCorrespondentRejectionEmail } from "./services/employeeNotifications";
 import { analyzeSentiment, detectLanguage } from './sentiment-analyzer';
 import { classifyArticle } from './ai-classifier';
 import { generateSeoMetadata } from './seo-generator';
@@ -32396,6 +32397,14 @@ Allow: /
         newValue: { status: 'approved', createdUserId: result.user.id },
       });
 
+      // Send approval email notification (non-blocking)
+      sendCorrespondentApprovalEmail(
+        result.user.email,
+        result.application.fullNameAr || result.application.fullName || '',
+        result.application.fullName || '',
+        result.temporaryPassword
+      ).catch(err => console.error('Failed to send correspondent approval email:', err));
+
       res.json({
         message: "تمت الموافقة على الطلب وإنشاء حساب المراسل",
         application: result.application,
@@ -32438,6 +32447,13 @@ Allow: /
         entityId: id,
         newValue: { status: 'rejected', reason },
       });
+
+      // Send rejection email notification (non-blocking)
+      sendCorrespondentRejectionEmail(
+        application.email,
+        application.fullNameAr || application.fullName || '',
+        reason
+      ).catch(err => console.error('Failed to send correspondent rejection email:', err));
 
       res.json({
         message: "تم رفض الطلب",
