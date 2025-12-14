@@ -32400,8 +32400,8 @@ Allow: /
       // Send approval email notification (non-blocking)
       sendCorrespondentApprovalEmail(
         result.user.email,
-        result.application.fullNameAr || result.application.fullName || '',
-        result.application.fullName || '',
+        result.application.arabicName || '',
+        result.application.englishName || '',
         result.temporaryPassword
       ).catch(err => console.error('Failed to send correspondent approval email:', err));
 
@@ -32451,7 +32451,7 @@ Allow: /
       // Send rejection email notification (non-blocking)
       sendCorrespondentRejectionEmail(
         application.email,
-        application.fullNameAr || application.fullName || '',
+        application.arabicName || '',
         reason
       ).catch(err => console.error('Failed to send correspondent rejection email:', err));
 
