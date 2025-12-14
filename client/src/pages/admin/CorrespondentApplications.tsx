@@ -159,7 +159,11 @@ export default function CorrespondentApplications() {
     });
   };
 
+  const limit = 10;
+  const totalPages = Math.ceil((data?.total || 0) / limit);
+
   return (
+    <DashboardLayout>
     <div className="p-6 space-y-6" dir="rtl">
       <div className="flex items-center justify-between">
         <div>
@@ -338,6 +342,37 @@ export default function CorrespondentApplications() {
                 ))}
               </TableBody>
             </Table>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4 pt-4 border-t">
+              <div className="text-sm text-muted-foreground">
+                الصفحة {page} من {totalPages} (إجمالي {data?.total || 0} طلب)
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page <= 1}
+                  data-testid="button-prev-page"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                  السابق
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                  data-testid="button-next-page"
+                >
+                  التالي
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -529,5 +564,6 @@ export default function CorrespondentApplications() {
         </DialogContent>
       </Dialog>
     </div>
+    </DashboardLayout>
   );
 }
