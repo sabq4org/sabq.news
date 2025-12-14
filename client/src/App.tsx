@@ -177,6 +177,8 @@ import ChatbotPage from "@/pages/ChatbotPage";
 import AccessibilityInsights from "@/pages/admin/AccessibilityInsights";
 import PublisherDashboard from "@/pages/publisher/PublisherDashboard";
 import PublisherArticles from "@/pages/publisher/PublisherArticles";
+import CorrespondentRegister from "@/pages/correspondent/CorrespondentRegister";
+import CorrespondentApplications from "@/pages/admin/CorrespondentApplications";
 import PublisherArticleEditor from "@/pages/publisher/PublisherArticleEditor";
 import PublisherCredits from "@/pages/publisher/PublisherCredits";
 import AdminPublishers from "@/pages/admin/publishers/AdminPublishers";
@@ -454,6 +456,10 @@ function Router() {
       <Route path="/dashboard/admin/publishers/:id" component={AdminPublisherDetails} />
       <Route path="/dashboard/admin/publisher-articles" component={AdminPublisherArticles} />
       <Route path="/dashboard/admin/publisher-analytics" component={AdminPublisherAnalytics} />
+      
+      {/* Correspondent Registration Routes */}
+      <Route path="/correspondent/register" component={CorrespondentRegister} />
+      <Route path="/dashboard/correspondents" component={CorrespondentApplications} />
       
       {/* iFox Admin Dashboard Routes */}
       <Route path="/dashboard/admin/ifox" component={IFoxDashboard} />

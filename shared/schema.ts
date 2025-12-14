@@ -9546,3 +9546,78 @@ export type InsertQuizQuestion = z.infer<typeof insertQuizQuestionSchema>;
 
 export type QuizResponse = typeof quizResponses.$inferSelect;
 export type InsertQuizResponse = z.infer<typeof insertQuizResponseSchema>;
+
+// ============================================
+// CORRESPONDENT REGISTRATION SYSTEM - نظام تسجيل المراسلين
+// ============================================
+
+// جدول طلبات تسجيل المراسلين
+export const correspondentApplications = pgTable("correspondent_applications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // معلومات المراسل
+  arabicName: text("arabic_name").notNull(), // الاسم بالعربية
+  englishName: text("english_name").notNull(), // الاسم بالإنجليزية
+  email: text("email").notNull(), // البريد الإلكتروني
+  phone: text("phone").notNull(), // رقم الهاتف
+  jobTitle: text("job_title").default("مراسل صحفي").notNull(), // المسمى الوظيفي
+  bio: text("bio"), // السيرة الذاتية (اختياري)
+  city: text("city").notNull(), // المدينة
+  profilePhotoUrl: text("profile_photo_url").notNull(), // رابط الصورة الشخصية
+  
+  // حالة الطلب
+  status: text("status").default("pending").notNull(), // pending, approved, rejected
+  
+  // معلومات المراجعة
+  reviewedBy: varchar("reviewed_by").references(() => users.id), // من راجع الطلب
+  reviewedAt: timestamp("reviewed_at"), // تاريخ المراجعة
+  reviewNotes: text("review_notes"), // ملاحظات المراجعة (سبب الرفض مثلاً)
+  
+  // المستخدم الناتج عن الموافقة
+  createdUserId: varchar("created_user_id").references(() => users.id), // المستخدم المُنشأ بعد الموافقة
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_correspondent_applications_status").on(table.status),
+  index("idx_correspondent_applications_email").on(table.email),
+  index("idx_correspondent_applications_created").on(table.createdAt),
+]);
+
+// Relations for Correspondent Applications
+export const correspondentApplicationsRelations = relations(correspondentApplications, ({ one }) => ({
+  reviewer: one(users, {
+    fields: [correspondentApplications.reviewedBy],
+    references: [users.id],
+    relationName: "reviewer",
+  }),
+  createdUser: one(users, {
+    fields: [correspondentApplications.createdUserId],
+    references: [users.id],
+    relationName: "createdUser",
+  }),
+}));
+
+// Insert schema for Correspondent Applications
+export const insertCorrespondentApplicationSchema = createInsertSchema(correspondentApplications).omit({
+  id: true,
+  status: true,
+  reviewedBy: true,
+  reviewedAt: true,
+  reviewNotes: true,
+  createdUserId: true,
+  createdAt: true,
+});
+
+// Select types for Correspondent Applications
+export type CorrespondentApplication = typeof correspondentApplications.$inferSelect;
+export type InsertCorrespondentApplication = z.infer<typeof insertCorrespondentApplicationSchema>;
+
+// Type for application with reviewer details
+export type CorrespondentApplicationWithDetails = CorrespondentApplication & {
+  reviewer?: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+  } | null;
+};

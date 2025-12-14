@@ -32270,6 +32270,188 @@ Allow: /
       }
     }
   );
+  // ============================================
+  // CORRESPONDENT REGISTRATION ROUTES - مسارات تسجيل المراسلين
+  // ============================================
+
+  // POST /api/correspondent-applications - Public registration with photo upload
+  app.post("/api/correspondent-applications", upload.single('profilePhoto'), async (req: any, res) => {
+    try {
+      const { arabicName, englishName, email, phone, jobTitle, bio, city } = req.body;
+
+      // Validate required fields
+      if (!arabicName || !englishName || !email || !phone || !city) {
+        return res.status(400).json({ message: "جميع الحقول المطلوبة يجب ملؤها" });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ message: "الصورة الشخصية مطلوبة" });
+      }
+
+      // Upload photo to Object Storage
+      const objectStorageService = new ObjectStorageService();
+      const privateObjectDir = process.env.PRIVATE_OBJECT_DIR || '';
+      
+      if (!privateObjectDir) {
+        return res.status(500).json({ message: "Object Storage غير مُعد" });
+      }
+
+      const timestamp = Date.now();
+      const sanitizedFilename = req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const filename = `correspondent-applications/${timestamp}-${sanitizedFilename}`;
+      const fullPath = `${privateObjectDir}/${filename}`;
+      
+      const pathParts = fullPath.split('/').filter(Boolean);
+      const bucketName = process.env.REPLIT_OBJECT_BUCKET || 'replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138';
+      const objectName = pathParts.join('/');
+
+      const bucket = objectStorageClient.bucket(bucketName);
+      const file = bucket.file(objectName);
+
+      await file.save(req.file.buffer, {
+        metadata: {
+          contentType: req.file.mimetype,
+        },
+      });
+
+      await setObjectAclPolicy(file, {
+        owner: 'system',
+        visibility: "public",
+      });
+
+      const profilePhotoUrl = `/objects/${filename}`;
+
+      // Create application
+      const application = await storage.createCorrespondentApplication({
+        arabicName,
+        englishName,
+        email,
+        phone,
+        jobTitle: jobTitle || "مراسل صحفي",
+        bio: bio || null,
+        city,
+        profilePhotoUrl,
+      });
+
+      console.log(`✅ Correspondent application created: ${application.id}`);
+      res.status(201).json({ 
+        message: "تم تقديم طلبك بنجاح. سيتم مراجعته والرد عليك قريباً.", 
+        applicationId: application.id 
+      });
+    } catch (error: any) {
+      console.error("Error creating correspondent application:", error);
+      res.status(500).json({ message: "حدث خطأ في تقديم الطلب: " + error.message });
+    }
+  });
+
+  // GET /api/admin/correspondent-applications - List all applications (admin only)
+  app.get("/api/admin/correspondent-applications", requireAuth, requireRole('admin', 'system_admin'), async (req: any, res) => {
+    try {
+      const { status, page = '1', limit = '10' } = req.query;
+      
+      const result = await storage.getCorrespondentApplications(
+        status as string,
+        parseInt(page as string),
+        parseInt(limit as string)
+      );
+
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error fetching correspondent applications:", error);
+      res.status(500).json({ message: "فشل في جلب الطلبات" });
+    }
+  });
+
+  // GET /api/admin/correspondent-applications/:id - Get application by ID (admin only)
+  app.get("/api/admin/correspondent-applications/:id", requireAuth, requireRole('admin', 'system_admin'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      
+      const application = await storage.getCorrespondentApplicationById(id);
+      
+      if (!application) {
+        return res.status(404).json({ message: "الطلب غير موجود" });
+      }
+
+      res.json(application);
+    } catch (error: any) {
+      console.error("Error fetching correspondent application:", error);
+      res.status(500).json({ message: "فشل في جلب تفاصيل الطلب" });
+    }
+  });
+
+  // POST /api/admin/correspondent-applications/:id/approve - Approve application (admin only)
+  app.post("/api/admin/correspondent-applications/:id/approve", requireAuth, requireRole('admin', 'system_admin'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { notes } = req.body;
+      
+      const result = await storage.approveCorrespondentApplication(id, req.user.id, notes);
+
+      await logActivity({
+        userId: req.user.id,
+        action: 'approve',
+        entityType: 'correspondent_application',
+        entityId: id,
+        newValue: { status: 'approved', createdUserId: result.user.id },
+      });
+
+      res.json({
+        message: "تمت الموافقة على الطلب وإنشاء حساب المراسل",
+        application: result.application,
+        user: {
+          id: result.user.id,
+          email: result.user.email,
+          firstName: result.user.firstName,
+          lastName: result.user.lastName,
+        },
+        temporaryPassword: result.temporaryPassword,
+      });
+    } catch (error: any) {
+      console.error("Error approving correspondent application:", error);
+      if (error.message === "Application not found") {
+        return res.status(404).json({ message: "الطلب غير موجود" });
+      }
+      if (error.message === "Application already processed") {
+        return res.status(400).json({ message: "تمت معالجة هذا الطلب مسبقاً" });
+      }
+      res.status(500).json({ message: "فشل في الموافقة على الطلب: " + error.message });
+    }
+  });
+
+  // POST /api/admin/correspondent-applications/:id/reject - Reject application (admin only)
+  app.post("/api/admin/correspondent-applications/:id/reject", requireAuth, requireRole('admin', 'system_admin'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { reason } = req.body;
+
+      if (!reason) {
+        return res.status(400).json({ message: "سبب الرفض مطلوب" });
+      }
+      
+      const application = await storage.rejectCorrespondentApplication(id, req.user.id, reason);
+
+      await logActivity({
+        userId: req.user.id,
+        action: 'reject',
+        entityType: 'correspondent_application',
+        entityId: id,
+        newValue: { status: 'rejected', reason },
+      });
+
+      res.json({
+        message: "تم رفض الطلب",
+        application,
+      });
+    } catch (error: any) {
+      console.error("Error rejecting correspondent application:", error);
+      if (error.message === "Application not found") {
+        return res.status(404).json({ message: "الطلب غير موجود" });
+      }
+      res.status(500).json({ message: "فشل في رفض الطلب: " + error.message });
+    }
+  });
+
 
   const httpServer = createServer(app);
   return httpServer;
