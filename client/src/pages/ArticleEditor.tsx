@@ -2660,17 +2660,115 @@ const generateSlug = (text: string) => {
                       </div>
                     )}
                     
-                    <div className="space-y-2">
-                      <Label htmlFor="videoThumbnailUrl" className="text-sm">صورة مصغرة للفيديو (اختياري)</Label>
-                      <Input
-                        id="videoThumbnailUrl"
-                        value={videoThumbnailUrl}
-                        onChange={(e) => setVideoThumbnailUrl(e.target.value)}
-                        placeholder="رابط الصورة المصغرة (سيتم استخدام صورة المقال إذا تركت فارغة)"
-                        className="text-sm"
-                        dir="ltr"
-                        data-testid="input-video-thumbnail"
-                      />
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">صورة مصغرة للفيديو</Label>
+                      <RadioGroup 
+                        value={
+                          videoThumbnailUrl === "" ? "auto" : 
+                          videoThumbnailUrl === imageUrl && imageUrl ? "article" : 
+                          "custom"
+                        }
+                        onValueChange={(value) => {
+                          if (value === "auto") {
+                            setVideoThumbnailUrl("");
+                          } else if (value === "article" && imageUrl) {
+                            setVideoThumbnailUrl(imageUrl);
+                          }
+                        }}
+                        className="flex flex-wrap gap-3"
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <RadioGroupItem value="auto" id="thumb-auto" data-testid="radio-thumb-auto" />
+                          <Label htmlFor="thumb-auto" className="text-xs cursor-pointer">
+                            تلقائي (YouTube/Dailymotion)
+                          </Label>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <RadioGroupItem value="article" id="thumb-article" disabled={!imageUrl} data-testid="radio-thumb-article" />
+                          <Label htmlFor="thumb-article" className={`text-xs cursor-pointer ${!imageUrl ? 'text-muted-foreground' : ''}`}>
+                            صورة المقال
+                          </Label>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <RadioGroupItem value="custom" id="thumb-custom" data-testid="radio-thumb-custom" />
+                          <Label htmlFor="thumb-custom" className="text-xs cursor-pointer">مخصص</Label>
+                        </div>
+                      </RadioGroup>
+                      
+                      {(videoThumbnailUrl !== "" && videoThumbnailUrl !== imageUrl) && (
+                        <div className="space-y-2 pt-2 border-t">
+                          <div className="flex gap-2">
+                            <Input
+                              id="videoThumbnailUrl"
+                              value={videoThumbnailUrl}
+                              onChange={(e) => setVideoThumbnailUrl(e.target.value)}
+                              placeholder="رابط الصورة المصغرة"
+                              className="text-sm flex-1"
+                              dir="ltr"
+                              data-testid="input-video-thumbnail"
+                            />
+                            <div className="relative">
+                              <Input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp,image/gif"
+                                className="absolute inset-0 opacity-0 cursor-pointer"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  if (file.size > 5 * 1024 * 1024) {
+                                    toast({ title: "خطأ", description: "حجم الصورة كبير جداً. الحد الأقصى 5MB", variant: "destructive" });
+                                    return;
+                                  }
+                                  try {
+                                    const formData = new FormData();
+                                    formData.append('file', file);
+                                    const response = await fetch('/api/upload/image', { method: 'POST', body: formData, credentials: 'include' });
+                                    if (!response.ok) {
+                                      const error = await response.json();
+                                      throw new Error(error.message || 'فشل رفع الصورة');
+                                    }
+                                    const data = await response.json();
+                                    setVideoThumbnailUrl(data.url);
+                                    toast({ title: "نجاح", description: "تم رفع الصورة المصغرة بنجاح" });
+                                  } catch (error: any) {
+                                    toast({ title: "خطأ", description: error.message || "فشل رفع الصورة", variant: "destructive" });
+                                  }
+                                }}
+                                data-testid="input-video-thumbnail-file"
+                              />
+                              <Button type="button" variant="outline" size="sm" className="gap-1">
+                                <Upload className="h-3.5 w-3.5" />
+                                رفع
+                              </Button>
+                            </div>
+                          </div>
+                          {videoThumbnailUrl && (
+                            <div className="relative rounded-md overflow-hidden border bg-muted aspect-video max-w-[200px]">
+                              <img 
+                                src={videoThumbnailUrl} 
+                                alt="معاينة الصورة المصغرة" 
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                }}
+                              />
+                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <div className="w-8 h-8 rounded-full bg-primary/80 flex items-center justify-center">
+                                  <Play className="h-4 w-4 text-primary-foreground fill-current mr-[-1px]" />
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      <p className="text-xs text-muted-foreground">
+                        {videoThumbnailUrl === "" 
+                          ? "سيتم جلب الصورة تلقائياً من YouTube/Dailymotion، أو استخدام صورة المقال"
+                          : videoThumbnailUrl === imageUrl 
+                            ? "سيتم استخدام صورة المقال الرئيسية كصورة مصغرة"
+                            : "صورة مخصصة للفيديو"}
+                      </p>
                     </div>
                   </div>
                 )}
