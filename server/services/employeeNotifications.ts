@@ -239,39 +239,50 @@ function getDefaultTemplate(type: TemplateType): { subject: string; bodyHtml: st
           ${baseStyles}
         </head>
         <body>
-          <div class="container">
-            <div class="header">
-              <h1>${LOGO_PLACEHOLDER}</h1>
-            </div>
-            <div class="content">
-              <h2 class="success">🎉 تهانينا {{arabicName}}!</h2>
-              <p>يسعدنا إبلاغك بأنه قد تمت الموافقة على طلبك للانضمام إلى فريق المراسلين في صحيفة سبق الإلكترونية.</p>
-              
-              <div class="highlight-box">
-                <p><strong>مرحباً بك في عائلة سبق!</strong></p>
-                <p>نحن سعداء بانضمامك إلينا ونتطلع لتعاون مثمر معك.</p>
+          <div class="wrapper">
+            <div class="container">
+              <div class="header">
+                <img src="${LOGO_URL}" alt="سبق" onerror="this.style.display='none'" />
+                <p class="header-text">صحيفة سبق الإلكترونية</p>
               </div>
               
-              <p>يمكنك الآن تسجيل الدخول باستخدام بيانات الحساب التالية:</p>
-              
-              <div class="credentials">
-                <p><strong>البريد الإلكتروني:</strong> {{email}}</p>
-                <p><strong>كلمة المرور المؤقتة:</strong> {{temporaryPassword}}</p>
+              <div class="content">
+                <h2 class="greeting">مرحباً {{arabicName}}!</h2>
+                
+                <div style="text-align: center; margin-bottom: 24px;">
+                  <span class="badge-success">تمت الموافقة على طلبك</span>
+                </div>
+                
+                <p>يسعدنا إبلاغك بأنه قد تمت الموافقة على طلبك للانضمام إلى فريق المراسلين في صحيفة سبق الإلكترونية.</p>
+                
+                <div class="info-card">
+                  <p class="info-card-label">مرحباً بك في عائلة سبق!</p>
+                  <p class="info-card-content">نحن سعداء بانضمامك إلينا ونتطلع لتعاون مثمر معك.</p>
+                </div>
+                
+                <p>يمكنك الآن تسجيل الدخول باستخدام البيانات التالية:</p>
+                
+                <div class="credentials-box">
+                  <p><strong>البريد الإلكتروني:</strong> {{email}}</p>
+                  <p><strong>كلمة المرور المؤقتة:</strong> {{temporaryPassword}}</p>
+                </div>
+                
+                <p class="text-muted">يرجى تغيير كلمة المرور فور تسجيل الدخول الأول للحفاظ على أمان حسابك.</p>
+                
+                <p style="text-align: center;">
+                  <a href="{{loginUrl}}" class="btn">تسجيل الدخول الآن</a>
+                </p>
+                
+                <div class="signature">
+                  <p>مع أطيب التحيات،</p>
+                  <p><strong>فريق سبق</strong></p>
+                </div>
               </div>
               
-              <p style="color: #dc3545; font-size: 14px;">⚠️ يرجى تغيير كلمة المرور فور تسجيل الدخول الأول للحفاظ على أمان حسابك.</p>
-              
-              <p style="text-align: center;">
-                <a href="{{loginUrl}}" class="button">تسجيل الدخول الآن</a>
-              </p>
-              
-              <p>إذا واجهت أي مشكلة، لا تتردد في التواصل معنا.</p>
-              
-              <p>مع أطيب التحيات،<br><strong>فريق سبق</strong></p>
-            </div>
-            <div class="footer">
-              <p>© ${new Date().getFullYear()} صحيفة سبق الإلكترونية - جميع الحقوق محفوظة</p>
-              <p style="font-size: 12px; margin-top: 8px;">هذه الرسالة موجهة للمستلم المحدد فقط</p>
+              <div class="footer">
+                <p>© ${new Date().getFullYear()} صحيفة سبق الإلكترونية</p>
+                <p>جميع الحقوق محفوظة</p>
+              </div>
             </div>
           </div>
         </body>
@@ -371,29 +382,43 @@ function getDefaultTemplate(type: TemplateType): { subject: string; bodyHtml: st
           ${baseStyles}
         </head>
         <body>
-          <div class="container">
-            <div class="header">
-              <h1>${LOGO_PLACEHOLDER}</h1>
-            </div>
-            <div class="content">
-              <h2 class="success">✨ أخبار رائعة {{authorName}}!</h2>
-              <p>يسعدنا إبلاغك بأن مقالتك قد تم نشرها بنجاح!</p>
-              
-              <div class="highlight-box">
-                <p><strong>عنوان المقالة:</strong></p>
-                <p style="font-size: 18px; color: #333;">{{articleTitle}}</p>
+          <div class="wrapper">
+            <div class="container">
+              <div class="header">
+                <img src="${LOGO_URL}" alt="سبق" onerror="this.style.display='none'" />
+                <p class="header-text">صحيفة سبق الإلكترونية</p>
               </div>
               
-              <p style="text-align: center;">
-                <a href="{{articleUrl}}" class="button">عرض المقالة</a>
-              </p>
+              <div class="content">
+                <h2 class="greeting">أخبار رائعة {{authorName}}!</h2>
+                
+                <div style="text-align: center; margin-bottom: 24px;">
+                  <span class="badge-success">تم نشر مقالتك بنجاح</span>
+                </div>
+                
+                <p>يسعدنا إبلاغك بأن مقالتك قد تم نشرها بنجاح!</p>
+                
+                <div class="info-card">
+                  <p class="info-card-label">عنوان المقالة</p>
+                  <p class="info-card-content">{{articleTitle}}</p>
+                </div>
+                
+                <p style="text-align: center;">
+                  <a href="{{articleUrl}}" class="btn">عرض المقالة</a>
+                </p>
+                
+                <p>شكراً لمساهمتك القيمة في إثراء محتوى سبق.</p>
+                
+                <div class="signature">
+                  <p>مع أطيب التحيات،</p>
+                  <p><strong>فريق سبق</strong></p>
+                </div>
+              </div>
               
-              <p>شكراً لمساهمتك القيمة في إثراء محتوى سبق.</p>
-              
-              <p>مع أطيب التحيات،<br><strong>فريق سبق</strong></p>
-            </div>
-            <div class="footer">
-              <p>© ${new Date().getFullYear()} صحيفة سبق الإلكترونية - جميع الحقوق محفوظة</p>
+              <div class="footer">
+                <p>© ${new Date().getFullYear()} صحيفة سبق الإلكترونية</p>
+                <p>جميع الحقوق محفوظة</p>
+              </div>
             </div>
           </div>
         </body>
@@ -425,32 +450,42 @@ function getDefaultTemplate(type: TemplateType): { subject: string; bodyHtml: st
           ${baseStyles}
         </head>
         <body>
-          <div class="container">
-            <div class="header">
-              <h1>${LOGO_PLACEHOLDER}</h1>
-            </div>
-            <div class="content">
-              <h2>{{authorName}} العزيز/ة</h2>
-              <p>شكراً لتقديم مقالتك إلى صحيفة سبق.</p>
-              
-              <div class="highlight-box">
-                <p><strong>عنوان المقالة:</strong></p>
-                <p>{{articleTitle}}</p>
+          <div class="wrapper">
+            <div class="container">
+              <div class="header">
+                <img src="${LOGO_URL}" alt="سبق" onerror="this.style.display='none'" />
+                <p class="header-text">صحيفة سبق الإلكترونية</p>
               </div>
               
-              <p>بعد مراجعة المقالة من قبل فريق التحرير، نأسف لإبلاغك بأن المقالة لم تستوف معايير النشر المطلوبة.</p>
-              
-              <div class="credentials">
-                <p><strong>ملاحظات فريق التحرير:</strong></p>
-                <p>{{reason}}</p>
+              <div class="content">
+                <h2 class="greeting">{{authorName}} العزيز/ة،</h2>
+                
+                <p>شكراً لتقديم مقالتك إلى صحيفة سبق.</p>
+                
+                <div class="info-card">
+                  <p class="info-card-label">عنوان المقالة</p>
+                  <p class="info-card-content">{{articleTitle}}</p>
+                </div>
+                
+                <p>بعد مراجعة المقالة من قبل فريق التحرير، نأسف لإبلاغك بأن المقالة لم تستوف معايير النشر المطلوبة.</p>
+                
+                <div class="credentials-box">
+                  <p><strong>ملاحظات فريق التحرير:</strong></p>
+                  <p>{{reason}}</p>
+                </div>
+                
+                <p>نشجعك على مراجعة الملاحظات وإعادة تقديم المقالة بعد إجراء التعديلات اللازمة.</p>
+                
+                <div class="signature">
+                  <p>مع أطيب التحيات،</p>
+                  <p><strong>فريق التحرير - سبق</strong></p>
+                </div>
               </div>
               
-              <p>نشجعك على مراجعة الملاحظات وإعادة تقديم المقالة بعد إجراء التعديلات اللازمة.</p>
-              
-              <p>مع أطيب التحيات،<br><strong>فريق سبق</strong></p>
-            </div>
-            <div class="footer">
-              <p>© ${new Date().getFullYear()} صحيفة سبق الإلكترونية - جميع الحقوق محفوظة</p>
+              <div class="footer">
+                <p>© ${new Date().getFullYear()} صحيفة سبق الإلكترونية</p>
+                <p>جميع الحقوق محفوظة</p>
+              </div>
             </div>
           </div>
         </body>
@@ -485,23 +520,33 @@ function getDefaultTemplate(type: TemplateType): { subject: string; bodyHtml: st
           ${baseStyles}
         </head>
         <body>
-          <div class="container">
-            <div class="header">
-              <h1>${LOGO_PLACEHOLDER}</h1>
-            </div>
-            <div class="content">
-              <h2>مرحباً {{name}} 💪</h2>
-              
-              <div class="highlight-box">
-                <p style="font-size: 18px; line-height: 2;">{{message}}</p>
+          <div class="wrapper">
+            <div class="container">
+              <div class="header">
+                <img src="${LOGO_URL}" alt="سبق" onerror="this.style.display='none'" />
+                <p class="header-text">صحيفة سبق الإلكترونية</p>
               </div>
               
-              <p>نقدر جهودك ومساهماتك في تقديم أفضل المحتوى لقرائنا.</p>
+              <div class="content">
+                <h2 class="greeting">مرحباً {{name}}!</h2>
+                
+                <div class="info-card">
+                  <p class="info-card-label">رسالة خاصة لك</p>
+                  <p class="info-card-content">{{message}}</p>
+                </div>
+                
+                <p>نقدر جهودك ومساهماتك في تقديم أفضل المحتوى لقرائنا.</p>
+                
+                <div class="signature">
+                  <p>مع أطيب التحيات،</p>
+                  <p><strong>فريق سبق</strong></p>
+                </div>
+              </div>
               
-              <p>مع أطيب التحيات،<br><strong>فريق سبق</strong></p>
-            </div>
-            <div class="footer">
-              <p>© ${new Date().getFullYear()} صحيفة سبق الإلكترونية - جميع الحقوق محفوظة</p>
+              <div class="footer">
+                <p>© ${new Date().getFullYear()} صحيفة سبق الإلكترونية</p>
+                <p>جميع الحقوق محفوظة</p>
+              </div>
             </div>
           </div>
         </body>
