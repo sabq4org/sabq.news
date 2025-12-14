@@ -405,6 +405,15 @@ export const navConfig: NavItem[] = [
         roles: ["admin"],
         permissions: ["permissions.view", "permissions.manage"],
       },
+      {
+        id: "correspondents",
+        labelKey: "nav.correspondents",
+        labelAr: "طلبات المراسلين",
+        path: "/dashboard/correspondents",
+        icon: User,
+        roles: ["admin"],
+        permissions: ["users.view", "users.manage"],
+      },
     ],
   },
 
