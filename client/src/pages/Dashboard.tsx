@@ -251,7 +251,7 @@ function Dashboard() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Welcome Section with Greeting */}
-        <Card className="bg-gradient-to-r from-indigo-50 via-blue-50 to-indigo-50 dark:from-indigo-950/20 dark:via-blue-950/20 dark:to-indigo-950/20 border-primary/20 shadow-sm shadow-indigo-50 dark:shadow-none" data-testid="card-welcome">
+        <Card className="bg-gradient-to-r from-blue-50 via-slate-50 to-blue-50 dark:from-blue-950/20 dark:via-slate-950/20 dark:to-blue-950/20 border-primary/20" data-testid="card-welcome">
           <CardContent className="pt-6">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div className="flex-1 space-y-2">
@@ -303,7 +303,7 @@ function Dashboard() {
         {/* Main Stats Cards - 2 columns on mobile for better space utilization */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6">
           {/* Articles Stats */}
-          <Card className="shadow-sm shadow-indigo-50 dark:shadow-none hover-elevate transition-all" data-testid="card-articles-stats">
+          <Card className="shadow-sm hover-elevate transition-all border-t-2 border-primary" data-testid="card-articles-stats">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">المقالات</CardTitle>
               <div className="p-2 rounded-md bg-accent-blue/30">
@@ -327,7 +327,7 @@ function Dashboard() {
           </Card>
 
           {/* Users Stats */}
-          <Card className="shadow-sm shadow-indigo-50 dark:shadow-none hover-elevate transition-all" data-testid="card-users-stats">
+          <Card className="shadow-sm hover-elevate transition-all border-t-2 border-primary" data-testid="card-users-stats">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">المستخدمون</CardTitle>
               <div className="p-2 rounded-md bg-accent-purple/30">
@@ -351,7 +351,7 @@ function Dashboard() {
           </Card>
 
           {/* Comments Stats */}
-          <Card className="shadow-sm shadow-indigo-50 dark:shadow-none hover-elevate transition-all" data-testid="card-comments-stats">
+          <Card className="shadow-sm hover-elevate transition-all border-t-2 border-primary" data-testid="card-comments-stats">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">التعليقات</CardTitle>
               <div className="p-2 rounded-md bg-accent-green/30">
@@ -375,7 +375,7 @@ function Dashboard() {
           </Card>
 
           {/* Views Stats */}
-          <Card className="shadow-sm shadow-indigo-50 dark:shadow-none hover-elevate transition-all" data-testid="card-views-stats">
+          <Card className="shadow-sm hover-elevate transition-all border-t-2 border-primary" data-testid="card-views-stats">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">المشاهدات الكلية</CardTitle>
               <div className="p-2 rounded-md bg-accent-blue/30">
@@ -401,7 +401,7 @@ function Dashboard() {
 
         {/* Today's Activity Stats - 2 columns on mobile */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6">
-          <Card data-testid="card-views-today-stats" className="border-l-4 border-l-primary/50">
+          <Card data-testid="card-views-today-stats" className="shadow-sm border-l-4 border-l-primary/50">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">المشاهدات اليوم</CardTitle>
               <Activity className="h-4 w-4 text-primary" data-testid="icon-views-today" />
@@ -422,7 +422,7 @@ function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card data-testid="card-active-today-stats" className="border-l-4 border-l-chart-2/50">
+          <Card data-testid="card-active-today-stats" className="shadow-sm border-l-4 border-l-chart-2/50">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">القراء النشطون اليوم</CardTitle>
               <Users className="h-4 w-4 text-chart-2" data-testid="icon-active-today" />
@@ -443,7 +443,7 @@ function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card data-testid="card-reads-today-stats" className="border-l-4 border-l-chart-3/50">
+          <Card data-testid="card-reads-today-stats" className="shadow-sm border-l-4 border-l-chart-3/50">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">القراءات اليوم</CardTitle>
               <FileText className="h-4 w-4 text-chart-3" data-testid="icon-reads-today" />
@@ -464,7 +464,7 @@ function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card data-testid="card-engagement-today-stats" className="border-l-4 border-l-chart-4/50">
+          <Card data-testid="card-engagement-today-stats" className="shadow-sm border-l-4 border-l-chart-4/50">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">التفاعل اليوم</CardTitle>
               <Heart className="h-4 w-4 text-chart-4" data-testid="icon-engagement-today" />

@@ -40,59 +40,59 @@ input, select, textarea {
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
 
-  --background: 60deg 6.67% 97.06%;
+  --background: 0 0% 100%;
 
-  --foreground: 220deg 19.48% 15.1%;
+  --foreground: 0 0% 9%;
 
-  --border: 220deg 13.04% 90.98%;
+  --border: 0 0% 90%;
 
-  --card: 0deg 0% 100%;
+  --card: 0 0% 98%;
 
-  --card-foreground: 220deg 19.48% 15.1%;
+  --card-foreground: 0 0% 9%;
 
-  --card-border: 220 24% 88%;
+  --card-border: 210 20% 88%;
 
-  --sidebar: 180 6.6667% 97.0588%;
+  --sidebar: 229 50% 24%;
 
-  --sidebar-foreground: 210 25% 7.8431%;
+  --sidebar-foreground: 0 0% 98%;
 
-  --sidebar-border: 205.0000 25.0000% 90.5882%;
+  --sidebar-border: 229 45% 30%;
 
-  --sidebar-primary: 203.8863 88.2845% 53.1373%;
+  --sidebar-primary: 210 70% 60%;
 
   --sidebar-primary-foreground: 0 0% 100%;
 
-  --sidebar-accent: 211.5789 51.3514% 92.7451%;
+  --sidebar-accent: 229 45% 30%;
 
-  --sidebar-accent-foreground: 203.8863 88.2845% 53.1373%;
+  --sidebar-accent-foreground: 0 0% 98%;
 
-  --sidebar-ring: 202.8169 89.1213% 53.1373%;
+  --sidebar-ring: 210 70% 60%;
 
-  --popover: 0deg 0% 100%;
+  --popover: 0 0% 100%;
 
-  --popover-foreground: 220deg 19.48% 15.1%;
+  --popover-foreground: 0 0% 9%;
 
-  --popover-border: 220 24% 88%;
+  --popover-border: 210 20% 88%;
 
-  --primary: 219.8deg 84.17% 52.94%;
+  --primary: 210 70% 40%;
 
-  --primary-foreground: 0deg 0% 98.04%;
+  --primary-foreground: 0 0% 98%;
 
-  --secondary: 220deg 9.68% 93.92%;
+  --secondary: 210 6% 88%;
 
-  --secondary-foreground: 217.89deg 14.96% 24.9%;
+  --secondary-foreground: 210 5% 35%;
 
-  --muted: 220deg 100% 97.06%;
+  --muted: 210 6% 95%;
 
-  --muted-foreground: 220deg 9.8% 70%;
+  --muted-foreground: 210 5% 35%;
 
-  --footer: 220 15% 30%;
+  --footer: 229 50% 20%;
 
   --footer-foreground: 0 0% 95%;
 
-  --accent: 220deg 24.59% 88.04%;
+  --accent: 210 20% 92%;
 
-  --accent-foreground: 220deg 19.48% 15.1%;
+  --accent-foreground: 210 70% 40%;
 
   --accent-blue: 220 84% 88%;
 
@@ -116,13 +116,13 @@ input, select, textarea {
 
   --info-foreground: 0 0% 98%;
 
-  --input: 220deg 9.8% 70%;
-  --ring: 219.8deg 84.17% 52.94%;
-  --chart-1: 219.8deg 84.17% 52.94%;
-  --chart-2: 243.06deg 75.12% 59.02%;
-  --chart-3: 141.99deg 70.31% 44.9%;
-  --chart-4: 195.08deg 74.9% 50%;
-  --chart-5: 34.78deg 90.39% 55.1%;
+  --input: 210 6% 70%;
+  --ring: 210 70% 40%;
+  --chart-1: 210 70% 40%;
+  --chart-2: 200 65% 45%;
+  --chart-3: 25 85% 42%;
+  --chart-4: 280 70% 40%;
+  --chart-5: 340 75% 40%;
 
   /* AI Accent Colors - Professional Blue Tones */
   --ai-primary: 220 84% 53%;
@@ -224,59 +224,59 @@ input, select, textarea {
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
 
-  --background: 0 0% 0%;
+  --background: 220 20% 10%;
 
-  --foreground: 200 6.6667% 91.1765%;
+  --foreground: 210 6% 90%;
 
-  --border: 210 5.2632% 14.9020%;
+  --border: 220 12% 20%;
 
-  --card: 228 9.8039% 10%;
+  --card: 220 18% 13%;
 
-  --card-foreground: 0 0% 85.0980%;
+  --card-foreground: 210 6% 90%;
 
-  --card-border: 220 18% 16%;
+  --card-border: 220 15% 18%;
 
-  --sidebar: 228 9.8039% 10%;
+  --sidebar: 229 50% 20%;
 
-  --sidebar-foreground: 0 0% 85.0980%;
+  --sidebar-foreground: 210 6% 90%;
 
-  --sidebar-border: 205.7143 15.7895% 26.0784%;
+  --sidebar-border: 229 45% 26%;
 
-  --sidebar-primary: 202.8169 89.1213% 53.1373%;
+  --sidebar-primary: 210 65% 50%;
 
   --sidebar-primary-foreground: 0 0% 100%;
 
-  --sidebar-accent: 205.7143 70% 7.8431%;
+  --sidebar-accent: 229 45% 26%;
 
-  --sidebar-accent-foreground: 203.7736 87.6033% 52.5490%;
+  --sidebar-accent-foreground: 210 6% 90%;
 
-  --sidebar-ring: 202.8169 89.1213% 53.1373%;
+  --sidebar-ring: 210 65% 50%;
 
-  --popover: 0 0% 0%;
+  --popover: 220 18% 13%;
 
-  --popover-foreground: 200 6.6667% 91.1765%;
+  --popover-foreground: 210 6% 90%;
 
-  --popover-border: 220 18% 16%;
+  --popover-border: 220 15% 18%;
 
-  --primary: 203.7736 87.6033% 52.5490%;
+  --primary: 210 60% 48%;
 
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 195.0000 15.3846% 94.9020%;
+  --secondary: 220 12% 20%;
 
-  --secondary-foreground: 210 25% 7.8431%;
+  --secondary-foreground: 210 6% 90%;
 
-  --muted: 0 0% 9.4118%;
+  --muted: 220 15% 15%;
 
-  --muted-foreground: 210 3.3898% 46.2745%;
+  --muted-foreground: 210 6% 60%;
 
-  --footer: 220 20% 15%;
+  --footer: 229 50% 15%;
 
   --footer-foreground: 0 0% 95%;
 
-  --accent: 205.7143 70% 7.8431%;
+  --accent: 220 15% 18%;
 
-  --accent-foreground: 203.7736 87.6033% 52.5490%;
+  --accent-foreground: 210 60% 48%;
 
   --destructive: 356.3033 90.5579% 54.3137%;
 
@@ -294,13 +294,13 @@ input, select, textarea {
 
   --info-foreground: 0 0% 98%;
 
-  --input: 207.6923 27.6596% 18.4314%;
-  --ring: 202.8169 89.1213% 53.1373%;
-  --chart-1: 203.8863 88.2845% 53.1373%;
-  --chart-2: 159.7826 100% 36.0784%;
-  --chart-3: 42.0290 92.8251% 56.2745%;
-  --chart-4: 147.1429 78.5047% 41.9608%;
-  --chart-5: 341.4894 75.2000% 50.9804%;
+  --input: 220 12% 20%;
+  --ring: 210 60% 48%;
+  --chart-1: 210 60% 55%;
+  --chart-2: 200 55% 50%;
+  --chart-3: 35 70% 55%;
+  --chart-4: 270 50% 55%;
+  --chart-5: 340 55% 55%;
 
   /* AI Accent Colors - Professional Blue Tones (Dark Mode) */
   --ai-primary: 220 84% 60%;
