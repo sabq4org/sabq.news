@@ -3,9 +3,27 @@ import { db } from '../db';
 import { employeeEmailTemplates } from '@shared/schema';
 import { eq, and } from 'drizzle-orm';
 
-const LOGO_URL = 'https://sabq.life/logo.png';
+const LOGO_PATH = '/branding/sabq-logo.png';
 const BRAND_COLOR = '#1a73e8';
 const BRAND_DARK = '#0d47a1';
+
+function getFrontendUrl(): string {
+  if (process.env.FRONTEND_URL) {
+    return process.env.FRONTEND_URL;
+  }
+  if (process.env.REPLIT_DOMAINS) {
+    const domains = process.env.REPLIT_DOMAINS.split(',');
+    const primaryDomain = domains[0]?.trim();
+    if (primaryDomain) {
+      return `https://${primaryDomain}`;
+    }
+  }
+  return 'http://localhost:5000';
+}
+
+function getLogoUrl(): string {
+  return `${getFrontendUrl()}${LOGO_PATH}`;
+}
 
 type TemplateType = 'correspondent_approved' | 'correspondent_rejected' | 'article_published' | 'article_rejected' | 'motivational';
 
@@ -242,7 +260,7 @@ function getDefaultTemplate(type: TemplateType): { subject: string; bodyHtml: st
           <div class="wrapper">
             <div class="container">
               <div class="header">
-                <img src="${LOGO_URL}" alt="سبق" onerror="this.style.display='none'" />
+                <img src="${getLogoUrl()}" alt="سبق" onerror="this.style.display='none'" />
                 <p class="header-text">صحيفة سبق الإلكترونية</p>
               </div>
               
@@ -319,7 +337,7 @@ function getDefaultTemplate(type: TemplateType): { subject: string; bodyHtml: st
           <div class="wrapper">
             <div class="container">
               <div class="header">
-                <img src="${LOGO_URL}" alt="سبق" onerror="this.style.display='none'" />
+                <img src="${getLogoUrl()}" alt="سبق" onerror="this.style.display='none'" />
                 <p class="header-text">صحيفة سبق الإلكترونية</p>
               </div>
               
@@ -385,7 +403,7 @@ function getDefaultTemplate(type: TemplateType): { subject: string; bodyHtml: st
           <div class="wrapper">
             <div class="container">
               <div class="header">
-                <img src="${LOGO_URL}" alt="سبق" onerror="this.style.display='none'" />
+                <img src="${getLogoUrl()}" alt="سبق" onerror="this.style.display='none'" />
                 <p class="header-text">صحيفة سبق الإلكترونية</p>
               </div>
               
@@ -453,7 +471,7 @@ function getDefaultTemplate(type: TemplateType): { subject: string; bodyHtml: st
           <div class="wrapper">
             <div class="container">
               <div class="header">
-                <img src="${LOGO_URL}" alt="سبق" onerror="this.style.display='none'" />
+                <img src="${getLogoUrl()}" alt="سبق" onerror="this.style.display='none'" />
                 <p class="header-text">صحيفة سبق الإلكترونية</p>
               </div>
               
@@ -523,7 +541,7 @@ function getDefaultTemplate(type: TemplateType): { subject: string; bodyHtml: st
           <div class="wrapper">
             <div class="container">
               <div class="header">
-                <img src="${LOGO_URL}" alt="سبق" onerror="this.style.display='none'" />
+                <img src="${getLogoUrl()}" alt="سبق" onerror="this.style.display='none'" />
                 <p class="header-text">صحيفة سبق الإلكترونية</p>
               </div>
               
@@ -619,20 +637,6 @@ export function getDefaultTemplateByType(type: TemplateType): {
     bodyText: template.bodyText,
     isActive: true,
   };
-}
-
-function getFrontendUrl(): string {
-  if (process.env.FRONTEND_URL) {
-    return process.env.FRONTEND_URL;
-  }
-  if (process.env.REPLIT_DOMAINS) {
-    const domains = process.env.REPLIT_DOMAINS.split(',');
-    const primaryDomain = domains[0]?.trim();
-    if (primaryDomain) {
-      return `https://${primaryDomain}`;
-    }
-  }
-  return 'http://localhost:5000';
 }
 
 export async function sendCorrespondentApprovalEmail(
