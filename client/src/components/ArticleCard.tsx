@@ -15,7 +15,8 @@ import {
   Sparkles,
   Brain,
   TrendingUp,
-  Eye
+  Eye,
+  Play
 } from "lucide-react";
 import { ViewsCount } from "./ViewsCount";
 import { Link } from "wouter";
@@ -132,6 +133,14 @@ export function ArticleCard({
               </TooltipProvider>
             )}
 
+            {(article as any).isVideoTemplate && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary/90 flex items-center justify-center shadow-lg">
+                  <Play className="h-8 w-8 sm:h-10 sm:w-10 text-primary-foreground fill-current mr-[-2px]" />
+                </div>
+              </div>
+            )}
+
             <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 md:p-8 text-white">
               <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2 sm:mb-3 leading-tight" data-testid={`text-title-${article.id}`}>
                 {article.title}
@@ -228,6 +237,13 @@ export function ArticleCard({
                   />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-primary/10 to-accent/10" />
+                )}
+                {(article as any).isVideoTemplate && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-10 h-10 rounded-full bg-primary/90 flex items-center justify-center shadow-lg">
+                      <Play className="h-5 w-5 text-primary-foreground fill-current mr-[-1px]" />
+                    </div>
+                  </div>
                 )}
                 {article.category && (
                   <div className="absolute bottom-2 right-2">
@@ -350,6 +366,14 @@ export function ArticleCard({
               />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-primary/10 to-accent/10" />
+            )}
+            
+            {(article as any).isVideoTemplate && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="w-12 h-12 rounded-full bg-primary/90 flex items-center justify-center shadow-lg">
+                  <Play className="h-6 w-6 text-primary-foreground fill-current mr-[-1px]" />
+                </div>
+              </div>
             )}
             
             <div className="absolute top-3 right-3 flex flex-wrap gap-2">
