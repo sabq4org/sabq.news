@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Clock, Eye, Share2, Bookmark, BookmarkCheck, ChevronDown, Zap, Sparkles, Check } from "lucide-react";
+import { Clock, Eye, Share2, Bookmark, BookmarkCheck, ChevronDown, Zap, Sparkles, Check, Play } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import type { Article, Category, User } from "@shared/schema";
@@ -26,6 +26,29 @@ function getOptimizedImageUrl(url: string | null | undefined): string {
   }
   
   return url;
+}
+
+function getVideoEmbedUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  
+  // YouTube
+  const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
+  if (youtubeMatch) {
+    return `https://www.youtube.com/embed/${youtubeMatch[1]}?autoplay=1&rel=0`;
+  }
+  
+  // Dailymotion
+  const dailymotionMatch = url.match(/dailymotion\.com\/video\/([\w-]+)/);
+  if (dailymotionMatch) {
+    return `https://www.dailymotion.com/embed/video/${dailymotionMatch[1]}?autoplay=1`;
+  }
+  
+  // Direct video URL
+  if (url.match(/\.(mp4|webm|ogg)$/i)) {
+    return url;
+  }
+  
+  return null;
 }
 
 interface SwipeCardProps {
@@ -58,6 +81,7 @@ export function SwipeCard({
   const [detailDragOffset, setDetailDragOffset] = useState(0);
   const [localBookmarked, setLocalBookmarked] = useState(isBookmarked);
   const [cachedShortUrl, setCachedShortUrl] = useState<string | null>(null);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const startYRef = useRef(0);
   const lastYRef = useRef(0);
   const lastTimeRef = useRef(0);
@@ -103,6 +127,11 @@ export function SwipeCard({
   useEffect(() => {
     setLocalBookmarked(isBookmarked);
   }, [isBookmarked]);
+
+  // Reset video playback state when article changes
+  useEffect(() => {
+    setIsVideoPlaying(false);
+  }, [article.id]);
 
   // Pre-fetch short URL when details are opened
   useEffect(() => {
@@ -234,6 +263,8 @@ export function SwipeCard({
     // Use original image directly without optimization to avoid 404 errors
     return article.imageUrl || article.thumbnailUrl || '';
   }, [article.liteOptimizedImageUrl, article.imageUrl, article.thumbnailUrl]);
+  const videoEmbedUrl = article.isVideoTemplate ? getVideoEmbedUrl(article.videoUrl) : null;
+  const videoThumbnail = article.videoThumbnailUrl || imageUrl;
   const publishedDate = article.publishedAt ? new Date(article.publishedAt) : new Date();
   const smartSummary = article.aiSummary || article.excerpt;
   const timeAgo = formatDistanceToNow(publishedDate, { addSuffix: false, locale: arSA });
@@ -275,7 +306,52 @@ export function SwipeCard({
         data-testid={`swipe-card-${article.id}`}
       >
         <div className="h-full w-full overflow-hidden bg-black relative">
-          {imageUrl ? (
+          {article.isVideoTemplate && videoEmbedUrl ? (
+            <div className="absolute top-0 left-0 right-0 h-[45%]">
+              {isVideoPlaying ? (
+                videoEmbedUrl.match(/\.(mp4|webm|ogg)$/i) ? (
+                  <video
+                    src={videoEmbedUrl}
+                    className="w-full h-full object-cover"
+                    autoPlay
+                    controls
+                    playsInline
+                  />
+                ) : (
+                  <iframe
+                    src={videoEmbedUrl}
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                )
+              ) : (
+                <>
+                  <img
+                    src={videoThumbnail}
+                    alt={article.title}
+                    className="w-full h-full object-cover"
+                    style={{ objectPosition: 'center center' }}
+                    draggable={false}
+                  />
+                  <div 
+                    className="absolute inset-0 flex items-center justify-center cursor-pointer"
+                    onClick={(e) => { e.stopPropagation(); setIsVideoPlaying(true); }}
+                  >
+                    <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center shadow-lg">
+                      <Play className="h-8 w-8 text-white fill-white ml-1" />
+                    </div>
+                  </div>
+                </>
+              )}
+              <div 
+                className="absolute inset-0 pointer-events-none" 
+                style={{ 
+                  background: isVideoPlaying ? 'none' : 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,0.7) 70%, rgba(0,0,0,1) 100%)' 
+                }} 
+              />
+            </div>
+          ) : imageUrl ? (
             <div className="absolute top-0 left-0 right-0 h-[45%]">
               <img
                 src={imageUrl}
@@ -387,7 +463,51 @@ export function SwipeCard({
             onTouchMove={handleDetailTouchMove}
             onTouchEnd={handleDetailTouchEnd}
           >
-            {imageUrl && (
+            {article.isVideoTemplate && videoEmbedUrl ? (
+              <div className="relative h-72 sm:h-96">
+                {videoEmbedUrl.match(/\.(mp4|webm|ogg)$/i) ? (
+                  <video
+                    src={videoEmbedUrl}
+                    className="w-full h-full object-cover"
+                    autoPlay
+                    controls
+                    playsInline
+                  />
+                ) : (
+                  <iframe
+                    src={videoEmbedUrl}
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                )}
+                
+                <button
+                  onClick={() => setShowDetails(false)}
+                  className="absolute top-4 right-4 p-2 bg-black/50 backdrop-blur-sm rounded-full text-white"
+                  data-testid="button-close-details"
+                >
+                  <ChevronDown className="h-6 w-6" />
+                </button>
+
+                <div className="absolute bottom-4 left-4 flex gap-2">
+                  <button 
+                    className="p-3 bg-black/40 backdrop-blur-sm rounded-full text-white/90 active:bg-white/20 transition-colors"
+                    onClick={handleShareClick}
+                    data-testid="button-share"
+                  >
+                    <Share2 className="h-5 w-5" />
+                  </button>
+                  <button 
+                    className={`p-3 backdrop-blur-sm rounded-full transition-colors active:bg-white/20 ${localBookmarked ? 'bg-primary text-white' : 'bg-black/40 text-white/90'}`}
+                    onClick={handleBookmarkClick}
+                    data-testid="button-bookmark"
+                  >
+                    {localBookmarked ? <BookmarkCheck className="h-5 w-5" /> : <Bookmark className="h-5 w-5" />}
+                  </button>
+                </div>
+              </div>
+            ) : imageUrl && (
               <div className="relative h-72 sm:h-96">
                 <img
                   src={imageUrl}
