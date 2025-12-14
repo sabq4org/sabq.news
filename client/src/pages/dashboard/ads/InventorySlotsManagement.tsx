@@ -394,11 +394,12 @@ export default function InventorySlotsManagement() {
 
   const formatPrice = (priceInCents: number) => {
     const priceInRiyals = priceInCents / 100;
-    const formatted = new Intl.NumberFormat("ar-SA", {
+    return new Intl.NumberFormat("ar-SA", {
+      style: "currency",
+      currency: "SAR",
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
     }).format(priceInRiyals);
-    return `${formatted} ر.س`;
   };
 
   return (
