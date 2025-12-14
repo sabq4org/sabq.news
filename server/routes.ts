@@ -4464,6 +4464,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get users list (admin only, supports role filtering)
+
+  // Video upload endpoint for article video template
+  const videoUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 100 * 1024 * 1024, // 100MB max for videos
+    },
+    fileFilter: (req, file, cb) => {
+      const allowedTypes = ['video/mp4', 'video/webm', 'video/quicktime'];
+      if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error('نوع الملف غير مسموح. الأنواع المسموحة: MP4, WebM, MOV'));
+      }
+    },
+  });
+
+  app.post("/api/upload/video", isAuthenticated, videoUpload.single('file'), async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "لم يتم اختيار ملف فيديو" });
+      }
+
+      console.log("[Video Upload] File received:", {
+        originalName: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size
+      });
+
+      const publicObjectPaths = process.env.PUBLIC_OBJECT_SEARCH_PATHS || '';
+      const publicPath = publicObjectPaths.split(',')[0];
+      
+      if (!publicPath) {
+        throw new Error('PUBLIC_OBJECT_SEARCH_PATHS not configured');
+      }
+
+      // Determine file extension from mimetype
+      const extMap: Record<string, string> = {
+        'video/mp4': 'mp4',
+        'video/webm': 'webm',
+        'video/quicktime': 'mov'
+      };
+      const fileExtension = extMap[req.file.mimetype] || 'mp4';
+      const timestamp = Date.now();
+      const safeFilename = req.file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_').replace(/\.[^.]+$/, '');
+      const relativePath = `videos/${timestamp}_${safeFilename}.${fileExtension}`;
+      const fullPath = `${publicPath}/${relativePath}`;
+
+      console.log("[Video Upload] Uploading to path:", fullPath);
+
+      const { objectStorageClient } = await import('./objectStorage');
+
+      // Parse the path to get bucket and object name
+      const pathParts = fullPath.startsWith('/') ? fullPath.substring(1).split('/') : fullPath.split('/');
+      const bucketName = pathParts[0];
+      const objectName = pathParts.slice(1).join('/');
+      
+      const bucket = objectStorageClient.bucket(bucketName);
+      const file = bucket.file(objectName);
+
+      await file.save(req.file.buffer, {
+        contentType: req.file.mimetype,
+      });
+
+      const proxyUrl = `/public-objects/${relativePath}`;
+
+      console.log("[Video Upload] Success. Proxy URL:", proxyUrl);
+
+      res.json({ 
+        success: true,
+        url: proxyUrl
+      });
+    } catch (error: any) {
+      console.error("Error uploading video:", error);
+      
+      if (error.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ message: "الملف كبير جداً. الحد الأقصى 100MB" });
+      }
+      
+      if (error.message?.includes('نوع الملف')) {
+        return res.status(400).json({ message: error.message });
+      }
+
+      res.status(500).json({ message: "فشل في رفع الفيديو" });
+    }
+  });
   // Get suggested users for discovery/follow (for logged-in users)
   app.get("/api/users/suggested", requireAuth, async (req: any, res) => {
     try {

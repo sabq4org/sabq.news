@@ -150,6 +150,8 @@ export default function ArticleEditor() {
   const [hideFromHomepage, setHideFromHomepage] = useState(false);
   
   // Video Template fields
+  const [videoSourceType, setVideoSourceType] = useState<"url" | "upload">("url");
+  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
   const [isVideoTemplate, setIsVideoTemplate] = useState(false);
   const [videoUrl, setVideoUrl] = useState("");
   const [videoThumbnailUrl, setVideoThumbnailUrl] = useState("");
@@ -2579,21 +2581,84 @@ const generateSlug = (text: string) => {
                 
                 {isVideoTemplate && (
                   <div className="space-y-3 pt-3 border-t">
-                    <div className="space-y-2">
-                      <Label htmlFor="videoUrl" className="text-sm">رابط الفيديو</Label>
-                      <Input
-                        id="videoUrl"
-                        value={videoUrl}
-                        onChange={(e) => setVideoUrl(e.target.value)}
-                        placeholder="رابط YouTube أو Dailymotion أو رابط مباشر للفيديو"
-                        className="text-sm"
-                        dir="ltr"
-                        data-testid="input-video-url"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        يدعم: YouTube, Dailymotion, أو رابط مباشر (mp4)
-                      </p>
-                    </div>
+                    <RadioGroup
+                      value={videoSourceType}
+                      onValueChange={(value: "url" | "upload") => setVideoSourceType(value)}
+                      className="flex gap-4"
+                    >
+                      <div className="flex items-center space-x-2 space-x-reverse">
+                        <RadioGroupItem value="url" id="video-source-url" data-testid="radio-video-url" />
+                        <Label htmlFor="video-source-url" className="text-sm cursor-pointer">رابط خارجي</Label>
+                      </div>
+                      <div className="flex items-center space-x-2 space-x-reverse">
+                        <RadioGroupItem value="upload" id="video-source-upload" data-testid="radio-video-upload" />
+                        <Label htmlFor="video-source-upload" className="text-sm cursor-pointer">رفع فيديو</Label>
+                      </div>
+                    </RadioGroup>
+
+                    {videoSourceType === "url" ? (
+                      <div className="space-y-2">
+                        <Label htmlFor="videoUrl" className="text-sm">رابط الفيديو</Label>
+                        <Input
+                          id="videoUrl"
+                          value={videoUrl}
+                          onChange={(e) => setVideoUrl(e.target.value)}
+                          placeholder="رابط YouTube أو Dailymotion أو رابط مباشر للفيديو"
+                          className="text-sm"
+                          dir="ltr"
+                          data-testid="input-video-url"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          يدعم: YouTube, Dailymotion, أو رابط مباشر (mp4)
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Label className="text-sm">رفع ملف فيديو</Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="file"
+                            accept="video/mp4,video/webm,video/quicktime"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              if (file.size > 100 * 1024 * 1024) {
+                                toast({ title: "خطأ", description: "حجم الملف كبير جداً. الحد الأقصى 100MB", variant: "destructive" });
+                                return;
+                              }
+                              setIsUploadingVideo(true);
+                              try {
+                                const formData = new FormData();
+                                formData.append('file', file);
+                                const response = await fetch('/api/upload/video', { method: 'POST', body: formData, credentials: 'include' });
+                                if (!response.ok) {
+                                  const error = await response.json();
+                                  throw new Error(error.message || 'فشل رفع الفيديو');
+                                }
+                                const data = await response.json();
+                                setVideoUrl(data.url);
+                                toast({ title: "نجاح", description: "تم رفع الفيديو بنجاح" });
+                              } catch (error: any) {
+                                toast({ title: "خطأ", description: error.message || "فشل رفع الفيديو", variant: "destructive" });
+                              } finally {
+                                setIsUploadingVideo(false);
+                              }
+                            }}
+                            disabled={isUploadingVideo}
+                            className="text-sm"
+                            data-testid="input-video-file"
+                          />
+                          {isUploadingVideo && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                        </div>
+                        <p className="text-xs text-muted-foreground">الأنواع المسموحة: MP4, WebM, MOV (الحد الأقصى: 100MB)</p>
+                        {videoUrl && videoSourceType === "upload" && (
+                          <div className="flex items-center gap-2 text-xs text-green-600">
+                            <CheckCircle2 className="h-3 w-3" />
+                            <span>تم رفع الفيديو</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     
                     <div className="space-y-2">
                       <Label htmlFor="videoThumbnailUrl" className="text-sm">صورة مصغرة للفيديو (اختياري)</Label>
