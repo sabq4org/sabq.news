@@ -144,9 +144,9 @@ export default function CorrespondentApplications() {
     }
   };
 
-  const pendingCount = data?.applications.filter(a => a.status === "pending").length || 0;
-  const approvedCount = data?.applications.filter(a => a.status === "approved").length || 0;
-  const rejectedCount = data?.applications.filter(a => a.status === "rejected").length || 0;
+  const pendingCount = data?.applications?.filter(a => a.status === "pending").length || 0;
+  const approvedCount = data?.applications?.filter(a => a.status === "approved").length || 0;
+  const rejectedCount = data?.applications?.filter(a => a.status === "rejected").length || 0;
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -246,7 +246,7 @@ export default function CorrespondentApplications() {
                 <Skeleton key={i} className="h-16 w-full" />
               ))}
             </div>
-          ) : data?.applications.length === 0 ? (
+          ) : data?.applications?.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground" data-testid="text-no-applications">
               لا توجد طلبات
             </div>
@@ -263,7 +263,7 @@ export default function CorrespondentApplications() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data?.applications.map((app) => (
+                {data?.applications?.map((app) => (
                   <TableRow key={app.id} data-testid={`row-application-${app.id}`}>
                     <TableCell>
                       <div className="flex items-center gap-3">
