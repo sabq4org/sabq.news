@@ -1616,7 +1616,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const url = new URL(existingMedia.url);
         const pathParts = url.pathname.split('/').filter(Boolean);
         // Use the actual Replit bucket ID
-        const bucketName = process.env.REPLIT_OBJECT_BUCKET || 'replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138';
+        // Extract bucket name from PRIVATE_OBJECT_DIR path
+      const bucketName = pathParts[0];
         // Treat the entire path as the object path
         const objectPath = pathParts.join('/');
 
@@ -1859,7 +1860,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const gcsPath = file.url.replace('gs://', '');
           const pathParts = gcsPath.split('/');
           // Use the actual Replit bucket ID
-          const bucketName = process.env.REPLIT_OBJECT_BUCKET || 'replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138';
+          // Extract bucket name from PRIVATE_OBJECT_DIR path
+      const bucketName = pathParts[0];
           // Treat the entire path as the object path
           const objectPath = pathParts.join('/');
 
@@ -2294,7 +2296,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const pathParts = storagePath.replace('gs://', '').split('/');
       // Use the actual Replit bucket ID
-      const bucketName = process.env.REPLIT_OBJECT_BUCKET || 'replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138';
+      // Extract bucket name from PRIVATE_OBJECT_DIR path
+      const bucketName = pathParts[0];
       // Treat the entire path as the object path
       const objectPath = pathParts.join('/');
 
@@ -4390,7 +4393,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/upload/profile-image", isAuthenticated, strictLimiter, profileImageUpload.single('file'), async (req: any, res) => {
     const parseObjectPath = (path: string): { bucketName: string; objectName: string } => {
       // Use the actual Replit bucket ID
-      const bucketName = process.env.REPLIT_OBJECT_BUCKET || 'replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138';
+      // Extract bucket name from PRIVATE_OBJECT_DIR path
+      const bucketName = pathParts[0];
       
       // Treat the entire path as the object name
       if (!path.startsWith("/")) {
@@ -24337,9 +24341,11 @@ ${currentTitle ? `العنوان الحالي: ${currentTitle}\n\n` : ''}
       // استخراج bucket name و object name
       const pathParts = fullPath.split('/').filter(Boolean);
       // Use the actual Replit bucket ID
-      const bucketName = process.env.REPLIT_OBJECT_BUCKET || 'replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138';
+      // Extract bucket name from PRIVATE_OBJECT_DIR path
+      const bucketName = pathParts[0];
       // Treat the entire path as the object name
-      const objectName = pathParts.join('/');
+      // Skip the first part (bucket name) when creating object name
+      const objectName = pathParts.slice(1).join('/');
 
       // رفع الملف
       const bucket = objectStorageClient.bucket(bucketName);
@@ -32290,22 +32296,16 @@ Allow: /
 
       // Upload photo to Object Storage
       const objectStorageService = new ObjectStorageService();
-      const privateObjectDir = process.env.PRIVATE_OBJECT_DIR || '';
       
-      if (!privateObjectDir) {
-        return res.status(500).json({ message: "Object Storage غير مُعد" });
-      }
-
       const timestamp = Date.now();
       const sanitizedFilename = req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
       const filename = `correspondent-applications/${timestamp}-${sanitizedFilename}`;
-      const fullPath = `${privateObjectDir}/${filename}`;
       
-      const pathParts = fullPath.split('/').filter(Boolean);
-      const bucketName = process.env.REPLIT_OBJECT_BUCKET || 'replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138';
-      const objectName = pathParts.join('/');
+      // Use the actual bucket ID directly for reliable access
+      const actualBucketId = 'replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138'; // Hardcoded bucket for correspondent files
+      const objectName = `.private/${filename}`;
 
-      const bucket = objectStorageClient.bucket(bucketName);
+      const bucket = objectStorageClient.bucket(actualBucketId);
       const file = bucket.file(objectName);
 
       await file.save(req.file.buffer, {

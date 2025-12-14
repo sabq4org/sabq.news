@@ -234,13 +234,12 @@ export class ObjectStorageService {
     }
 
     const entityId = parts.slice(1).join("/");
-    let entityDir = this.getPrivateObjectDir();
-    if (!entityDir.endsWith("/")) {
-      entityDir = `${entityDir}/`;
-    }
-    const objectEntityPath = `${entityDir}${entityId}`;
-    const { bucketName, objectName } = parseObjectPath(objectEntityPath);
-    const bucket = objectStorageClient.bucket(bucketName);
+    
+    // Use actual bucket ID directly to avoid alias resolution issues
+    const actualBucketId = 'replit-objstore-3dc2325c-bbbe-4e54-9a00-e6f10b243138'; // Hardcoded bucket where correspondent files exist
+    const objectName = `.private/${entityId}`;
+    
+    const bucket = objectStorageClient.bucket(actualBucketId);
     const objectFile = bucket.file(objectName);
     const [exists] = await objectFile.exists();
     if (!exists) {
