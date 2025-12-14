@@ -32449,11 +32449,18 @@ Allow: /
       });
 
       // Send rejection email notification (non-blocking)
+      console.log('📧 [REJECT] Attempting to send rejection email:', {
+        email: application.email,
+        arabicName: application.arabicName,
+        reason: reason
+      });
       sendCorrespondentRejectionEmail(
         application.email,
         application.arabicName || '',
         reason
-      ).catch(err => console.error('Failed to send correspondent rejection email:', err));
+      ).then(result => {
+        console.log('📧 [REJECT] Email result:', result);
+      }).catch(err => console.error('❌ [REJECT] Failed to send correspondent rejection email:', err));
 
       res.json({
         message: "تم رفض الطلب",
