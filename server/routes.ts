@@ -32469,6 +32469,197 @@ Allow: /
   });
 
 
+  // ============================================
+  // Employee Email Templates Management Routes
+  // ============================================
+
+  // GET /api/admin/email-templates - List all email templates
+  app.get("/api/admin/email-templates", requireAuth, requireRole('admin', 'system_admin'), async (req: any, res) => {
+    try {
+      const templates = await storage.getAllEmailTemplates();
+      res.json(templates);
+    } catch (error: any) {
+      console.error("Error fetching email templates:", error);
+      res.status(500).json({ message: "فشل في جلب قوالب البريد الإلكتروني" });
+    }
+  });
+
+  // GET /api/admin/email-templates/:type - Get single template by type
+  app.get("/api/admin/email-templates/:type", requireAuth, requireRole('admin', 'system_admin'), async (req: any, res) => {
+    try {
+      const { type } = req.params;
+      const template = await storage.getEmailTemplate(type);
+      
+      if (!template) {
+        return res.status(404).json({ message: "القالب غير موجود" });
+      }
+      
+      res.json(template);
+    } catch (error: any) {
+      console.error("Error fetching email template:", error);
+      res.status(500).json({ message: "فشل في جلب القالب" });
+    }
+  });
+
+  // PUT /api/admin/email-templates/:type - Update template
+  app.put("/api/admin/email-templates/:type", requireAuth, requireRole('admin', 'system_admin'), async (req: any, res) => {
+    try {
+      const { type } = req.params;
+      const { subject, bodyHtml, bodyText, isActive, nameAr } = req.body;
+      
+      const template = await storage.upsertEmailTemplate(type, {
+        subject,
+        bodyHtml,
+        bodyText,
+        isActive,
+        nameAr,
+      });
+
+      await logActivity({
+        userId: req.user.id,
+        action: 'update',
+        entityType: 'email_template',
+        entityId: type,
+        newValue: { subject, isActive },
+      });
+      
+      res.json(template);
+    } catch (error: any) {
+      console.error("Error updating email template:", error);
+      res.status(500).json({ message: "فشل في تحديث القالب" });
+    }
+  });
+
+  // POST /api/admin/email-templates/preview - Preview email template with sample data
+  app.post("/api/admin/email-templates/preview", requireAuth, requireRole('admin', 'system_admin'), async (req: any, res) => {
+    try {
+      const { type, bodyHtml, bodyText, subject } = req.body;
+      
+      // Sample data for preview based on template type
+      const sampleData: Record<string, Record<string, string>> = {
+        correspondent_approved: {
+          name: "أحمد محمد",
+          email: "ahmed@example.com",
+          password: "TempPass123!",
+        },
+        correspondent_rejected: {
+          name: "أحمد محمد",
+          reason: "لم تستوفِ الشروط المطلوبة",
+        },
+        article_published: {
+          name: "أحمد محمد",
+          articleTitle: "مقال تجريبي للمعاينة",
+          articleUrl: "https://sabq.org/article/sample",
+        },
+        article_rejected: {
+          name: "أحمد محمد",
+          articleTitle: "مقال تجريبي للمعاينة",
+          reason: "المحتوى غير مناسب للنشر",
+        },
+        motivational: {
+          name: "أحمد محمد",
+          message: "شكراً لجهودك المتميزة!",
+        },
+      };
+      
+      const data = sampleData[type] || {};
+      
+      // Replace placeholders in template
+      let previewHtml = bodyHtml || "";
+      let previewText = bodyText || "";
+      let previewSubject = subject || "";
+      
+      Object.entries(data).forEach(([key, value]) => {
+        const placeholder = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+        previewHtml = previewHtml.replace(placeholder, value);
+        previewText = previewText.replace(placeholder, value);
+        previewSubject = previewSubject.replace(placeholder, value);
+      });
+      
+      res.json({
+        subject: previewSubject,
+        bodyHtml: previewHtml,
+        bodyText: previewText,
+        sampleData: data,
+      });
+    } catch (error: any) {
+      console.error("Error generating email preview:", error);
+      res.status(500).json({ message: "فشل في إنشاء معاينة البريد الإلكتروني" });
+    }
+  });
+
+  // POST /api/admin/email-templates/test-send - Send test email to admin
+  app.post("/api/admin/email-templates/test-send", requireAuth, requireRole('admin', 'system_admin'), async (req: any, res) => {
+    try {
+      const { type, subject, bodyHtml, bodyText } = req.body;
+      const adminEmail = req.user.email;
+      
+      if (!adminEmail) {
+        return res.status(400).json({ message: "لم يتم العثور على بريد المسؤول" });
+      }
+      
+      // Sample data for test based on template type
+      const sampleData: Record<string, Record<string, string>> = {
+        correspondent_approved: {
+          name: "أحمد محمد",
+          email: "ahmed@example.com",
+          password: "TempPass123!",
+        },
+        correspondent_rejected: {
+          name: "أحمد محمد",
+          reason: "لم تستوفِ الشروط المطلوبة",
+        },
+        article_published: {
+          name: "أحمد محمد",
+          articleTitle: "مقال تجريبي للمعاينة",
+          articleUrl: "https://sabq.org/article/sample",
+        },
+        article_rejected: {
+          name: "أحمد محمد",
+          articleTitle: "مقال تجريبي للمعاينة",
+          reason: "المحتوى غير مناسب للنشر",
+        },
+        motivational: {
+          name: "أحمد محمد",
+          message: "شكراً لجهودك المتميزة!",
+        },
+      };
+      
+      const data = sampleData[type] || {};
+      
+      // Replace placeholders
+      let finalHtml = bodyHtml || "";
+      let finalText = bodyText || "";
+      let finalSubject = subject || "";
+      
+      Object.entries(data).forEach(([key, value]) => {
+        const placeholder = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+        finalHtml = finalHtml.replace(placeholder, value);
+        finalText = finalText.replace(placeholder, value);
+        finalSubject = finalSubject.replace(placeholder, value);
+      });
+      
+      // Send email using SendGrid
+      const sgMail = require('@sendgrid/mail');
+      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+      
+      await sgMail.send({
+        to: adminEmail,
+        from: process.env.SENDGRID_FROM_EMAIL || 'noreply@sabq.org',
+        subject: `[اختبار] ${finalSubject}`,
+        text: finalText,
+        html: finalHtml,
+      });
+      
+      res.json({ message: "تم إرسال البريد التجريبي بنجاح", sentTo: adminEmail });
+    } catch (error: any) {
+      console.error("Error sending test email:", error);
+      res.status(500).json({ message: "فشل في إرسال البريد التجريبي: " + error.message });
+    }
+  });
+
+
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -390,6 +390,10 @@ import {
   type CorrespondentApplication,
   type InsertCorrespondentApplication,
   type CorrespondentApplicationWithDetails,
+  // Employee Email Templates
+  employeeEmailTemplates,
+  type EmployeeEmailTemplate,
+  type UpdateEmployeeEmailTemplate,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -2321,6 +2325,11 @@ export interface IStorage {
   getCorrespondentApplicationById(id: string): Promise<CorrespondentApplicationWithDetails | undefined>;
   approveCorrespondentApplication(id: string, reviewerId: string, notes?: string): Promise<{application: CorrespondentApplication, user: User, temporaryPassword: string}>;
   rejectCorrespondentApplication(id: string, reviewerId: string, reason: string): Promise<CorrespondentApplication>;
+  
+  // Employee Email Templates
+  getAllEmailTemplates(): Promise<EmployeeEmailTemplate[]>;
+  getEmailTemplate(type: string): Promise<EmployeeEmailTemplate | undefined>;
+  upsertEmailTemplate(type: string, data: UpdateEmployeeEmailTemplate & { nameAr?: string; subject?: string; bodyHtml?: string; bodyText?: string }): Promise<EmployeeEmailTemplate>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -19280,6 +19289,43 @@ export class DatabaseStorage implements IStorage {
     
     if (!application) throw new Error("Application not found");
     return application;
+  }
+
+  // Employee Email Templates
+  async getAllEmailTemplates(): Promise<EmployeeEmailTemplate[]> {
+    return db.select().from(employeeEmailTemplates).orderBy(asc(employeeEmailTemplates.type));
+  }
+
+  async getEmailTemplate(type: string): Promise<EmployeeEmailTemplate | undefined> {
+    const [template] = await db.select().from(employeeEmailTemplates).where(eq(employeeEmailTemplates.type, type));
+    return template;
+  }
+
+  async upsertEmailTemplate(type: string, data: UpdateEmployeeEmailTemplate & { nameAr?: string; subject?: string; bodyHtml?: string; bodyText?: string }): Promise<EmployeeEmailTemplate> {
+    const existing = await this.getEmailTemplate(type);
+    
+    if (existing) {
+      const [updated] = await db.update(employeeEmailTemplates)
+        .set({
+          ...data,
+          updatedAt: new Date(),
+        })
+        .where(eq(employeeEmailTemplates.type, type))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db.insert(employeeEmailTemplates)
+        .values({
+          type,
+          nameAr: data.nameAr || type,
+          subject: data.subject || '',
+          bodyHtml: data.bodyHtml || '',
+          bodyText: data.bodyText || '',
+          isActive: data.isActive ?? true,
+        })
+        .returning();
+      return created;
+    }
   }
 }
 

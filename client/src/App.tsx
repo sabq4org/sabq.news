@@ -179,6 +179,7 @@ import PublisherDashboard from "@/pages/publisher/PublisherDashboard";
 import PublisherArticles from "@/pages/publisher/PublisherArticles";
 import CorrespondentRegister from "@/pages/correspondent/CorrespondentRegister";
 import CorrespondentApplications from "@/pages/admin/CorrespondentApplications";
+import EmailTemplatesPage from "@/pages/admin/EmailTemplatesPage";
 import PublisherArticleEditor from "@/pages/publisher/PublisherArticleEditor";
 import PublisherCredits from "@/pages/publisher/PublisherCredits";
 import AdminPublishers from "@/pages/admin/publishers/AdminPublishers";
@@ -517,6 +518,7 @@ function Router() {
       <Route path="/dashboard/profile" component={DashboardProfile} />
       <Route path="/dashboard/notifications" component={Notifications} />
       <Route path="/dashboard/notification-admin" component={NotificationAdmin} />
+      <Route path="/dashboard/email-templates" component={EmailTemplatesPage} />
       <Route path="/notifications" component={UserNotifications} />
       <Route path="/recommendation-settings" component={UserRecommendationSettings} />
       <Route path="/my-follows" component={MyFollows} />
