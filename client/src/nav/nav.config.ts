@@ -414,6 +414,15 @@ export const navConfig: NavItem[] = [
         roles: ["admin"],
         permissions: ["users.view", "users.manage"],
       },
+      {
+        id: "email-templates",
+        labelKey: "nav.emailTemplates",
+        labelAr: "قوالب البريد الإلكتروني",
+        path: "/dashboard/email-templates",
+        icon: Mail,
+        roles: ["admin"],
+        permissions: ["users.manage"],
+      },
     ],
   },
 
