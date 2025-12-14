@@ -3563,12 +3563,13 @@ router.get("/analytics/export/pdf", requireAdvertiser, async (req, res) => {
     
     // Format numbers for display
     const formatNum = (num: number) => new Intl.NumberFormat('ar-SA').format(num || 0);
-    const formatCurr = (num: number) => new Intl.NumberFormat('ar-SA', {
-      style: 'currency',
-      currency: 'SAR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2
-    }).format(num || 0);
+    const formatCurr = (num: number) => {
+      const formatted = new Intl.NumberFormat('ar-SA', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+      }).format(num || 0);
+      return `${formatted} ر.س`;
+    };
     
     // Funnel colors
     const funnelColors = ['#A855F7', '#3B82F6', '#22C55E', '#F97316', '#EF4444'];

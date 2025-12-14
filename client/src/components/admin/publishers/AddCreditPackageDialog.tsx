@@ -323,7 +323,7 @@ export function AddCreditPackageDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="SAR">ريال سعودي</SelectItem>
+                        <SelectItem value="SAR">ر.س - ريال سعودي</SelectItem>
                         <SelectItem value="USD">دولار أمريكي</SelectItem>
                         <SelectItem value="EUR">يورو</SelectItem>
                       </SelectContent>

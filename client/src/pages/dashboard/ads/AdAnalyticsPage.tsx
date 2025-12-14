@@ -165,19 +165,13 @@ function formatNumber(num: number): string {
 
 function formatCurrency(num: number): string {
   if (num === null || num === undefined || isNaN(num)) {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "SAR",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(0);
+    return "0 ر.س";
   }
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "SAR",
+  const formatted = new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(num);
+  return `${formatted} ر.س`;
 }
 
 function KPICard({
