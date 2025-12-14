@@ -1,0 +1,109 @@
+2025-12-14 20:09:51.15
+d786b653
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-14 20:09:51.16
+d786b653
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-14 20:09:51.18
+d786b653
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+
+2025-12-14 20:09:51.18
+d786b653
+User
+📡 User admin-sabq subscribed to notification stream
+2025-12-14 20:09:51.18
+d786b653
+User
+📡 SSE connection opened for user: admin-sabq
+2025-12-14 20:09:51.26
+d786b653
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-14 20:09:51.28
+d786b653
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin,system_admin, user has: system_admin, admin
+2025-12-14 20:09:51.29
+d786b653
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-14 20:09:51.31
+d786b653
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-14 20:09:51.31
+d786b653
+User
+📡 SSE connection opened for user: admin-sabq
+2025-12-14 20:09:51.31
+d786b653
+User
+📡 User admin-sabq subscribed to notification stream
+2025-12-14 20:09:51.33
+d786b653
+User
+5:09:51 PM [express] GET /api/admin/email-templates 304 in 195ms :: [{"id":"a130e0ef-ff11-4788-bd28-…
+2025-12-14 20:10:00.05
+d786b653
+User
+[NotificationWorker] Starting queue processing...
+2025-12-14 20:10:00.05
+d786b653
+User
+🔄 Checking for scheduled audio newsletters...
+2025-12-14 20:10:00.05
+d786b653
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-12-14 20:10:00.06
+d786b653
+User
+[AI Task Executor] Checking for pending tasks...
+2025-12-14 20:10:00.16
+d786b653
+User
+Found 0 scheduled newsletters to process
+2025-12-14 20:10:00.17
+d786b653
+User
+[NotificationWorker] Queue processing completed
+2025-12-14 20:10:00.17
+d786b653
+User
+[NotificationWorker] Found 0 notifications to process
+2025-12-14 20:10:00.17
+d786b653
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-12-14 20:10:00.52
+d786b653
+User
+[AI Tasks Cleanup] Checking for stuck tasks...
+2025-12-14 20:10:14.98
+d786b653
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-14 20:10:15.01
+d786b653
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-14 20:10:15.04
+d786b653
+User
+[RBAC] requireRole check - userId: admin-sabq, required: admin,system_admin, user has: system_admin, admin
+2025-12-14 20:10:15.06
+d786b653
+User
+5:10:15 PM [express] POST /api/admin/email-templates/preview 200 in 240ms :: {"subject":"بخصوص طلب ا…
+2025-12-14 20:11:00.04
+d786b653
+User
+[NotificationWorker] Starting queue processing...
+2025-12-14 20:11:00.05
+d786b653
+User
+[ScheduledPublisher] Checking for scheduled articles...
