@@ -32,7 +32,7 @@ import { findSimilarArticles, getPersonalizedRecommendations } from "./similarit
 import { recommendationService } from "./services/recommendationService";
 import { sendSMSOTP, verifySMSOTP } from "./twilio";
 import { sendVerificationEmail, verifyEmailToken, resendVerificationEmail } from "./services/email";
-import { sendCorrespondentApprovalEmail, sendCorrespondentRejectionEmail } from "./services/employeeNotifications";
+import { sendCorrespondentApprovalEmail, sendCorrespondentRejectionEmail, getAllDefaultTemplates, getDefaultTemplateByType } from "./services/employeeNotifications";
 import { analyzeSentiment, detectLanguage } from './sentiment-analyzer';
 import { classifyArticle } from './ai-classifier';
 import { generateSeoMetadata } from './seo-generator';
@@ -32480,6 +32480,34 @@ Allow: /
   // Employee Email Templates Management Routes
   // ============================================
 
+
+  // GET /api/admin/email-templates/defaults - Get all default templates from code
+  app.get("/api/admin/email-templates/defaults", requireAuth, requireRole('admin', 'system_admin'), async (req: any, res) => {
+    try {
+      const defaultTemplates = getAllDefaultTemplates();
+      res.json(defaultTemplates);
+    } catch (error: any) {
+      console.error("Error fetching default email templates:", error);
+      res.status(500).json({ message: "فشل في جلب القوالب الافتراضية" });
+    }
+  });
+
+  // GET /api/admin/email-templates/defaults/:type - Get single default template by type
+  app.get("/api/admin/email-templates/defaults/:type", requireAuth, requireRole('admin', 'system_admin'), async (req: any, res) => {
+    try {
+      const { type } = req.params;
+      const template = getDefaultTemplateByType(type as any);
+      
+      if (!template) {
+        return res.status(404).json({ message: "القالب غير موجود" });
+      }
+      
+      res.json(template);
+    } catch (error: any) {
+      console.error("Error fetching default email template:", error);
+      res.status(500).json({ message: "فشل في جلب القالب الافتراضي" });
+    }
+  });
   // GET /api/admin/email-templates - List all email templates
   app.get("/api/admin/email-templates", requireAuth, requireRole('admin', 'system_admin'), async (req: any, res) => {
     try {

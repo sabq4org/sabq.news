@@ -568,6 +568,59 @@ function getDefaultTemplate(type: TemplateType): { subject: string; bodyHtml: st
   return templates[type];
 }
 
+const TEMPLATE_NAMES: Record<TemplateType, string> = {
+  correspondent_approved: "قبول طلب المراسل",
+  correspondent_rejected: "رفض طلب المراسل",
+  article_published: "نشر المقال",
+  article_rejected: "رفض المقال",
+  motivational: "رسالة تحفيزية",
+};
+
+export function getAllDefaultTemplates(): Array<{
+  type: TemplateType;
+  nameAr: string;
+  subject: string;
+  bodyHtml: string;
+  bodyText: string;
+  isActive: boolean;
+}> {
+  const types: TemplateType[] = ['correspondent_approved', 'correspondent_rejected', 'article_published', 'article_rejected', 'motivational'];
+  
+  return types.map(type => {
+    const template = getDefaultTemplate(type);
+    return {
+      type,
+      nameAr: TEMPLATE_NAMES[type],
+      subject: template.subject,
+      bodyHtml: template.bodyHtml,
+      bodyText: template.bodyText,
+      isActive: true,
+    };
+  });
+}
+
+export function getDefaultTemplateByType(type: TemplateType): {
+  type: TemplateType;
+  nameAr: string;
+  subject: string;
+  bodyHtml: string;
+  bodyText: string;
+  isActive: boolean;
+} | null {
+  const validTypes: TemplateType[] = ['correspondent_approved', 'correspondent_rejected', 'article_published', 'article_rejected', 'motivational'];
+  if (!validTypes.includes(type)) return null;
+  
+  const template = getDefaultTemplate(type);
+  return {
+    type,
+    nameAr: TEMPLATE_NAMES[type],
+    subject: template.subject,
+    bodyHtml: template.bodyHtml,
+    bodyText: template.bodyText,
+    isActive: true,
+  };
+}
+
 function getFrontendUrl(): string {
   if (process.env.FRONTEND_URL) {
     return process.env.FRONTEND_URL;

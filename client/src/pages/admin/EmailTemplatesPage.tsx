@@ -76,7 +76,7 @@ export default function EmailTemplatesPage() {
   } | null>(null);
 
   const { data: templates, isLoading, refetch } = useQuery<EmployeeEmailTemplate[]>({
-    queryKey: ["/api/admin/email-templates"],
+    queryKey: ["/api/admin/email-templates/defaults"],
   });
 
   const updateMutation = useMutation({
@@ -188,8 +188,14 @@ export default function EmailTemplatesPage() {
   };
 
   const getTemplatesList = (): EmployeeEmailTemplate[] => {
-    const existingTypes = new Set((templates || []).map(t => t.type));
-    const defaultTemplates: EmployeeEmailTemplate[] = Object.entries(TEMPLATE_TYPES).map(([type, nameAr]) => ({
+    if (templates && templates.length > 0) {
+      return templates.map(t => ({
+        ...t,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }));
+    }
+    return Object.entries(TEMPLATE_TYPES).map(([type, nameAr]) => ({
       type,
       nameAr,
       subject: "",
@@ -199,11 +205,6 @@ export default function EmailTemplatesPage() {
       createdAt: new Date(),
       updatedAt: new Date(),
     }));
-
-    return defaultTemplates.map(defaultT => {
-      const existing = (templates || []).find(t => t.type === defaultT.type);
-      return existing || defaultT;
-    });
   };
 
   const activeCount = getTemplatesList().filter(t => t.isActive).length;
