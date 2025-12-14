@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -82,11 +82,20 @@ export function OnlineModeratorsWidget() {
 
   if (isLoading) {
     return (
-      <Card data-testid="card-online-moderators-loading" dir="rtl">
-        <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">المشرفون المتصلون</CardTitle>
-          <Users className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
+      <div className="space-y-3 sm:space-y-4" dir="rtl">
+        {/* Header matching QuickActionsSection */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg sm:text-xl font-bold">المتصلون</h2>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+              فريق العمل المتواجد حالياً
+            </p>
+          </div>
+          <div className="p-2 rounded-md bg-primary/10">
+            <Users className="h-5 w-5 text-primary" />
+          </div>
+        </div>
+        <Card className="shadow-sm hover-elevate transition-all border-t-2 border-primary" data-testid="card-online-moderators-loading">
         <CardContent>
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
@@ -101,24 +110,34 @@ export function OnlineModeratorsWidget() {
             ))}
           </div>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
     );
   }
 
   return (
-    <Card data-testid="card-online-moderators" dir="rtl">
-      <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">المشرفون المتصلون</CardTitle>
+    <div className="space-y-3 sm:space-y-4" dir="rtl">
+      {/* Header matching QuickActionsSection */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg sm:text-xl font-bold">المتصلون</h2>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+            فريق العمل المتواجد حالياً
+          </p>
+        </div>
         <div className="flex items-center gap-2">
           {onlineModerators.length > 0 && (
             <Badge variant="secondary" className="text-xs" data-testid="badge-online-count">
               {onlineModerators.length} متصل
             </Badge>
           )}
-          <Users className="h-4 w-4 text-muted-foreground" />
+          <div className="p-2 rounded-md bg-primary/10">
+            <Users className="h-5 w-5 text-primary" />
+          </div>
         </div>
-      </CardHeader>
-      <CardContent>
+      </div>
+      <Card className="shadow-sm hover-elevate transition-all border-t-2 border-primary" data-testid="card-online-moderators">
+        <CardContent className="pt-4">
         {onlineModerators.length === 0 && offlineModerators.length === 0 ? (
           <div className="text-center py-6 text-muted-foreground" data-testid="text-no-moderators">
             <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -191,7 +210,8 @@ export function OnlineModeratorsWidget() {
             </div>
           </ScrollArea>
         )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
