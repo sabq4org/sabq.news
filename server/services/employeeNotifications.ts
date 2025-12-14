@@ -3,7 +3,9 @@ import { db } from '../db';
 import { employeeEmailTemplates } from '@shared/schema';
 import { eq, and } from 'drizzle-orm';
 
-const LOGO_PLACEHOLDER = '🧠 سبق';
+const LOGO_URL = 'https://sabq.life/logo.png';
+const BRAND_COLOR = '#1a73e8';
+const BRAND_DARK = '#0d47a1';
 
 type TemplateType = 'correspondent_approved' | 'correspondent_rejected' | 'article_published' | 'article_rejected' | 'motivational';
 
@@ -44,21 +46,184 @@ function replacePlaceholders(template: string, data: TemplateData): string {
 function getDefaultTemplate(type: TemplateType): { subject: string; bodyHtml: string; bodyText: string } {
   const baseStyles = `
     <style>
-      body { font-family: 'Tajawal', Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 0; direction: rtl; }
-      .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-      .header { background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%); padding: 40px 20px; text-align: center; }
-      .header h1 { color: white; font-size: 28px; margin: 0; font-weight: bold; }
-      .content { padding: 40px 30px; text-align: right; }
-      .content h2 { color: #333; font-size: 22px; margin-bottom: 16px; }
-      .content p { color: #666; font-size: 16px; line-height: 1.8; margin-bottom: 16px; }
-      .highlight-box { background: #e8f4fd; border-right: 4px solid #0066cc; padding: 16px; margin: 20px 0; border-radius: 8px; }
-      .credentials { background: #f9f9f9; padding: 20px; margin: 20px 0; border-radius: 8px; border: 1px solid #eee; }
-      .credentials p { margin: 8px 0; font-size: 15px; }
-      .credentials strong { color: #0066cc; }
-      .button { display: inline-block; background: #0066cc; color: white !important; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 18px; font-weight: bold; margin: 20px 0; }
-      .footer { background: #f9f9f9; padding: 24px 30px; text-align: center; color: #999; font-size: 14px; border-top: 1px solid #eee; }
-      .success { color: #28a745; }
-      .warning { color: #dc3545; }
+      @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+      
+      body { 
+        font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; 
+        background-color: #f0f4f8; 
+        margin: 0; 
+        padding: 0; 
+        direction: rtl;
+        -webkit-font-smoothing: antialiased;
+      }
+      
+      .wrapper {
+        padding: 40px 20px;
+      }
+      
+      .container { 
+        max-width: 580px; 
+        margin: 0 auto; 
+        background: #ffffff; 
+        border-radius: 16px; 
+        overflow: hidden; 
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+      }
+      
+      .header { 
+        background: linear-gradient(135deg, ${BRAND_COLOR} 0%, ${BRAND_DARK} 100%); 
+        padding: 32px 24px; 
+        text-align: center;
+      }
+      
+      .header img {
+        height: 48px;
+        margin-bottom: 8px;
+      }
+      
+      .header-text {
+        color: rgba(255,255,255,0.95);
+        font-size: 20px;
+        font-weight: 500;
+        margin: 0;
+        letter-spacing: -0.3px;
+      }
+      
+      .content { 
+        padding: 36px 32px; 
+        text-align: right;
+      }
+      
+      .greeting {
+        color: #1a1a2e;
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0 0 20px 0;
+        line-height: 1.4;
+      }
+      
+      .content p { 
+        color: #4a5568; 
+        font-size: 16px; 
+        line-height: 1.9; 
+        margin: 0 0 18px 0;
+      }
+      
+      .info-card { 
+        background: linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%);
+        border-right: 4px solid ${BRAND_COLOR}; 
+        padding: 20px 24px; 
+        margin: 24px 0; 
+        border-radius: 12px;
+      }
+      
+      .info-card-label {
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 0 0 8px 0;
+      }
+      
+      .info-card-content {
+        color: #1e293b;
+        font-size: 16px;
+        line-height: 1.7;
+        margin: 0;
+      }
+      
+      .credentials-box { 
+        background: #fafbfc;
+        padding: 24px; 
+        margin: 24px 0; 
+        border-radius: 12px; 
+        border: 1px solid #e2e8f0;
+      }
+      
+      .credentials-box p { 
+        margin: 10px 0; 
+        font-size: 15px;
+        color: #475569;
+      }
+      
+      .credentials-box strong { 
+        color: ${BRAND_COLOR};
+        font-weight: 600;
+      }
+      
+      .btn { 
+        display: inline-block; 
+        background: linear-gradient(135deg, ${BRAND_COLOR} 0%, ${BRAND_DARK} 100%);
+        color: #ffffff !important; 
+        text-decoration: none; 
+        padding: 14px 36px; 
+        border-radius: 10px; 
+        font-size: 16px; 
+        font-weight: 600; 
+        margin: 24px 0;
+        transition: transform 0.2s, box-shadow 0.2s;
+        box-shadow: 0 4px 14px rgba(26, 115, 232, 0.35);
+      }
+      
+      .signature {
+        margin-top: 32px;
+        padding-top: 24px;
+        border-top: 1px solid #e2e8f0;
+      }
+      
+      .signature p {
+        color: #64748b;
+        margin: 0;
+      }
+      
+      .signature strong {
+        color: #1e293b;
+      }
+      
+      .footer { 
+        background: #f8fafc; 
+        padding: 24px 32px; 
+        text-align: center; 
+        border-top: 1px solid #e2e8f0;
+      }
+      
+      .footer p {
+        color: #94a3b8;
+        font-size: 13px;
+        margin: 4px 0;
+      }
+      
+      .divider {
+        height: 1px;
+        background: #e2e8f0;
+        margin: 24px 0;
+      }
+      
+      .badge-success {
+        display: inline-block;
+        background: #dcfce7;
+        color: #166534;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 600;
+      }
+      
+      .badge-warning {
+        display: inline-block;
+        background: #fef3c7;
+        color: #92400e;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 600;
+      }
+      
+      .text-muted {
+        color: #94a3b8 !important;
+        font-size: 14px !important;
+      }
     </style>
   `;
 
@@ -140,29 +305,39 @@ function getDefaultTemplate(type: TemplateType): { subject: string; bodyHtml: st
           ${baseStyles}
         </head>
         <body>
-          <div class="container">
-            <div class="header">
-              <h1>${LOGO_PLACEHOLDER}</h1>
-            </div>
-            <div class="content">
-              <h2>{{arabicName}} العزيز/ة</h2>
-              <p>شكراً لاهتمامك بالانضمام إلى فريق المراسلين في صحيفة سبق الإلكترونية.</p>
-              
-              <p>بعد مراجعة طلبك بعناية، نأسف لإبلاغك بأننا لم نتمكن من قبول طلبك في هذا الوقت.</p>
-              
-              <div class="highlight-box">
-                <p><strong>سبب القرار:</strong></p>
-                <p>{{reason}}</p>
+          <div class="wrapper">
+            <div class="container">
+              <div class="header">
+                <img src="${LOGO_URL}" alt="سبق" onerror="this.style.display='none'" />
+                <p class="header-text">صحيفة سبق الإلكترونية</p>
               </div>
               
-              <p>نقدر وقتك وجهدك في التقديم، ونشجعك على إعادة التقديم مستقبلاً بعد استيفاء المتطلبات اللازمة.</p>
+              <div class="content">
+                <h2 class="greeting">{{arabicName}} العزيز/ة،</h2>
+                
+                <p>نشكرك على اهتمامك بالانضمام إلى فريق المراسلين في صحيفة سبق الإلكترونية.</p>
+                
+                <p>بعد مراجعة طلبك بعناية من قبل لجنة التقييم، نود إبلاغك بأننا لم نتمكن من قبول طلبك في الوقت الحالي.</p>
+                
+                <div class="info-card">
+                  <p class="info-card-label">ملاحظات اللجنة</p>
+                  <p class="info-card-content">{{reason}}</p>
+                </div>
+                
+                <p>نقدّر الوقت والجهد الذي بذلته في التقديم، ونشجعك على متابعة تطوير مهاراتك وإعادة التقديم مستقبلاً.</p>
+                
+                <p>نتمنى لك كل التوفيق في مسيرتك المهنية.</p>
+                
+                <div class="signature">
+                  <p>مع أطيب التحيات،</p>
+                  <p><strong>فريق التوظيف - سبق</strong></p>
+                </div>
+              </div>
               
-              <p>نتمنى لك التوفيق في مسيرتك المهنية.</p>
-              
-              <p>مع أطيب التحيات،<br><strong>فريق سبق</strong></p>
-            </div>
-            <div class="footer">
-              <p>© ${new Date().getFullYear()} صحيفة سبق الإلكترونية - جميع الحقوق محفوظة</p>
+              <div class="footer">
+                <p>© ${new Date().getFullYear()} صحيفة سبق الإلكترونية</p>
+                <p>جميع الحقوق محفوظة</p>
+              </div>
             </div>
           </div>
         </body>
