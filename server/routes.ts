@@ -4808,7 +4808,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all users with filtering (admin only)
   app.get("/api/admin/users", requireAuth, requirePermission("users.view"), async (req: any, res) => {
     try {
-      const { search, query, roleId, role, status, limit = 20, ids } = req.query;
+      const { search, query, roleId, role, status, limit = 500, ids } = req.query;
 
       // Build conditions for the main user query
       const conditions = [];
