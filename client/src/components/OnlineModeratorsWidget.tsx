@@ -95,7 +95,7 @@ export function OnlineModeratorsWidget() {
             <Users className="h-5 w-5 text-primary" />
           </div>
         </div>
-        <Card className="shadow-sm hover-elevate transition-all border-t-2 border-primary" data-testid="card-online-moderators-loading">
+        <Card className="hover-elevate active-elevate-2 transition-all" data-testid="card-online-moderators-loading">
         <CardContent>
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
@@ -136,7 +136,7 @@ export function OnlineModeratorsWidget() {
           </div>
         </div>
       </div>
-      <Card className="shadow-sm hover-elevate transition-all border-t-2 border-primary" data-testid="card-online-moderators">
+      <Card className="hover-elevate active-elevate-2 transition-all" data-testid="card-online-moderators">
         <CardContent className="pt-4">
         {onlineModerators.length === 0 && offlineModerators.length === 0 ? (
           <div className="text-center py-6 text-muted-foreground" data-testid="text-no-moderators">

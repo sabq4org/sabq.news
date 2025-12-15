@@ -303,7 +303,7 @@ function Dashboard() {
         {/* Main Stats Cards - 2 columns on mobile for better space utilization */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6">
           {/* Articles Stats */}
-          <Card className="shadow-sm hover-elevate transition-all border-t-2 border-primary" data-testid="card-articles-stats">
+          <Card className="hover-elevate active-elevate-2 transition-all" data-testid="card-articles-stats">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">المقالات</CardTitle>
               <div className="p-2 rounded-md bg-accent-blue/30">
@@ -327,7 +327,7 @@ function Dashboard() {
           </Card>
 
           {/* Users Stats */}
-          <Card className="shadow-sm hover-elevate transition-all border-t-2 border-primary" data-testid="card-users-stats">
+          <Card className="hover-elevate active-elevate-2 transition-all" data-testid="card-users-stats">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">المستخدمون</CardTitle>
               <div className="p-2 rounded-md bg-accent-purple/30">
@@ -351,7 +351,7 @@ function Dashboard() {
           </Card>
 
           {/* Comments Stats */}
-          <Card className="shadow-sm hover-elevate transition-all border-t-2 border-primary" data-testid="card-comments-stats">
+          <Card className="hover-elevate active-elevate-2 transition-all" data-testid="card-comments-stats">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">التعليقات</CardTitle>
               <div className="p-2 rounded-md bg-accent-green/30">
@@ -375,7 +375,7 @@ function Dashboard() {
           </Card>
 
           {/* Views Stats */}
-          <Card className="shadow-sm hover-elevate transition-all border-t-2 border-primary" data-testid="card-views-stats">
+          <Card className="hover-elevate active-elevate-2 transition-all" data-testid="card-views-stats">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">المشاهدات الكلية</CardTitle>
               <div className="p-2 rounded-md bg-accent-blue/30">
@@ -401,7 +401,7 @@ function Dashboard() {
 
         {/* Today's Activity Stats - 2 columns on mobile */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6">
-          <Card data-testid="card-views-today-stats" className="shadow-sm hover-elevate transition-all border-t-2 border-primary">
+          <Card data-testid="card-views-today-stats" className="hover-elevate active-elevate-2 transition-all">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">المشاهدات اليوم</CardTitle>
               <Activity className="h-4 w-4 text-primary" data-testid="icon-views-today" />
@@ -422,7 +422,7 @@ function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card data-testid="card-active-today-stats" className="shadow-sm hover-elevate transition-all border-t-2 border-primary">
+          <Card data-testid="card-active-today-stats" className="hover-elevate active-elevate-2 transition-all">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">القراء النشطون اليوم</CardTitle>
               <Users className="h-4 w-4 text-chart-2" data-testid="icon-active-today" />
@@ -443,7 +443,7 @@ function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card data-testid="card-reads-today-stats" className="shadow-sm hover-elevate transition-all border-t-2 border-primary">
+          <Card data-testid="card-reads-today-stats" className="hover-elevate active-elevate-2 transition-all">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">القراءات اليوم</CardTitle>
               <FileText className="h-4 w-4 text-chart-3" data-testid="icon-reads-today" />
@@ -464,7 +464,7 @@ function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card data-testid="card-engagement-today-stats" className="shadow-sm hover-elevate transition-all border-t-2 border-primary">
+          <Card data-testid="card-engagement-today-stats" className="hover-elevate active-elevate-2 transition-all">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">التفاعل اليوم</CardTitle>
               <Heart className="h-4 w-4 text-chart-4" data-testid="icon-engagement-today" />
@@ -488,7 +488,7 @@ function Dashboard() {
 
         {/* Secondary Stats - 2 columns on mobile */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4 md:gap-6">
-          <Card data-testid="card-categories-stats" className="shadow-sm hover-elevate transition-all border-t-2 border-primary">
+          <Card data-testid="card-categories-stats" className="hover-elevate active-elevate-2 transition-all">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">التصنيفات</CardTitle>
               <FolderTree className="h-4 w-4 text-muted-foreground" />
@@ -504,7 +504,7 @@ function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card data-testid="card-abtests-stats" className="shadow-sm hover-elevate transition-all border-t-2 border-primary">
+          <Card data-testid="card-abtests-stats" className="hover-elevate active-elevate-2 transition-all">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">اختبارات A/B</CardTitle>
               <FlaskConical className="h-4 w-4 text-muted-foreground" />
@@ -525,7 +525,7 @@ function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card data-testid="card-avg-time-stats" className="shadow-sm hover-elevate transition-all border-t-2 border-primary">
+          <Card data-testid="card-avg-time-stats" className="hover-elevate active-elevate-2 transition-all">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">متوسط وقت القراءة</CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
@@ -550,7 +550,7 @@ function Dashboard() {
         {/* Platform Services Stats - 2 columns on mobile */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6">
           {/* Audio Newsletters */}
-          <Card data-testid="card-audio-newsletters-stats" className="shadow-sm hover-elevate transition-all border-t-2 border-primary">
+          <Card data-testid="card-audio-newsletters-stats" className="hover-elevate active-elevate-2 transition-all">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">النشرات الصوتية</CardTitle>
               <div className="p-2 rounded-md bg-purple-500/20">
@@ -574,7 +574,7 @@ function Dashboard() {
           </Card>
 
           {/* Deep Analyses */}
-          <Card data-testid="card-deep-analyses-stats" className="shadow-sm hover-elevate transition-all border-t-2 border-primary">
+          <Card data-testid="card-deep-analyses-stats" className="hover-elevate active-elevate-2 transition-all">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">التحليلات العميقة</CardTitle>
               <div className="p-2 rounded-md bg-indigo-500/20">
@@ -598,7 +598,7 @@ function Dashboard() {
           </Card>
 
           {/* Publishers */}
-          <Card data-testid="card-publishers-stats" className="shadow-sm hover-elevate transition-all border-t-2 border-primary">
+          <Card data-testid="card-publishers-stats" className="hover-elevate active-elevate-2 transition-all">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">الناشرون</CardTitle>
               <div className="p-2 rounded-md bg-amber-500/20">
@@ -622,7 +622,7 @@ function Dashboard() {
           </Card>
 
           {/* Media Library */}
-          <Card data-testid="card-media-library-stats" className="shadow-sm hover-elevate transition-all border-t-2 border-primary">
+          <Card data-testid="card-media-library-stats" className="hover-elevate active-elevate-2 transition-all">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">مكتبة الوسائط</CardTitle>
               <div className="p-2 rounded-md bg-cyan-500/20">
@@ -649,7 +649,7 @@ function Dashboard() {
         {/* AI & Smart Features Stats - 2 columns on mobile */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4 md:gap-6">
           {/* AI Tasks */}
-          <Card data-testid="card-ai-tasks-stats" className="shadow-sm hover-elevate transition-all border-t-2 border-primary">
+          <Card data-testid="card-ai-tasks-stats" className="hover-elevate active-elevate-2 transition-all">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">مهام الذكاء الاصطناعي</CardTitle>
               <div className="p-2 rounded-md bg-emerald-500/20">
@@ -673,7 +673,7 @@ function Dashboard() {
           </Card>
 
           {/* AI Generated Images */}
-          <Card data-testid="card-ai-images-stats" className="shadow-sm hover-elevate transition-all border-t-2 border-primary">
+          <Card data-testid="card-ai-images-stats" className="hover-elevate active-elevate-2 transition-all">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">صور الذكاء الاصطناعي</CardTitle>
               <div className="p-2 rounded-md bg-rose-500/20">
@@ -697,7 +697,7 @@ function Dashboard() {
           </Card>
 
           {/* Smart Blocks */}
-          <Card data-testid="card-smart-blocks-stats" className="shadow-sm hover-elevate transition-all border-t-2 border-primary">
+          <Card data-testid="card-smart-blocks-stats" className="hover-elevate active-elevate-2 transition-all">
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">القوالب الذكية</CardTitle>
               <div className="p-2 rounded-md bg-sky-500/20">
@@ -724,7 +724,7 @@ function Dashboard() {
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Articles Distribution */}
-          <Card data-testid="card-articles-chart" className="shadow-sm hover-elevate transition-all border-t-2 border-primary">
+          <Card data-testid="card-articles-chart" className="hover-elevate active-elevate-2 transition-all">
             <CardHeader>
               <CardTitle>توزيع المقالات</CardTitle>
               <CardDescription>حسب الحالة</CardDescription>
@@ -757,7 +757,7 @@ function Dashboard() {
           </Card>
 
           {/* Comments Distribution */}
-          <Card data-testid="card-comments-chart" className="shadow-sm hover-elevate transition-all border-t-2 border-primary">
+          <Card data-testid="card-comments-chart" className="hover-elevate active-elevate-2 transition-all">
             <CardHeader>
               <CardTitle>توزيع التعليقات</CardTitle>
               <CardDescription>حسب الحالة</CardDescription>
@@ -783,7 +783,7 @@ function Dashboard() {
         {/* Recent Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Recent Articles */}
-          <Card data-testid="card-recent-articles" className="shadow-sm hover-elevate transition-all border-t-2 border-primary">
+          <Card data-testid="card-recent-articles" className="hover-elevate active-elevate-2 transition-all">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>أحدث المقالات</CardTitle>
@@ -841,7 +841,7 @@ function Dashboard() {
           </Card>
 
           {/* Recent Comments */}
-          <Card data-testid="card-recent-comments" className="shadow-sm hover-elevate transition-all border-t-2 border-primary">
+          <Card data-testid="card-recent-comments" className="hover-elevate active-elevate-2 transition-all">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>أحدث التعليقات</CardTitle>
@@ -905,7 +905,7 @@ function Dashboard() {
         </div>
 
         {/* Top Articles */}
-        <Card data-testid="card-top-articles" className="shadow-sm hover-elevate transition-all border-t-2 border-primary">
+        <Card data-testid="card-top-articles" className="hover-elevate active-elevate-2 transition-all">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -982,7 +982,7 @@ function UpcomingRemindersWidget() {
   });
 
   return (
-    <Card data-testid="card-upcoming-reminders" className="shadow-sm hover-elevate transition-all border-t-2 border-primary">
+    <Card data-testid="card-upcoming-reminders" className="hover-elevate active-elevate-2 transition-all">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Bell className="h-5 w-5" data-testid="icon-reminders" />
@@ -1066,7 +1066,7 @@ function UpcomingTasksWidget() {
   });
 
   return (
-    <Card data-testid="card-upcoming-tasks" className="shadow-sm hover-elevate transition-all border-t-2 border-primary">
+    <Card data-testid="card-upcoming-tasks" className="hover-elevate active-elevate-2 transition-all">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ClipboardList className="h-5 w-5" data-testid="icon-tasks" />
