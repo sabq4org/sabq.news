@@ -54,7 +54,7 @@ const SCHEDULES: ScheduleConfig[] = [
     articleCount: 5,
     timeWindow: 12, // Last 12 hours
     voicePreset: 'FEMALE_NEWS',
-    cronSchedule: '0 20 * * *', // 8:00 PM every day
+    cronSchedule: '30 12 * * *', // 12:30 PM every day (testing)
     enabled: true
   },
   {
