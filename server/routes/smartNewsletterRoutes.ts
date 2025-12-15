@@ -139,12 +139,33 @@ export function registerSmartNewsletterRoutes(app: Express) {
         }
       }
 
+      // Resolve category names from IDs for welcome email
+      let interestNames: string[] = [];
+      if (data.interests && data.interests.length > 0) {
+        // Check if interests are UUIDs or names
+        const isUUID = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+        
+        if (isUUID(data.interests[0])) {
+          // Fetch all categories and filter by IDs
+          const allCategories = await db
+            .select({ id: categories.id, nameAr: categories.nameAr })
+            .from(categories);
+          
+          interestNames = data.interests
+            .map(id => allCategories.find(c => c.id === id)?.nameAr)
+            .filter((name): name is string => !!name);
+        } else {
+          // Already names, use as-is
+          interestNames = data.interests;
+        }
+      }
+
       // Send welcome email to new subscriber
       const welcomeResult = await sendNewsletterWelcomeEmail({
         to: data.email,
         firstName: data.firstName,
         language: data.language,
-        interests: data.interests,
+        interests: interestNames.length > 0 ? interestNames : data.interests,
       });
       
       if (!welcomeResult.success) {
