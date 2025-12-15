@@ -309,3 +309,136 @@ export async function resendVerificationEmail(userId: string): Promise<{ success
     };
   }
 }
+
+/**
+ * Send password reset email
+ */
+export async function sendPasswordResetEmail(email: string, resetToken: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!mailerSend || !MAILERSEND_API_KEY) {
+      console.warn('Password reset email not sent - MailerSend not configured');
+      return { success: false, error: 'MailerSend API key not configured' };
+    }
+
+    // Create reset link
+    const resetLink = `${FRONTEND_URL}/reset-password?token=${resetToken}`;
+
+    // Email content
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html dir="rtl" lang="ar">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body { font-family: 'Tajawal', Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 0; direction: rtl; }
+          .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+          .header { background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); padding: 40px 20px; text-align: center; }
+          .header h1 { color: white; font-size: 28px; margin: 0; font-weight: bold; }
+          .content { padding: 40px 30px; text-align: right; }
+          .content h2 { color: #333; font-size: 22px; margin-bottom: 16px; }
+          .content p { color: #666; font-size: 16px; line-height: 1.8; margin-bottom: 16px; }
+          .button { display: inline-block; background: #dc2626; color: white !important; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 18px; font-weight: bold; margin: 20px 0; transition: background 0.3s; }
+          .button:hover { background: #b91c1c; }
+          .footer { background: #f9f9f9; padding: 24px 30px; text-align: center; color: #999; font-size: 14px; border-top: 1px solid #eee; }
+          .warning { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 16px; margin: 20px 0; color: #92400e; }
+          .en-section { direction: ltr; text-align: left; margin-top: 24px; padding-top: 24px; border-top: 2px solid #eee; }
+          .en-section h2 { font-size: 20px; color: #333; margin-bottom: 12px; }
+          .en-section p { color: #666; font-size: 15px; line-height: 1.6; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>🔐 إعادة تعيين كلمة المرور</h1>
+          </div>
+          
+          <div class="content">
+            <h2>طلب إعادة تعيين كلمة المرور</h2>
+            <p>تلقينا طلباً لإعادة تعيين كلمة المرور لحسابك في صحيفة سبق الإلكترونية.</p>
+            
+            <p style="text-align: center;">
+              <a href="${resetLink}" class="button" data-testid="reset-password-button">
+                🔑 إعادة تعيين كلمة المرور
+              </a>
+            </p>
+            
+            <p style="color: #999; font-size: 14px;">
+              أو انسخ الرابط التالي والصقه في المتصفح:<br>
+              <span style="color: #dc2626; word-break: break-all;">${resetLink}</span>
+            </p>
+            
+            <div class="warning">
+              ⚠️ هذا الرابط صالح لمدة ساعة واحدة فقط. إذا لم تطلب إعادة تعيين كلمة المرور، يرجى تجاهل هذه الرسالة.
+            </div>
+
+            <div class="en-section">
+              <h2>Password Reset Request</h2>
+              <p>We received a request to reset the password for your Sabq News account.</p>
+              <p style="color: #999; font-size: 13px;">
+                Or copy and paste this link into your browser:<br>
+                <span style="color: #dc2626; word-break: break-all;">${resetLink}</span>
+              </p>
+              <p style="font-size: 13px; color: #92400e; background: #fef3c7; padding: 12px; border-radius: 6px; margin-top: 16px;">
+                ⚠️ This link is valid for 1 hour only. If you didn't request a password reset, please ignore this email.
+              </p>
+            </div>
+          </div>
+          
+          <div class="footer">
+            <p>© ${new Date().getFullYear()} صحيفة سبق الإلكترونية - Sabq News</p>
+            <p style="font-size: 12px; margin-top: 8px;">لأسباب أمنية، لا نشارك كلمات المرور عبر البريد الإلكتروني</p>
+            <p style="font-size: 12px; margin-top: 4px;">For security reasons, we never share passwords via email</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const textContent = `
+إعادة تعيين كلمة المرور - صحيفة سبق
+
+تلقينا طلباً لإعادة تعيين كلمة المرور لحسابك.
+
+لإعادة تعيين كلمة المرور، انقر على الرابط التالي:
+${resetLink}
+
+⚠️ هذا الرابط صالح لمدة ساعة واحدة فقط.
+
+إذا لم تطلب إعادة تعيين كلمة المرور، يرجى تجاهل هذه الرسالة.
+
+---
+Password Reset - Sabq News
+
+We received a request to reset your password.
+
+To reset your password, click the following link:
+${resetLink}
+
+⚠️ This link is valid for 1 hour only.
+
+If you didn't request a password reset, please ignore this email.
+    `.trim();
+
+    const sentFrom = new Sender(FROM_EMAIL, FROM_NAME);
+    const recipients = [new Recipient(email)];
+
+    const emailParams = new EmailParams()
+      .setFrom(sentFrom)
+      .setTo(recipients)
+      .setSubject('إعادة تعيين كلمة المرور - Password Reset | سبق')
+      .setHtml(htmlContent)
+      .setText(textContent);
+
+    await mailerSend.email.send(emailParams);
+    console.log(`✅ Password reset email sent to ${email}`);
+    
+    return { success: true };
+  } catch (error) {
+    console.error('❌ Failed to send password reset email:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to send email' 
+    };
+  }
+}
