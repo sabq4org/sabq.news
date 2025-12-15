@@ -9,6 +9,7 @@ import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
 import { LiveRegionProvider } from "@/contexts/LiveRegionContext";
 import { VoiceAssistantProvider } from "@/contexts/VoiceAssistantContext";
 import { SkipLinks } from "@/components/SkipLinks";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useEffect } from "react";
 import { useVoiceCommands } from "@/hooks/useVoiceCommands";
 import { VoiceCommandsHelp } from "@/components/VoiceCommandsHelp";
@@ -392,10 +393,28 @@ function Router() {
       <Route path="/dashboard/announcements/:id/analytics" component={AnnouncementAnalytics} />
       <Route path="/dashboard/announcements/:id" component={AnnouncementDetail} />
       
-      {/* Shorts dashboard */}
-      <Route path="/dashboard/shorts" component={ShortsManagement} />
-      <Route path="/dashboard/shorts/new" component={ShortsEditor} />
-      <Route path="/dashboard/shorts/:id" component={ShortsEditor} />
+      {/* Shorts dashboard - restricted from reporters */}
+      <Route path="/dashboard/shorts">
+        {() => (
+          <ProtectedRoute requireStaff={true} excludeRoles={["reporter"]}>
+            <ShortsManagement />
+          </ProtectedRoute>
+        )}
+      </Route>
+      <Route path="/dashboard/shorts/new">
+        {() => (
+          <ProtectedRoute requireStaff={true} excludeRoles={["reporter"]}>
+            <ShortsEditor />
+          </ProtectedRoute>
+        )}
+      </Route>
+      <Route path="/dashboard/shorts/:id">
+        {(params) => (
+          <ProtectedRoute requireStaff={true} excludeRoles={["reporter"]}>
+            <ShortsEditor />
+          </ProtectedRoute>
+        )}
+      </Route>
       
       {/* Quad Categories Block Settings */}
       <Route path="/dashboard/blocks/quad-categories" component={QuadCategoriesBlockSettings} />
@@ -411,7 +430,14 @@ function Router() {
       
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/dashboard/analytics" component={AnalyticsDashboard} />
-      <Route path="/dashboard/article-analytics" component={ArticleAnalyticsDashboard} />
+      {/* Article Analytics - restricted from reporters */}
+      <Route path="/dashboard/article-analytics">
+        {() => (
+          <ProtectedRoute requireStaff={true} excludeRoles={["reporter"]}>
+            <ArticleAnalyticsDashboard />
+          </ProtectedRoute>
+        )}
+      </Route>
       <Route path="/dashboard/articles/new" component={ArticleEditor} />
       <Route path="/dashboard/article/new" component={ArticleEditor} />
       <Route path="/dashboard/articles/:id" component={ArticleEditor} />
@@ -421,7 +447,14 @@ function Router() {
       <Route path="/dashboard/categories" component={CategoriesManagement} />
       <Route path="/dashboard/media-library" component={MediaLibrary} />
       <Route path="/dashboard/ai-tools" component={AITools} />
-      <Route path="/dashboard/infographic-studio" component={InfographicStudio} />
+      {/* Infographic Studio - restricted from reporters */}
+      <Route path="/dashboard/infographic-studio">
+        {() => (
+          <ProtectedRoute requireStaff={true} excludeRoles={["reporter"]}>
+            <InfographicStudio />
+          </ProtectedRoute>
+        )}
+      </Route>
       <Route path="/dashboard/users" component={UsersManagement} />
       <Route path="/dashboard/roles" component={RolesManagement} />
       

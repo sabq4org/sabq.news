@@ -211,6 +211,9 @@ export default function ArticleEditor() {
   // Check authentication and redirect if needed
   const { user, isLoading: isUserLoading } = useAuth({ redirectToLogin: true });
 
+  // Check if user is a reporter - reporters have restricted AI features
+  const isReporter = user?.role === 'reporter' || (user?.roles && user.roles.some((r: any) => r.name === 'reporter' || r === 'reporter'));
+
   // Permission check: require articles.create for new articles, articles.edit/edit_any/edit_own for editing
   const canAccessEditor = user && hasAnyPermission(
     user, 
@@ -2142,33 +2145,39 @@ const generateSlug = (text: string) => {
                     <ImageIcon className="h-4 w-4" />
                     اختر من المكتبة
                   </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowAIImageDialog(true)}
-                    className="gap-2"
-                    data-testid="button-generate-ai-image"
-                  >
-                    <Sparkles className="h-4 w-4 text-primary" />
-                    توليد بالذكاء الاصطناعي
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowInfographicDialog(true)}
-                    className="gap-2"
-                    data-testid="button-generate-infographic"
-                  >
-                    <LayoutGrid className="h-4 w-4 text-primary" />
-                    إنفوجرافيك
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowStoryCardsDialog(true)}
-                    className="gap-2"
-                    data-testid="button-generate-story-cards"
-                  >
-                    <Layers className="h-4 w-4 text-primary" />
-                    قصص مصورة
-                  </Button>
+                  {!isReporter && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowAIImageDialog(true)}
+                      className="gap-2"
+                      data-testid="button-generate-ai-image"
+                    >
+                      <Sparkles className="h-4 w-4 text-primary" />
+                      توليد بالذكاء الاصطناعي
+                    </Button>
+                  )}
+                  {!isReporter && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowInfographicDialog(true)}
+                      className="gap-2"
+                      data-testid="button-generate-infographic"
+                    >
+                      <LayoutGrid className="h-4 w-4 text-primary" />
+                      إنفوجرافيك
+                    </Button>
+                  )}
+                  {!isReporter && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowStoryCardsDialog(true)}
+                      className="gap-2"
+                      data-testid="button-generate-story-cards"
+                    >
+                      <Layers className="h-4 w-4 text-primary" />
+                      قصص مصورة
+                    </Button>
+                  )}
                   <input
                     id="image-upload"
                     type="file"

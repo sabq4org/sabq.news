@@ -43,6 +43,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 import {
   Dialog,
@@ -103,6 +104,10 @@ export function RichTextEditor({
   const [aiImageDialogOpen, setAiImageDialogOpen] = useState(false);
   const [isSmartFormatting, setIsSmartFormatting] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
+  
+  // Check if user is a reporter - reporters have restricted AI features
+  const isReporter = user?.role === 'reporter' || (user?.roles && user.roles.some((r: any) => r.name === 'reporter' || r === 'reporter'));
 
   const editor = useEditor({
     extensions: [
@@ -667,12 +672,14 @@ export function RichTextEditor({
           <ImageIcon className="h-4 w-4" />
         </ToolbarButton>
 
-        <ToolbarButton
-          onClick={() => setAiImageDialogOpen(true)}
-          title="توليد صورة بالذكاء الاصطناعي"
-        >
-          <Sparkles className="h-4 w-4 text-primary" />
-        </ToolbarButton>
+        {!isReporter && (
+          <ToolbarButton
+            onClick={() => setAiImageDialogOpen(true)}
+            title="توليد صورة بالذكاء الاصطناعي"
+          >
+            <Sparkles className="h-4 w-4 text-primary" />
+          </ToolbarButton>
+        )}
 
         <Button
           type="button"

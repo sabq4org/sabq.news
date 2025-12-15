@@ -7,6 +7,7 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
   requireStaff?: boolean;
   requireRoles?: string[];
+  excludeRoles?: string[];
   requireAnyPermission?: string[];
   requireAllPermissions?: string[];
   redirectTo?: string;
@@ -17,6 +18,7 @@ export function ProtectedRoute({
   children,
   requireStaff = false,
   requireRoles = [],
+  excludeRoles = [],
   requireAnyPermission = [],
   requireAllPermissions = [],
   redirectTo = "/login",
@@ -40,6 +42,12 @@ export function ProtectedRoute({
       return;
     }
 
+    // Check excluded roles (user must NOT have any of these roles)
+    if (excludeRoles.length > 0 && hasRole(user, ...excludeRoles)) {
+      setLocation(fallbackPath);
+      return;
+    }
+
     // Check specific role requirements
     if (requireRoles.length > 0 && !hasRole(user, ...requireRoles)) {
       setLocation(fallbackPath);
@@ -57,7 +65,7 @@ export function ProtectedRoute({
       setLocation(fallbackPath);
       return;
     }
-  }, [user, isLoading, isAuthenticated, requireStaff, requireRoles, requireAnyPermission, requireAllPermissions, redirectTo, fallbackPath, setLocation]);
+  }, [user, isLoading, isAuthenticated, requireStaff, requireRoles, excludeRoles, requireAnyPermission, requireAllPermissions, redirectTo, fallbackPath, setLocation]);
 
   // Show loading state
   if (isLoading) {
@@ -75,6 +83,11 @@ export function ProtectedRoute({
 
   // Staff check failed
   if (requireStaff && !isStaff(user)) {
+    return null;
+  }
+
+  // Excluded role check failed (user has a denied role)
+  if (excludeRoles.length > 0 && hasRole(user, ...excludeRoles)) {
     return null;
   }
 
