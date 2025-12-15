@@ -23,6 +23,7 @@ import {
   isMailerLiteConfigured,
   getMailerLiteGroups,
 } from '../services/mailerlite';
+import { sendNewsletterWelcomeEmail } from '../services/email';
 
 // Subscription request schema
 const subscribeSchema = z.object({
@@ -136,6 +137,18 @@ export function registerSmartNewsletterRoutes(app: Express) {
         if (!mailerliteResult.success) {
           console.warn(`⚠️ MailerLite sync failed for ${data.email}:`, mailerliteResult.error);
         }
+      }
+
+      // Send welcome email to new subscriber
+      const welcomeResult = await sendNewsletterWelcomeEmail({
+        to: data.email,
+        firstName: data.firstName,
+        language: data.language,
+        interests: data.interests,
+      });
+      
+      if (!welcomeResult.success) {
+        console.warn(`⚠️ Welcome email failed for ${data.email}:`, welcomeResult.error);
       }
 
       res.status(201).json({
