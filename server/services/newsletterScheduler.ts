@@ -54,7 +54,7 @@ const SCHEDULES: ScheduleConfig[] = [
     articleCount: 5,
     timeWindow: 12, // Last 12 hours
     voicePreset: 'FEMALE_NEWS',
-    cronSchedule: '30 12 * * *', // 12:30 PM every day (testing)
+    cronSchedule: '40 12 * * *', // 12:40 PM every day (testing)
     enabled: true
   },
   {
@@ -269,7 +269,7 @@ class NewsletterScheduler {
       .from(articles)
       .where(
         and(
-          gte(articles.createdAt, startTime.toISOString()),
+          gte(articles.createdAt, startTime),
           eq(articles.status, 'published'),
           isNotNull(articles.content)
         )
