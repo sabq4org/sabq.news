@@ -15,8 +15,8 @@ import {
 import { nanoid } from 'nanoid';
 import { audioNewsletterService, NewsletterTemplate, ARABIC_VOICES } from './audioNewsletterService';
 import { sendEmailNotification, sendNewsletterEmail } from './email';
-import { addDays, subHours, subDays, startOfDay, endOfDay, format } from 'date-fns';
-import { formatInTimeZone, toZonedTime } from 'date-fns-tz';
+import { subHours, format } from 'date-fns';
+import { generateArticleSummary, generatePersonalizedIntro } from './aiNewsletterService';
 
 interface ScheduleConfig {
   type: 'morning_brief' | 'evening_digest' | 'weekly_roundup';
@@ -134,7 +134,6 @@ class NewsletterScheduler {
         await this.executeScheduledNewsletter(config);
       },
       {
-        scheduled: true,
         timezone: TIMEZONE
       }
     );
@@ -151,8 +150,10 @@ class NewsletterScheduler {
     console.log(`[NewsletterScheduler] Executing scheduled newsletter: ${jobId}`);
 
     try {
-      // Get top articles based on performance metrics
-      const topArticles = await this.getTopArticles(config.articleCount, config.timeWindow);
+      // Fetch MORE articles than needed to allow per-subscriber personalization
+      // Fetch 3x the required amount (or at least 15-20) for variety
+      const articlesToFetch = Math.max(config.articleCount * 3, 20);
+      const topArticles = await this.getTopArticles(articlesToFetch, config.timeWindow);
       
       if (topArticles.length === 0) {
         console.log(`[NewsletterScheduler] No articles found for ${config.type}, skipping`);
@@ -206,13 +207,14 @@ class NewsletterScheduler {
         .where(eq(audioNewsletters.id, newsletter.id))
         .limit(1);
       
-      // Send newsletter to all active subscribers
+      // Send newsletter to all active subscribers with per-subscriber article selection
       await this.sendToSubscribers(
         config.type,
         title,
         config.description,
         generatedNewsletter?.audioUrl || undefined,
-        topArticles
+        topArticles,
+        config.articleCount // Pass the target articles per subscriber
       );
 
       // Send notifications to admins
@@ -271,14 +273,15 @@ class NewsletterScheduler {
   }
 
   /**
-   * Send newsletter to all active subscribers
+   * Send newsletter to all active subscribers with AI-powered personalization
    */
   private async sendToSubscribers(
     newsletterType: 'morning_brief' | 'evening_digest' | 'weekly_roundup',
     title: string,
     description: string,
     audioUrl: string | undefined,
-    articles: Article[]
+    allArticles: Article[],
+    articlesPerSubscriber: number = 5
   ) {
     try {
       // Get all active newsletter subscribers
@@ -292,53 +295,107 @@ class NewsletterScheduler {
         return;
       }
 
-      console.log(`[NewsletterScheduler] Sending newsletter to ${subscribers.length} subscribers`);
+      console.log(`[NewsletterScheduler] Sending personalized newsletter to ${subscribers.length} subscribers`);
+      console.log(`[NewsletterScheduler] Pre-computing AI summaries for ${allArticles.length} articles`);
 
-      // Prepare article summaries
-      const articleSummaries = articles.map(article => ({
-        title: article.title,
-        excerpt: article.excerpt || (article.content ? article.content.substring(0, 150) + '...' : ''),
-        url: article.slug ? `${process.env.FRONTEND_URL || ''}/article/${article.slug}` : undefined
-      }));
+      // OPTIMIZATION: Pre-compute AI summaries for ALL articles ONCE before subscriber loop
+      // This avoids N×M API calls (where N=subscribers, M=articles)
+      const summaryCache = new Map<string, string>();
+      
+      await Promise.all(
+        allArticles.map(async (article) => {
+          try {
+            const summary = await generateArticleSummary(article);
+            summaryCache.set(article.id, summary);
+          } catch (error) {
+            console.warn(`[NewsletterScheduler] Failed to generate summary for article ${article.id}:`, error);
+            summaryCache.set(article.id, article.excerpt || article.content?.substring(0, 150) + '...' || 'لا يوجد ملخص متاح');
+          }
+        })
+      );
 
-      // Send emails in batches to avoid rate limiting
-      const batchSize = 10;
+      console.log(`[NewsletterScheduler] Cached ${summaryCache.size} article summaries`);
+
       let successCount = 0;
       let failCount = 0;
 
-      for (let i = 0; i < subscribers.length; i += batchSize) {
-        const batch = subscribers.slice(i, i + batchSize);
-        
-        const results = await Promise.allSettled(
-          batch.map(subscriber =>
-            sendNewsletterEmail({
-              to: subscriber.email,
-              newsletterTitle: title,
-              newsletterDescription: description,
-              audioUrl,
-              articleSummaries,
-              newsletterType,
-              unsubscribeToken: subscriber.id // Use subscriber ID as token for now
-            })
-          )
-        );
+      // Process each subscriber individually for personalization
+      for (const subscriber of subscribers) {
+        try {
+          // Get subscriber's category preferences
+          const subscriberCategories = subscriber.preferences?.categories || [];
+          
+          // TRUE PERSONALIZATION: Filter and select articles for this subscriber
+          let personalizedArticles: Article[];
+          
+          if (subscriberCategories.length > 0) {
+            // Filter articles matching subscriber's preferred categories
+            const matchingArticles = allArticles.filter(article => 
+              subscriberCategories.includes(article.categoryId || '')
+            );
+            
+            // If enough matching articles, use those; otherwise, mix with general articles
+            if (matchingArticles.length >= articlesPerSubscriber) {
+              personalizedArticles = matchingArticles.slice(0, articlesPerSubscriber);
+            } else {
+              // Start with matching articles, then fill with non-matching ones
+              const nonMatchingArticles = allArticles.filter(article => 
+                !subscriberCategories.includes(article.categoryId || '')
+              );
+              personalizedArticles = [
+                ...matchingArticles,
+                ...nonMatchingArticles.slice(0, articlesPerSubscriber - matchingArticles.length)
+              ];
+            }
+          } else {
+            // No preferences: shuffle and pick random mix to provide variety
+            const shuffled = [...allArticles].sort(() => Math.random() - 0.5);
+            personalizedArticles = shuffled.slice(0, articlesPerSubscriber);
+          }
 
-        results.forEach((result, index) => {
-          if (result.status === 'fulfilled' && result.value.success) {
+          // Use pre-cached summaries instead of regenerating
+          const articleSummaries = personalizedArticles.map((article) => ({
+            title: article.title,
+            excerpt: summaryCache.get(article.id) || article.excerpt || 'لا يوجد ملخص متاح',
+            url: article.slug ? `${process.env.FRONTEND_URL || ''}/article/${article.slug}` : undefined
+          }));
+
+          // Generate personalized intro for this subscriber (this is cheap and per-subscriber)
+          const personalizedIntro = await generatePersonalizedIntro(
+            undefined, // We don't have subscriber name in current schema
+            subscriberCategories,
+            newsletterType
+          );
+
+          // Send personalized email
+          const result = await sendNewsletterEmail({
+            to: subscriber.email,
+            newsletterTitle: title,
+            newsletterDescription: description,
+            audioUrl,
+            articleSummaries,
+            newsletterType,
+            unsubscribeToken: subscriber.id,
+            personalizedIntro
+          });
+
+          if (result.success) {
             successCount++;
           } else {
             failCount++;
-            console.warn(`[NewsletterScheduler] Failed to send to ${batch[index].email}`);
+            console.warn(`[NewsletterScheduler] Failed to send to ${subscriber.email}: ${result.error}`);
           }
-        });
 
-        // Small delay between batches to avoid rate limiting
-        if (i + batchSize < subscribers.length) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          // Small delay between emails to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 200));
+          
+        } catch (subscriberError) {
+          failCount++;
+          console.error(`[NewsletterScheduler] Error processing subscriber ${subscriber.email}:`, subscriberError);
         }
       }
 
-      console.log(`[NewsletterScheduler] Newsletter sent: ${successCount} success, ${failCount} failed out of ${subscribers.length} subscribers`);
+      console.log(`[NewsletterScheduler] Personalized newsletter sent: ${successCount} success, ${failCount} failed out of ${subscribers.length} subscribers`);
       
     } catch (error) {
       console.error('[NewsletterScheduler] Error sending to subscribers:', error);
@@ -363,14 +420,12 @@ class NewsletterScheduler {
     const [newUser] = await db
       .insert(users)
       .values({
-        id: 'system_newsletter_bot',
+        id: 'system-newsletter',
         email: 'system@sabq.sa',
         firstName: 'نظام',
         lastName: 'سبق',
         role: 'system',
-        hashedPassword: '', // System user doesn't need password
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        passwordHash: ''
       })
       .returning();
     
@@ -404,20 +459,17 @@ class NewsletterScheduler {
       // Create notifications for all admins
       const notificationPromises = adminUsers.map(admin =>
         db.insert(notificationsInbox).values({
-          id: nanoid(),
           userId: admin.id,
           type: status === 'success' ? 'info' : 'alert',
           title: notificationTitle,
-          message: notificationBody,
+          body: notificationBody,
           metadata: {
             newsletterId,
             scheduleType,
             status,
             error: error?.message,
             timestamp: new Date().toISOString()
-          },
-          isRead: false,
-          createdAt: new Date()
+          }
         })
       );
       

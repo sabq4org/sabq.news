@@ -599,6 +599,7 @@ export async function sendNewsletterEmail(options: {
   articleSummaries?: { title: string; excerpt: string; url?: string }[];
   newsletterType: 'morning_brief' | 'evening_digest' | 'weekly_roundup';
   unsubscribeToken?: string;
+  personalizedIntro?: string;
 }): Promise<{ success: boolean; error?: string }> {
   try {
     if (!mailerSend || !MAILERSEND_API_KEY) {
@@ -606,7 +607,7 @@ export async function sendNewsletterEmail(options: {
       return { success: false, error: 'MailerSend API key not configured' };
     }
 
-    const { to, newsletterTitle, newsletterDescription, audioUrl, articleSummaries, newsletterType, unsubscribeToken } = options;
+    const { to, newsletterTitle, newsletterDescription, audioUrl, articleSummaries, newsletterType, unsubscribeToken, personalizedIntro } = options;
 
     // Type-specific styling
     const typeStyles = {
@@ -659,6 +660,12 @@ export async function sendNewsletterEmail(options: {
           </div>
           
           <div class="content">
+            ${personalizedIntro ? `
+              <div style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-radius: 12px; padding: 20px; margin-bottom: 24px; border-right: 4px solid #22c55e;">
+                <p style="margin: 0; color: #166534; font-size: 16px; line-height: 1.8;">${personalizedIntro}</p>
+              </div>
+            ` : ''}
+            
             ${audioUrl ? `
               <div class="audio-section">
                 <h3>🎧 استمع للنشرة الصوتية</h3>
@@ -698,7 +705,7 @@ ${style.label} - ${newsletterTitle}
 
 ${newsletterDescription}
 
-${audioUrl ? `🎧 استمع للنشرة: ${audioUrl}\n` : ''}
+${personalizedIntro ? `${personalizedIntro}\n\n` : ''}${audioUrl ? `🎧 استمع للنشرة: ${audioUrl}\n` : ''}
 ${articleSummaries?.map((a, i) => `${i + 1}. ${a.title}\n${a.excerpt}${a.url ? `\n${a.url}` : ''}`).join('\n\n') || ''}
 
 ---
