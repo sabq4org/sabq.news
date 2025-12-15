@@ -728,3 +728,114 @@ ${articleSummaries?.map((a, i) => `${i + 1}. ${a.title}\n${a.excerpt}${a.url ? `
     };
   }
 }
+
+/**
+ * Send unsubscribe confirmation email
+ */
+export async function sendNewsletterUnsubscribeEmail(options: {
+  to: string;
+  firstName?: string;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!mailerSend || !MAILERSEND_API_KEY) {
+      console.warn('Unsubscribe email not sent - MailerSend not configured');
+      return { success: false, error: 'MailerSend API key not configured' };
+    }
+
+    const { to, firstName } = options;
+    const greeting = firstName ? `${firstName} العزيز` : 'عزيزي المشترك';
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html dir="rtl" lang="ar">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body { font-family: 'Tajawal', Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 0; direction: rtl; }
+          .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+          .header { background: linear-gradient(135deg, #6b7280, #4b5563); padding: 40px 20px; text-align: center; }
+          .header h1 { color: white; font-size: 24px; margin: 0; font-weight: bold; }
+          .content { padding: 40px 30px; text-align: right; }
+          .content h2 { color: #1f2937; font-size: 20px; margin-bottom: 16px; }
+          .content p { color: #4b5563; font-size: 16px; line-height: 1.8; margin-bottom: 16px; }
+          .info-box { background: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; padding: 16px; margin: 20px 0; }
+          .info-box p { color: #92400e; margin: 0; font-size: 14px; }
+          .resubscribe-button { display: inline-block; background: #10b981; color: white !important; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 16px; font-weight: bold; margin-top: 20px; }
+          .footer { background: #f9f9f9; padding: 24px 30px; text-align: center; color: #999; font-size: 14px; border-top: 1px solid #eee; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <p style="font-size: 48px; margin-bottom: 8px;">👋</p>
+            <h1>تم إلغاء اشتراكك</h1>
+          </div>
+          
+          <div class="content">
+            <h2>${greeting}،</h2>
+            <p>نؤكد لك أنه تم إلغاء اشتراكك من النشرة الإخبارية الذكية لصحيفة سبق بنجاح.</p>
+            <p>لن تتلقى أي رسائل إخبارية منا بعد الآن.</p>
+            
+            <div class="info-box">
+              <p>💡 نأسف لرؤيتك تذهب! إذا ألغيت الاشتراك بالخطأ أو غيرت رأيك، يمكنك إعادة الاشتراك في أي وقت.</p>
+            </div>
+            
+            <p style="text-align: center;">
+              <a href="${FRONTEND_URL}/newsletter" class="resubscribe-button">
+                إعادة الاشتراك
+              </a>
+            </p>
+            
+            <p style="color: #9ca3af; font-size: 14px; margin-top: 30px;">
+              إذا كان لديك أي ملاحظات حول سبب إلغاء اشتراكك، نرحب بتواصلك معنا لتحسين خدماتنا.
+            </p>
+          </div>
+          
+          <div class="footer">
+            <p>© ${new Date().getFullYear()} صحيفة سبق الإلكترونية</p>
+            <p style="margin-top: 8px;">
+              <a href="${FRONTEND_URL}" style="color: #6b7280;">زيارة الموقع</a>
+            </p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const textContent = `
+${greeting}،
+
+نؤكد لك أنه تم إلغاء اشتراكك من النشرة الإخبارية الذكية لصحيفة سبق بنجاح.
+
+لن تتلقى أي رسائل إخبارية منا بعد الآن.
+
+إذا ألغيت الاشتراك بالخطأ أو غيرت رأيك، يمكنك إعادة الاشتراك من هنا:
+${FRONTEND_URL}/newsletter
+
+---
+© ${new Date().getFullYear()} صحيفة سبق الإلكترونية
+    `.trim();
+
+    const sentFrom = new Sender(FROM_EMAIL, FROM_NAME);
+    const recipients = [new Recipient(to)];
+
+    const emailParams = new EmailParams()
+      .setFrom(sentFrom)
+      .setTo(recipients)
+      .setSubject('👋 تم إلغاء اشتراكك | سبق')
+      .setHtml(htmlContent)
+      .setText(textContent);
+
+    await mailerSend.email.send(emailParams);
+    console.log(`✅ Unsubscribe confirmation email sent to ${to}`);
+    
+    return { success: true };
+  } catch (error) {
+    console.error(`❌ Failed to send unsubscribe email to ${options.to}:`, error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to send email' 
+    };
+  }
+}

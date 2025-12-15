@@ -23,7 +23,7 @@ import {
   isMailerLiteConfigured,
   getMailerLiteGroups,
 } from '../services/mailerlite';
-import { sendNewsletterWelcomeEmail } from '../services/email';
+import { sendNewsletterWelcomeEmail, sendNewsletterUnsubscribeEmail } from '../services/email';
 
 // Subscription request schema
 const subscribeSchema = z.object({
@@ -356,6 +356,15 @@ export function registerSmartNewsletterRoutes(app: Express) {
         if (mlSub.success && mlSub.data) {
           await unsubscribeFromMailerLite(mlSub.data.id);
         }
+      }
+
+      // Send unsubscribe confirmation email
+      const unsubscribeResult = await sendNewsletterUnsubscribeEmail({
+        to: email,
+      });
+      
+      if (!unsubscribeResult.success) {
+        console.warn(`⚠️ Unsubscribe email failed for ${email}:`, unsubscribeResult.error);
       }
 
       res.json({
