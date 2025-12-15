@@ -6211,6 +6211,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
       }
+      // Check publish permission if status is "published"
+      if (parsed.data.status === 'published') {
+        const userPermissions = await getUserPermissions(req.user.id);
+        const canPublish = userPermissions.includes("articles.publish");
+        if (!canPublish) {
+          return res.status(403).json({ message: "You don't have permission to publish articles. Please save as draft." });
+        }
+      }
+
 
       // Add publishedAt automatically if status is published and publishedAt is not set
       const articleData: any = {
@@ -11083,7 +11092,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!reporter) {
           return res.status(422).json({ message: "Reporter not found" });
         }
+      // Check publish permission if status is "published"
       }
+      if (parsed.data.status === 'published') {
+        const userPermissions = await getUserPermissions(req.user.id);
+        const canPublish = userPermissions.includes("articles.publish");
+        if (!canPublish) {
+          return res.status(403).json({ message: "You don't have permission to publish articles. Please save as draft." });
+        }
+      }
+
 
       // If status is published, set publishedAt
       const articleData = {
@@ -27323,6 +27341,15 @@ Allow: /
 
       if (existingArticle) {
         return res.status(409).json({ message: "Article slug already exists" });
+      // Check publish permission if status is "published"
+      if (parsed.data.status === 'published') {
+        const userPermissions = await getUserPermissions(req.user.id);
+        const canPublish = userPermissions.includes("articles.publish");
+        if (!canPublish) {
+          return res.status(403).json({ message: "You don't have permission to publish articles. Please save as draft." });
+        }
+      }
+
       }
 
       const [article] = await db
