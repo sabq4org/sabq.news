@@ -37,11 +37,11 @@ export function ReporterSelect({ value, onChange, disabled }: ReporterSelectProp
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: reportersData, isLoading } = useQuery<{ items: Reporter[] }>({
-    queryKey: ["/api/admin/users", { role: "reporter", query: searchQuery, limit: 20 }],
+    queryKey: ["/api/admin/users", { role: "reporter", query: searchQuery, limit: 200 }],
     queryFn: async () => {
       const params = new URLSearchParams({
         role: "reporter",
-        limit: "20",
+        limit: "200",
         ...(searchQuery && { query: searchQuery }),
       });
       const res = await fetch(`/api/admin/users?${params}`);
@@ -166,9 +166,6 @@ export function ReporterSelect({ value, onChange, disabled }: ReporterSelectProp
                             <div className="flex flex-col items-start min-w-0">
                               <span className="text-sm font-medium truncate w-full">
                                 {reporter.name}
-                              </span>
-                              <span className="text-xs text-muted-foreground truncate w-full">
-                                {reporter.email}
                               </span>
                             </div>
                           </div>
