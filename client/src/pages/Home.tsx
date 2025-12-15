@@ -555,8 +555,8 @@ export default function Home() {
           ))}
 
           {/* Smart Newsletter Subscription Form */}
-          <div className="scroll-fade-in mt-8">
-            <SmartNewsletterForm variant="full" source="homepage" />
+          <div className="scroll-fade-in mt-8 max-w-md mx-auto">
+            <SmartNewsletterForm variant="compact" source="homepage" />
           </div>
         </div>
       </main>
