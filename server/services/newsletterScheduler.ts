@@ -252,11 +252,13 @@ class NewsletterScheduler {
 
   /**
    * Get top performing articles based on metrics
+   * Uses adaptive time window to ensure enough articles for personalization
    */
   private async getTopArticles(limit: number, hoursBack: number): Promise<Article[]> {
     const startTime = subHours(new Date(), hoursBack);
     
-    const topArticles = await db
+    // First, try to get articles from the specified time window
+    let topArticles = await db
       .select()
       .from(articles)
       .where(
@@ -268,6 +270,29 @@ class NewsletterScheduler {
       )
       .orderBy(desc(articles.createdAt))
       .limit(limit);
+
+    // ADAPTIVE TIME WINDOW: If not enough articles, expand the search
+    // This ensures we have enough variety for personalization
+    if (topArticles.length < limit) {
+      console.log(`[NewsletterScheduler] Only found ${topArticles.length} articles in ${hoursBack}h window, expanding search...`);
+      
+      // Expand to 7 days if needed
+      const extendedStartTime = subHours(new Date(), 168); // 7 days
+      topArticles = await db
+        .select()
+        .from(articles)
+        .where(
+          and(
+            gte(articles.createdAt, extendedStartTime),
+            eq(articles.status, 'published'),
+            isNotNull(articles.content)
+          )
+        )
+        .orderBy(desc(articles.createdAt))
+        .limit(limit);
+      
+      console.log(`[NewsletterScheduler] Extended search found ${topArticles.length} articles`);
+    }
 
     return topArticles;
   }
