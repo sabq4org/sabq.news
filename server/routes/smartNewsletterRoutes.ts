@@ -610,6 +610,64 @@ export function registerSmartNewsletterRoutes(app: Express) {
     }
   });
 
+  /**
+   * POST /api/smart-newsletter/test-send
+   * Test sending newsletter email (admin only, for testing)
+   */
+  app.post('/api/smart-newsletter/test-send', async (req: any, res) => {
+    try {
+      const { email, type } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({
+          success: false,
+          message: 'البريد الإلكتروني مطلوب',
+        });
+      }
+
+      const { sendNewsletterEmail } = await import('../services/email');
+      
+      const result = await sendNewsletterEmail({
+        to: email,
+        newsletterTitle: 'نشرة سبق المسائية - اختبار',
+        newsletterDescription: 'هذه رسالة اختبار للنشرة الإخبارية',
+        newsletterType: type || 'evening_digest',
+        articleSummaries: [
+          {
+            title: 'خبر اختباري رقم 1',
+            excerpt: 'هذا نص تجريبي للخبر الأول في النشرة الإخبارية',
+            url: 'https://sabq.life/article/test-1'
+          },
+          {
+            title: 'خبر اختباري رقم 2', 
+            excerpt: 'هذا نص تجريبي للخبر الثاني في النشرة الإخبارية',
+            url: 'https://sabq.life/article/test-2'
+          }
+        ],
+        unsubscribeToken: 'test-token'
+      });
+
+      if (result.success) {
+        console.log(`✅ Test newsletter sent to ${email}`);
+        res.json({
+          success: true,
+          message: `تم إرسال بريد الاختبار إلى ${email}`,
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          message: result.error || 'فشل إرسال البريد',
+        });
+      }
+    } catch (error) {
+      console.error('Error sending test newsletter:', error);
+      res.status(500).json({
+        success: false,
+        message: 'خطأ في إرسال بريد الاختبار',
+      });
+    }
+  });
+
   console.log('✅ Smart Newsletter routes registered');
 }
 
