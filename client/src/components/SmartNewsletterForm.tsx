@@ -172,22 +172,28 @@ export function SmartNewsletterForm({
                       {categoriesLoading ? (
                         <div className="text-sm text-muted-foreground">جاري التحميل...</div>
                       ) : (
-                        categories.slice(0, 6).map((category) => (
-                          <Badge
-                            key={category.id}
-                            variant={field.value.includes(category.id) ? 'default' : 'outline'}
-                            className="cursor-pointer transition-all hover-elevate"
-                            onClick={() => {
-                              const newValue = field.value.includes(category.id)
-                                ? field.value.filter((id) => id !== category.id)
-                                : [...field.value, category.id];
-                              field.onChange(newValue);
-                            }}
-                            data-testid={`badge-category-${category.slug}`}
-                          >
-                            {category.nameAr}
-                          </Badge>
-                        ))
+                        categories.slice(0, 6).map((category) => {
+                          const categoryIdStr = String(category.id);
+                          const isSelected = field.value.includes(categoryIdStr);
+                          return (
+                            <Badge
+                              key={category.id}
+                              variant={isSelected ? 'default' : 'outline'}
+                              className="cursor-pointer transition-all hover-elevate"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                const newValue = isSelected
+                                  ? field.value.filter((id: string) => id !== categoryIdStr)
+                                  : [...field.value, categoryIdStr];
+                                field.onChange(newValue);
+                              }}
+                              data-testid={`badge-category-${category.slug}`}
+                            >
+                              {category.nameAr}
+                            </Badge>
+                          );
+                        })
                       )}
                     </div>
                     <FormMessage />
@@ -295,32 +301,38 @@ export function SmartNewsletterForm({
                         جاري تحميل الأقسام...
                       </div>
                     ) : (
-                      categories.map((category) => (
-                        <div
-                          key={category.id}
-                          className={`
-                            flex items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all
-                            ${field.value.includes(category.id)
-                              ? 'border-primary bg-primary/5'
-                              : 'border-border hover:border-primary/50'
-                            }
-                          `}
-                          onClick={() => {
-                            const newValue = field.value.includes(category.id)
-                              ? field.value.filter((id) => id !== category.id)
-                              : [...field.value, category.id];
-                            field.onChange(newValue);
-                          }}
-                          data-testid={`checkbox-category-${category.slug}`}
-                        >
-                          <Checkbox
-                            checked={field.value.includes(category.id)}
-                            onCheckedChange={() => {}}
-                            className="pointer-events-none"
-                          />
-                          <span className="text-sm font-medium">{category.nameAr}</span>
-                        </div>
-                      ))
+                      categories.map((category) => {
+                        const categoryIdStr = String(category.id);
+                        const isSelected = field.value.includes(categoryIdStr);
+                        return (
+                          <div
+                            key={category.id}
+                            className={`
+                              flex items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all
+                              ${isSelected
+                                ? 'border-primary bg-primary/5'
+                                : 'border-border hover:border-primary/50'
+                              }
+                            `}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              const newValue = isSelected
+                                ? field.value.filter((id: string) => id !== categoryIdStr)
+                                : [...field.value, categoryIdStr];
+                              field.onChange(newValue);
+                            }}
+                            data-testid={`checkbox-category-${category.slug}`}
+                          >
+                            <Checkbox
+                              checked={isSelected}
+                              onCheckedChange={() => {}}
+                              className="pointer-events-none"
+                            />
+                            <span className="text-sm font-medium">{category.nameAr}</span>
+                          </div>
+                        );
+                      })
                     )}
                   </div>
                   <FormMessage />
