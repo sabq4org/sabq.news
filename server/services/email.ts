@@ -442,3 +442,144 @@ If you didn't request a password reset, please ignore this email.
     };
   }
 }
+
+/**
+ * Send newsletter email to a subscriber
+ */
+export async function sendNewsletterEmail(options: {
+  to: string;
+  newsletterTitle: string;
+  newsletterDescription: string;
+  audioUrl?: string;
+  articleSummaries?: { title: string; excerpt: string; url?: string }[];
+  newsletterType: 'morning_brief' | 'evening_digest' | 'weekly_roundup';
+  unsubscribeToken?: string;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!mailerSend || !MAILERSEND_API_KEY) {
+      console.warn('Newsletter email not sent - MailerSend not configured');
+      return { success: false, error: 'MailerSend API key not configured' };
+    }
+
+    const { to, newsletterTitle, newsletterDescription, audioUrl, articleSummaries, newsletterType, unsubscribeToken } = options;
+
+    // Type-specific styling
+    const typeStyles = {
+      morning_brief: { gradient: '#f97316, #ea580c', icon: '☀️', label: 'النشرة الصباحية' },
+      evening_digest: { gradient: '#8b5cf6, #7c3aed', icon: '🌙', label: 'النشرة المسائية' },
+      weekly_roundup: { gradient: '#0ea5e9, #0284c7', icon: '📊', label: 'النشرة الأسبوعية' }
+    };
+    
+    const style = typeStyles[newsletterType];
+    const unsubscribeUrl = unsubscribeToken 
+      ? `${FRONTEND_URL}/unsubscribe?token=${unsubscribeToken}`
+      : `${FRONTEND_URL}/unsubscribe`;
+
+    // Build article list HTML
+    const articlesHtml = articleSummaries?.map((article, index) => `
+      <div style="background: #f9fafb; border-radius: 8px; padding: 16px; margin-bottom: 12px;">
+        <h3 style="margin: 0 0 8px 0; font-size: 16px; color: #1f2937;">${index + 1}. ${article.title}</h3>
+        <p style="margin: 0; color: #6b7280; font-size: 14px; line-height: 1.6;">${article.excerpt}</p>
+        ${article.url ? `<a href="${article.url}" style="color: #0066cc; font-size: 13px; text-decoration: none;">اقرأ المزيد ←</a>` : ''}
+      </div>
+    `).join('') || '';
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html dir="rtl" lang="ar">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body { font-family: 'Tajawal', Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 0; direction: rtl; }
+          .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+          .header { background: linear-gradient(135deg, ${style.gradient}); padding: 40px 20px; text-align: center; }
+          .header h1 { color: white; font-size: 24px; margin: 0 0 8px 0; font-weight: bold; }
+          .header p { color: rgba(255,255,255,0.9); font-size: 14px; margin: 0; }
+          .content { padding: 30px; text-align: right; }
+          .audio-section { background: linear-gradient(135deg, #1e293b, #334155); border-radius: 12px; padding: 24px; margin-bottom: 24px; text-align: center; }
+          .audio-section h3 { color: white; margin: 0 0 12px 0; font-size: 18px; }
+          .audio-button { display: inline-block; background: white; color: #1e293b !important; text-decoration: none; padding: 14px 32px; border-radius: 50px; font-size: 16px; font-weight: bold; }
+          .articles-section h2 { font-size: 18px; color: #1f2937; margin-bottom: 16px; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; }
+          .footer { background: #f9f9f9; padding: 20px 30px; text-align: center; color: #999; font-size: 12px; border-top: 1px solid #eee; }
+          .footer a { color: #6b7280; text-decoration: underline; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <p style="font-size: 28px; margin-bottom: 8px;">${style.icon}</p>
+            <h1>${newsletterTitle}</h1>
+            <p>${newsletterDescription}</p>
+          </div>
+          
+          <div class="content">
+            ${audioUrl ? `
+              <div class="audio-section">
+                <h3>🎧 استمع للنشرة الصوتية</h3>
+                <p style="color: rgba(255,255,255,0.7); font-size: 13px; margin-bottom: 16px;">استمع أثناء تنقلك أو عملك</p>
+                <a href="${audioUrl}" class="audio-button">▶ تشغيل النشرة</a>
+              </div>
+            ` : ''}
+            
+            ${articlesHtml ? `
+              <div class="articles-section">
+                <h2>📰 أبرز الأخبار</h2>
+                ${articlesHtml}
+              </div>
+            ` : ''}
+            
+            <p style="text-align: center; margin-top: 24px;">
+              <a href="${FRONTEND_URL}" style="background: #0066cc; color: white !important; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; display: inline-block;">
+                زيارة سبق للمزيد
+              </a>
+            </p>
+          </div>
+          
+          <div class="footer">
+            <p>© ${new Date().getFullYear()} صحيفة سبق الإلكترونية</p>
+            <p style="margin-top: 8px;">
+              <a href="${unsubscribeUrl}">إلغاء الاشتراك</a> | 
+              <a href="${FRONTEND_URL}/newsletter/preferences">تعديل التفضيلات</a>
+            </p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const textContent = `
+${style.label} - ${newsletterTitle}
+
+${newsletterDescription}
+
+${audioUrl ? `🎧 استمع للنشرة: ${audioUrl}\n` : ''}
+${articleSummaries?.map((a, i) => `${i + 1}. ${a.title}\n${a.excerpt}${a.url ? `\n${a.url}` : ''}`).join('\n\n') || ''}
+
+---
+زيارة سبق: ${FRONTEND_URL}
+إلغاء الاشتراك: ${unsubscribeUrl}
+    `.trim();
+
+    const sentFrom = new Sender(FROM_EMAIL, FROM_NAME);
+    const recipients = [new Recipient(to)];
+
+    const emailParams = new EmailParams()
+      .setFrom(sentFrom)
+      .setTo(recipients)
+      .setSubject(`${style.icon} ${newsletterTitle}`)
+      .setHtml(htmlContent)
+      .setText(textContent);
+
+    await mailerSend.email.send(emailParams);
+    console.log(`✅ Newsletter email sent to ${to}`);
+    
+    return { success: true };
+  } catch (error) {
+    console.error(`❌ Failed to send newsletter email to ${options.to}:`, error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to send email' 
+    };
+  }
+}

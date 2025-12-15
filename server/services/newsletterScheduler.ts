@@ -7,13 +7,14 @@ import {
   audioNewsletterArticles,
   users,
   notificationsInbox,
+  newsletterSubscriptions,
   type Article,
   type InsertAudioNewsletter,
   type NotificationInbox,
 } from '@shared/schema';
 import { nanoid } from 'nanoid';
 import { audioNewsletterService, NewsletterTemplate, ARABIC_VOICES } from './audioNewsletterService';
-import { sendEmailNotification } from './email';
+import { sendEmailNotification, sendNewsletterEmail } from './email';
 import { addDays, subHours, subDays, startOfDay, endOfDay, format } from 'date-fns';
 import { formatInTimeZone, toZonedTime } from 'date-fns-tz';
 
@@ -198,6 +199,22 @@ class NewsletterScheduler {
         webhookUrl: process.env.WEBHOOK_URL ? `${process.env.WEBHOOK_URL}/api/webhooks/audio-complete` : undefined
       });
 
+      // Get the generated newsletter audio URL from database
+      const [generatedNewsletter] = await db
+        .select()
+        .from(audioNewsletters)
+        .where(eq(audioNewsletters.id, newsletter.id))
+        .limit(1);
+      
+      // Send newsletter to all active subscribers
+      await this.sendToSubscribers(
+        config.type,
+        title,
+        config.description,
+        generatedNewsletter?.audioUrl || undefined,
+        topArticles
+      );
+
       // Send notifications to admins
       await this.notifyAdmins(newsletter.id, config.type, 'success');
       
@@ -261,6 +278,81 @@ class NewsletterScheduler {
       .limit(limit);
 
     return topArticles.map(row => row.article);
+  }
+
+  /**
+   * Send newsletter to all active subscribers
+   */
+  private async sendToSubscribers(
+    newsletterType: 'morning_brief' | 'evening_digest' | 'weekly_roundup',
+    title: string,
+    description: string,
+    audioUrl: string | undefined,
+    articles: Article[]
+  ) {
+    try {
+      // Get all active newsletter subscribers
+      const subscribers = await db
+        .select()
+        .from(newsletterSubscriptions)
+        .where(eq(newsletterSubscriptions.status, 'active'));
+
+      if (subscribers.length === 0) {
+        console.log('[NewsletterScheduler] No active subscribers to send newsletter to');
+        return;
+      }
+
+      console.log(`[NewsletterScheduler] Sending newsletter to ${subscribers.length} subscribers`);
+
+      // Prepare article summaries
+      const articleSummaries = articles.map(article => ({
+        title: article.title,
+        excerpt: article.excerpt || (article.content ? article.content.substring(0, 150) + '...' : ''),
+        url: article.slug ? `${process.env.FRONTEND_URL || ''}/article/${article.slug}` : undefined
+      }));
+
+      // Send emails in batches to avoid rate limiting
+      const batchSize = 10;
+      let successCount = 0;
+      let failCount = 0;
+
+      for (let i = 0; i < subscribers.length; i += batchSize) {
+        const batch = subscribers.slice(i, i + batchSize);
+        
+        const results = await Promise.allSettled(
+          batch.map(subscriber =>
+            sendNewsletterEmail({
+              to: subscriber.email,
+              newsletterTitle: title,
+              newsletterDescription: description,
+              audioUrl,
+              articleSummaries,
+              newsletterType,
+              unsubscribeToken: subscriber.id // Use subscriber ID as token for now
+            })
+          )
+        );
+
+        results.forEach((result, index) => {
+          if (result.status === 'fulfilled' && result.value.success) {
+            successCount++;
+          } else {
+            failCount++;
+            console.warn(`[NewsletterScheduler] Failed to send to ${batch[index].email}`);
+          }
+        });
+
+        // Small delay between batches to avoid rate limiting
+        if (i + batchSize < subscribers.length) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+
+      console.log(`[NewsletterScheduler] Newsletter sent: ${successCount} success, ${failCount} failed out of ${subscribers.length} subscribers`);
+      
+    } catch (error) {
+      console.error('[NewsletterScheduler] Error sending to subscribers:', error);
+    }
   }
 
   /**
