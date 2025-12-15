@@ -21,6 +21,7 @@ import { QuadCategoriesBlock } from "@/components/QuadCategoriesBlock";
 import { IFoxHomeBlock } from "@/components/IFoxHomeBlock";
 import { OpinionArticlesBlock } from "@/components/OpinionArticlesBlock";
 import { MuqtarabHomeBlock } from "@/components/MuqtarabHomeBlock";
+import { SmartNewsletterForm } from "@/components/SmartNewsletterForm";
 import { AdSlot } from "@/components/AdSlot";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -552,6 +553,11 @@ export default function Home() {
           {blocksAboveFooter && blocksAboveFooter.map((block) => (
             <SmartNewsBlock key={block.id} config={block} />
           ))}
+
+          {/* Smart Newsletter Subscription Form */}
+          <div className="scroll-fade-in mt-8">
+            <SmartNewsletterForm variant="full" source="homepage" />
+          </div>
         </div>
       </main>
       
