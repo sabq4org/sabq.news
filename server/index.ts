@@ -177,6 +177,11 @@ const uploadsDir = path.join(process.cwd(), 'uploads');
 app.use('/uploads', express.static(uploadsDir));
 console.log(`[Server] ✅ Static uploads directory configured: ${uploadsDir}`);
 
+// Serve static files from public directory (for branding, logos, etc.)
+const publicDir = path.join(process.cwd(), 'public');
+app.use('/branding', express.static(path.join(publicDir, 'branding')));
+console.log(`[Server] ✅ Static branding directory configured: ${publicDir}/branding`);
+
 // Rate limiting configurations
 const generalApiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes

@@ -342,7 +342,7 @@ function getDefaultTemplate(type: TemplateType): { subject: string; bodyHtml: st
               </div>
               
               <div class="content">
-                <h2 class="greeting">{{arabicName}} العزيز/ة،</h2>
+                <h2 class="greeting">العزيز/ة {{arabicName}}،</h2>
                 
                 <p>نشكرك على اهتمامك بالانضمام إلى فريق المراسلين في صحيفة سبق الإلكترونية.</p>
                 
@@ -373,7 +373,7 @@ function getDefaultTemplate(type: TemplateType): { subject: string; bodyHtml: st
         </html>
       `,
       bodyText: `
-{{arabicName}} العزيز/ة،
+العزيز/ة {{arabicName}}،
 
 شكراً لاهتمامك بالانضمام إلى فريق المراسلين في صحيفة سبق الإلكترونية.
 
@@ -476,7 +476,7 @@ function getDefaultTemplate(type: TemplateType): { subject: string; bodyHtml: st
               </div>
               
               <div class="content">
-                <h2 class="greeting">{{authorName}} العزيز/ة،</h2>
+                <h2 class="greeting">العزيز/ة {{authorName}}،</h2>
                 
                 <p>شكراً لتقديم مقالتك إلى صحيفة سبق.</p>
                 
@@ -510,7 +510,7 @@ function getDefaultTemplate(type: TemplateType): { subject: string; bodyHtml: st
         </html>
       `,
       bodyText: `
-{{authorName}} العزيز/ة،
+العزيز/ة {{authorName}}،
 
 شكراً لتقديم مقالتك إلى صحيفة سبق.
 
