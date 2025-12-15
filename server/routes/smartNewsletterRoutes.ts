@@ -611,59 +611,30 @@ export function registerSmartNewsletterRoutes(app: Express) {
   });
 
   /**
-   * POST /api/smart-newsletter/test-send
-   * Test sending newsletter email (admin only, for testing)
+   * POST /api/smart-newsletter/trigger-real
+   * Trigger real newsletter with actual articles to all subscribers
    */
-  app.post('/api/smart-newsletter/test-send', async (req: any, res) => {
+  app.post('/api/smart-newsletter/trigger-real', async (req: any, res) => {
     try {
-      const { email, type } = req.body;
+      const { type } = req.body;
+      const newsletterType = type || 'evening_digest';
       
-      if (!email) {
-        return res.status(400).json({
-          success: false,
-          message: 'البريد الإلكتروني مطلوب',
-        });
-      }
-
-      const { sendNewsletterEmail } = await import('../services/email');
+      const { newsletterScheduler } = await import('../services/newsletterScheduler');
       
-      const result = await sendNewsletterEmail({
-        to: email,
-        newsletterTitle: 'نشرة سبق المسائية - اختبار',
-        newsletterDescription: 'هذه رسالة اختبار للنشرة الإخبارية',
-        newsletterType: type || 'evening_digest',
-        articleSummaries: [
-          {
-            title: 'خبر اختباري رقم 1',
-            excerpt: 'هذا نص تجريبي للخبر الأول في النشرة الإخبارية',
-            url: 'https://sabq.life/article/test-1'
-          },
-          {
-            title: 'خبر اختباري رقم 2', 
-            excerpt: 'هذا نص تجريبي للخبر الثاني في النشرة الإخبارية',
-            url: 'https://sabq.life/article/test-2'
-          }
-        ],
-        unsubscribeToken: 'test-token'
+      console.log(`[Newsletter] Manually triggering ${newsletterType} newsletter...`);
+      
+      // Trigger the real newsletter
+      await newsletterScheduler.triggerManual(newsletterType);
+      
+      res.json({
+        success: true,
+        message: `تم تشغيل النشرة ${newsletterType} بنجاح - سيتم إرسالها للمشتركين`,
       });
-
-      if (result.success) {
-        console.log(`✅ Test newsletter sent to ${email}`);
-        res.json({
-          success: true,
-          message: `تم إرسال بريد الاختبار إلى ${email}`,
-        });
-      } else {
-        res.status(500).json({
-          success: false,
-          message: result.error || 'فشل إرسال البريد',
-        });
-      }
     } catch (error) {
-      console.error('Error sending test newsletter:', error);
+      console.error('Error triggering newsletter:', error);
       res.status(500).json({
         success: false,
-        message: 'خطأ في إرسال بريد الاختبار',
+        message: error instanceof Error ? error.message : 'خطأ في تشغيل النشرة',
       });
     }
   });

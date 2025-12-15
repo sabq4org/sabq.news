@@ -54,7 +54,7 @@ const SCHEDULES: ScheduleConfig[] = [
     articleCount: 5,
     timeWindow: 12, // Last 12 hours
     voicePreset: 'FEMALE_NEWS',
-    cronSchedule: '40 12 * * *', // 12:40 PM every day (testing)
+    cronSchedule: '0 17 * * *', // 5:00 PM every day
     enabled: true
   },
   {
@@ -255,17 +255,7 @@ class NewsletterScheduler {
     const startTime = subHours(new Date(), hoursBack);
     
     const topArticles = await db
-      .select({
-        article: articles,
-        viewCount: sql<number>`COALESCE(${articles.viewCount}, 0)`.as('view_count'),
-        shareCount: sql<number>`COALESCE(${articles.shareCount}, 0)`.as('share_count'),
-        commentCount: sql<number>`COALESCE(${articles.commentCount}, 0)`.as('comment_count'),
-        engagementScore: sql<number>`
-          COALESCE(${articles.viewCount}, 0) * 1 + 
-          COALESCE(${articles.shareCount}, 0) * 3 + 
-          COALESCE(${articles.commentCount}, 0) * 2
-        `.as('engagement_score')
-      })
+      .select()
       .from(articles)
       .where(
         and(
@@ -274,10 +264,10 @@ class NewsletterScheduler {
           isNotNull(articles.content)
         )
       )
-      .orderBy(desc(sql`engagement_score`))
+      .orderBy(desc(articles.createdAt))
       .limit(limit);
 
-    return topArticles.map(row => row.article);
+    return topArticles;
   }
 
   /**
