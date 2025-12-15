@@ -2884,6 +2884,7 @@ export class DatabaseStorage implements IStorage {
         phoneVerified: userData.phoneVerified || false,
         role: 'reader',
         isProfileComplete: true,
+        mustChangePassword: true, // Require password change on first login
       }).returning();
 
       if (userData.roleIds && userData.roleIds.length > 0) {
@@ -19272,13 +19273,13 @@ export class DatabaseStorage implements IStorage {
         lastName: application.arabicName.split(' ').slice(1).join(' ') || '',
         profileImageUrl: application.profilePhotoUrl,
         status: 'active',
-        password: hashedPassword,
+        passwordHash: hashedPassword,
         emailVerified: true,
         role: 'reporter',
         jobTitle: application.jobTitle,
         bio: application.bio,
-        city: application.city,
         isProfileComplete: true,
+        mustChangePassword: true, // Require password change on first login
       }).returning();
       finalUser = newUser;
       

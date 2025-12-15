@@ -18,6 +18,7 @@ import Register from "@/pages/Register";
 import VerifyEmail from "@/pages/VerifyEmail";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
+import SetPassword from "@/pages/SetPassword";
 import TwoFactorVerify from "@/pages/TwoFactorVerify";
 import ArticleDetail from "@/pages/ArticleDetail";
 import CategoryPage from "@/pages/CategoryPage";
@@ -297,6 +298,7 @@ function Router() {
       <Route path="/verify-email" component={VerifyEmail} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />
+      <Route path="/set-password" component={SetPassword} />
       <Route path="/2fa-verify" component={TwoFactorVerify} />
       <Route path="/category/:slug" component={CategoryPage} />
       <Route path="/keyword/:keyword" component={KeywordPage} />

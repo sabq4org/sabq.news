@@ -612,6 +612,9 @@ export const users = pgTable("users", {
   twoFactorBackupCodes: text("two_factor_backup_codes").array(),
   twoFactorMethod: text("two_factor_method").default("authenticator").notNull(), // authenticator, sms, both
   
+  // Temporary password flag - requires password change on first login
+  mustChangePassword: boolean("must_change_password").default(false).notNull(),
+  
   // Soft delete
   deletedAt: timestamp("deleted_at"),
   

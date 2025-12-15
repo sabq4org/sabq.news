@@ -483,7 +483,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return res.status(500).json({ message: "خطأ في حفظ الجلسة" });
           }
           console.log("✅ Login successful:", user.email);
-      res.json({ message: "تم تسجيل الدخول بنجاح", user: { id: user.id, email: user.email } });
+      res.json({ message: "تم تسجيل الدخول بنجاح", user: { id: user.id, email: user.email }, mustChangePassword: user.mustChangePassword || false });
         });
       });
     })(req, res, next);
@@ -790,6 +790,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Reset password error:", error);
       res.status(500).json({ message: "خطأ في إعادة تعيين كلمة المرور" });
+    }
+  });
+
+  // Set Password - For users with temporary password who must change it
+  app.post("/api/auth/set-password", isAuthenticated, async (req: any, res) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      const userId = req.user.id;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "كلمة المرور الحالية والجديدة مطلوبتان" });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" });
+      }
+
+      // Get user from database
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "المستخدم غير موجود" });
+      }
+
+      // Verify current password
+      if (!user.passwordHash) {
+        return res.status(400).json({ message: "لا يمكن تغيير كلمة المرور لهذا الحساب" });
+      }
+
+      const isValidPassword = await bcrypt.compare(currentPassword, user.passwordHash);
+      if (!isValidPassword) {
+        return res.status(401).json({ message: "كلمة المرور الحالية غير صحيحة" });
+      }
+
+      // Hash new password
+      const passwordHash = await bcrypt.hash(newPassword, 10);
+
+      // Update user password and set mustChangePassword to false
+      await db
+        .update(users)
+        .set({ 
+          passwordHash,
+          mustChangePassword: false 
+        })
+        .where(eq(users.id, userId));
+
+      console.log("✅ Password changed successfully for user:", user.email);
+      res.json({ message: "تم تغيير كلمة المرور بنجاح" });
+    } catch (error) {
+      console.error("Set password error:", error);
+      res.status(500).json({ message: "خطأ في تغيير كلمة المرور" });
     }
   });
 

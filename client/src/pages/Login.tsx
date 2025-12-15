@@ -45,6 +45,16 @@ export default function Login() {
       });
       
       // Check if 2FA is required
+      if (response.mustChangePassword) {
+        setIsLoading(false);
+        toast({
+          title: "تغيير كلمة المرور مطلوب",
+          description: "يجب عليك تعيين كلمة مرور جديدة للمتابعة",
+        });
+        navigate("/set-password");
+        return;
+      }
+
       if (response.requires2FA) {
         setIsLoading(false);
         toast({
