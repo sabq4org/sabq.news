@@ -32,7 +32,7 @@ import { trackUserEvent } from "./eventTrackingService";
 import { findSimilarArticles, getPersonalizedRecommendations } from "./similarityEngine";
 import { recommendationService } from "./services/recommendationService";
 import { sendSMSOTP, verifySMSOTP } from "./twilio";
-import { sendVerificationEmail, verifyEmailToken, resendVerificationEmail } from "./services/email";
+import { sendVerificationEmail, verifyEmailToken, resendVerificationEmail, sendPasswordResetEmail } from "./services/email";
 import { sendCorrespondentApprovalEmail, sendCorrespondentRejectionEmail, getAllDefaultTemplates, getDefaultTemplateByType } from "./services/employeeNotifications";
 import { analyzeSentiment, detectLanguage } from './sentiment-analyzer';
 import { classifyArticle } from './ai-classifier';
@@ -717,11 +717,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         expiresAt,
       });
 
-      // In production, send email here
-      // For now, log the reset link (development only)
-      if (process.env.NODE_ENV === 'development') {
-        const resetLink = `${process.env.REPLIT_DEV_DOMAIN || 'http://localhost:5000'}/reset-password?token=${resetToken}`;
-        console.log(`🔗 Password reset link for ${email}: ${resetLink}`);
+      // Send password reset email via MailerSend
+      const emailResult = await sendPasswordResetEmail(email, resetToken);
+      if (!emailResult.success) {
+        console.warn("⚠️  Failed to send password reset email:", emailResult.error);
+        // Still return success to prevent email enumeration
+      } else {
+        console.log(`✅ Password reset email sent to ${email}`);
       }
 
       res.json({ 
