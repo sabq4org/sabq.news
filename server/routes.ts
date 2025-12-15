@@ -16,6 +16,7 @@ import { ObjectStorageService, ObjectNotFoundError, objectStorageClient } from "
 import imageOptimizationService, { optimizeImage, getOptimizedImage, generateSrcSet, getBestFormat, supportsWebP, IMAGE_SIZES, generateLiteOptimizedImage } from "./services/imageOptimizationService";
 import sharp from "sharp";
 import { registerInfographicAiRoutes } from "./routes/infographicAi";
+import { registerSmartNewsletterRoutes } from "./routes/smartNewsletterRoutes";
 import { getObjectAclPolicy, setObjectAclPolicy } from "./objectAcl";
 import { summarizeArticle, generateTitle, chatWithAssistant, analyzeCredibility, generateDailyActivityInsights, analyzeSEO, generateSmartContent, rewriteAndEnhanceContent } from "./openai";
 import { chatWithMultilingualAssistant, chatWithAssistantFallback, type ChatLanguage } from "./multilingual-chatbot";
@@ -27863,6 +27864,7 @@ Allow: /
 
   // INFOGRAPHIC AI - مولد اقتراحات الإنفوجرافيك
   registerInfographicAiRoutes(app);
+  registerSmartNewsletterRoutes(app);
   // ============================================================
   // SMART JOURNALIST AGENT - وكيل الصحفي الذكي
   // ============================================================
