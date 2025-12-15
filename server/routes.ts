@@ -3,6 +3,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
+import { getCsrfToken, validateCsrfToken, ensureCsrfToken } from "./csrf";
 import adsRoutes from "./ads-routes";
 import { registerDataStoryRoutes } from './data-story-routes';
 import journalistAgentRoutes from './journalist-agent-routes';
@@ -301,6 +302,12 @@ import { pool } from "./db";
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
   await setupAuth(app);
+  
+  // CSRF token endpoint
+  app.get("/api/csrf-token", getCsrfToken);
+  
+  // Apply CSRF validation to all state-changing API routes
+  app.use("/api", validateCsrfToken);
   
   // Start WhatsApp message aggregator job (processes multi-part messages)
   startMessageAggregatorJob();

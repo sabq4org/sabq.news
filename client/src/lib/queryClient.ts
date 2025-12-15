@@ -1,6 +1,30 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 
+// CSRF Protection
+function getCsrfTokenFromCookie(): string | null {
+  const match = document.cookie.match(/csrf-token=([^;]+)/);
+  return match ? match[1] : null;
+}
+
+let csrfToken: string | null = null;
+
+export async function initializeCsrf(): Promise<void> {
+  try {
+    const res = await fetch("/api/csrf-token", { credentials: "include" });
+    if (res.ok) {
+      const data = await res.json();
+      csrfToken = data.csrfToken;
+    }
+  } catch (e) {
+    console.error("Failed to fetch CSRF token:", e);
+  }
+}
+
+function getCsrfToken(): string | null {
+  return csrfToken || getCsrfTokenFromCookie();
+}
+
 function handleSessionExpiration() {
   // Store current URL for redirect after login
   const currentPath = window.location.pathname + window.location.search;
@@ -179,6 +203,12 @@ export async function apiRequest<T = any>(
       xhr.open(options?.method || 'POST', url);
       xhr.withCredentials = true;
       
+      // Add CSRF token for state-changing requests
+      const token = getCsrfToken();
+      if (token) {
+        xhr.setRequestHeader("x-csrf-token", token);
+      }
+      
       // Don't set Content-Type for FormData - browser will set it with boundary
       if (options?.headers) {
         Object.entries(options.headers).forEach(([key, value]) => {
@@ -191,12 +221,22 @@ export async function apiRequest<T = any>(
   }
 
   // Standard fetch for non-FormData requests
+  const method = options?.method || "GET";
+  const isStateChangingMethod = ["POST", "PUT", "PATCH", "DELETE"].includes(method.toUpperCase());
+  const csrfTokenValue = getCsrfToken();
+  
+  const headers: Record<string, string> = {
+    ...(options?.body && typeof options.body === 'string' ? { "Content-Type": "application/json" } : {}),
+    ...(options?.headers || {}),
+  };
+  
+  if (isStateChangingMethod && csrfTokenValue) {
+    headers["x-csrf-token"] = csrfTokenValue;
+  }
+  
   const res = await fetch(url, {
-    method: options?.method || "GET",
-    headers: {
-      ...(options?.body && typeof options.body === 'string' ? { "Content-Type": "application/json" } : {}),
-      ...(options?.headers || {}),
-    },
+    method,
+    headers,
     body: typeof options?.body === 'string' ? options.body : undefined,
     credentials: "include",
   });

@@ -23,6 +23,7 @@ import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import cors from "cors";
 import compression from "compression";
+import cookieParser from "cookie-parser";
 import fs from "fs";
 import path from "path";
 
@@ -169,6 +170,7 @@ app.use(compression({
   threshold: 1024, // Only compress responses larger than 1KB
 }));
 
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
