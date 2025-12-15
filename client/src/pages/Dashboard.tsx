@@ -805,7 +805,7 @@ function Dashboard() {
                   {stats.recentArticles.map((article) => (
                     <div
                       key={article.id}
-                      className="flex items-start justify-between p-3 border rounded-lg hover-elevate transition-all"
+                      className="flex items-start justify-between p-3 border rounded-lg hover-elevate transition-all bg-blue-50 dark:bg-blue-950/30"
                       data-testid={`recent-article-${article.id}`}
                     >
                       <div className="flex-1 min-w-0">
@@ -863,7 +863,7 @@ function Dashboard() {
                   {stats.recentComments.map((comment) => (
                     <div
                       key={comment.id}
-                      className="flex items-start justify-between p-3 border rounded-lg hover-elevate transition-all"
+                      className="flex items-start justify-between p-3 border rounded-lg hover-elevate transition-all bg-green-50 dark:bg-green-950/30"
                       data-testid={`recent-comment-${comment.id}`}
                     >
                       <div className="flex-1 min-w-0">
@@ -929,7 +929,7 @@ function Dashboard() {
                 {stats.topArticles.map((article, index) => (
                   <div
                     key={article.id}
-                    className="flex items-center gap-4 p-3 border rounded-lg hover-elevate transition-all"
+                    className="flex items-center gap-4 p-3 border rounded-lg hover-elevate transition-all bg-rose-50 dark:bg-rose-950/30"
                     data-testid={`top-article-${article.id}`}
                   >
                     <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary font-bold">
