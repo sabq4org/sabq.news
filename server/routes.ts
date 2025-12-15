@@ -1081,7 +1081,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         limit = 20,
       } = req.query;
 
-      const pageNum = parseInt(page as string, 10);
+      const pageNum = Math.max(1, parseInt(page as string, 10) || 1);
       const limitNum = parseInt(limit as string, 20);
       const offset = (pageNum - 1) * limitNum;
 
@@ -5990,7 +5990,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all articles with filtering (admin only)
   app.get("/api/admin/articles", requireAuth, requirePermission("articles.view"), async (req: any, res) => {
     try {
-      const { search, status, articleType, categoryId, authorId, featured, includeAI } = req.query;
+      const { search, status, articleType, categoryId, authorId, featured, includeAI, page = '1', limit = '30' } = req.query;
+      const pageNum = Math.max(1, parseInt(page as string, 10) || 1);
+      const limitNum = Math.max(1, Math.min(100, parseInt(limit as string, 10) || 30));
+      const offset = (pageNum - 1) * limitNum;
 
       const reporterAlias = aliasedTable(users, 'reporter');
 
@@ -6086,7 +6089,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         query = query.where(and(...whereConditions));
       }
 
-      query = query.orderBy(desc(articles.publishedAt), desc(articles.createdAt), desc(articles.displayOrder));
+      
+      // Get total count for pagination
+      let countQuery = db.select({ count: sql<number>`count(*)` }).from(articles).$dynamic();
+      if (whereConditions.length > 0) {
+        countQuery = countQuery.where(and(...whereConditions));
+      }
+      const [countResult] = await countQuery;
+      const total = Number(countResult?.count || 0);
+
+      query = query.orderBy(desc(articles.publishedAt), desc(articles.createdAt), desc(articles.displayOrder))
+        .limit(limitNum)
+        .offset(offset);
 
       const results = await query;
 
@@ -6096,7 +6110,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         author: row.reporter || row.author,
       }));
 
-      res.json(formattedArticles);
+      res.json({ articles: formattedArticles, total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) });
     } catch (error) {
       console.error("Error fetching articles:", error);
       res.status(500).json({ message: "Failed to fetch articles" });
@@ -11063,7 +11077,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         author: row.reporter || row.author,
       }));
 
-      res.json(formattedArticles);
+      res.json({ articles: formattedArticles, total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) });
     } catch (error) {
       console.error("Error fetching English articles:", error);
       res.status(500).json({ message: "Failed to fetch English articles" });

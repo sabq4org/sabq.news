@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Edit, Trash2, Send, Star, Bell, Plus, Archive, Trash, GripVertical, Sparkles, Newspaper, Clock, FilePenLine, Brain, PenLine, MessageCircle, Mail } from "lucide-react";
+import { Edit, Trash2, Send, Star, Bell, Plus, Archive, Trash, GripVertical, Sparkles, Newspaper, Clock, FilePenLine, Brain, PenLine, MessageCircle, Mail, ChevronLeft, ChevronRight } from "lucide-react";
 import { ViewsCount } from "@/components/ViewsCount";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { MobileOptimizedKpiCard } from "@/components/MobileOptimizedKpiCard";
@@ -163,6 +163,9 @@ export default function ArticlesManagement() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   
+  // State for pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  
   // State for bulk selection
   const [selectedArticles, setSelectedArticles] = useState<Set<string>>(new Set());
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
@@ -214,17 +217,30 @@ export default function ArticlesManagement() {
     enabled: !!user,
   });
 
-  // Fetch articles with filters
-  const { data: articles = [], isLoading: articlesLoading } = useQuery<Article[]>({
-    queryKey: ["/api/admin/articles", searchTerm, activeStatus, typeFilter, categoryFilter],
+  // Reset page to 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, activeStatus, typeFilter, categoryFilter]);
+
+  // Fetch articles with filters and pagination
+  const { data: articlesData, isLoading: articlesLoading } = useQuery<{
+    articles: Article[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }>({
+    queryKey: ["/api/admin/articles", searchTerm, activeStatus, typeFilter, categoryFilter, currentPage],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (searchTerm) params.append("search", searchTerm);
       if (activeStatus) params.append("status", activeStatus);
       if (typeFilter && typeFilter !== "all") params.append("articleType", typeFilter);
       if (categoryFilter && categoryFilter !== "all") params.append("categoryId", categoryFilter);
+      params.append("page", currentPage.toString());
+      params.append("limit", "30");
       
-      const url = `/api/admin/articles${params.toString() ? `?${params.toString()}` : ""}`;
+      const url = `/api/admin/articles?${params.toString()}`;
       const response = await fetch(url, { credentials: "include" });
       if (!response.ok) {
         throw new Error(`Failed to fetch articles: ${response.statusText}`);
@@ -233,6 +249,9 @@ export default function ArticlesManagement() {
     },
     enabled: !!user,
   });
+
+  const articles = articlesData?.articles || [];
+  const totalPages = articlesData?.totalPages || 1;
 
   // Fetch categories for filter
   const { data: categories = [] } = useQuery<Category[]>({
@@ -1086,6 +1105,35 @@ export default function ArticlesManagement() {
               ))
             )}
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-4 py-4 border-t mt-4" data-testid="pagination-container">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1 || articlesLoading}
+                data-testid="button-pagination-prev"
+              >
+                <ChevronRight className="h-4 w-4 ml-1" />
+                السابق
+              </Button>
+              <span className="text-sm text-muted-foreground" data-testid="text-pagination-info">
+                الصفحة {currentPage} من {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage >= totalPages || totalPages <= 1 || articlesLoading}
+                data-testid="button-pagination-next"
+              >
+                التالي
+                <ChevronLeft className="h-4 w-4 mr-1" />
+              </Button>
+            </div>
+          )}
         </div>
 
       {/* Bulk Action Bar - Mobile Only */}
