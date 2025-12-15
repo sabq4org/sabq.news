@@ -194,10 +194,6 @@ export async function seedRBAC() {
     
     reporter: [
       "articles.view", "articles.create", "articles.edit_own",
-      "categories.view",
-      "comments.view",
-      "shorts:view", "shorts:create", "shorts:edit",
-      "calendar:view", "calendar:create",
       "tasks.view_own", "tasks.create", "tasks.edit_own",
     ],
     

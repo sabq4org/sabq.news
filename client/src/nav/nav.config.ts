@@ -85,7 +85,7 @@ export const navConfig: NavItem[] = [
     labelKey: "nav.content",
     labelAr: "المحتوى",
     icon: Newspaper,
-    roles: ["admin", "editor", "author", "reviewer", "comments_moderator"],
+    roles: ["admin", "editor", "author", "reviewer", "comments_moderator", "reporter"],
     // No parent permissions - each child validates independently and parent shows if any child is accessible
     children: [
       {
@@ -94,7 +94,7 @@ export const navConfig: NavItem[] = [
         labelAr: "الأخبار والمقالات",
         path: "/dashboard/articles",
         icon: FileText,
-        roles: ["admin", "editor", "author", "reviewer"],
+        roles: ["admin", "editor", "author", "reviewer", "reporter"],
         permissions: ["articles.view"], // Users with articles.view permission can access
       },
       {
@@ -103,7 +103,7 @@ export const navConfig: NavItem[] = [
         labelAr: "مقال جديد",
         path: "/dashboard/articles/new",
         icon: PlusCircle,
-        roles: ["admin", "editor", "author"],
+        roles: ["admin", "editor", "author", "reporter"],
         permissions: ["articles.create"], // Users with articles.create permission can access
       },
       {
@@ -193,8 +193,8 @@ export const navConfig: NavItem[] = [
         labelAr: "مكتبة الوسائط",
         path: "/dashboard/media-library",
         icon: ImageIcon,
-        roles: ["admin", "editor", "author"],
-        permissions: ["media.view", "media.manage", "media.upload"],
+        roles: ["admin", "editor", "author", "reporter"],
+        permissions: ["media.view", "media.upload"],
       },
     ],
   },
