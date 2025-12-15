@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
+import DOMPurify from "isomorphic-dompurify";
 
 interface AdSlotProps {
   slotId: string;
@@ -155,7 +156,7 @@ export function AdSlot({ slotId, className = "" }: AdSlotProps) {
           onClick={handleClick}
           className="cursor-pointer mx-auto"
           style={{ maxWidth: `${width}px` }}
-          dangerouslySetInnerHTML={{ __html: creative.content }}
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(creative.content || '') }}
           data-testid={`ad-html-${creative.id}`}
         />
       )}

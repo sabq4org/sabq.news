@@ -6,6 +6,7 @@ import { arSA } from "date-fns/locale";
 import type { Article, Category, User } from "@shared/schema";
 import { ArticleQuiz } from "@/components/ArticleQuiz";
 import { useToast } from "@/hooks/use-toast";
+import DOMPurify from "isomorphic-dompurify";
 
 type ArticleWithDetails = Article & {
   category?: Category;
@@ -598,7 +599,7 @@ export function SwipeCard({
 
               <div 
                 className="prose prose-lg dark:prose-invert max-w-none text-foreground leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: article.content || smartSummary || '' }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(article.content || smartSummary || '') }}
               />
               
               {/* Quiz Section */}

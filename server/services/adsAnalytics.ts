@@ -176,24 +176,31 @@ export async function getOverviewStats(
   };
 }
 
+const VALID_DATE_TRUNCS = ['day', 'week', 'month'] as const;
+type ValidDateTrunc = typeof VALID_DATE_TRUNCS[number];
+
+function getSafeDateTrunc(period: string): ValidDateTrunc {
+  switch (period) {
+    case "weekly":
+      return "week";
+    case "monthly":
+      return "month";
+    case "daily":
+    default:
+      return "day";
+  }
+}
+
 export async function getTimeSeriesData(
   period: "daily" | "weekly" | "monthly",
   campaignId?: string,
   dateFrom?: Date,
   dateTo?: Date
 ): Promise<TimeSeriesDataPoint[]> {
-  let dateTrunc: string;
-  switch (period) {
-    case "weekly":
-      dateTrunc = "week";
-      break;
-    case "monthly":
-      dateTrunc = "month";
-      break;
-    case "daily":
-    default:
-      dateTrunc = "day";
-      break;
+  const dateTrunc = getSafeDateTrunc(period);
+  
+  if (!VALID_DATE_TRUNCS.includes(dateTrunc)) {
+    throw new Error('Invalid date truncation period');
   }
 
   // Query impressions grouped by date

@@ -439,7 +439,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Login
   app.post("/api/login", authLimiter, (req, res, next) => {
-    console.log("🔐 Login attempt:", { email: req.body?.email, hasPassword: !!req.body?.password });
+    if (process.env.NODE_ENV !== 'production') {
+      console.log("🔐 Login attempt for:", req.body?.email);
+    }
     
     passport.authenticate("local", async (err: any, user: any, info: any) => {
       if (err) {

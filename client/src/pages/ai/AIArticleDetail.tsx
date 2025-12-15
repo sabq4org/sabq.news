@@ -30,6 +30,7 @@ import AIHeader from "@/components/ai/AIHeader";
 import AINewsCard from "@/components/ai/AINewsCard";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { ArticleWithDetails } from "@shared/schema";
+import DOMPurify from "isomorphic-dompurify";
 
 export default function AIArticleDetail() {
   const params = useParams<{ slug: string }>();
@@ -416,7 +417,7 @@ export default function AIArticleDetail() {
           {/* Article Content */}
           <div 
             className="prose prose-invert prose-lg max-w-none mb-12"
-            dangerouslySetInnerHTML={{ __html: article.content }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(article.content || '') }}
           />
 
 

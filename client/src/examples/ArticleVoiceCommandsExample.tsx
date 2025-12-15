@@ -8,6 +8,7 @@
 import { useArticleVoiceCommands } from "@/hooks/useArticleVoiceCommands";
 import { Button } from "@/components/ui/button";
 import { Volume2, VolumeX } from "lucide-react";
+import DOMPurify from "isomorphic-dompurify";
 
 export function ArticleDetailExample() {
   // Example article data
@@ -55,7 +56,7 @@ export function ArticleDetailExample() {
       
       <div 
         className="article-content"
-        dangerouslySetInnerHTML={{ __html: article.content }}
+        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(article.content || '') }}
       />
       
       {/* Voice commands are automatically available:

@@ -12,6 +12,7 @@ import { Separator } from "./ui/separator";
 import { ScrollArea } from "./ui/scroll-area";
 import { AlertCircle, CheckCircle, FileText, Paperclip } from "lucide-react";
 import type { EmailWebhookLog } from "@shared/schema";
+import DOMPurify from "isomorphic-dompurify";
 
 interface EmailDetailsModalProps {
   open: boolean;
@@ -120,7 +121,7 @@ export function EmailDetailsModal({
                 {log.bodyHtml ? (
                   <div
                     className="prose prose-sm max-w-none dark:prose-invert"
-                    dangerouslySetInnerHTML={{ __html: log.bodyHtml }}
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(log.bodyHtml || '') }}
                   />
                 ) : log.bodyText ? (
                   <pre className="whitespace-pre-wrap font-sans text-sm">
