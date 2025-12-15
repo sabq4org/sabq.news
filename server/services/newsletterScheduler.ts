@@ -297,6 +297,16 @@ class NewsletterScheduler {
 
       console.log(`[NewsletterScheduler] Sending personalized newsletter to ${subscribers.length} subscribers`);
       console.log(`[NewsletterScheduler] Pre-computing AI summaries for ${allArticles.length} articles`);
+      
+      // Debug: Log available category IDs in the article pool
+      const uniqueCategoryIds = Array.from(new Set(allArticles.map(a => a.categoryId).filter(Boolean)));
+      console.log(`[NewsletterScheduler] Available article categories (${uniqueCategoryIds.length}):`, uniqueCategoryIds);
+      
+      // Debug: Log first article to verify categoryId is populated
+      if (allArticles.length > 0) {
+        const sample = allArticles[0];
+        console.log(`[NewsletterScheduler] Sample article - id: ${sample.id}, categoryId: ${sample.categoryId}, title: ${sample.title?.substring(0, 30)}...`);
+      }
 
       // OPTIMIZATION: Pre-compute AI summaries for ALL articles ONCE before subscriber loop
       // This avoids N×M API calls (where N=subscribers, M=articles)
@@ -323,20 +333,38 @@ class NewsletterScheduler {
       for (const subscriber of subscribers) {
         try {
           // Get subscriber's category preferences
-          const subscriberCategories = subscriber.preferences?.categories || [];
+          // Handle potential string encoding from JSONB column
+          let subscriberCategories: string[] = [];
+          try {
+            const prefs = typeof subscriber.preferences === 'string' 
+              ? JSON.parse(subscriber.preferences) 
+              : subscriber.preferences;
+            subscriberCategories = prefs?.categories || [];
+          } catch (parseError) {
+            console.warn(`[NewsletterScheduler] Failed to parse preferences for ${subscriber.email}:`, parseError);
+            subscriberCategories = [];
+          }
+          
+          // Log personalization details for debugging
+          console.log(`[NewsletterScheduler] Subscriber ${subscriber.email} has ${subscriberCategories.length} category preferences:`, subscriberCategories.slice(0, 3));
           
           // TRUE PERSONALIZATION: Filter and select articles for this subscriber
           let personalizedArticles: Article[];
           
           if (subscriberCategories.length > 0) {
             // Filter articles matching subscriber's preferred categories
-            const matchingArticles = allArticles.filter(article => 
-              subscriberCategories.includes(article.categoryId || '')
-            );
+            const matchingArticles = allArticles.filter(article => {
+              const articleCategoryId = article.categoryId || '';
+              const isMatch = subscriberCategories.includes(articleCategoryId);
+              return isMatch;
+            });
+            
+            console.log(`[NewsletterScheduler] Found ${matchingArticles.length} matching articles for ${subscriber.email} (need ${articlesPerSubscriber})`);
             
             // If enough matching articles, use those; otherwise, mix with general articles
             if (matchingArticles.length >= articlesPerSubscriber) {
               personalizedArticles = matchingArticles.slice(0, articlesPerSubscriber);
+              console.log(`[NewsletterScheduler] Using ${articlesPerSubscriber} matching articles for ${subscriber.email}`);
             } else {
               // Start with matching articles, then fill with non-matching ones
               const nonMatchingArticles = allArticles.filter(article => 
@@ -346,12 +374,17 @@ class NewsletterScheduler {
                 ...matchingArticles,
                 ...nonMatchingArticles.slice(0, articlesPerSubscriber - matchingArticles.length)
               ];
+              console.log(`[NewsletterScheduler] Using ${matchingArticles.length} matching + ${personalizedArticles.length - matchingArticles.length} general articles for ${subscriber.email}`);
             }
           } else {
             // No preferences: shuffle and pick random mix to provide variety
+            console.log(`[NewsletterScheduler] No preferences for ${subscriber.email}, using shuffled articles`);
             const shuffled = [...allArticles].sort(() => Math.random() - 0.5);
             personalizedArticles = shuffled.slice(0, articlesPerSubscriber);
           }
+          
+          // Log selected articles for this subscriber
+          console.log(`[NewsletterScheduler] Selected articles for ${subscriber.email}:`, personalizedArticles.map(a => a.title?.substring(0, 30) + '...').join(', '));
 
           // Use pre-cached summaries instead of regenerating
           const articleSummaries = personalizedArticles.map((article) => ({
