@@ -29,8 +29,9 @@ export function useReadingTimeTracker({
     if (totalSeconds >= minReadingTime) {
       hasSentRef.current = true;
       try {
-        await apiRequest('POST', `/api/articles/${articleId}/reading-time`, {
-          duration: totalSeconds
+        await apiRequest(`/api/articles/${articleId}/reading-time`, {
+          method: 'POST',
+          body: JSON.stringify({ duration: totalSeconds })
         });
       } catch (error) {
         console.error('Failed to record reading time:', error);

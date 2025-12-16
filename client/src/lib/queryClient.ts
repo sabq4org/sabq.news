@@ -8,17 +8,50 @@ function getCsrfTokenFromCookie(): string | null {
 }
 
 let csrfToken: string | null = null;
+let csrfInitPromise: Promise<void> | null = null;
+let csrfRetryCount = 0;
+const MAX_CSRF_RETRIES = 3;
 
 export async function initializeCsrf(): Promise<void> {
-  try {
-    const res = await fetch("/api/csrf-token", { credentials: "include" });
-    if (res.ok) {
-      const data = await res.json();
-      csrfToken = data.csrfToken;
-    }
-  } catch (e) {
-    console.error("Failed to fetch CSRF token:", e);
+  // If already initializing, return the existing promise
+  if (csrfInitPromise) {
+    return csrfInitPromise;
   }
+  
+  csrfInitPromise = (async () => {
+    while (csrfRetryCount < MAX_CSRF_RETRIES) {
+      try {
+        const res = await fetch("/api/csrf-token", { credentials: "include" });
+        if (res.ok) {
+          const data = await res.json();
+          csrfToken = data.csrfToken;
+          csrfRetryCount = 0; // Reset on success
+          return;
+        }
+      } catch (e) {
+        console.error("Failed to fetch CSRF token, attempt", csrfRetryCount + 1, e);
+      }
+      csrfRetryCount++;
+      if (csrfRetryCount < MAX_CSRF_RETRIES) {
+        // Wait before retry (exponential backoff: 500ms, 1s, 2s)
+        await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(2, csrfRetryCount - 1)));
+      }
+    }
+    // Final attempt - try to get from cookie
+    csrfToken = getCsrfTokenFromCookie();
+  })();
+  
+  await csrfInitPromise;
+  csrfInitPromise = null;
+}
+
+// Force refresh CSRF token (used after 403 errors)
+async function refreshCsrfToken(): Promise<string | null> {
+  csrfToken = null;
+  csrfRetryCount = 0;
+  csrfInitPromise = null;
+  await initializeCsrf();
+  return csrfToken;
 }
 
 function getCsrfToken(): string | null {
@@ -119,10 +152,16 @@ export async function apiRequest<T = any>(
     headers?: Record<string, string>;
     isFormData?: boolean;
     onUploadProgress?: (progress: { loaded: number; total: number }) => void;
+    _csrfRetry?: boolean; // Internal flag for CSRF retry
   }
 ): Promise<T> {
   // Use XMLHttpRequest for FormData with progress tracking
   if (options?.isFormData && options.body instanceof FormData) {
+    // Ensure CSRF token is available before FormData upload
+    if (!getCsrfToken()) {
+      await initializeCsrf();
+    }
+    
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       
@@ -150,10 +189,25 @@ export async function apiRequest<T = any>(
             handleSessionExpiration();
           }
           
-          // Handle 403 Forbidden - show user-friendly message
+          // Handle 403 Forbidden - check for CSRF error and handle gracefully
           if (xhr.status === 403) {
             try {
               const data = JSON.parse(xhr.responseText);
+              // Check if it's a CSRF error - refresh token silently and show retry message
+              if (data.message && (
+                data.message.includes('رمز الحماية') || 
+                data.message.includes('الجلسة غير متوفرة')
+              )) {
+                // Refresh CSRF token for next request
+                refreshCsrfToken();
+                toast({
+                  title: "يرجى المحاولة مرة أخرى",
+                  description: "تم تحديث رمز الحماية",
+                  variant: "default",
+                });
+                reject(new Error(data.message));
+                return;
+              }
               if (data.message) {
                 toast({
                   title: "تنبيه",
@@ -220,35 +274,60 @@ export async function apiRequest<T = any>(
     });
   }
 
-  // Standard fetch for non-FormData requests
+  // Standard fetch for non-FormData requests with CSRF auto-retry
   const method = options?.method || "GET";
   const isStateChangingMethod = ["POST", "PUT", "PATCH", "DELETE"].includes(method.toUpperCase());
-  const csrfTokenValue = getCsrfToken();
   
-  const headers: Record<string, string> = {
-    ...(options?.body && typeof options.body === 'string' ? { "Content-Type": "application/json" } : {}),
-    ...(options?.headers || {}),
-  };
-  
-  if (isStateChangingMethod && csrfTokenValue) {
-    headers["x-csrf-token"] = csrfTokenValue;
-  }
-  
-  const res = await fetch(url, {
-    method,
-    headers,
-    body: typeof options?.body === 'string' ? options.body : undefined,
-    credentials: "include",
-  });
+  // Helper to make the actual request
+  async function makeRequest(retryAttempt = 0): Promise<T> {
+    const currentCsrfToken = getCsrfToken();
+    
+    const headers: Record<string, string> = {
+      ...(options?.body && typeof options.body === 'string' ? { "Content-Type": "application/json" } : {}),
+      ...(options?.headers || {}),
+    };
+    
+    if (isStateChangingMethod && currentCsrfToken) {
+      headers["x-csrf-token"] = currentCsrfToken;
+    }
+    
+    const res = await fetch(url, {
+      method,
+      headers,
+      body: typeof options?.body === 'string' ? options.body : undefined,
+      credentials: "include",
+    });
 
-  await throwIfResNotOk(res);
-  
-  const contentType = res.headers.get("content-type");
-  if (contentType && contentType.includes("application/json")) {
-    return await res.json();
+    // Check for CSRF-related 403 error and retry once
+    if (res.status === 403 && retryAttempt === 0 && isStateChangingMethod) {
+      const text = await res.clone().text();
+      try {
+        const data = JSON.parse(text);
+        // Check if it's a CSRF error (contains Arabic CSRF messages)
+        if (data.message && (
+          data.message.includes('رمز الحماية') || 
+          data.message.includes('الجلسة غير متوفرة')
+        )) {
+          // Refresh CSRF token and retry
+          await refreshCsrfToken();
+          return makeRequest(1);
+        }
+      } catch {
+        // Not a JSON error, continue with normal error handling
+      }
+    }
+
+    await throwIfResNotOk(res);
+    
+    const contentType = res.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      return await res.json();
+    }
+    
+    return res as T;
   }
   
-  return res as T;
+  return makeRequest();
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
