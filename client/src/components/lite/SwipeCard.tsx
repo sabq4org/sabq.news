@@ -470,11 +470,11 @@ export function SwipeCard({
             onTouchEnd={handleDetailTouchEnd}
           >
             {article.isVideoTemplate && videoEmbedUrl ? (
-              <div className="relative h-72 sm:h-96">
+              <div className="relative h-72 sm:h-96 bg-black">
                 {videoEmbedUrl.match(/\.(mp4|webm|ogg)$/i) ? (
                   <video
                     src={videoEmbedUrl}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                     autoPlay
                     controls
                     playsInline
