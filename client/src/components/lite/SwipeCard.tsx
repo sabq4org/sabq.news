@@ -470,7 +470,7 @@ export function SwipeCard({
             onTouchEnd={handleDetailTouchEnd}
           >
             {article.isVideoTemplate && videoEmbedUrl ? (
-              <div className="relative h-72 sm:h-96 bg-black">
+              <div className="relative h-screen bg-black">
                 {videoEmbedUrl.match(/\.(mp4|webm|ogg)$/i) ? (
                   <video
                     src={videoEmbedUrl}
@@ -490,13 +490,13 @@ export function SwipeCard({
                 
                 <button
                   onClick={() => setShowDetails(false)}
-                  className="absolute top-4 right-4 p-2 bg-black/50 backdrop-blur-sm rounded-full text-white"
+                  className="absolute top-4 right-4 p-2 bg-black/50 backdrop-blur-sm rounded-full text-white z-10"
                   data-testid="button-close-details"
                 >
                   <ChevronDown className="h-6 w-6" />
                 </button>
 
-                <div className="absolute bottom-4 left-4 flex gap-2">
+                <div className="absolute bottom-4 left-4 flex gap-2 z-10">
                   <button 
                     className="p-3 bg-black/40 backdrop-blur-sm rounded-full text-white/90 active:bg-white/20 transition-colors"
                     onClick={handleShareClick}
@@ -514,14 +514,13 @@ export function SwipeCard({
                 </div>
               </div>
             ) : imageUrl && (
-              <div className="relative h-72 sm:h-96">
+              <div className="relative">
                 <img
                   src={imageUrl}
                   alt={article.title}
-                  className="w-full h-full object-contain"
-                  style={{ objectPosition: getFocalPointStyle((article as any).imageFocalPoint) }}
+                  className="w-full h-auto max-h-[80vh]"
+                  style={{ objectFit: 'contain', objectPosition: getFocalPointStyle((article as any).imageFocalPoint) }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                 
                 <button
                   onClick={() => setShowDetails(false)}
