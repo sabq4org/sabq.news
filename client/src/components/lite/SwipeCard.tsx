@@ -52,6 +52,11 @@ function getVideoEmbedUrl(url: string | null | undefined): string | null {
   return null;
 }
 
+function getFocalPointStyle(focalPoint: { x: number; y: number } | null | undefined): string {
+  if (!focalPoint) return 'center center';
+  return `${focalPoint.x}% ${focalPoint.y}%`;
+}
+
 interface SwipeCardProps {
   article: ArticleWithDetails;
   position: 'current' | 'next' | 'previous';
@@ -358,7 +363,7 @@ export function SwipeCard({
                 src={imageUrl}
                 alt={article.title}
                 className="w-full h-full object-cover"
-                style={{ objectPosition: 'center center' }}
+                style={{ objectPosition: getFocalPointStyle((article as any).imageFocalPoint) }}
                 draggable={false}
               />
               <div 
@@ -513,7 +518,8 @@ export function SwipeCard({
                 <img
                   src={imageUrl}
                   alt={article.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
+                  style={{ objectPosition: getFocalPointStyle((article as any).imageFocalPoint) }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                 
