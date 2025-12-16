@@ -1461,12 +1461,18 @@ router.patch("/tokens/:id", requireAuth, requireRole('admin', 'manager'), async 
     const { id } = req.params;
     const updates = req.body;
     
+    console.log("[WhatsApp Agent] PATCH /tokens/:id - Received updates:", JSON.stringify(updates, null, 2));
+    
     delete updates.token;
     delete updates.usageCount;
     delete updates.lastUsedAt;
     delete updates.createdAt;
     
+    console.log("[WhatsApp Agent] PATCH /tokens/:id - After cleanup:", JSON.stringify(updates, null, 2));
+    
     const updated = await storage.updateWhatsappToken(id, updates);
+    
+    console.log("[WhatsApp Agent] PATCH /tokens/:id - Updated token:", JSON.stringify(updated, null, 2));
     
     if (!updated) {
       return res.status(404).json({ error: "Token not found" });
