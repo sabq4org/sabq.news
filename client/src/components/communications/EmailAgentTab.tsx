@@ -118,7 +118,7 @@ export default function EmailAgentTab({ user }: EmailAgentTabProps) {
       values: Partial<SenderFormValues>;
     }) => {
       return await apiRequest(`/api/email-agent/senders/${id}`, {
-        method: 'PATCH',
+        method: 'PUT',
         body: JSON.stringify(values),
       });
     },
