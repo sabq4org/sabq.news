@@ -84,22 +84,22 @@ export default function RecentActivityFeed() {
         <CardDescription>آخر التحديثات والأنشطة على المنصة</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4 max-h-[600px] overflow-y-auto">
+        <div className="space-y-1.5 max-h-[600px] overflow-y-auto">
           {activities?.map((activity) => {
             const Icon = activityIcons[activity.type];
             const colorClass = activityColors[activity.type];
 
             return (
-              <div key={activity.id} className="flex items-start gap-3 p-2 rounded-lg hover-elevate">
-                <Avatar className="h-10 w-10">
+              <div key={activity.id} className="flex items-start gap-2 p-1.5 rounded-lg hover-elevate">
+                <Avatar className="h-7 w-7">
                   <AvatarImage src={activity.user.avatar} alt={activity.user.name} />
-                  <AvatarFallback>{activity.user.name.charAt(0)}</AvatarFallback>
+                  <AvatarFallback className="text-xs">{activity.user.name.charAt(0)}</AvatarFallback>
                 </Avatar>
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Icon className={`h-4 w-4 ${colorClass}`} />
-                    <span className="font-medium text-sm">{activity.user.name}</span>
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <Icon className={`h-3 w-3 ${colorClass}`} />
+                    <span className="font-medium text-xs">{activity.user.name}</span>
                     <Badge variant="outline" className="text-xs">
                       {activity.type === 'article' && 'مقال جديد'}
                       {activity.type === 'comment' && 'تعليق'}
@@ -110,7 +110,7 @@ export default function RecentActivityFeed() {
                     </Badge>
                   </div>
 
-                  <p className="text-sm text-muted-foreground mb-1">
+                  <p className="text-xs text-muted-foreground mb-0.5 line-clamp-1">
                     {activity.description}
                   </p>
 
@@ -120,7 +120,7 @@ export default function RecentActivityFeed() {
                     </p>
                   )}
 
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-[10px] text-muted-foreground">
                     {getRelativeTime(activity.timestamp)}
                   </span>
                 </div>
