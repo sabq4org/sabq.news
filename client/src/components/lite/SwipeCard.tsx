@@ -593,7 +593,7 @@ export function SwipeCard({
 
               {article.author && (
                 <p className="text-muted-foreground text-sm mb-6">
-                  بقلم: {article.author.firstName} {article.author.lastName}
+                  {article.author.firstName} {article.author.lastName}
                 </p>
               )}
 
