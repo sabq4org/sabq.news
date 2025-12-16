@@ -51,6 +51,7 @@ const EXEMPT_PATHS = [
   "/api/whatsapp/",
   "/api/twilio/",
   "/api/email-agent/webhook",  // SendGrid inbound parse webhook
+  "/api/correspondent-applications",  // Public reporter registration form
 ];
 
 function isExemptPath(path: string, originalUrl: string): boolean {
