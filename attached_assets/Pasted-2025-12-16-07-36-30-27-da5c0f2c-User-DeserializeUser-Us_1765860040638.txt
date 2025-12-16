@@ -1,0 +1,109 @@
+2025-12-16 07:36:30.27
+da5c0f2c
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-16 07:36:30.28
+da5c0f2c
+User
+[SSE] Client connected (total: 1)
+2025-12-16 07:36:32.09
+da5c0f2c
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-16 07:36:32.11
+da5c0f2c
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-16 07:36:32.12
+da5c0f2c
+User
+📡 SSE connection opened for user: admin-sabq
+2025-12-16 07:36:32.12
+da5c0f2c
+User
+📡 User admin-sabq subscribed to notification stream
+2025-12-16 07:36:32.23
+da5c0f2c
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-16 07:36:32.25
+da5c0f2c
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-16 07:36:32.26
+da5c0f2c
+User
+📡 SSE connection opened for user: admin-sabq
+2025-12-16 07:36:32.26
+da5c0f2c
+User
+📡 User admin-sabq subscribed to notification stream
+2025-12-16 07:36:33.39
+da5c0f2c
+User
+[CSRF] No session token for: /email-agent/webhook
+2025-12-16 07:36:33.39
+da5c0f2c
+User
+4:36:33 AM [express] POST /api/email-agent/webhook 403 in 4ms :: {"message":"رمز الحماية غير متوفر. …
+2025-12-16 07:36:39.28
+da5c0f2c
+User
+[CSRF] No session token for: /whatsapp/webhook
+2025-12-16 07:36:39.28
+da5c0f2c
+User
+4:36:39 AM [express] POST /api/whatsapp/webhook 403 in 2ms :: {"message":"رمز الحماية غير متوفر. يرج…
+2025-12-16 07:36:47.24
+da5c0f2c
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-16 07:36:47.27
+da5c0f2c
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-16 07:36:47.53
+da5c0f2c
+User
+4:36:47 AM [express] GET /api/homepage 200 in 475ms :: {"hero":[{"id":"950a50b9-b982-479e-8526-d8f3b…
+2025-12-16 07:37:00.04
+da5c0f2c
+User
+[NotificationWorker] Starting queue processing...
+2025-12-16 07:37:00.04
+da5c0f2c
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-12-16 07:37:00.05
+da5c0f2c
+User
+🔄 Checking for scheduled audio newsletters...
+
+2025-12-16 07:37:00.06
+da5c0f2c
+User
+[AI Task Executor] Checking for pending tasks...
+2025-12-16 07:37:00.16
+da5c0f2c
+User
+[NotificationWorker] Queue processing completed
+2025-12-16 07:37:00.16
+da5c0f2c
+User
+[NotificationWorker] Found 0 notifications to process
+2025-12-16 07:37:00.17
+da5c0f2c
+User
+Found 0 scheduled newsletters to process
+2025-12-16 07:37:00.17
+da5c0f2c
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-12-16 07:37:08.02
+da5c0f2c
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-16 07:37:08.05
+da5c0f2c
+User
+✅ DeserializeUser: User found: admin@sabq.sa

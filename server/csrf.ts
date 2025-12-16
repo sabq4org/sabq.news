@@ -53,9 +53,11 @@ const EXEMPT_PATHS = [
   "/api/email-agent/webhook",  // SendGrid inbound parse webhook
 ];
 
-function isExemptPath(path: string): boolean {
+function isExemptPath(path: string, originalUrl: string): boolean {
+  // Check both req.path and req.originalUrl since middleware mounting affects req.path
   return EXEMPT_PATHS.some(exempt => 
-    path === exempt || path.startsWith(exempt)
+    path === exempt || path.startsWith(exempt) ||
+    originalUrl === exempt || originalUrl.startsWith(exempt)
   );
 }
 
@@ -64,7 +66,7 @@ export const validateCsrfToken: RequestHandler = (req, res, next) => {
     return next();
   }
 
-  if (isExemptPath(req.path)) {
+  if (isExemptPath(req.path, req.originalUrl)) {
     return next();
   }
 
