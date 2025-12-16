@@ -84,6 +84,7 @@ interface TokenFormValues {
   canArchiveAny: boolean;
   canEditAny: boolean;
   canMarkBreaking: boolean;
+  isActive: boolean;
 }
 
 interface WhatsAppTabProps {
@@ -115,6 +116,7 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
     canArchiveAny: false,
     canEditAny: false,
     canMarkBreaking: false,
+    isActive: true,
   });
 
   const { data: config } = useQuery<WhatsAppConfig>({
@@ -194,6 +196,7 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
         canArchiveAny: false,
         canEditAny: false,
         canMarkBreaking: false,
+        isActive: true,
       });
     },
     onError: (error: Error) => {
@@ -317,6 +320,7 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
       canArchiveAny: false,
       canEditAny: false,
       canMarkBreaking: false,
+      isActive: true,
     });
     setGeneratedToken("");
     setCreateDialogOpen(true);
@@ -334,6 +338,7 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
       canArchiveAny: token.canArchiveAny || false,
       canEditAny: token.canEditAny || false,
       canMarkBreaking: token.canMarkBreaking || false,
+      isActive: token.isActive !== false,
     });
     setEditDialogOpen(true);
   };
@@ -399,6 +404,7 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
         canArchiveAny: formData.canArchiveAny,
         canEditAny: formData.canEditAny,
         canMarkBreaking: formData.canMarkBreaking,
+        isActive: formData.isActive,
       },
     });
   };
@@ -1344,6 +1350,20 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
           </DialogHeader>
 
           <div className="space-y-4">
+            <div className="flex items-center space-x-2 space-x-reverse">
+              <Switch
+                id="edit-isActive"
+                checked={formData.isActive}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, isActive: checked })
+                }
+                data-testid="switch-edit-is-active"
+              />
+              <Label htmlFor="edit-isActive">
+                {formData.isActive ? "نشط" : "معلّق"}
+              </Label>
+            </div>
+
             <div className="flex items-center space-x-2 space-x-reverse">
               <Switch
                 id="edit-autoPublish"
