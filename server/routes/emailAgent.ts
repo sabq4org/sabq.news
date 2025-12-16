@@ -1316,7 +1316,11 @@ router.post("/senders", isAuthenticated, requirePermission('admin.manage_setting
 // PUT /api/email-agent/senders/:id - Update a trusted sender (admin only)
 router.put("/senders/:id", isAuthenticated, requirePermission('admin.manage_settings'), async (req: Request, res: Response) => {
   try {
+    console.log("[Email Agent] PUT /senders/:id - Received update request");
+    console.log("[Email Agent] Sender ID:", req.params.id);
+    console.log("[Email Agent] Update data:", JSON.stringify(req.body));
     const sender = await storage.updateTrustedSender(req.params.id, req.body);
+    console.log("[Email Agent] Updated sender status:", sender.status);
     return res.json(sender);
   } catch (error: any) {
     console.error("[Email Agent] Error updating sender:", error);
