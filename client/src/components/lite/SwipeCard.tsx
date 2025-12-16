@@ -337,7 +337,7 @@ export function SwipeCard({
                     src={videoThumbnail}
                     alt={article.title}
                     className="w-full h-full object-cover"
-                    style={{ objectPosition: 'center center' }}
+                    style={{ objectPosition: getFocalPointStyle((article as any).imageFocalPoint) }}
                     draggable={false}
                   />
                   <div 
