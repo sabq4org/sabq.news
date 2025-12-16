@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Check, ChevronsUpDown, User, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/popover";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useMemo } from "react";
+import { useAuth, hasRole } from "@/hooks/useAuth";
 
 interface Reporter {
   id: string;
@@ -35,6 +36,24 @@ interface ReporterSelectProps {
 export function ReporterSelect({ value, onChange, disabled }: ReporterSelectProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const { user } = useAuth();
+  
+  // Check if current user is a reporter (not admin/editor)
+  const isReporterRole = useMemo(() => {
+    if (!user) return false;
+    // If user has admin, system_admin, super_admin, editor, or chief_editor role, they can select any reporter
+    const canSelectOthers = hasRole(user, 'admin', 'system_admin', 'super_admin', 'superadmin', 'editor', 'chief_editor');
+    // If user is a reporter but not an admin/editor, they can only select themselves
+    const isOnlyReporter = hasRole(user, 'reporter') && !canSelectOthers;
+    return isOnlyReporter;
+  }, [user]);
+  
+  // Auto-set reporter ID to current user's ID if they're a reporter
+  useEffect(() => {
+    if (isReporterRole && user?.id && !value) {
+      onChange(user.id);
+    }
+  }, [isReporterRole, user?.id, value, onChange]);
 
   const { data: reportersData, isLoading } = useQuery<{ items: Reporter[] }>({
     queryKey: ["/api/admin/users", { role: "reporter", query: searchQuery, limit: 200 }],
@@ -48,6 +67,7 @@ export function ReporterSelect({ value, onChange, disabled }: ReporterSelectProp
       if (!res.ok) throw new Error("فشل في جلب المراسلين");
       return res.json();
     },
+    enabled: !isReporterRole, // Only fetch all reporters if user can select others
   });
 
   const { data: selectedReporterData } = useQuery<{ items: Reporter[] }>({
@@ -62,6 +82,16 @@ export function ReporterSelect({ value, onChange, disabled }: ReporterSelectProp
   });
 
   const reporters = useMemo(() => {
+    // If user is a reporter-only, show only their own data
+    if (isReporterRole && user) {
+      return [{
+        id: user.id,
+        name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.name || user.email || 'المراسل',
+        email: user.email || '',
+        avatarUrl: user.profileImageUrl || null,
+      }];
+    }
+    
     const searchResults = reportersData?.items || [];
     const selected = selectedReporterData?.items?.[0];
     
@@ -70,7 +100,7 @@ export function ReporterSelect({ value, onChange, disabled }: ReporterSelectProp
     }
     
     return searchResults;
-  }, [reportersData, selectedReporterData]);
+  }, [reportersData, selectedReporterData, isReporterRole, user]);
   
   const selectedReporter = useMemo(() => {
     return reporters.find((r) => r.id === value);
@@ -98,7 +128,7 @@ export function ReporterSelect({ value, onChange, disabled }: ReporterSelectProp
               role="combobox"
               aria-expanded={open}
               className="w-full justify-between"
-              disabled={disabled}
+              disabled={disabled || isReporterRole}
               data-testid="button-reporter-select"
             >
               {selectedReporter ? (
@@ -185,7 +215,7 @@ export function ReporterSelect({ value, onChange, disabled }: ReporterSelectProp
           </PopoverContent>
         </Popover>
 
-        {value && !disabled && (
+        {value && !disabled && !isReporterRole && (
           <Button
             variant="ghost"
             size="icon"
@@ -202,7 +232,10 @@ export function ReporterSelect({ value, onChange, disabled }: ReporterSelectProp
       </div>
 
       <p className="text-xs text-muted-foreground" data-testid="text-reporter-helper">
-        اختر المراسل المسؤول عن هذا الخبر. سيتم إظهار اسمه في بطاقة الخبر وصفحة التفاصيل.
+        {isReporterRole 
+          ? "سيتم نشر الخبر باسمك كمراسل."
+          : "اختر المراسل المسؤول عن هذا الخبر. سيتم إظهار اسمه في بطاقة الخبر وصفحة التفاصيل."
+        }
       </p>
     </div>
   );
