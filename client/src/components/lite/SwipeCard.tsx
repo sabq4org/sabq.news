@@ -651,6 +651,17 @@ export function SwipeCard({
               <div className="mt-8 pt-6 border-t">
                 <ArticleQuiz articleId={article.id} />
               </div>
+              
+              {/* Return to Home Button */}
+              <div className="mt-8 mb-8 flex justify-center">
+                <button
+                  onClick={() => setShowDetails(false)}
+                  className="px-12 py-4 bg-primary text-white text-lg font-bold rounded-full shadow-lg hover:bg-primary/90 transition-colors"
+                  data-testid="button-return-home"
+                >
+                  العودة للرئيسية
+                </button>
+              </div>
             </div>
           </div>
         </motion.div>
