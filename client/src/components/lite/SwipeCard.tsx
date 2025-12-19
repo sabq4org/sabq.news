@@ -523,17 +523,35 @@ export function SwipeCard({
                 )}
               </div>
             ) : imageUrl && (
-              <div className="relative bg-black">
+              <div className="relative bg-black h-[45vh]">
                 <img
                   src={imageUrl}
                   alt={article.title}
-                  className="w-full h-auto"
-                  style={{ objectFit: 'contain', objectPosition: getFocalPointStyle((article as any).imageFocalPoint) }}
+                  className="w-full h-full object-cover"
+                  style={{ objectPosition: getFocalPointStyle((article as any).imageFocalPoint) }}
                 />
+                
+                {/* Bookmark & Share buttons on image */}
+                <div className="absolute top-4 left-4 flex gap-2">
+                  <button 
+                    className={`p-2.5 backdrop-blur-sm rounded-lg transition-colors ${localBookmarked ? 'bg-primary text-white' : 'bg-black/40 text-white'}`}
+                    onClick={handleBookmarkClick}
+                    data-testid="button-bookmark-image"
+                  >
+                    {localBookmarked ? <BookmarkCheck className="h-5 w-5" /> : <Bookmark className="h-5 w-5" />}
+                  </button>
+                  <button 
+                    className="p-2.5 bg-black/40 backdrop-blur-sm rounded-lg text-white"
+                    onClick={handleShareClick}
+                    data-testid="button-share-image"
+                  >
+                    <Share2 className="h-5 w-5" />
+                  </button>
+                </div>
                 
                 {/* AI-Generated Image Badge */}
                 {(article as any).isAiGeneratedImage && (
-                  <div className="absolute bottom-8 right-4">
+                  <div className="absolute bottom-10 right-4">
                     <div 
                       className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/90 backdrop-blur-sm rounded-full text-white text-xs font-medium shadow-lg"
                       data-testid="badge-ai-generated-image"
