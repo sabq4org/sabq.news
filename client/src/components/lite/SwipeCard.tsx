@@ -592,25 +592,45 @@ export function SwipeCard({
                 {article.title}
               </h1>
 
-              {/* Author Section - Side aligned with Avatar */}
-              {article.author && (
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm">
-                    {article.author.firstName?.charAt(0) || 'م'}
+              {/* Author Section with Share/Bookmark on opposite side */}
+              <div className="flex items-center justify-between gap-3 mb-6">
+                {article.author && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm">
+                      {article.author.firstName?.charAt(0) || 'م'}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground text-sm">
+                        {article.author.firstName} {article.author.lastName}
+                      </p>
+                      <p className="text-muted-foreground text-xs">
+                        {article.author.role === 'editor' ? 'محرر' : 
+                         article.author.role === 'admin' ? 'مدير' : 
+                         article.author.role === 'correspondent' ? 'مراسل' : 'كاتب'} 
+                        {article.category && ` في قسم ${article.category.nameAr}`}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-semibold text-foreground text-sm">
-                      {article.author.firstName} {article.author.lastName}
-                    </p>
-                    <p className="text-muted-foreground text-xs">
-                      {article.author.role === 'editor' ? 'محرر' : 
-                       article.author.role === 'admin' ? 'مدير' : 
-                       article.author.role === 'correspondent' ? 'مراسل' : 'كاتب'} 
-                      {article.category && ` في قسم ${article.category.nameAr}`}
-                    </p>
-                  </div>
+                )}
+                
+                {/* Share & Bookmark buttons - same size as avatar */}
+                <div className="flex items-center gap-2">
+                  <button 
+                    className="w-10 h-10 flex items-center justify-center bg-muted text-muted-foreground rounded-full hover:bg-muted/80 transition-colors"
+                    onClick={handleShareClick}
+                    data-testid="button-share-content"
+                  >
+                    <Share2 className="h-5 w-5" />
+                  </button>
+                  <button 
+                    className={`w-10 h-10 flex items-center justify-center rounded-full transition-colors ${localBookmarked ? 'bg-primary text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}
+                    onClick={handleBookmarkClick}
+                    data-testid="button-bookmark-content"
+                  >
+                    {localBookmarked ? <BookmarkCheck className="h-5 w-5" /> : <Bookmark className="h-5 w-5" />}
+                  </button>
                 </div>
-              )}
+              </div>
 
               {/* Highlighted Summary/Excerpt */}
               {smartSummary && (
