@@ -568,7 +568,7 @@ export function SwipeCard({
               <div className="flex items-center gap-3 mb-5 flex-wrap">
                 {article.category && (
                   <span 
-                    className="px-3 py-1 rounded-full bg-emerald-500 text-white text-xs font-bold uppercase tracking-wide"
+                    className="px-3 py-1.5 rounded-full bg-primary/5 text-primary text-xs font-bold border border-primary/20"
                   >
                     {article.category.nameAr}
                   </span>
