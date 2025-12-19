@@ -523,7 +523,7 @@ export function SwipeCard({
                 )}
               </div>
             ) : imageUrl && (
-              <div className="relative bg-black h-[45vh]">
+              <div className="relative bg-black h-[35vh]">
                 <img
                   src={imageUrl}
                   alt={article.title}
@@ -565,7 +565,7 @@ export function SwipeCard({
             )}
 
             {/* Content Section - Curved top overlapping image */}
-            <div className="px-4 py-6 bg-background rounded-t-[2rem] -mt-6 relative z-10">
+            <div className="px-4 py-6 bg-background rounded-t-[2rem] -mt-10 relative z-10">
               {/* Horizontal line indicator */}
               <div className="flex justify-center mb-4">
                 <div className="w-12 h-1 bg-muted-foreground/30 rounded-full" />
