@@ -470,7 +470,7 @@ export function SwipeCard({
             onTouchEnd={handleDetailTouchEnd}
           >
             {article.isVideoTemplate && videoEmbedUrl ? (
-              <div className="relative bg-black" style={{ borderRadius: '0 0 24px 24px', overflow: 'hidden' }}>
+              <div className="relative bg-black">
                 {videoEmbedUrl.match(/\.(mp4|webm|ogg)$/i) ? (
                   <video
                     src={videoEmbedUrl}
@@ -496,7 +496,7 @@ export function SwipeCard({
                   <ChevronDown className="h-6 w-6" />
                 </button>
 
-                <div className="absolute bottom-4 left-4 flex gap-2 z-10">
+                <div className="absolute bottom-8 left-4 flex gap-2 z-10">
                   <button 
                     className="p-3 bg-black/40 backdrop-blur-sm rounded-full text-white/90 active:bg-white/20 transition-colors"
                     onClick={handleShareClick}
@@ -514,7 +514,7 @@ export function SwipeCard({
                 </div>
               </div>
             ) : imageUrl && (
-              <div className="relative" style={{ borderRadius: '0 0 24px 24px', overflow: 'hidden' }}>
+              <div className="relative">
                 <img
                   src={imageUrl}
                   alt={article.title}
@@ -530,7 +530,7 @@ export function SwipeCard({
                   <ChevronDown className="h-6 w-6" />
                 </button>
 
-                <div className="absolute bottom-4 left-4 flex gap-2">
+                <div className="absolute bottom-8 left-4 flex gap-2">
                   <button 
                     className="p-3 bg-black/40 backdrop-blur-sm rounded-full text-white/90 active:bg-white/20 transition-colors"
                     onClick={handleShareClick}
@@ -549,7 +549,7 @@ export function SwipeCard({
                 
                 {/* AI-Generated Image Badge */}
                 {(article as any).isAiGeneratedImage && (
-                  <div className="absolute bottom-4 right-4">
+                  <div className="absolute bottom-8 right-4">
                     <div 
                       className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/90 backdrop-blur-sm rounded-full text-white text-xs font-medium shadow-lg"
                       data-testid="badge-ai-generated-image"
@@ -562,8 +562,8 @@ export function SwipeCard({
               </div>
             )}
 
-            {/* Content Section */}
-            <div className="px-6 py-6">
+            {/* Content Section - Curved top overlapping image */}
+            <div className="px-6 py-6 bg-background rounded-t-3xl -mt-6 relative z-10">
               {/* Category & Time */}
               <div className="flex items-center gap-3 mb-5 flex-wrap">
                 {article.category && (
