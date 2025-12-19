@@ -546,12 +546,13 @@ export function SwipeCard({
               </div>
             )}
 
-            {/* Content Section - Curved top overlapping image */}
-            <div className="px-4 py-6 bg-background rounded-t-3xl mt-0 relative z-10">
-              {/* Horizontal line indicator */}
-              <div className="flex justify-center mb-4">
-                <div className="w-12 h-1 bg-muted-foreground/30 rounded-full" />
-              </div>
+            {/* Content Section - Curved top with black sides */}
+            <div className="bg-black pt-4">
+              <div className="mx-3 px-4 py-6 bg-background rounded-t-[2rem] relative z-10">
+                {/* Horizontal line indicator */}
+                <div className="flex justify-center mb-4">
+                  <div className="w-12 h-1 bg-muted-foreground/30 rounded-full" />
+                </div>
 
               {/* Category, Time & Views */}
               <div className="flex items-center gap-3 mb-5 flex-wrap">
@@ -658,6 +659,7 @@ export function SwipeCard({
                 >
                   العودة للرئيسية
                 </button>
+              </div>
               </div>
             </div>
           </div>
