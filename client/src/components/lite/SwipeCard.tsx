@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Clock, Eye, Share2, Bookmark, BookmarkCheck, ChevronDown, Zap, Sparkles, Check, Play } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Clock, Eye, Share2, Bookmark, BookmarkCheck, ChevronDown, Zap, Sparkles, Check, Play, ChevronUp } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import type { Article, Category, User } from "@shared/schema";
@@ -55,6 +55,40 @@ function getVideoEmbedUrl(url: string | null | undefined): string | null {
 function getFocalPointStyle(focalPoint: { x: number; y: number } | null | undefined): string {
   if (!focalPoint) return 'center center';
   return `${focalPoint.x}% ${focalPoint.y}%`;
+}
+
+// Expandable Summary Component
+function ExpandableSummary({ summary }: { summary: string | null | undefined }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  if (!summary) return null;
+  
+  return (
+    <div className="mb-6 p-4 bg-primary/5 rounded-xl border-r-4 border-primary">
+      <p className={`text-primary font-medium text-base leading-relaxed ${!isExpanded ? 'line-clamp-3' : ''}`}>
+        {summary}
+      </p>
+      {summary.length > 150 && (
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="flex items-center gap-1 text-primary/70 text-sm mt-2 hover:text-primary transition-colors"
+          data-testid="button-expand-summary"
+        >
+          {isExpanded ? (
+            <>
+              <span>عرض أقل</span>
+              <ChevronUp className="h-4 w-4" />
+            </>
+          ) : (
+            <>
+              <span>عرض المزيد</span>
+              <ChevronDown className="h-4 w-4" />
+            </>
+          )}
+        </button>
+      )}
+    </div>
+  );
 }
 
 interface SwipeCardProps {
@@ -487,31 +521,6 @@ export function SwipeCard({
                     allowFullScreen
                   />
                 )}
-                
-                <button
-                  onClick={() => setShowDetails(false)}
-                  className="absolute top-4 right-4 p-2 bg-black/50 backdrop-blur-sm rounded-full text-white z-10"
-                  data-testid="button-close-details"
-                >
-                  <ChevronDown className="h-6 w-6" />
-                </button>
-
-                <div className="absolute bottom-8 left-4 flex gap-2 z-10">
-                  <button 
-                    className="p-3 bg-black/40 backdrop-blur-sm rounded-full text-white/90 active:bg-white/20 transition-colors"
-                    onClick={handleShareClick}
-                    data-testid="button-share"
-                  >
-                    <Share2 className="h-5 w-5" />
-                  </button>
-                  <button 
-                    className={`p-3 backdrop-blur-sm rounded-full transition-colors active:bg-white/20 ${localBookmarked ? 'bg-primary text-white' : 'bg-black/40 text-white/90'}`}
-                    onClick={handleBookmarkClick}
-                    data-testid="button-bookmark"
-                  >
-                    {localBookmarked ? <BookmarkCheck className="h-5 w-5" /> : <Bookmark className="h-5 w-5" />}
-                  </button>
-                </div>
               </div>
             ) : imageUrl && (
               <div className="relative">
@@ -521,31 +530,6 @@ export function SwipeCard({
                   className="w-full h-auto"
                   style={{ objectFit: 'contain', objectPosition: getFocalPointStyle((article as any).imageFocalPoint) }}
                 />
-                
-                <button
-                  onClick={() => setShowDetails(false)}
-                  className="absolute top-4 right-4 p-2 bg-black/50 backdrop-blur-sm rounded-full text-white"
-                  data-testid="button-close-details"
-                >
-                  <ChevronDown className="h-6 w-6" />
-                </button>
-
-                <div className="absolute bottom-8 left-4 flex gap-2">
-                  <button 
-                    className="p-3 bg-black/40 backdrop-blur-sm rounded-full text-white/90 active:bg-white/20 transition-colors"
-                    onClick={handleShareClick}
-                    data-testid="button-share"
-                  >
-                    <Share2 className="h-5 w-5" />
-                  </button>
-                  <button 
-                    className={`p-3 backdrop-blur-sm rounded-full transition-colors active:bg-white/20 ${localBookmarked ? 'bg-primary text-white' : 'bg-black/40 text-white/90'}`}
-                    onClick={handleBookmarkClick}
-                    data-testid="button-bookmark"
-                  >
-                    {localBookmarked ? <BookmarkCheck className="h-5 w-5" /> : <Bookmark className="h-5 w-5" />}
-                  </button>
-                </div>
                 
                 {/* AI-Generated Image Badge */}
                 {(article as any).isAiGeneratedImage && (
@@ -563,12 +547,17 @@ export function SwipeCard({
             )}
 
             {/* Content Section - Curved top overlapping image */}
-            <div className="px-6 py-6 bg-background rounded-t-3xl -mt-6 relative z-10">
-              {/* Category & Time */}
+            <div className="px-4 py-6 bg-background rounded-t-3xl -mt-3 relative z-10">
+              {/* Horizontal line indicator */}
+              <div className="flex justify-center mb-4">
+                <div className="w-12 h-1 bg-muted-foreground/30 rounded-full" />
+              </div>
+
+              {/* Category, Time & Views */}
               <div className="flex items-center gap-3 mb-5 flex-wrap">
                 {article.category && (
                   <span 
-                    className="px-3 py-1.5 rounded-full bg-primary/5 text-primary text-xs font-bold border border-primary/20"
+                    className="px-3 py-1.5 rounded-md bg-primary/5 text-primary text-xs font-bold border border-primary/20"
                   >
                     {article.category.nameAr}
                   </span>
@@ -576,9 +565,15 @@ export function SwipeCard({
                 <span className="text-muted-foreground text-sm">
                   {formatDistanceToNow(publishedDate, { addSuffix: true, locale: arSA })}
                 </span>
+                {article.views !== undefined && article.views > 0 && (
+                  <span className="text-muted-foreground text-sm flex items-center gap-1">
+                    <Eye className="h-3.5 w-3.5" />
+                    {article.views.toString()}
+                  </span>
+                )}
                 {article.newsType === 'breaking' && (
                   <span 
-                    className="px-3 py-1 rounded-full text-white text-sm font-bold flex items-center gap-1 bg-red-600"
+                    className="px-3 py-1 rounded-md text-white text-sm font-bold flex items-center gap-1 bg-red-600"
                     data-testid="badge-breaking-details"
                   >
                     <Zap className="h-3.5 w-3.5" />
@@ -596,9 +591,17 @@ export function SwipeCard({
               <div className="flex items-center justify-between gap-3 mb-6">
                 {article.author && (
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm">
-                      {article.author.firstName?.charAt(0) || 'م'}
-                    </div>
+                    {(article.author as any).profileImageUrl ? (
+                      <img 
+                        src={(article.author as any).profileImageUrl} 
+                        alt={`${article.author.firstName} ${article.author.lastName}`}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm">
+                        {article.author.firstName?.charAt(0) || 'م'}
+                      </div>
+                    )}
                     <div>
                       <p className="font-semibold text-foreground text-sm">
                         {article.author.firstName} {article.author.lastName}
@@ -632,14 +635,8 @@ export function SwipeCard({
                 </div>
               </div>
 
-              {/* Highlighted Summary/Excerpt */}
-              {smartSummary && (
-                <div className="mb-6 p-4 bg-primary/5 rounded-xl border-r-4 border-primary">
-                  <p className="text-primary font-medium text-base leading-relaxed">
-                    {smartSummary}
-                  </p>
-                </div>
-              )}
+              {/* Highlighted Summary/Excerpt - Expandable */}
+              <ExpandableSummary summary={smartSummary} />
 
               {/* Article Content */}
               <div 
