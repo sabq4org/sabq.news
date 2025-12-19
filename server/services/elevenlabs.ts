@@ -266,13 +266,12 @@ export class ElevenLabsService {
 // Export singleton instance
 let elevenLabsInstance: ElevenLabsService | null = null;
 
-export function getElevenLabsService(): ElevenLabsService {
+export function getElevenLabsService(): ElevenLabsService | null {
   const apiKey = process.env.ELEVENLABS_API_KEY;
   
   if (!apiKey || apiKey.trim() === '') {
-    throw new Error(
-      'ELEVENLABS_API_KEY غير مكوّن - يرجى إضافة المفتاح في متغيرات البيئة'
-    );
+    console.warn('⚠️ ELEVENLABS_API_KEY not set - Audio newsletter features disabled');
+    return null;
   }
   
   if (!elevenLabsInstance) {
@@ -280,4 +279,9 @@ export function getElevenLabsService(): ElevenLabsService {
   }
   
   return elevenLabsInstance;
+}
+
+export function isElevenLabsConfigured(): boolean {
+  const apiKey = process.env.ELEVENLABS_API_KEY;
+  return !!(apiKey && apiKey.trim() !== '');
 }

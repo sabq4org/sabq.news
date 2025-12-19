@@ -469,12 +469,40 @@ export function SwipeCard({
             onTouchMove={handleDetailTouchMove}
             onTouchEnd={handleDetailTouchEnd}
           >
+            {/* Top Action Bar */}
+            <div className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 bg-background/80 backdrop-blur-md">
+              <div className="flex items-center gap-2">
+                <button 
+                  className={`p-2.5 rounded-full transition-colors ${localBookmarked ? 'bg-primary text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}
+                  onClick={handleBookmarkClick}
+                  data-testid="button-bookmark-details"
+                >
+                  {localBookmarked ? <BookmarkCheck className="h-5 w-5" /> : <Bookmark className="h-5 w-5" />}
+                </button>
+                <button 
+                  className="p-2.5 bg-muted text-muted-foreground rounded-full hover:bg-muted/80 transition-colors"
+                  onClick={handleShareClick}
+                  data-testid="button-share-details"
+                >
+                  <Share2 className="h-5 w-5" />
+                </button>
+              </div>
+              
+              <button
+                onClick={() => setShowDetails(false)}
+                className="p-2.5 bg-muted text-muted-foreground rounded-full hover:bg-muted/80 transition-colors"
+                data-testid="button-close-details"
+              >
+                <ChevronDown className="h-5 w-5" />
+              </button>
+            </div>
+
             {article.isVideoTemplate && videoEmbedUrl ? (
-              <div className="relative h-screen bg-black">
+              <div className="relative bg-black" style={{ borderRadius: '0 0 24px 24px', overflow: 'hidden' }}>
                 {videoEmbedUrl.match(/\.(mp4|webm|ogg)$/i) ? (
                   <video
                     src={videoEmbedUrl}
-                    className="w-full h-full object-contain"
+                    className="w-full h-auto max-h-[50vh] object-contain"
                     autoPlay
                     controls
                     playsInline
@@ -482,70 +510,20 @@ export function SwipeCard({
                 ) : (
                   <iframe
                     src={videoEmbedUrl}
-                    className="w-full h-full"
+                    className="w-full aspect-video"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                   />
                 )}
-                
-                <button
-                  onClick={() => setShowDetails(false)}
-                  className="absolute top-4 right-4 p-2 bg-black/50 backdrop-blur-sm rounded-full text-white z-10"
-                  data-testid="button-close-details"
-                >
-                  <ChevronDown className="h-6 w-6" />
-                </button>
-
-                <div className="absolute bottom-4 left-4 flex gap-2 z-10">
-                  <button 
-                    className="p-3 bg-black/40 backdrop-blur-sm rounded-full text-white/90 active:bg-white/20 transition-colors"
-                    onClick={handleShareClick}
-                    data-testid="button-share"
-                  >
-                    <Share2 className="h-5 w-5" />
-                  </button>
-                  <button 
-                    className={`p-3 backdrop-blur-sm rounded-full transition-colors active:bg-white/20 ${localBookmarked ? 'bg-primary text-white' : 'bg-black/40 text-white/90'}`}
-                    onClick={handleBookmarkClick}
-                    data-testid="button-bookmark"
-                  >
-                    {localBookmarked ? <BookmarkCheck className="h-5 w-5" /> : <Bookmark className="h-5 w-5" />}
-                  </button>
-                </div>
               </div>
             ) : imageUrl && (
-              <div className="relative">
+              <div className="relative" style={{ borderRadius: '0 0 24px 24px', overflow: 'hidden' }}>
                 <img
                   src={imageUrl}
                   alt={article.title}
-                  className="w-full h-auto max-h-[80vh]"
-                  style={{ objectFit: 'contain', objectPosition: getFocalPointStyle((article as any).imageFocalPoint) }}
+                  className="w-full h-auto max-h-[50vh] object-cover"
+                  style={{ objectPosition: getFocalPointStyle((article as any).imageFocalPoint) }}
                 />
-                
-                <button
-                  onClick={() => setShowDetails(false)}
-                  className="absolute top-4 right-4 p-2 bg-black/50 backdrop-blur-sm rounded-full text-white"
-                  data-testid="button-close-details"
-                >
-                  <ChevronDown className="h-6 w-6" />
-                </button>
-
-                <div className="absolute bottom-4 left-4 flex gap-2">
-                  <button 
-                    className="p-3 bg-black/40 backdrop-blur-sm rounded-full text-white/90 active:bg-white/20 transition-colors"
-                    onClick={handleShareClick}
-                    data-testid="button-share"
-                  >
-                    <Share2 className="h-5 w-5" />
-                  </button>
-                  <button 
-                    className={`p-3 backdrop-blur-sm rounded-full transition-colors active:bg-white/20 ${localBookmarked ? 'bg-primary text-white' : 'bg-black/40 text-white/90'}`}
-                    onClick={handleBookmarkClick}
-                    data-testid="button-bookmark"
-                  >
-                    {localBookmarked ? <BookmarkCheck className="h-5 w-5" /> : <Bookmark className="h-5 w-5" />}
-                  </button>
-                </div>
                 
                 {/* AI-Generated Image Badge */}
                 {(article as any).isAiGeneratedImage && (
@@ -562,49 +540,73 @@ export function SwipeCard({
               </div>
             )}
 
-            <div className="p-6 mt-2 relative">
-              <div className="flex items-center gap-3 mb-4 flex-wrap">
-                {article.newsType === 'breaking' && (
-                  <span 
-                    className="px-3 py-1.5 rounded-full text-white text-sm font-bold flex items-center gap-1 bg-red-600"
-                    data-testid="badge-breaking-details"
-                  >
-                    <Zap className="h-3.5 w-3.5" />
-                    عاجل
-                  </span>
-                )}
+            {/* Content Section */}
+            <div className="px-6 py-6">
+              {/* Category & Time - Centered */}
+              <div className="flex items-center justify-center gap-3 mb-5">
                 {article.category && (
                   <span 
-                    className="px-2.5 py-1 rounded-md bg-muted text-muted-foreground text-xs font-medium"
+                    className="px-3 py-1 rounded-full bg-emerald-500 text-white text-xs font-bold uppercase tracking-wide"
                   >
                     {article.category.nameAr}
                   </span>
                 )}
-                <span className="text-muted-foreground text-xs flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
+                <span className="text-muted-foreground text-sm">
                   {formatDistanceToNow(publishedDate, { addSuffix: true, locale: arSA })}
                 </span>
-                {article.views !== undefined && (
-                  <span className="text-muted-foreground text-xs flex items-center gap-1">
-                    <Eye className="h-3 w-3" />
-                    {article.views.toLocaleString('en-US')}
-                  </span>
-                )}
               </div>
 
-              <h1 className="text-2xl sm:text-3xl font-bold text-foreground leading-tight mb-4">
+              {/* Breaking News Badge */}
+              {article.newsType === 'breaking' && (
+                <div className="flex justify-center mb-4">
+                  <span 
+                    className="px-4 py-1.5 rounded-full text-white text-sm font-bold flex items-center gap-1.5 bg-red-600"
+                    data-testid="badge-breaking-details"
+                  >
+                    <Zap className="h-4 w-4" />
+                    عاجل
+                  </span>
+                </div>
+              )}
+
+              {/* Title - Centered */}
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground leading-tight mb-6 text-center">
                 {article.title}
               </h1>
 
+              {/* Author Section - Centered with Avatar */}
               {article.author && (
-                <p className="text-muted-foreground text-sm mb-6">
-                  {article.author.firstName} {article.author.lastName}
-                </p>
+                <div className="flex items-center justify-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm">
+                    {article.author.firstName?.charAt(0) || 'م'}
+                  </div>
+                  <div className="text-center">
+                    <p className="font-semibold text-foreground text-sm">
+                      {article.author.firstName} {article.author.lastName}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      {article.author.role === 'editor' ? 'محرر' : 
+                       article.author.role === 'admin' ? 'مدير' : 
+                       article.author.role === 'correspondent' ? 'مراسل' : 'كاتب'} 
+                      {article.category && ` في قسم ${article.category.nameAr}`}
+                    </p>
+                  </div>
+                </div>
               )}
 
+              {/* Highlighted Summary/Excerpt */}
+              {smartSummary && (
+                <div className="mb-6 p-4 bg-primary/5 rounded-xl border-r-4 border-primary">
+                  <p className="text-primary font-medium text-base leading-relaxed">
+                    {smartSummary}
+                  </p>
+                </div>
+              )}
+
+              {/* Article Content */}
               <div 
                 className="prose prose-lg dark:prose-invert max-w-none text-foreground leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(article.content || smartSummary || '') }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(article.content || '') }}
               />
               
               {/* Quiz Section */}

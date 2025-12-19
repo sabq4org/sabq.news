@@ -281,13 +281,17 @@ const SCRIPT_TEMPLATES: Record<NewsletterTemplate, ScriptTemplate> = {
 };
 
 export class AudioNewsletterService extends EventEmitter {
-  private elevenLabs: ElevenLabsService;
+  private elevenLabs: ElevenLabsService | null;
   private activeJobs: Map<string, AudioGenerationJob>;
   
   constructor() {
     super();
     this.elevenLabs = getElevenLabsService();
     this.activeJobs = new Map();
+  }
+  
+  isConfigured(): boolean {
+    return this.elevenLabs !== null;
   }
   
   // Create a new audio newsletter
@@ -383,6 +387,11 @@ export class AudioNewsletterService extends EventEmitter {
   // Process audio generation
   private async processAudioGeneration(job: AudioGenerationJob): Promise<void> {
     try {
+      // Check if ElevenLabs is configured
+      if (!this.elevenLabs) {
+        throw new Error('ElevenLabs service not configured - please add ELEVENLABS_API_KEY');
+      }
+      
       job.status = GenerationStatus.PROCESSING;
       job.startedAt = new Date();
       job.progress = 10;
