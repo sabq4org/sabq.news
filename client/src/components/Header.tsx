@@ -173,7 +173,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
 
             {/* Mobile Actions */}
             <div className="md:hidden flex items-center gap-1">
-              <Link href="/lite">
+              <Link href="/">
                 <Button
                   variant="ghost"
                   size="icon"
