@@ -1595,8 +1595,16 @@ router.post("/kapso-webhook", async (req: Request, res: Response) => {
     // 🔐 SECURITY: Verify Kapso webhook authenticity
     const kapsoApiKey = process.env.KAPSO_API_KEY;
     const kapsoWebhookSecret = process.env.KAPSO_WEBHOOK_SECRET;
-    const kapsoSignature = req.headers['x-kapso-signature'] as string;
-    const kapsoApiKeyHeader = req.headers['x-kapso-api-key'] as string;
+    // Kapso uses X-Webhook-Signature header (not X-Kapso-Signature)
+    const kapsoSignature = (req.headers['x-webhook-signature'] || req.headers['x-kapso-signature']) as string;
+    const kapsoApiKeyHeader = (req.headers['x-api-key'] || req.headers['x-kapso-api-key']) as string;
+    const webhookEvent = req.headers['x-webhook-event'] as string;
+    
+    console.log("[Kapso WhatsApp] Headers received:", {
+      'x-webhook-signature': req.headers['x-webhook-signature'] ? 'present' : 'missing',
+      'x-api-key': req.headers['x-api-key'] ? 'present' : 'missing',
+      'x-webhook-event': webhookEvent || 'missing'
+    });
     
     const isDevelopment = process.env.NODE_ENV === 'development';
     const skipValidation = isDevelopment && process.env.SKIP_KAPSO_VALIDATION === 'true';
@@ -1630,15 +1638,28 @@ router.post("/kapso-webhook", async (req: Request, res: Response) => {
       
       // Method 2: Validate using HMAC signature (if secret is configured)
       if (!isValid && kapsoWebhookSecret && kapsoSignature) {
+        // Use raw body if available, otherwise use stringified body
+        // Note: Raw body should be captured by middleware for accurate signature verification
+        const rawBody = (req as any).rawBody || JSON.stringify(req.body);
+        
         const expectedSignature = crypto
           .createHmac('sha256', kapsoWebhookSecret)
-          .update(JSON.stringify(req.body))
+          .update(rawBody)
           .digest('hex');
         
-        isValid = crypto.timingSafeEqual(
-          Buffer.from(kapsoSignature),
-          Buffer.from(expectedSignature)
-        );
+        // timingSafeEqual requires equal length buffers - check length first
+        const sigBuffer = Buffer.from(kapsoSignature);
+        const expectedBuffer = Buffer.from(expectedSignature);
+        
+        console.log(`[Kapso WhatsApp] 🔐 Signature check - incoming: ${kapsoSignature.substring(0, 16)}...`);
+        console.log(`[Kapso WhatsApp] 🔐 Signature check - expected: ${expectedSignature.substring(0, 16)}...`);
+        
+        if (sigBuffer.length === expectedBuffer.length) {
+          isValid = crypto.timingSafeEqual(sigBuffer, expectedBuffer);
+        } else {
+          console.log(`[Kapso WhatsApp] 🔐 Signature length mismatch: got ${sigBuffer.length}, expected ${expectedBuffer.length}`);
+          isValid = false;
+        }
         console.log(`[Kapso WhatsApp] 🔐 HMAC signature validation: ${isValid ? 'PASSED' : 'FAILED'}`);
       }
       
