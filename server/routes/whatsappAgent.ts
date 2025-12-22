@@ -1572,12 +1572,81 @@ router.post("/kapso-webhook", async (req: Request, res: Response) => {
     console.log("[Kapso WhatsApp] ============ WEBHOOK START ============");
     console.log(`[Kapso WhatsApp] 📝 Request Body:`, JSON.stringify(req.body, null, 2));
     
-    // Kapso webhook signature verification
+    // 🔐 SECURITY: Verify Kapso webhook authenticity
+    const kapsoApiKey = process.env.KAPSO_API_KEY;
+    const kapsoWebhookSecret = process.env.KAPSO_WEBHOOK_SECRET;
     const kapsoSignature = req.headers['x-kapso-signature'] as string;
-    const idempotencyKey = req.headers['x-idempotency-key'] as string;
+    const kapsoApiKeyHeader = req.headers['x-kapso-api-key'] as string;
     
-    // For now, we'll trust the webhook if it comes through (can add HMAC verification later)
-    // Kapso provides a secret key for HMAC verification
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const skipValidation = isDevelopment && process.env.SKIP_KAPSO_VALIDATION === 'true';
+    
+    // Validate that Kapso is configured
+    if (!kapsoApiKey) {
+      console.error("[Kapso WhatsApp] ❌ Kapso not configured");
+      
+      await storage.createWhatsappWebhookLog({
+        from: 'unknown',
+        message: '',
+        status: 'rejected',
+        reason: 'Kapso not configured - webhook received but service disabled',
+        processingTimeMs: Date.now() - startTime,
+      });
+      
+      return res.status(200).json({ success: false, error: 'Service not configured' });
+    }
+    
+    // Validate webhook authenticity using one of these methods:
+    // 1. API key header validation
+    // 2. HMAC signature validation (if webhook secret is configured)
+    let isValid = skipValidation;
+    
+    if (!skipValidation) {
+      // Method 1: Validate using API key header
+      if (kapsoApiKeyHeader) {
+        isValid = kapsoApiKeyHeader === kapsoApiKey;
+        console.log(`[Kapso WhatsApp] 🔐 API key header validation: ${isValid ? 'PASSED' : 'FAILED'}`);
+      }
+      
+      // Method 2: Validate using HMAC signature (if secret is configured)
+      if (!isValid && kapsoWebhookSecret && kapsoSignature) {
+        const expectedSignature = crypto
+          .createHmac('sha256', kapsoWebhookSecret)
+          .update(JSON.stringify(req.body))
+          .digest('hex');
+        
+        isValid = crypto.timingSafeEqual(
+          Buffer.from(kapsoSignature),
+          Buffer.from(expectedSignature)
+        );
+        console.log(`[Kapso WhatsApp] 🔐 HMAC signature validation: ${isValid ? 'PASSED' : 'FAILED'}`);
+      }
+      
+      // Method 3: If no secret/header, use IP whitelist or basic validation
+      // For now, if Kapso is configured and request has expected structure, proceed with caution
+      if (!isValid && !kapsoWebhookSecret && !kapsoApiKeyHeader) {
+        // Log warning but allow processing if Kapso is configured and body has expected format
+        console.warn("[Kapso WhatsApp] ⚠️ No webhook authentication configured - allowing request");
+        console.warn("[Kapso WhatsApp] ⚠️ Set KAPSO_WEBHOOK_SECRET for secure webhook validation");
+        isValid = true;
+      }
+    }
+    
+    if (!isValid) {
+      console.error("[Kapso WhatsApp] ❌ Invalid webhook authentication");
+      
+      await storage.createWhatsappWebhookLog({
+        from: 'unknown',
+        message: '',
+        status: 'rejected',
+        reason: 'Invalid Kapso webhook authentication - possible spoofing attempt',
+        processingTimeMs: Date.now() - startTime,
+      });
+      
+      return res.status(200).json({ success: false, error: 'Invalid request' });
+    }
+    
+    console.log("[Kapso WhatsApp] ✅ Webhook authentication validated");
     
     const events = req.body;
     
