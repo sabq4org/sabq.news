@@ -83,7 +83,7 @@ export default function LiteFeedPage() {
 
   const handleLogoTouchStart = useCallback(() => {
     logoLongPressRef.current = setTimeout(() => {
-      setLocation('/');
+      setLocation('/lite');
     }, 800);
   }, [setLocation]);
 
