@@ -69,9 +69,19 @@ interface StatsData {
   activeTokens: number;
 }
 
+interface WhatsAppProvider {
+  configured: boolean;
+  phoneNumber?: string | null;
+  phoneNumberId?: string | null;
+}
+
 interface WhatsAppConfig {
   whatsappNumber: string | null;
   configured: boolean;
+  providers?: {
+    twilio: WhatsAppProvider;
+    kapso: WhatsAppProvider;
+  };
 }
 
 interface TokenFormValues {
@@ -495,6 +505,91 @@ export default function WhatsAppTab({ user }: WhatsAppTabProps) {
       </div>
 
       <Separator />
+
+      {/* Provider Status Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5" />
+            مزودي خدمة واتساب
+          </CardTitle>
+          <CardDescription>
+            حالة الاتصال بمزودي خدمة واتساب المتاحين
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center">
+                  <MessageSquare className="h-5 w-5 text-green-600" />
+                </div>
+                <div>
+                  <h4 className="font-medium">Twilio</h4>
+                  <p className="text-sm text-muted-foreground" dir="ltr">
+                    {config?.providers?.twilio?.phoneNumber || "غير مُعد"}
+                  </p>
+                </div>
+              </div>
+              <Badge 
+                variant={config?.providers?.twilio?.configured ? "default" : "secondary"}
+                data-testid="badge-twilio-status"
+              >
+                {config?.providers?.twilio?.configured ? (
+                  <span className="flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3" />
+                    متصل
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1">
+                    <XCircle className="h-3 w-3" />
+                    غير متصل
+                  </span>
+                )}
+              </Badge>
+            </div>
+
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                  <MessageSquare className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <h4 className="font-medium">Kapso</h4>
+                  <p className="text-sm text-muted-foreground" dir="ltr">
+                    {config?.providers?.kapso?.phoneNumberId ? `ID: ${config.providers.kapso.phoneNumberId.substring(0, 12)}...` : "غير مُعد"}
+                  </p>
+                </div>
+              </div>
+              <Badge 
+                variant={config?.providers?.kapso?.configured ? "default" : "secondary"}
+                data-testid="badge-kapso-status"
+              >
+                {config?.providers?.kapso?.configured ? (
+                  <span className="flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3" />
+                    متصل
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1">
+                    <XCircle className="h-3 w-3" />
+                    غير متصل
+                  </span>
+                )}
+              </Badge>
+            </div>
+          </div>
+          
+          {!config?.configured && (
+            <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" />
+                لم يتم إعداد أي مزود خدمة واتساب. تواصل مع المسؤول لإضافة مفاتيح API.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Usage Instructions */}
       <Card className="bg-gradient-to-l from-primary/5 to-transparent border-primary/20">

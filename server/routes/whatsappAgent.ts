@@ -322,10 +322,22 @@ async function downloadWhatsAppMedia(mediaUrl: string): Promise<{ buffer: Buffer
 // GET /api/whatsapp/config - Get WhatsApp configuration
 router.get("/config", requireAuth, requireRole('admin', 'manager', 'system_admin'), async (req: Request, res: Response) => {
   try {
-    const whatsappNumber = process.env.TWILIO_PHONE_NUMBER || '';
+    const twilioNumber = process.env.TWILIO_PHONE_NUMBER || '';
+    const kapsoStatus = getKapsoStatus();
+    
     return res.json({
-      whatsappNumber: whatsappNumber || null,
-      configured: !!whatsappNumber,
+      whatsappNumber: twilioNumber || null,
+      configured: !!twilioNumber || kapsoStatus.configured,
+      providers: {
+        twilio: {
+          configured: !!twilioNumber,
+          phoneNumber: twilioNumber || null,
+        },
+        kapso: {
+          configured: kapsoStatus.configured,
+          phoneNumberId: kapsoStatus.phoneNumberId,
+        }
+      }
     });
   } catch (error) {
     console.error('[WhatsApp Config] Error:', error);
