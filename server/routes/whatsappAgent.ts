@@ -1668,19 +1668,52 @@ router.post("/kapso-webhook", async (req: Request, res: Response) => {
     
     console.log("[Kapso WhatsApp] ✅ Webhook authentication validated");
     
-    const events = req.body;
+    const payload = req.body;
     
-    // Handle Kapso webhook format
-    // Kapso sends events in a specific format - messages array
-    if (!events || !events.messages || !Array.isArray(events.messages)) {
-      console.log("[Kapso WhatsApp] No messages in webhook body");
+    // Handle Kapso webhook v2 format
+    // v2 sends single message object, not array
+    // Format: { event: "whatsapp.message.received", message: { id, from, type, text: { body } } }
+    
+    let messages: any[] = [];
+    
+    // Check for v2 format (single message object)
+    if (payload.event && payload.message) {
+      console.log("[Kapso WhatsApp] Detected v2 payload format");
+      messages = [payload.message];
+    }
+    // Check for v1 format (messages array)
+    else if (payload.messages && Array.isArray(payload.messages)) {
+      console.log("[Kapso WhatsApp] Detected v1 payload format");
+      messages = payload.messages;
+    }
+    // Check for direct message object
+    else if (payload.from && (payload.text || payload.body)) {
+      console.log("[Kapso WhatsApp] Detected direct message format");
+      messages = [payload];
+    }
+    
+    if (messages.length === 0) {
+      console.log("[Kapso WhatsApp] No messages found in webhook body");
+      console.log("[Kapso WhatsApp] Payload keys:", Object.keys(payload));
+      
+      // Log the payload for debugging
+      await storage.createWhatsappWebhookLog({
+        from: 'kapso-debug',
+        message: JSON.stringify(payload).substring(0, 500),
+        status: 'received',
+        reason: 'empty_or_unknown_format',
+        processingTimeMs: Date.now() - startTime,
+      });
+      
       return res.status(200).json({ success: true });
     }
     
-    for (const message of events.messages) {
-      const from = message.from || message.kapso?.contact_phone || "";
-      const body = message.text?.body || message.kapso?.content || "";
-      const messageId = message.id;
+    console.log(`[Kapso WhatsApp] Processing ${messages.length} message(s)`);
+    
+    for (const message of messages) {
+      const from = message.from || message.contact_phone || payload.contact_phone || "";
+      const body = message.text?.body || message.body || message.content || "";
+      const messageId = message.id || payload.message_id;
       
       console.log("[Kapso WhatsApp] Processing message:");
       console.log("[Kapso WhatsApp] - From:", from);
