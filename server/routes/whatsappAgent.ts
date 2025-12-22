@@ -1676,9 +1676,9 @@ router.post("/kapso-webhook", async (req: Request, res: Response) => {
     
     let messages: any[] = [];
     
-    // Check for v2 format (single message object)
-    if (payload.event && payload.message) {
-      console.log("[Kapso WhatsApp] Detected v2 payload format");
+    // Check for v2 format (single message object) - with or without event field
+    if (payload.message && payload.message.from) {
+      console.log("[Kapso WhatsApp] Detected v2 payload format (message object)");
       messages = [payload.message];
     }
     // Check for v1 format (messages array)
