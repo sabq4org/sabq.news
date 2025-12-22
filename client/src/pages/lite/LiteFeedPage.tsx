@@ -83,7 +83,7 @@ export default function LiteFeedPage() {
 
   const handleLogoTouchStart = useCallback(() => {
     logoLongPressRef.current = setTimeout(() => {
-      setLocation('/lite');
+      setLocation('/');
     }, 800);
   }, [setLocation]);
 
@@ -497,7 +497,7 @@ export default function LiteFeedPage() {
       <div className="absolute top-4 left-4 z-30 flex items-center gap-2">
         {/* Button to go to full version */}
         <button
-          onClick={() => setLocation('/lite')}
+          onClick={() => setLocation('/')}
           className="w-9 h-9 flex items-center justify-center bg-white/10 backdrop-blur-sm rounded-full text-white/50 hover:text-white hover:bg-white/20 transition-all"
           data-testid="button-full-version"
           title="النسخة الكاملة"

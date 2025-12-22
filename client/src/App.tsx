@@ -273,8 +273,8 @@ function Router() {
         <Route path="/ur/dashboard" component={UrduDashboard} />
         
         {/* Arabic Version Routes */}
-        <Route path="/" component={LiteFeedPage} />
-        <Route path="/ar" component={LiteFeedPage} />
+        <Route path="/" component={Home} />
+        <Route path="/ar" component={Home} />
         <Route path="/about" component={AboutPage} />
       <Route path="/terms" component={TermsPage} />
       <Route path="/ar/terms" component={TermsPage} />
@@ -292,7 +292,7 @@ function Router() {
       <Route path="/opinion/:slug" component={OpinionDetailPage} />
       <Route path="/categories" component={CategoriesListPage} />
       <Route path="/shorts" component={ShortsPage} />
-      <Route path="/lite" component={Home} />
+      <Route path="/lite" component={LiteFeedPage} />
       <Route path="/login" component={Login} />
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/register" component={Register} />
