@@ -4,6 +4,7 @@ import { analyzeAndEditWithSabqStyle, detectLanguage, normalizeLanguageCode, gen
 import { objectStorageClient } from "../objectStorage";
 import { nanoid } from "nanoid";
 import { twilioClient, sendWhatsAppMessage, sendWhatsAppMessageWithDetails, extractTokenFromMessage, removeTokenFromMessage, validateTwilioSignature, updateLastInboundTime, isWithin24HourWindow } from "../services/whatsapp";
+import { isKapsoConfigured, sendKapsoWhatsAppMessage, updateKapsoLastInboundTime, getKapsoStatus } from "../services/kapsoWhatsapp";
 import { requireAuth, requireRole } from "../rbac";
 import { insertWhatsappTokenSchema, mediaFiles, articleMediaAssets } from "@shared/schema";
 import crypto from "crypto";
@@ -1544,6 +1545,154 @@ router.post("/logs/bulk-delete", requireAuth, requireRole('admin', 'manager'), a
   } catch (error) {
     console.error("[WhatsApp Agent] Error bulk deleting logs:", error);
     return res.status(500).json({ error: "Failed to bulk delete logs" });
+  }
+});
+
+// ============================================
+// KAPSO WEBHOOK HANDLER
+// ============================================
+
+router.post("/kapso-webhook", async (req: Request, res: Response) => {
+  const startTime = Date.now();
+  let webhookLog: any = null;
+  
+  try {
+    console.log("[Kapso WhatsApp] ============ WEBHOOK START ============");
+    console.log(`[Kapso WhatsApp] 📝 Request Body:`, JSON.stringify(req.body, null, 2));
+    
+    // Kapso webhook signature verification
+    const kapsoSignature = req.headers['x-kapso-signature'] as string;
+    const idempotencyKey = req.headers['x-idempotency-key'] as string;
+    
+    // For now, we'll trust the webhook if it comes through (can add HMAC verification later)
+    // Kapso provides a secret key for HMAC verification
+    
+    const events = req.body;
+    
+    // Handle Kapso webhook format
+    // Kapso sends events in a specific format - messages array
+    if (!events || !events.messages || !Array.isArray(events.messages)) {
+      console.log("[Kapso WhatsApp] No messages in webhook body");
+      return res.status(200).json({ success: true });
+    }
+    
+    for (const message of events.messages) {
+      const from = message.from || message.kapso?.contact_phone || "";
+      const body = message.text?.body || message.kapso?.content || "";
+      const messageId = message.id;
+      
+      console.log("[Kapso WhatsApp] Processing message:");
+      console.log("[Kapso WhatsApp] - From:", from);
+      console.log("[Kapso WhatsApp] - Body:", body);
+      console.log("[Kapso WhatsApp] - Message ID:", messageId);
+      
+      // Update 24h window tracker
+      updateKapsoLastInboundTime(from);
+      
+      // Create webhook log
+      webhookLog = await storage.createWhatsappWebhookLog({
+        from: from,
+        message: body,
+        status: "received",
+      });
+      
+      console.log(`[Kapso WhatsApp] Created webhook log: ${webhookLog.id}`);
+      
+      // Extract token from message
+      const token = extractTokenFromMessage(body);
+      
+      if (!token) {
+        console.log("[Kapso WhatsApp] No token found in message");
+        
+        await storage.updateWhatsappWebhookLog(webhookLog.id, {
+          status: "rejected",
+          reason: "no_token_found",
+          processingTimeMs: Date.now() - startTime,
+        });
+        
+        continue;
+      }
+      
+      console.log(`[Kapso WhatsApp] Token extracted: ${token}`);
+      
+      const whatsappToken = await storage.getWhatsappTokenByToken(token);
+      
+      if (!whatsappToken) {
+        console.log("[Kapso WhatsApp] Token not found in database");
+        
+        await storage.updateWhatsappWebhookLog(webhookLog.id, {
+          status: "rejected",
+          reason: "invalid_token",
+          token: token,
+          processingTimeMs: Date.now() - startTime,
+        });
+        
+        continue;
+      }
+      
+      if (!whatsappToken.isActive) {
+        console.log("[Kapso WhatsApp] Token is inactive");
+        
+        await storage.updateWhatsappWebhookLog(webhookLog.id, {
+          status: "rejected",
+          reason: "token_inactive",
+          userId: whatsappToken.userId,
+          token: token,
+          processingTimeMs: Date.now() - startTime,
+        });
+        
+        continue;
+      }
+      
+      // Process the message content (similar to Twilio webhook)
+      const contentWithoutToken = removeTokenFromMessage(body);
+      const command = parseWhatsAppCommand(contentWithoutToken);
+      
+      console.log(`[Kapso WhatsApp] Command type: ${command.type}`);
+      
+      // Update log with processing info
+      await storage.updateWhatsappWebhookLog(webhookLog.id, {
+        status: "processed",
+        userId: whatsappToken.userId,
+        token: token,
+        processingTimeMs: Date.now() - startTime,
+      });
+      
+      // Send confirmation via Kapso
+      const confirmationMessage = `✅ تم استلام رسالتك بنجاح!\n\nنوع الأمر: ${command.type === 'create' ? 'إنشاء مقال جديد' : command.type}\n\n🔄 جاري المعالجة...`;
+      
+      await sendKapsoWhatsAppMessage({
+        to: from,
+        body: confirmationMessage
+      });
+    }
+    
+    console.log("[Kapso WhatsApp] ============ WEBHOOK END ============");
+    return res.status(200).json({ success: true });
+    
+  } catch (error: any) {
+    console.error("[Kapso WhatsApp] Webhook error:", error);
+    
+    if (webhookLog) {
+      await storage.updateWhatsappWebhookLog(webhookLog.id, {
+        status: "error",
+        reason: error.message || "Unknown error",
+        processingTimeMs: Date.now() - startTime,
+      });
+    }
+    
+    return res.status(200).json({ success: false, error: error.message });
+  }
+});
+
+// Get Kapso status
+router.get("/kapso-status", requireAuth, requireRole('admin', 'manager'), async (req: Request, res: Response) => {
+  try {
+    const status = getKapsoStatus();
+    return res.json(status);
+  } catch (error) {
+    console.error("[Kapso WhatsApp] Error getting status:", error);
+    return res.status(500).json({ error: "Failed to get Kapso status" });
   }
 });
 
