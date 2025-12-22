@@ -3373,9 +3373,9 @@ const generateSlug = (text: string) => {
         isOpen={showMediaPicker}
         onClose={() => setShowMediaPicker(false)}
         onSelect={(media: MediaFile) => {
-          // Use originalUrl (from database) instead of url (which might be proxy URL)
-          // This ensures we store the actual GCS URL (https:// or gs://)
-          const urlToStore = (media as any).originalUrl || media.url;
+          // Use url (display URL) which is either https:// or proxy URL
+          // originalUrl might be gs:// which browsers can't display
+          const urlToStore = media.url;
           setImageUrl(urlToStore);
           // Save media ID for caption creation
           setHeroImageMediaId(media.id);
