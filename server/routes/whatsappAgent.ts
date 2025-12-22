@@ -1564,6 +1564,26 @@ router.post("/logs/bulk-delete", requireAuth, requireRole('admin', 'manager'), a
 // KAPSO WEBHOOK HANDLER
 // ============================================
 
+// GET handler for webhook verification
+router.get("/kapso-webhook", async (req: Request, res: Response) => {
+  console.log("[Kapso WhatsApp] 🔍 Webhook verification request received");
+  console.log("[Kapso WhatsApp] Query params:", req.query);
+  
+  // Kapso may send a verification challenge
+  const challenge = req.query['hub.challenge'] || req.query.challenge;
+  if (challenge) {
+    console.log("[Kapso WhatsApp] ✅ Returning challenge:", challenge);
+    return res.status(200).send(challenge);
+  }
+  
+  // Simple ping/health check
+  return res.status(200).json({ 
+    status: 'ok', 
+    message: 'Kapso webhook endpoint is active',
+    timestamp: new Date().toISOString()
+  });
+});
+
 router.post("/kapso-webhook", async (req: Request, res: Response) => {
   const startTime = Date.now();
   let webhookLog: any = null;
