@@ -278,7 +278,7 @@ const categoryCache = new Map<string, string>();
 
 /**
  * Get or create category from section
- * Uses section slug as stable identifier to prevent duplicates on re-import
+ * First checks by Arabic name to use existing categories, then by slug
  */
 async function getOrCreateCategory(section: QuintypeSection): Promise<string> {
   // Check cache first
@@ -292,15 +292,27 @@ async function getOrCreateCategory(section: QuintypeSection): Promise<string> {
     color: '#6b7280'
   };
   
-  // Check if category exists by slug (stable identifier)
-  const existing = await db.select({ id: categories.id })
+  // First: Check if category exists by Arabic name (most reliable for matching)
+  const existingByName = await db.select({ id: categories.id })
+    .from(categories)
+    .where(eq(categories.nameAr, mapping.nameAr))
+    .limit(1);
+  
+  if (existingByName.length > 0) {
+    categoryCache.set(section.slug, existingByName[0].id);
+    console.log(`  Using existing category: ${mapping.nameAr}`);
+    return existingByName[0].id;
+  }
+  
+  // Second: Check if category exists by slug
+  const existingBySlug = await db.select({ id: categories.id })
     .from(categories)
     .where(eq(categories.slug, section.slug))
     .limit(1);
   
-  if (existing.length > 0) {
-    categoryCache.set(section.slug, existing[0].id);
-    return existing[0].id;
+  if (existingBySlug.length > 0) {
+    categoryCache.set(section.slug, existingBySlug[0].id);
+    return existingBySlug[0].id;
   }
   
   // Create new category with proper bilingual names
