@@ -757,8 +757,13 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     console.log("[Email Agent] Category:", editorialResult.detectedCategory);
     console.log("[Email Agent] Has news value:", editorialResult.hasNewsValue);
     console.log("[Email Agent] Issues found:", editorialResult.issues.length);
+    console.log("[Email Agent] Extracted from URL:", extractedFromUrl);
 
-    if (editorialResult.qualityScore < 30) {
+    // 🔗 Lower threshold for URL-extracted content from trusted sources (already vetted)
+    const qualityThreshold = extractedFromUrl ? 10 : 30;
+    console.log("[Email Agent] Quality threshold:", qualityThreshold, extractedFromUrl ? "(lower for trusted URL source)" : "");
+
+    if (editorialResult.qualityScore < qualityThreshold) {
       console.log("[Email Agent] Content quality too low - rejected");
       console.log("[Email Agent] Rejection reasons:", editorialResult.issues);
       
