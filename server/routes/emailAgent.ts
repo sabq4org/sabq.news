@@ -11,6 +11,7 @@ import { requireRole, requirePermission } from "../rbac";
 import { db } from "../db";
 import { mediaFiles, articleMediaAssets } from "@shared/schema";
 import { memoryCache } from "../memoryCache";
+import { detectUrls, isNewsUrl, containsOnlyUrl, extractArticleContent, getSourceAttribution } from "../services/urlContentExtractor";
 
 const router = Router();
 
@@ -646,6 +647,59 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     
     console.log("[Email Agent] Content length after token removal:", emailContent.length);
     
+    // 🔗 URL CONTENT EXTRACTION: Check if email contains a news URL to extract
+    let urlExtractionResult: any = null;
+    let extractedFromUrl = false;
+    const detectedUrls = detectUrls(emailContent);
+    
+    if (detectedUrls.length > 0) {
+      console.log("[Email Agent] 🔗 Detected URLs in email:", detectedUrls);
+      
+      // Find the first news URL
+      const newsUrl = detectedUrls.find(url => isNewsUrl(url));
+      
+      if (newsUrl) {
+        console.log("[Email Agent] 🔗 Found news URL:", newsUrl);
+        
+        // Check if this is primarily a URL-only message
+        const isUrlOnly = containsOnlyUrl(emailContent);
+        console.log("[Email Agent] 🔗 Is URL-only message:", isUrlOnly);
+        
+        if (isUrlOnly) {
+          console.log("[Email Agent] 🌐 Extracting article content from URL...");
+          
+          try {
+            urlExtractionResult = await extractArticleContent(newsUrl);
+            
+            if (urlExtractionResult.success && urlExtractionResult.article) {
+              console.log("[Email Agent] ✅ URL extraction successful!");
+              console.log("[Email Agent]    - Title:", urlExtractionResult.article.title);
+              console.log("[Email Agent]    - Source:", urlExtractionResult.article.sourceNameAr);
+              console.log("[Email Agent]    - Attribution:", urlExtractionResult.article.attribution);
+              
+              // Replace email content with extracted article
+              emailContent = `${urlExtractionResult.article.title}\n\n${urlExtractionResult.article.content}`;
+              extractedFromUrl = true;
+              
+              // If extracted article has an image and we don't have any uploaded images
+              if (urlExtractionResult.article.imageUrl && uploadedImages.length === 0) {
+                console.log("[Email Agent] 🖼️ Using image from source article:", urlExtractionResult.article.imageUrl);
+                uploadedImages.push(urlExtractionResult.article.imageUrl);
+              }
+            } else {
+              console.log("[Email Agent] ⚠️ URL extraction failed:", urlExtractionResult.error);
+              // Continue with original content if extraction fails
+            }
+          } catch (extractError: any) {
+            console.error("[Email Agent] ❌ URL extraction error:", extractError.message);
+            // Continue with original content if extraction fails
+          }
+        } else {
+          console.log("[Email Agent] 📝 Email has additional content besides URL, processing as normal");
+        }
+      }
+    }
+    
     // Check if content is empty
     if (!emailContent || emailContent.length < 10) {
       console.log("[Email Agent] No content found after token removal");
@@ -884,6 +938,16 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     console.log("[Email Agent] 📝 Author ID (reporter):", reporterUser.id);
     console.log("[Email Agent] 📝 Category ID:", finalCategoryId);
     
+    // 🔗 Prepare source info (for URL-extracted articles, include source attribution)
+    const sourceInfo = extractedFromUrl && urlExtractionResult?.article ? {
+      channel: "email",
+      externalSource: urlExtractionResult.article.sourceNameAr,
+      externalUrl: urlExtractionResult.article.sourceUrl,
+      attribution: urlExtractionResult.article.attribution,
+    } : {
+      channel: "email",
+    };
+    
     const articleData: any = {
       id: nanoid(),
       title: articleTitle,
@@ -904,7 +968,8 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       newsType: "regular", // Default news type (not breaking/featured)
       hideFromHomepage: false, // Article must be visible on homepage
       displayOrder: Math.floor(Date.now() / 1000), // New articles appear at top (seconds for consistency)
-      source: "email", // 📧 Mark as created via Smart Email Agent
+      source: extractedFromUrl ? "url" : "email", // 📧 Mark source: email or url
+      sourceInfo: sourceInfo, // 🔗 Additional source metadata (JSON)
     };
 
     let article: any;

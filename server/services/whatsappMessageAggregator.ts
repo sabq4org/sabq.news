@@ -7,6 +7,7 @@ import { db } from "../db";
 import { mediaFiles, articleMediaAssets } from "@shared/schema";
 import { memoryCache } from "../memoryCache";
 import { eq } from "drizzle-orm";
+import { detectUrls, isNewsUrl, containsOnlyUrl, extractArticleContent, getSourceAttribution } from "./urlContentExtractor";
 
 // تم تغيير وقت الانتظار إلى 0 للنشر الفوري
 // الأخبار الطويلة ستُنشر عبر البريد الذكي بدلاً من ذلك
@@ -78,7 +79,47 @@ async function processAggregatedMessage(pending: PendingWhatsappMessage): Promis
       return;
     }
     
-    const cleanText = removeTokenFromMessage(combinedText);
+    let cleanText = removeTokenFromMessage(combinedText);
+    
+    // 🔗 URL CONTENT EXTRACTION: Check if message contains a news URL
+    let urlExtractionResult: any = null;
+    let extractedFromUrl = false;
+    const detectedUrls = detectUrls(cleanText);
+    
+    if (detectedUrls.length > 0) {
+      console.log(`[WhatsApp Aggregator] 🔗 Detected URLs: ${detectedUrls.join(', ')}`);
+      
+      const newsUrl = detectedUrls.find(url => isNewsUrl(url));
+      
+      if (newsUrl && containsOnlyUrl(cleanText)) {
+        console.log(`[WhatsApp Aggregator] 🌐 URL-only message, extracting content from: ${newsUrl}`);
+        
+        try {
+          urlExtractionResult = await extractArticleContent(newsUrl);
+          
+          if (urlExtractionResult.success && urlExtractionResult.article) {
+            console.log(`[WhatsApp Aggregator] ✅ URL extraction successful!`);
+            console.log(`[WhatsApp Aggregator]    - Title: ${urlExtractionResult.article.title}`);
+            console.log(`[WhatsApp Aggregator]    - Source: ${urlExtractionResult.article.sourceNameAr}`);
+            console.log(`[WhatsApp Aggregator]    - Attribution: ${urlExtractionResult.article.attribution}`);
+            
+            // Replace message content with extracted article
+            cleanText = `${urlExtractionResult.article.title}\n\n${urlExtractionResult.article.content}`;
+            extractedFromUrl = true;
+            
+            // Use image from source if no images uploaded
+            if (urlExtractionResult.article.imageUrl && mediaUrls.length === 0) {
+              console.log(`[WhatsApp Aggregator] 🖼️ Using source image: ${urlExtractionResult.article.imageUrl}`);
+              mediaUrls.push(urlExtractionResult.article.imageUrl);
+            }
+          } else {
+            console.log(`[WhatsApp Aggregator] ⚠️ URL extraction failed: ${urlExtractionResult.error}`);
+          }
+        } catch (extractError: any) {
+          console.error(`[WhatsApp Aggregator] ❌ URL extraction error: ${extractError.message}`);
+        }
+      }
+    }
     
     if (!mediaUrls.length && cleanText.trim().length < 10) {
       console.log(`[WhatsApp Aggregator] Text too short: ${cleanText.length} chars`);
@@ -133,6 +174,24 @@ async function processAggregatedMessage(pending: PendingWhatsappMessage): Promis
     const slug = generateSlug(aiResult.optimized.title);
     const articleStatus = tokenData.autoPublish ? 'published' : 'draft';
     
+    // 🔗 Prepare source metadata (include external source info for URL-extracted articles)
+    const sourceMetadata = extractedFromUrl && urlExtractionResult?.article ? {
+      type: 'whatsapp_url_extracted',
+      from: pending.phoneNumber,
+      token: pending.token,
+      partsCount: pending.messageParts.length,
+      webhookLogId: webhookLog.id,
+      externalSource: urlExtractionResult.article.sourceNameAr,
+      externalUrl: urlExtractionResult.article.sourceUrl,
+      attribution: urlExtractionResult.article.attribution,
+    } : {
+      type: 'whatsapp_aggregated',
+      from: pending.phoneNumber,
+      token: pending.token,
+      partsCount: pending.messageParts.length,
+      webhookLogId: webhookLog.id,
+    };
+    
     const article = await storage.createArticle({
       title: aiResult.optimized.title,
       slug,
@@ -143,14 +202,8 @@ async function processAggregatedMessage(pending: PendingWhatsappMessage): Promis
       authorId: tokenData.userId,
       status: articleStatus,
       publishedAt: articleStatus === 'published' ? new Date() : null,
-      source: 'whatsapp',
-      sourceMetadata: {
-        type: 'whatsapp_aggregated',
-        from: pending.phoneNumber,
-        token: pending.token,
-        partsCount: pending.messageParts.length,
-        webhookLogId: webhookLog.id,
-      },
+      source: extractedFromUrl ? 'url' : 'whatsapp',
+      sourceMetadata: sourceMetadata,
       seoKeywords: aiResult.optimized.seoKeywords,
       articleType: "news",
       newsType: "regular",
