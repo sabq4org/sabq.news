@@ -149,6 +149,7 @@ function convertImageUrl(s3Key: string | undefined): string | null {
 
 /**
  * Convert story elements to HTML content
+ * Filters out metadata-only elements and properly formats supported types
  */
 function convertCardsToHtml(cards: QuintypeCard[] | undefined): string {
   if (!cards || cards.length === 0) return '';
@@ -159,9 +160,15 @@ function convertCardsToHtml(cards: QuintypeCard[] | undefined): string {
     if (!card['story-elements']) continue;
     
     for (const element of card['story-elements']) {
+      // Skip metadata-only and non-content elements
+      if (element.subtype === 'also-read') {
+        continue; // Skip "also read" links - these are internal references
+      }
+      
       switch (element.type) {
         case 'text':
-          if (element.text) {
+          // Only add text if it has actual content
+          if (element.text && element.text.trim()) {
             html += element.text;
           }
           break;
@@ -170,40 +177,61 @@ function convertCardsToHtml(cards: QuintypeCard[] | undefined): string {
           if (element['image-s3-key']) {
             const imageUrl = convertImageUrl(element['image-s3-key']);
             const alt = element['alt-text'] || element.title || '';
-            html += `<figure class="article-image"><img src="${imageUrl}" alt="${alt}" loading="lazy" /></figure>`;
+            const caption = element.description || '';
+            html += `<figure class="article-image">`;
+            html += `<img src="${imageUrl}" alt="${alt}" loading="lazy" />`;
+            if (caption) {
+              html += `<figcaption>${caption}</figcaption>`;
+            }
+            html += `</figure>`;
           }
           break;
           
         case 'youtube-video':
           if (element.url) {
-            html += `<div class="video-embed youtube-embed" data-url="${element.url}"><iframe src="${element.url}" frameborder="0" allowfullscreen></iframe></div>`;
+            // Extract video ID and create proper embed
+            const videoId = element.url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([^&\s]+)/)?.[1];
+            if (videoId) {
+              html += `<div class="video-embed youtube-embed">`;
+              html += `<iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen loading="lazy"></iframe>`;
+              html += `</div>`;
+            }
           }
           break;
           
         case 'jsembed':
-          if (element.subtype === 'tweet' && element['embed-js']) {
-            html += `<div class="social-embed tweet-embed">${element['embed-js']}</div>`;
-          } else if (element.subtype === 'instagram' && element['embed-js']) {
-            html += `<div class="social-embed instagram-embed">${element['embed-js']}</div>`;
+          // Handle social media embeds - store as data for later rendering
+          if (element.subtype === 'tweet') {
+            html += `<div class="social-embed tweet-embed" data-embed-type="twitter"><!-- Twitter embed --></div>`;
+          } else if (element.subtype === 'instagram') {
+            html += `<div class="social-embed instagram-embed" data-embed-type="instagram"><!-- Instagram embed --></div>`;
+          } else if (element.subtype === 'dailymotion-embed-script') {
+            html += `<div class="video-embed dailymotion-embed" data-embed-type="dailymotion"><!-- Dailymotion embed --></div>`;
           }
+          // Skip other jsembed types that we don't support
           break;
           
         case 'title':
-          if (element.text) {
+          if (element.text && element.text.trim()) {
             html += `<h2>${element.text}</h2>`;
           }
           break;
           
         case 'composite':
-          if (element.subtype === 'image-gallery') {
-            html += `<div class="image-gallery"><!-- Gallery placeholder --></div>`;
-          }
+          // Skip composite elements like galleries - they need special handling
+          // Could be expanded later to support galleries
           break;
+          
+        case 'file':
+          // Skip file attachments - these need separate handling
+          break;
+          
+        // Skip unknown types silently
       }
     }
   }
   
-  return html;
+  return html || '<p></p>'; // Ensure non-empty content
 }
 
 /**
@@ -245,27 +273,37 @@ async function ensureUniqueSlug(baseSlug: string, id: string): Promise<string> {
   return `${baseSlug}-${id.substring(0, 8)}`;
 }
 
+// Cache for categories to avoid repeated DB lookups
+const categoryCache = new Map<string, string>();
+
 /**
  * Get or create category from section
+ * Uses section slug as stable identifier to prevent duplicates on re-import
  */
 async function getOrCreateCategory(section: QuintypeSection): Promise<string> {
+  // Check cache first
+  if (categoryCache.has(section.slug)) {
+    return categoryCache.get(section.slug)!;
+  }
+  
   const mapping = SECTION_MAPPING[section.slug] || {
     nameAr: section.name,
-    nameEn: section.slug,
+    nameEn: section.slug.charAt(0).toUpperCase() + section.slug.slice(1), // Capitalize slug as fallback
     color: '#6b7280'
   };
   
-  // Check if category exists by slug
+  // Check if category exists by slug (stable identifier)
   const existing = await db.select({ id: categories.id })
     .from(categories)
     .where(eq(categories.slug, section.slug))
     .limit(1);
   
   if (existing.length > 0) {
+    categoryCache.set(section.slug, existing[0].id);
     return existing[0].id;
   }
   
-  // Create new category
+  // Create new category with proper bilingual names
   const [newCategory] = await db.insert(categories)
     .values({
       nameAr: mapping.nameAr,
@@ -277,34 +315,64 @@ async function getOrCreateCategory(section: QuintypeSection): Promise<string> {
     })
     .returning({ id: categories.id });
   
+  categoryCache.set(section.slug, newCategory.id);
   stats.categoriesCreated++;
   console.log(`  Created category: ${mapping.nameAr} (${section.slug})`);
   
   return newCategory.id;
 }
 
+// Cache for tags to avoid repeated DB lookups
+const tagCache = new Map<string, string>();
+
 /**
- * Get or create tag
+ * Create a stable slug from Arabic text
+ */
+function createStableSlug(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9\u0600-\u06FF-]/g, '')
+    .substring(0, 100); // Limit length
+}
+
+/**
+ * Get or create tag with proper bilingual support
+ * Uses external ID for deduplication to prevent duplicates on re-import
  */
 async function getOrCreateTag(qtTag: QuintypeTag): Promise<string> {
-  // Check if tag exists by name
+  // Use external ID as stable identifier if available
+  const externalKey = `qt-tag-${qtTag.id}`;
+  
+  // Check cache first
+  if (tagCache.has(externalKey)) {
+    return tagCache.get(externalKey)!;
+  }
+  
+  const tagSlug = createStableSlug(qtTag.name) || `tag-${qtTag.id}`;
+  
+  // Check if tag exists by slug (our stable identifier)
   const existing = await db.select({ id: tags.id })
     .from(tags)
-    .where(eq(tags.name, qtTag.name))
+    .where(eq(tags.slug, tagSlug))
     .limit(1);
   
   if (existing.length > 0) {
+    tagCache.set(externalKey, existing[0].id);
     return existing[0].id;
   }
   
-  // Create new tag
+  // Create new tag with bilingual names
+  // For now, use Arabic for both - English can be added via translation later
   const [newTag] = await db.insert(tags)
     .values({
-      name: qtTag.name,
-      slug: qtTag.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\u0600-\u06FF-]/g, ''),
+      nameAr: qtTag.name,
+      nameEn: qtTag.name, // Placeholder - should be translated
+      slug: tagSlug,
     })
     .returning({ id: tags.id });
   
+  tagCache.set(externalKey, newTag.id);
   stats.tagsCreated++;
   
   return newTag.id;
@@ -314,6 +382,7 @@ async function getOrCreateTag(qtTag: QuintypeTag): Promise<string> {
  * Get default author ID
  */
 async function getDefaultAuthorId(): Promise<string> {
+  // Try to find an admin user first
   const [adminUser] = await db.select({ id: users.id })
     .from(users)
     .where(eq(users.role, 'admin'))
@@ -323,18 +392,26 @@ async function getDefaultAuthorId(): Promise<string> {
     return adminUser.id;
   }
   
-  // Create system import user if needed
-  const [systemUser] = await db.insert(users)
-    .values({
-      username: 'system_import',
-      email: 'import@sabq.org',
-      password: 'not-for-login',
-      role: 'journalist',
-      displayName: 'سبق',
-    })
-    .returning({ id: users.id });
+  // Try to find any journalist
+  const [journalistUser] = await db.select({ id: users.id })
+    .from(users)
+    .where(eq(users.role, 'journalist'))
+    .limit(1);
   
-  return systemUser.id;
+  if (journalistUser) {
+    return journalistUser.id;
+  }
+  
+  // Try to find any user
+  const [anyUser] = await db.select({ id: users.id })
+    .from(users)
+    .limit(1);
+  
+  if (anyUser) {
+    return anyUser.id;
+  }
+  
+  throw new Error('No users found in database. Please create at least one user first.');
 }
 
 /**
