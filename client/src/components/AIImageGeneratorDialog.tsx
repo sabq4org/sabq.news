@@ -34,57 +34,57 @@ interface AIImageGeneratorDialogProps {
   initialPrompt?: string;
 }
 
-// Color style options for news graphics
+// Color style options for news graphics - Sabq branding, minimal and elegant
 const colorStyles = {
   red: {
     name: "أحمر - عاجل",
     color: "bg-red-500",
-    prompt: "ألوان حمراء وداكنة دراماتيكية، تأثيرات ديناميكية، شريط أحمر، خلفية سوداء مع لمسات حمراء",
+    prompt: "تدرج لوني أحمر هادئ وأنيق، تصميم بسيط ونظيف بدون زخارف، خلفية متدرجة من الأحمر الداكن للأسود، أسلوب مينيمالستي عصري",
   },
   blue: {
     name: "أزرق - خاص",
     color: "bg-blue-500",
-    prompt: "ألوان زرقاء احترافية وأنيقة، تدرجات زرقاء داكنة، خلفية فاخرة، تصميم عصري راقي",
+    prompt: "تدرج لوني أزرق هادئ واحترافي، تصميم نظيف وبسيط، خلفية متدرجة من الأزرق الداكن، أسلوب مينيمالستي أنيق بدون زخارف",
   },
   gold: {
     name: "ذهبي - حصري",
     color: "bg-yellow-500",
-    prompt: "ألوان ذهبية فاخرة، تدرجات ذهبية ولامعة، خلفية سوداء أنيقة، تصميم فخم واحترافي",
+    prompt: "تدرج لوني ذهبي ناعم وراقي، تصميم بسيط وأنيق، خلفية متدرجة من الذهبي الداكن للأسود، أسلوب مينيمالستي فاخر بدون زخارف",
   },
   green: {
     name: "أخضر - اقتصاد",
     color: "bg-green-500",
-    prompt: "ألوان خضراء احترافية، تدرجات خضراء داكنة، خلفية اقتصادية، تصميم مالي راقي",
+    prompt: "تدرج لوني أخضر هادئ ومهني، تصميم نظيف وبسيط، خلفية متدرجة من الأخضر الداكن، أسلوب مينيمالستي احترافي بدون زخارف",
   },
 };
 
-// Pre-built templates for common news graphics
+// Pre-built templates for common news graphics - Sabq style, minimal and professional
 const templates = {
   infographic: {
     name: "انفوجرافيك إحصائي",
     icon: ChartBar,
-    prompt: "انفوجرافيك احترافي بتصميم عصري يعرض {data} بألوان متناسقة وأيقونات واضحة، خلفية بيضاء نظيفة، نمط flat design، عربي",
+    prompt: "انفوجرافيك بسيط ونظيف يعرض {data}، تصميم مينيمالستي، خلفية بيضاء أو رمادية فاتحة، أيقونات بسيطة، بدون زخارف أو نصوص إضافية، نمط flat design عصري",
     fields: ["data"],
     hasColorOption: false,
   },
   featured: {
     name: "صورة بارزة",
     icon: Image,
-    prompt: "صورة صحفية احترافية عالية الجودة تُظهر {subject}، إضاءة طبيعية، تكوين متوازن، واقعية، بدقة عالية",
+    prompt: "صورة صحفية احترافية عالية الجودة تُظهر {subject}، إضاءة طبيعية ناعمة، تكوين متوازن، صورة واقعية بدون نصوص أو شعارات، بدقة عالية",
     fields: ["subject"],
     hasColorOption: false,
   },
   breaking: {
     name: "خبر مميز",
     icon: AlertCircle,
-    prompt: "خلفية خبر احترافية، {colorStyle}، نص {headline} بخط عربي واضح وجريء، تصميم إخباري متميز",
+    prompt: "خلفية هادئة وأنيقة، {colorStyle}، تصميم مينيمالستي بسيط بدون نصوص أو كلمات أو شعارات، فقط تدرجات لونية ناعمة، مناسبة لوضع النص فوقها لاحقاً",
     fields: ["headline"],
     hasColorOption: true,
   },
   comparison: {
     name: "مقارنة",
     icon: FileText,
-    prompt: "انفوجرافيك مقارنة بين {item1} و {item2}، تصميم جدول مقارنة احترافي، أيقونات توضيحية، ألوان متباينة",
+    prompt: "انفوجرافيك مقارنة بسيط بين {item1} و {item2}، تصميم نظيف وهادئ، أيقونات بسيطة، ألوان متناسقة وهادئة، بدون زخارف أو تفاصيل زائدة",
     fields: ["item1", "item2"],
     hasColorOption: false,
   },
