@@ -156,10 +156,10 @@ async function preloadCaches() {
   }
   console.log(`  ✓ Loaded ${allTags.length} tags`);
   
-  // Load existing article IDs (only Sabq imported ones for memory efficiency)
+  // Load ALL existing article IDs (supports resume after CDN migration)
+  // Uses source_metadata->>'type' = 'manual' to identify imported articles
   const existingArticles = await db.select({ id: articles.id })
-    .from(articles)
-    .where(sql`image_url LIKE '%images.sabq.org%'`);
+    .from(articles);
   
   for (const article of existingArticles) {
     existingArticleIds.add(article.id);
@@ -229,7 +229,7 @@ function createStableSlug(text: string): string {
 }
 
 /**
- * Get or create category (cache-first)
+ * Get or create category (cache-first, concurrency-safe)
  */
 async function getOrCreateCategory(section: QuintypeSection): Promise<string> {
   const mapping = SECTION_MAPPING[section.slug] || {
@@ -248,23 +248,43 @@ async function getOrCreateCategory(section: QuintypeSection): Promise<string> {
     return categoryCache.get(section.slug)!;
   }
   
-  // Create new category
-  const [newCategory] = await db.insert(categories)
-    .values({
-      nameAr: mapping.nameAr,
-      nameEn: mapping.nameEn,
-      slug: section.slug,
-      color: mapping.color,
-      status: 'active',
-      displayOrder: 0,
-    })
-    .returning({ id: categories.id });
+  // Try to create new category with conflict handling (concurrency-safe)
+  try {
+    const [newCategory] = await db.insert(categories)
+      .values({
+        nameAr: mapping.nameAr,
+        nameEn: mapping.nameEn,
+        slug: section.slug,
+        color: mapping.color,
+        status: 'active',
+        displayOrder: 0,
+      })
+      .onConflictDoNothing()
+      .returning({ id: categories.id });
+    
+    if (newCategory) {
+      categoryCache.set(mapping.nameAr, newCategory.id);
+      categoryCache.set(section.slug, newCategory.id);
+      stats.categoriesCreated++;
+      return newCategory.id;
+    }
+  } catch (e) {
+    // Conflict occurred, fall through to re-query
+  }
   
-  categoryCache.set(mapping.nameAr, newCategory.id);
-  categoryCache.set(section.slug, newCategory.id);
-  stats.categoriesCreated++;
+  // Re-query if insert failed (concurrent insert won)
+  const [existingCat] = await db.select({ id: categories.id })
+    .from(categories)
+    .where(sql`name_ar = ${mapping.nameAr} OR slug = ${section.slug}`)
+    .limit(1);
   
-  return newCategory.id;
+  if (existingCat) {
+    categoryCache.set(mapping.nameAr, existingCat.id);
+    categoryCache.set(section.slug, existingCat.id);
+    return existingCat.id;
+  }
+  
+  throw new Error(`Failed to create or find category: ${section.slug}`);
 }
 
 /**
