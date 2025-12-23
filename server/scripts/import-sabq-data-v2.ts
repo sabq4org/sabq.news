@@ -464,10 +464,9 @@ function loadProgress(): number {
 }
 
 /**
- * Get default author ID - uses "صحيفة سبق" reporter for imported articles
+ * Get "صحيفة سبق" author ID - ONLY this reporter is used for imported articles
  */
 async function getDefaultAuthorId(): Promise<string> {
-  // First: Look for "صحيفة سبق" reporter (preferred for imported articles)
   const [sabqUser] = await db.select({ id: users.id })
     .from(users)
     .where(sql`first_name = 'صحيفة' AND last_name = 'سبق'`)
@@ -478,22 +477,7 @@ async function getDefaultAuthorId(): Promise<string> {
     return sabqUser.id;
   }
   
-  // Fallback: admin user
-  const [adminUser] = await db.select({ id: users.id })
-    .from(users)
-    .where(eq(users.role, 'admin'))
-    .limit(1);
-  
-  if (adminUser) return adminUser.id;
-  
-  // Last resort: any user
-  const [anyUser] = await db.select({ id: users.id })
-    .from(users)
-    .limit(1);
-  
-  if (anyUser) return anyUser.id;
-  
-  throw new Error('No users found in database');
+  throw new Error('❌ User "صحيفة سبق" not found! Please create this user first.');
 }
 
 /**
