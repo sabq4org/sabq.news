@@ -464,9 +464,21 @@ function loadProgress(): number {
 }
 
 /**
- * Get default author ID
+ * Get default author ID - uses "صحيفة سبق" reporter for imported articles
  */
 async function getDefaultAuthorId(): Promise<string> {
+  // First: Look for "صحيفة سبق" reporter (preferred for imported articles)
+  const [sabqUser] = await db.select({ id: users.id })
+    .from(users)
+    .where(sql`first_name = 'صحيفة' AND last_name = 'سبق'`)
+    .limit(1);
+  
+  if (sabqUser) {
+    console.log('📰 Using "صحيفة سبق" as author for imported articles');
+    return sabqUser.id;
+  }
+  
+  // Fallback: admin user
   const [adminUser] = await db.select({ id: users.id })
     .from(users)
     .where(eq(users.role, 'admin'))
@@ -474,6 +486,7 @@ async function getDefaultAuthorId(): Promise<string> {
   
   if (adminUser) return adminUser.id;
   
+  // Last resort: any user
   const [anyUser] = await db.select({ id: users.id })
     .from(users)
     .limit(1);
