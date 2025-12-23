@@ -96,7 +96,7 @@ export default function CategoryPage() {
 
   // Filter states
   const [sortMode, setSortMode] = useState<SortMode>("newest");
-  const [timeRange, setTimeRange] = useState<TimeRange>("7days");
+  const [timeRange, setTimeRange] = useState<TimeRange>("30days");
   const [articleType, setArticleType] = useState<ArticleTypeFilter>("all");
   const [displayCount, setDisplayCount] = useState(12);
 
@@ -291,7 +291,7 @@ export default function CategoryPage() {
   // Reset filters
   const handleResetFilters = useCallback(() => {
     setSortMode("newest");
-    setTimeRange("7days");
+    setTimeRange("30days");
     setArticleType("all");
     setDisplayCount(12);
   }, []);
@@ -780,7 +780,7 @@ export default function CategoryPage() {
         </div>
 
         {/* Active Filters Indicator */}
-        {(sortMode !== "newest" || timeRange !== "7days" || articleType !== "all") && (
+        {(sortMode !== "newest" || timeRange !== "30days" || articleType !== "all") && (
           <div className="mt-3 flex items-center gap-2">
             <span className="text-sm text-muted-foreground">الفلاتر النشطة:</span>
             <div className="flex flex-wrap gap-2">
@@ -789,13 +789,13 @@ export default function CategoryPage() {
                   {sortMode === "views" ? "الأكثر مشاهدة" : "الأكثر تفاعلاً"}
                 </Badge>
               )}
-              {timeRange !== "7days" && (
+              {timeRange !== "30days" && (
                 <Badge variant="secondary" className="text-xs">
                   {
                     {
                       today: "اليوم",
                       "3days": "آخر 3 أيام",
-                      "30days": "آخر 30 يوم",
+                      "7days": "آخر 7 أيام",
                       all: "الكل",
                     }[timeRange]
                   }
