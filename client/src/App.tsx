@@ -175,6 +175,7 @@ import CreativesManagement from "@/pages/dashboard/ads/CreativesManagement";
 import InventorySlotsManagement from "@/pages/dashboard/ads/InventorySlotsManagement";
 import PlacementsManagement from "@/pages/dashboard/ads/PlacementsManagement";
 import AdAnalyticsPage from "@/pages/dashboard/ads/AdAnalyticsPage";
+import NativeAdsManagement from "@/pages/dashboard/NativeAdsManagement";
 import ChatbotPage from "@/pages/ChatbotPage";
 import AccessibilityInsights from "@/pages/admin/AccessibilityInsights";
 import PublisherDashboard from "@/pages/publisher/PublisherDashboard";
@@ -469,6 +470,13 @@ function Router() {
       <Route path="/dashboard/ads/inventory-slots" component={InventorySlotsManagement} />
       <Route path="/dashboard/ads/analytics" component={AdAnalyticsPage} />
       <Route path="/dashboard/ads/account" component={AdAccountPage} />
+      <Route path="/dashboard/native-ads">
+        {() => (
+          <ProtectedRoute requireStaff={true} requireRoles={["admin", "editor"]}>
+            <NativeAdsManagement />
+          </ProtectedRoute>
+        )}
+      </Route>
       <Route path="/dashboard/themes/switcher" component={ThemeSwitcher} />
       <Route path="/dashboard/themes/:id" component={ThemeEditor} />
       <Route path="/dashboard/themes" component={ThemeManager} />

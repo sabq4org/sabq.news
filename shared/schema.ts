@@ -6027,6 +6027,124 @@ export type BudgetHistory = typeof budgetHistory.$inferSelect;
 export type AIRecommendation = typeof aiRecommendations.$inferSelect;
 export type AuditLog = typeof auditLogs.$inferSelect;
 
+// ============================================
+// NATIVE ADS - المحتوى المدفوع (Sponsored Content)
+// ============================================
+
+export const nativeAds = pgTable("native_ads", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // المحتوى الأساسي
+  title: text("title").notNull(), // عنوان الإعلان
+  description: text("description"), // وصف مختصر
+  imageUrl: text("image_url").notNull(), // صورة الإعلان
+  destinationUrl: text("destination_url").notNull(), // رابط الوجهة
+  callToAction: text("call_to_action").default("اقرأ المزيد"), // زر الإجراء (CTA)
+  
+  // معلومات المعلن
+  advertiserName: text("advertiser_name").notNull(), // اسم المعلن
+  advertiserLogo: text("advertiser_logo"), // شعار المعلن
+  
+  // الاستهداف
+  targetCategories: text("target_categories").array(), // استهداف بالتصنيفات
+  targetKeywords: text("target_keywords").array(), // استهداف بالكلمات المفتاحية
+  targetDevices: text("target_devices").default("all").notNull(), // desktop, mobile, tablet, all
+  
+  // الجدولة والميزانية
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date"),
+  dailyBudget: integer("daily_budget"), // الميزانية اليومية بالسنتات
+  totalBudget: integer("total_budget"), // الميزانية الإجمالية بالسنتات
+  costPerClick: integer("cost_per_click").default(100), // تكلفة النقرة بالسنتات
+  
+  // الإحصائيات
+  impressions: integer("impressions").default(0).notNull(),
+  clicks: integer("clicks").default(0).notNull(),
+  conversions: integer("conversions").default(0).notNull(),
+  
+  // الترتيب والأولوية
+  priority: integer("priority").default(5).notNull(), // 1-10 (أعلى = أولوية أكبر)
+  position: integer("position").default(0).notNull(), // ترتيب العرض
+  
+  // الحالة
+  status: text("status").default("draft").notNull(), // draft, pending_approval, active, paused, expired, rejected
+  rejectionReason: text("rejection_reason"),
+  
+  // الإنشاء والتعديل
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_native_ads_status").on(table.status),
+  index("idx_native_ads_dates").on(table.startDate, table.endDate),
+  index("idx_native_ads_priority").on(table.priority),
+  index("idx_native_ads_device").on(table.targetDevices),
+]);
+
+// إحصائيات المحتوى المدفوع
+export const nativeAdImpressions = pgTable("native_ad_impressions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nativeAdId: varchar("native_ad_id").references(() => nativeAds.id, { onDelete: "cascade" }).notNull(),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "set null" }),
+  userId: varchar("user_id"),
+  sessionId: text("session_id"),
+  deviceType: text("device_type"),
+  userAgent: text("user_agent"),
+  ipAddress: text("ip_address"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_native_impressions_ad").on(table.nativeAdId),
+  index("idx_native_impressions_article").on(table.articleId),
+  index("idx_native_impressions_date").on(table.createdAt),
+]);
+
+export const nativeAdClicks = pgTable("native_ad_clicks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nativeAdId: varchar("native_ad_id").references(() => nativeAds.id, { onDelete: "cascade" }).notNull(),
+  impressionId: varchar("impression_id").references(() => nativeAdImpressions.id, { onDelete: "set null" }),
+  articleId: varchar("article_id").references(() => articles.id, { onDelete: "set null" }),
+  userId: varchar("user_id"),
+  sessionId: text("session_id"),
+  deviceType: text("device_type"),
+  userAgent: text("user_agent"),
+  ipAddress: text("ip_address"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_native_clicks_ad").on(table.nativeAdId),
+  index("idx_native_clicks_impression").on(table.impressionId),
+  index("idx_native_clicks_date").on(table.createdAt),
+]);
+
+// Insert schemas
+export const insertNativeAdSchema = createInsertSchema(nativeAds).omit({
+  id: true,
+  impressions: true,
+  clicks: true,
+  conversions: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  title: z.string().min(1, "عنوان الإعلان مطلوب").max(100, "العنوان طويل جداً"),
+  description: z.string().max(200, "الوصف طويل جداً").optional(),
+  imageUrl: z.string().url("رابط الصورة غير صحيح"),
+  destinationUrl: z.string().url("رابط الوجهة غير صحيح"),
+  callToAction: z.string().max(30, "زر الإجراء طويل جداً").optional(),
+  advertiserName: z.string().min(1, "اسم المعلن مطلوب"),
+  targetCategories: z.array(z.string()).optional(),
+  targetKeywords: z.array(z.string()).optional(),
+  targetDevices: z.enum(["desktop", "mobile", "tablet", "all"]).default("all"),
+  startDate: z.coerce.date({ message: "تاريخ البداية مطلوب" }),
+  endDate: z.coerce.date().optional().nullable(),
+  priority: z.coerce.number().int().min(1).max(10).default(5),
+  status: z.enum(["draft", "pending_approval", "active", "paused", "expired", "rejected"]).default("draft"),
+});
+
+// Types
+export type NativeAd = typeof nativeAds.$inferSelect;
+export type InsertNativeAd = z.infer<typeof insertNativeAdSchema>;
+export type NativeAdImpression = typeof nativeAdImpressions.$inferSelect;
+export type NativeAdClick = typeof nativeAdClicks.$inferSelect;
+
 // Campaign with additional details
 export type CampaignWithDetails = Campaign & {
   account?: AdAccount;

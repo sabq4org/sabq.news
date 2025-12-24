@@ -13,6 +13,7 @@ import commentModerationRoutes from './routes/commentModeration';
 import { startMessageAggregatorJob } from './services/whatsappMessageAggregator';
 import ifoxAiManagementRoutes from './routes/ifox/ai-management';
 import autoImageRoutes from './routes/autoImageRoutes';
+import nativeAdsRouter from './routes/nativeAds';
 import { ObjectStorageService, ObjectNotFoundError, objectStorageClient } from "./objectStorage";
 import imageOptimizationService, { optimizeImage, getOptimizedImage, generateSrcSet, getBestFormat, supportsWebP, IMAGE_SIZES, generateLiteOptimizedImage } from "./services/imageOptimizationService";
 import sharp from "sharp";
@@ -29756,6 +29757,7 @@ Allow: /
 
   // Mount the auto image generation routes
   app.use("/api/auto-image", autoImageRoutes);
+  app.use("/api/native-ads", nativeAdsRouter);
 
   // ============================================================
   // ACCESSIBILITY TELEMETRY ROUTES

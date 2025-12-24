@@ -12,6 +12,7 @@ import FollowStoryButton from "@/components/FollowStoryButton";
 import { ViewsCount } from "@/components/ViewsCount";
 import { AiArticleStats } from "@/components/AiArticleStats";
 import { AdSlot } from "@/components/AdSlot";
+import { NativeAdsSection } from "@/components/NativeAdsSection";
 import { SocialShareBar } from "@/components/SocialShareBar";
 import { ImageWithCaption } from "@/components/ImageWithCaption";
 import { VideoPlayer } from "@/components/VideoPlayer";
@@ -1332,6 +1333,14 @@ export default function ArticleDetail() {
               comments={comments}
               currentUser={user}
               onSubmitComment={handleComment}
+            />
+
+            {/* Native Ads - Sponsored Content */}
+            <NativeAdsSection
+              articleId={article.id}
+              categorySlug={article.category?.slug}
+              keywords={articleTags?.map(tag => tag.nameAr) || []}
+              limit={4}
             />
           </article>
 
