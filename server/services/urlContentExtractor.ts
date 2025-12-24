@@ -158,9 +158,24 @@ export interface ExtractionResult {
 }
 
 export function detectUrls(text: string): string[] {
+  // Match URLs with protocol (https:// or http://)
   const urlRegex = /https?:\/\/[^\s<>"{}|\\^`\[\]]+/gi;
-  const matches = text.match(urlRegex) || [];
-  return matches.map(url => url.replace(/[.,;:!?)\]]+$/, ''));
+  const protocolMatches = text.match(urlRegex) || [];
+  
+  // Also match URLs starting with www. (without protocol)
+  const wwwRegex = /\bwww\.[^\s<>"{}|\\^`\[\]]+/gi;
+  const wwwMatches = text.match(wwwRegex) || [];
+  
+  // Combine and normalize: add https:// to www URLs
+  const allUrls = [
+    ...protocolMatches,
+    ...wwwMatches.map(url => `https://${url}`)
+  ];
+  
+  // Remove duplicates and clean trailing punctuation
+  const cleanedUrls = allUrls.map(url => url.replace(/[.,;:!?)\]]+$/, ''));
+  const uniqueUrls = cleanedUrls.filter((url, index) => cleanedUrls.indexOf(url) === index);
+  return uniqueUrls;
 }
 
 export function isNewsUrl(url: string): boolean {
