@@ -1,0 +1,184 @@
+2025-12-24 09:42:37.82
+1cdf21af
+User
+[Email Agent] Token search results: {
+2025-12-24 09:42:37.82
+1cdf21af
+User
+html: '✗ Not found',
+2025-12-24 09:42:37.82
+1cdf21af
+User
+htmlLength: 0,
+2025-12-24 09:42:37.82
+1cdf21af
+User
+subjectPreview: '783ba8db0f873ca773bfebf660f402f6a1814797cfe4a389f857e84693d51026',
+2025-12-24 09:42:37.82
+1cdf21af
+User
+}
+2025-12-24 09:42:37.82
+1cdf21af
+User
+text: '✗ Not found',
+2025-12-24 09:42:37.82
+1cdf21af
+User
+textPreview: ''
+2025-12-24 09:42:37.82
+1cdf21af
+User
+[Email Agent] Sender verified successfully
+2025-12-24 09:42:37.82
+1cdf21af
+User
+subject: '✓ Found: 783ba8db...',
+2025-12-24 09:42:37.82
+1cdf21af
+User
+subjectLength: 64,
+2025-12-24 09:42:37.82
+1cdf21af
+User
+textLength: 0,
+2025-12-24 09:42:37.87
+1cdf21af
+User
+[Email Agent] 👤 Fetching assigned reporter user: RnP7eDOAl5T5rGpib9_8d
+2025-12-24 09:42:37.87
+1cdf21af
+User
+[Email Agent] Using system user ID: email-agent-system
+2025-12-24 09:42:37.89
+1cdf21af
+User
+[Email Agent] ✅ Reporter user found: RnP7eDOAl5T5rGpib9_8d - صحيفة سبق
+2025-12-24 09:42:37.89
+1cdf21af
+User
+[Email Agent] 📝 extractedTextFromDocs length: 0 chars
+2025-12-24 09:42:37.89
+1cdf21af
+User
+[Email Agent] Content length after token removal: 0
+2025-12-24 09:42:37.89
+1cdf21af
+User
+[Email Agent] 📝 Initial emailContent length: 0 chars
+2025-12-24 09:42:37.90
+1cdf21af
+User
+[Email Agent] 🔗 All detected URLs (HTML + text): 0 []
+2025-12-24 09:42:37.90
+1cdf21af
+User
+[Email Agent] 📸 isPublic: false
+2025-12-24 09:42:37.90
+1cdf21af
+User
+[Email Agent] 📸 pendingImageUploads.length: 0
+2025-12-24 09:42:37.90
+1cdf21af
+User
+[Email Agent] 📸 No pending images to upload - RETURNING EARLY
+2025-12-24 09:42:37.90
+1cdf21af
+User
+[Email Agent] No content found after token removal
+2025-12-24 09:42:37.90
+1cdf21af
+User
+[Email Agent] 📸 ========== uploadPendingImages called ==========
+2025-12-24 09:42:37.95
+1cdf21af
+User
+6:42:37 AM [express] POST /api/email-agent/webhook 200 in 924ms :: {"success":false,"message":"No co…
+2025-12-24 09:43:00.03
+1cdf21af
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-12-24 09:43:00.04
+1cdf21af
+User
+🔄 Checking for scheduled audio newsletters...
+2025-12-24 09:43:00.04
+1cdf21af
+User
+[NotificationWorker] Starting queue processing...
+2025-12-24 09:43:00.05
+1cdf21af
+User
+[AI Task Executor] Checking for pending tasks...
+2025-12-24 09:43:00.08
+1cdf21af
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-12-24 09:43:00.16
+1cdf21af
+User
+[NotificationWorker] Queue processing completed
+2025-12-24 09:43:00.16
+1cdf21af
+User
+[NotificationWorker] Found 0 notifications to process
+2025-12-24 09:43:00.17
+1cdf21af
+User
+Found 0 scheduled newsletters to process
+2025-12-24 09:43:20.11
+1cdf21af
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-24 09:43:20.11
+1cdf21af
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-24 09:43:20.14
+1cdf21af
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-24 09:43:20.20
+1cdf21af
+User
+6:43:20 AM [express] GET /api/live/breaking 304 in 243ms :: {"items":[]}
+2025-12-24 09:43:20.21
+1cdf21af
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-24 09:43:20.33
+1cdf21af
+User
+6:43:20 AM [express] GET /api/live/updates 304 in 382ms :: {"items":[{"id":"zgmgnYLN1mlfWLMC6WWX8","…
+2025-12-24 09:44:00.03
+1cdf21af
+User
+[NotificationWorker] Starting queue processing...
+2025-12-24 09:44:00.03
+1cdf21af
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-12-24 09:44:00.04
+1cdf21af
+User
+🔄 Checking for scheduled audio newsletters...
+2025-12-24 09:44:00.05
+1cdf21af
+User
+[AI Task Executor] Checking for pending tasks...
+2025-12-24 09:44:00.07
+1cdf21af
+User
+[NotificationWorker] Queue processing completed
+2025-12-24 09:44:00.07
+1cdf21af
+User
+[NotificationWorker] Found 0 notifications to process
+2025-12-24 09:44:00.16
+1cdf21af
+User
+Found 0 scheduled newsletters to process
+2025-12-24 09:44:00.17
+1cdf21af
+User
+[ScheduledPublisher] Found 0 articles ready to publish
