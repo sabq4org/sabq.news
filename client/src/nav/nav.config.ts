@@ -206,7 +206,7 @@ export const navConfig: NavItem[] = [
     labelKey: "nav.advertising",
     labelAr: "الإعلانات",
     icon: Megaphone,
-    roles: ["admin", "editor", "advertiser"],
+    roles: ["admin", "advertiser"],
     children: [
       {
         id: "ad_campaigns",
@@ -259,8 +259,7 @@ export const navConfig: NavItem[] = [
         labelAr: "المحتوى المدفوع",
         path: "/dashboard/native-ads",
         icon: DollarSign,
-        roles: ["admin", "editor"],
-        permissions: ["ads.view", "ads.manage"],
+        roles: ["admin"],
       },
     ],
   },
