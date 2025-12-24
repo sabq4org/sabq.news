@@ -1,0 +1,144 @@
+2025-12-24 10:52:25.69
+f93bb1e2
+User
+[Email Agent] Parsed email successfully:
+2025-12-24 10:52:25.69
+f93bb1e2
+User
+capsulah.com
+2025-12-24 10:52:25.69
+f93bb1e2
+User
+[Email Agent] 📎 Converting parsed attachments to Multer format
+2025-12-24 10:52:25.69
+f93bb1e2
+User
+fieldname: 'attachment',
+2025-12-24 10:52:25.69
+f93bb1e2
+User
+[Email Agent] ✅ Converted 1 attachments from raw MIME
+2025-12-24 10:52:25.69
+f93bb1e2
+User
+[Email Agent] - Multer files received: 1
+2025-12-24 10:52:25.69
+f93bb1e2
+User
+[Email Agent] - Subject: 783ba8db0f873ca773bfebf660f402f6a1814797cfe4a389f857e84693d51026
+2025-12-24 10:52:25.69
+f93bb1e2
+User
+[Email Agent] Final extracted values:
+2025-12-24 10:52:25.69
+f93bb1e2
+User
+[Email Agent] 📎 ============ ATTACHMENTS DETAILS ============
+2025-12-24 10:52:25.69
+f93bb1e2
+User
+[Email Agent] - From: Ali Alhazmi <aalhazmi@sabq.org>
+2025-12-24 10:52:25.69
+f93bb1e2
+User
+mimetype: 'image/jpeg',
+2025-12-24 10:52:25.69
+f93bb1e2
+User
+}
+2025-12-24 10:52:25.69
+f93bb1e2
+User
+[Email Agent] 📎 Attachment 1: {
+2025-12-24 10:52:25.69
+f93bb1e2
+User
+[Email Agent] 📎 ============ PROCESSING ALL ATTACHMENTS (EARLY) ============
+2025-12-24 10:52:25.69
+f93bb1e2
+User
+size: '116.11 KB',
+2025-12-24 10:52:25.69
+f93bb1e2
+User
+[Email Agent] 📸 DETECTED IMAGE: vx839.jpg, mimetype: image/jpeg, size: 118892 bytes
+2025-12-24 10:52:25.69
+f93bb1e2
+User
+buffer: 'Present'
+2025-12-24 10:52:25.69
+f93bb1e2
+User
+[Email Agent] - Text length: 109
+2025-12-24 10:52:25.69
+f93bb1e2
+User
+[Email Agent] - req.files keys: []
+2025-12-24 10:52:25.69
+f93bb1e2
+User
+filename: undefined,
+2025-12-24 10:52:25.69
+f93bb1e2
+User
+[Email Agent] - HTML length: 161204
+2025-12-24 10:52:25.69
+f93bb1e2
+User
+[Email Agent] 📎 ==========================================
+2025-12-24 10:52:25.69
+f93bb1e2
+User
+originalname: 'vx839.jpg',
+2025-12-24 10:52:25.69
+f93bb1e2
+User
+[Email Agent] 🔍 Running OCR on image using GPT-4o Vision...
+2025-12-24 10:52:27.43
+f93bb1e2
+User
+[Email Agent] 🔍 OCR extracted text from image: 64 characters
+2025-12-24 10:52:27.43
+f93bb1e2
+User
+[Email Agent] 📸 pendingImageUploads count is now: 1
+2025-12-24 10:52:27.43
+f93bb1e2
+User
+[Email Agent] ✅ OCR extracted 64 chars from image
+2025-12-24 10:54:00.04
+f93bb1e2
+User
+[NotificationWorker] Starting queue processing...
+2025-12-24 10:54:00.04
+f93bb1e2
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-12-24 10:54:00.04
+f93bb1e2
+User
+🔄 Checking for scheduled audio newsletters...
+2025-12-24 10:54:00.05
+f93bb1e2
+User
+[AI Task Executor] Checking for pending tasks...
+2025-12-24 10:54:00.17
+f93bb1e2
+User
+Found 0 scheduled newsletters to process
+2025-12-24 10:54:00.18
+f93bb1e2
+User
+[NotificationWorker] Queue processing completed
+2025-12-24 10:54:00.18
+f93bb1e2
+User
+[NotificationWorker] Found 0 notifications to process
+2025-12-24 10:54:00.19
+f93bb1e2
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-12-24 10:54:00.19
+f93bb1e2
+User
+[ScheduledPublisher] Found 0 articles ready to publish
