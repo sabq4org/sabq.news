@@ -2,6 +2,8 @@ import { Router, Request, Response } from "express";
 import multer from "multer";
 import { simpleParser } from "mailparser";
 import mammoth from "mammoth";
+import * as pdfParse from "pdf-parse";
+import OpenAI from "openai";
 import { storage } from "../storage";
 import { analyzeAndEditWithSabqStyle, detectLanguage, normalizeLanguageCode } from "../ai/contentAnalyzer";
 import { objectStorageClient } from "../objectStorage";
@@ -136,6 +138,72 @@ async function extractTextFromDocx(buffer: Buffer): Promise<string> {
     return result.value.trim();
   } catch (error) {
     console.error("[Email Agent] Error extracting text from DOCX:", error);
+    return "";
+  }
+}
+
+async function extractTextFromPdf(buffer: Buffer): Promise<string> {
+  try {
+    const data = await (pdfParse as any).default(buffer);
+    const text = data.text.trim();
+    console.log(`[Email Agent] 📄 Extracted ${text.length} chars from PDF (${data.numpages} pages)`);
+    return text;
+  } catch (error) {
+    console.error("[Email Agent] Error extracting text from PDF:", error);
+    return "";
+  }
+}
+
+async function extractTextFromImage(buffer: Buffer, mimeType: string): Promise<string> {
+  try {
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const base64Image = buffer.toString('base64');
+    const dataUrl = `data:${mimeType};base64,${base64Image}`;
+    
+    console.log("[Email Agent] 🔍 Running OCR on image using GPT-4o Vision...");
+    
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: `أنت خبير في استخراج النص من الصور. استخرج كل النص العربي والإنجليزي من هذه الصورة.
+
+قواعد مهمة:
+1. استخرج النص بالضبط كما يظهر في الصورة
+2. حافظ على ترتيب النص وتنسيقه
+3. إذا كانت الصورة تحتوي على خبر أو بيان صحفي، استخرج كل التفاصيل
+4. إذا لم يكن هناك نص في الصورة، أجب بـ "لا يوجد نص"
+5. لا تضف أي تعليقات أو شروحات، فقط النص المستخرج`
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: dataUrl,
+                detail: "high"
+              }
+            }
+          ]
+        }
+      ],
+      max_tokens: 4000,
+      temperature: 0.1
+    });
+    
+    const extractedText = response.choices[0]?.message?.content?.trim() || "";
+    
+    if (extractedText === "لا يوجد نص" || extractedText.length < 10) {
+      console.log("[Email Agent] 🔍 OCR: No text found in image");
+      return "";
+    }
+    
+    console.log(`[Email Agent] ✅ OCR extracted ${extractedText.length} chars from image`);
+    return extractedText;
+  } catch (error) {
+    console.error("[Email Agent] Error extracting text from image (OCR):", error);
     return "";
   }
 }
@@ -307,6 +375,8 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
       for (const attachment of attachments) {
         const isWordDoc = attachment.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
                           attachment.originalname?.toLowerCase().endsWith('.docx');
+        const isPdf = attachment.mimetype === 'application/pdf' ||
+                      attachment.originalname?.toLowerCase().endsWith('.pdf');
         const isImage = /^image\/(jpeg|jpg|png|gif|webp)$/i.test(attachment.mimetype);
         
         try {
