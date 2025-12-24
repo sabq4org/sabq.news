@@ -417,6 +417,43 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
             
             console.log(`[Email Agent] ✅ Word document uploaded to PRIVATE: ${gcsPath}`);
             
+          } else if (isPdf) {
+            // 📄 Process PDF Document
+            console.log(`[Email Agent] 📄 Found PDF document: ${attachment.originalname}`);
+            
+            // Extract text for AI analysis
+            try {
+              const extractedText = await extractTextFromPdf(attachment.buffer);
+              
+              if (extractedText && extractedText.length > 0) {
+                console.log(`[Email Agent] ✅ Extracted text from PDF: ${extractedText.length} characters`);
+                extractedTextFromDocs += extractedText + "\n\n";
+              } else {
+                console.log(`[Email Agent] ⚠️ No text extracted from PDF document`);
+              }
+            } catch (extractError) {
+              console.error(`[Email Agent] ⚠️ Failed to extract text from PDF:`, extractError);
+            }
+            
+            // Upload original PDF file to PRIVATE
+            const pdfGcsPath = await uploadAttachmentToGCS(
+              attachment.buffer,
+              attachment.originalname,
+              attachment.mimetype,
+              false  // isPublic: false - PDFs go to PRIVATE
+            );
+            
+            // Save complete metadata
+            allAttachmentsMetadata.push({
+              filename: attachment.originalname,
+              contentType: attachment.mimetype,
+              size: attachment.size,
+              url: pdfGcsPath,
+              type: 'document'
+            });
+            
+            console.log(`[Email Agent] ✅ PDF document uploaded to PRIVATE: ${pdfGcsPath}`);
+            
           } else if (isImage) {
             // 📸 Process Image - STORE IN MEMORY (DO NOT UPLOAD YET)
             console.log(`[Email Agent] 📸 DETECTED IMAGE: ${attachment.originalname}, mimetype: ${attachment.mimetype}, size: ${attachment.size} bytes`);
@@ -426,6 +463,17 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
             if (attachment.size > maxSize) {
               console.log(`[Email Agent] ⚠️ Image ${attachment.originalname} too large (${(attachment.size / 1024 / 1024).toFixed(2)}MB), skipping`);
               continue;
+            }
+            
+            // 🔍 Run OCR on image to extract text (if any)
+            try {
+              const ocrText = await extractTextFromImage(attachment.buffer, attachment.mimetype);
+              if (ocrText && ocrText.length > 20) {
+                console.log(`[Email Agent] 🔍 OCR extracted text from image: ${ocrText.length} characters`);
+                extractedTextFromDocs += `[نص مستخرج من صورة: ${attachment.originalname}]\n${ocrText}\n\n`;
+              }
+            } catch (ocrError) {
+              console.error(`[Email Agent] ⚠️ OCR failed for image:`, ocrError);
             }
             
             console.log(`[Email Agent] 📸 Storing image in memory (deferred upload): ${attachment.originalname} (${(attachment.size / 1024).toFixed(2)} KB)`);
