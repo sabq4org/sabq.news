@@ -206,7 +206,7 @@ export const navConfig: NavItem[] = [
     labelKey: "nav.advertising",
     labelAr: "الإعلانات",
     icon: Megaphone,
-    roles: ["admin", "advertiser"],
+    roles: ["admin", "editor", "advertiser"],
     children: [
       {
         id: "ad_campaigns",
