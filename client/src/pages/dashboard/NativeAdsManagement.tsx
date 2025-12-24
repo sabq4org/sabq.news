@@ -203,7 +203,8 @@ export default function NativeAdsManagement() {
       if (!response.ok) {
         throw new Error("فشل في جلب الإعلانات");
       }
-      return response.json();
+      const data = await response.json();
+      return data.ads || [];
     },
   });
 
