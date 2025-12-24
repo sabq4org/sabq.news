@@ -49,6 +49,7 @@ import {
   Mail,
   Building2,
   FileCheck,
+  DollarSign,
 } from "lucide-react";
 import type { NavItem } from "./types";
 
@@ -251,6 +252,15 @@ export const navConfig: NavItem[] = [
         icon: BarChart,
         roles: ["admin", "advertiser"],
         permissions: ["ads.view"],
+      },
+      {
+        id: "native_ads",
+        labelKey: "nav.native_ads",
+        labelAr: "المحتوى المدفوع",
+        path: "/dashboard/native-ads",
+        icon: DollarSign,
+        roles: ["admin", "editor"],
+        permissions: ["ads.view", "ads.manage"],
       },
     ],
   },
