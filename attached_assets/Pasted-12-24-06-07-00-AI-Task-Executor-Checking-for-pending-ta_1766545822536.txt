@@ -1,0 +1,55 @@
+12-24 06:07:00
+[AI Task Executor] Checking for pending tasks...
+12-24 06:07:00
+[ScheduledPublisher] Checking for scheduled articles...
+12-24 06:07:00
+[NotificationWorker] Found 0 notifications to process
+12-24 06:07:00
+[NotificationWorker] Queue processing completed
+12-24 06:07:00
+Found 0 scheduled newsletters to process
+12-24 06:07:00
+[ScheduledPublisher] Found 0 articles ready to publish
+12-24 06:07:05
+🔸 DeserializeUser called with id: admin-sabq
+12-24 06:07:05
+✅ DeserializeUser: User found: admin@sabq.sa
+12-24 06:07:05
+✅ [EVENT TRACKING] Tracked event: view for article npe79W0JmSjuITR0cwTwE (value: 1)
+12-24 06:07:06
+3:07:06 AM [express] POST /api/articles/npe79W0JmSjuITR0cwTwE/view 200 in 348ms :: {"success":true}
+12-24 06:07:06
+🔸 DeserializeUser called with id: admin-sabq
+12-24 06:07:06
+✅ DeserializeUser: User found: admin@sabq.sa
+12-24 06:07:06
+✅ [EVENT TRACKING] Tracked event: view for article eOF51ckTbvGn__0aNX1mm (value: 1)
+12-24 06:07:06
+3:07:06 AM [express] POST /api/articles/eOF51ckTbvGn__0aNX1mm/view 200 in 185ms :: {"success":true}
+12-24 06:07:06
+🔸 DeserializeUser called with id: admin-sabq
+12-24 06:07:06
+✅ DeserializeUser: User found: admin@sabq.sa
+12-24 06:07:07
+3:07:07 AM [express] GET /api/articles 200 in 226ms :: [{"id":"88dd9708-2dcb-4ac9-991b-4a69949a3a21"…
+12-24 06:07:08
+🔸 DeserializeUser called with id: admin-sabq
+12-24 06:07:08
+✅ DeserializeUser: User found: admin@sabq.sa
+12-24 06:07:08
+🔄 [EVENT TRACKING] Updated event: view for article eOF51ckTbvGn__0aNX1mm
+12-24 06:07:08
+3:07:08 AM [express] POST /api/articles/eOF51ckTbvGn__0aNX1mm/view 200 in 158ms :: {"success":true}
+12-24 06:07:09
+🔸 DeserializeUser called with id: admin-sabq
+12-24 06:07:09
+✅ DeserializeUser: User found: admin@sabq.sa
+12-24 06:07:09
+3:07:09 AM [express] GET /api/articles 200 in 212ms :: [{"id":"88dd9708-2dcb-4ac9-991b-4a69949a3a21"…
+12-24 06:07:10
+🔸 DeserializeUser called with id: admin-sabq
+12-24 06:07:10
+✅ DeserializeUser: User found: admin@sabq.sa
+12-24 06:07:10
+🔄 [EVENT TRACKING] Updated event: view for article eOF51ckTbvGn__0aNX1mm
+12-24 06:07:10
