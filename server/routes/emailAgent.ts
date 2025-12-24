@@ -906,10 +906,11 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     let urlExtractionResult: any = null;
     let extractedFromUrl = false;
     
-    // 🔗 CRITICAL FIX: Extract URLs from HTML href attributes BEFORE stripping HTML
-    // This ensures we don't lose URLs that are only in anchor tags
+    // 🔗 CRITICAL FIX: Extract URLs from HTML BEFORE stripping HTML
+    // This ensures we don't lose URLs that are only in anchor tags or Apple Mail link previews
     let htmlUrls: string[] = [];
     if (html) {
+      // 1. Standard href attributes
       const hrefRegex = /href\s*=\s*["']([^"']+)["']/gi;
       let match;
       while ((match = hrefRegex.exec(html)) !== null) {
@@ -918,7 +919,65 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
           htmlUrls.push(url);
         }
       }
-      console.log("[Email Agent] 🔗 URLs extracted from HTML hrefs:", htmlUrls.length, htmlUrls);
+      
+      // 2. Apple Mail link preview: data-x-apple-url and similar data-* attributes containing URLs
+      const dataUrlRegex = /data-[^=]*url[^=]*\s*=\s*["']([^"']+)["']/gi;
+      while ((match = dataUrlRegex.exec(html)) !== null) {
+        const url = match[1];
+        if (url && url.startsWith('http')) {
+          htmlUrls.push(url);
+        }
+      }
+      
+      // 3. og:url meta tags (sometimes present in forwarded emails)
+      const ogUrlRegex = /property\s*=\s*["']og:url["'][^>]*content\s*=\s*["']([^"']+)["']/gi;
+      while ((match = ogUrlRegex.exec(html)) !== null) {
+        const url = match[1];
+        if (url && url.startsWith('http')) {
+          htmlUrls.push(url);
+        }
+      }
+      
+      // 4. Look for TRUSTED domain patterns without protocol (spa.gov.sa/..., reuters.com/..., etc.)
+      // This handles Apple Mail link previews that show domain without protocol
+      const trustedDomains = [
+        'spa.gov.sa', 'reuters.com', 'aljazeera.net', 'alarabiya.net',
+        'cnn.com', 'bbc.com', 'skynewsarabia.com', 'aawsat.com',
+        'aleqt.com', 'okaz.com.sa', 'alriyadh.com', 'alwatan.com.sa',
+        'ajel.sa', 'moi.gov.sa', 'moe.gov.sa', 'moh.gov.sa',
+        'vision2030.gov.sa', 'argaam.com', 'tadawul.com.sa'
+      ];
+      
+      for (const domain of trustedDomains) {
+        // Match domain followed by path (e.g., spa.gov.sa/w/1234567)
+        const domainPattern = new RegExp(`\\b(${domain.replace(/\./g, '\\.')})/([^\\s"'<>]+)`, 'gi');
+        while ((match = domainPattern.exec(html)) !== null) {
+          const fullMatch = match[0];
+          // Construct full URL with https
+          const fullUrl = `https://${fullMatch}`;
+          console.log("[Email Agent] 🔗 Found trusted domain URL pattern:", fullUrl);
+          htmlUrls.push(fullUrl);
+        }
+      }
+      
+      // 5. Also check plain text content for trusted domains without protocol
+      for (const domain of trustedDomains) {
+        const domainPattern = new RegExp(`\\b(${domain.replace(/\./g, '\\.')})/([^\\s"'<>]+)`, 'gi');
+        while ((match = domainPattern.exec(emailContent)) !== null) {
+          const fullMatch = match[0];
+          const fullUrl = `https://${fullMatch}`;
+          console.log("[Email Agent] 🔗 Found trusted domain in text:", fullUrl);
+          htmlUrls.push(fullUrl);
+        }
+      }
+      
+      console.log("[Email Agent] 🔗 URLs extracted from HTML (all methods):", htmlUrls.length, htmlUrls);
+      
+      // Debug: Log sample of HTML if no URLs found to help diagnose
+      if (htmlUrls.length === 0 && html.length > 0) {
+        console.log("[Email Agent] ⚠️ No URLs found in HTML. HTML sample (first 2000 chars):");
+        console.log(html.substring(0, 2000));
+      }
     }
     
     // Combine URLs from both plain text content AND HTML hrefs
