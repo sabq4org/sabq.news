@@ -467,10 +467,17 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
             
             // 🔍 Run OCR on image to extract text (if any)
             try {
+              console.log(`[Email Agent] 🔍 Starting OCR for image: ${attachment.originalname}`);
               const ocrText = await extractTextFromImage(attachment.buffer, attachment.mimetype);
+              console.log(`[Email Agent] 🔍 OCR result: ${ocrText ? ocrText.length : 0} chars`);
               if (ocrText && ocrText.length > 20) {
                 console.log(`[Email Agent] 🔍 OCR extracted text from image: ${ocrText.length} characters`);
+                console.log(`[Email Agent] 🔍 OCR text preview: ${ocrText.substring(0, 200)}...`);
                 extractedTextFromDocs += `[نص مستخرج من صورة: ${attachment.originalname}]\n${ocrText}\n\n`;
+              } else if (ocrText && ocrText.length > 0) {
+                console.log(`[Email Agent] ⚠️ OCR text too short (${ocrText.length} chars): "${ocrText}"`);
+              } else {
+                console.log(`[Email Agent] ⚠️ OCR returned empty text`);
               }
             } catch (ocrError) {
               console.error(`[Email Agent] ⚠️ OCR failed for image:`, ocrError);
