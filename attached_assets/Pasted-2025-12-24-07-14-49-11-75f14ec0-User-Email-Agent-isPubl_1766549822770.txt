@@ -1,0 +1,115 @@
+2025-12-24 07:14:49.11
+75f14ec0
+User
+[Email Agent] 📸 isPublic: false
+2025-12-24 07:14:49.11
+75f14ec0
+User
+[Email Agent] 📸 No pending images to upload - RETURNING EARLY
+2025-12-24 07:14:49.11
+75f14ec0
+User
+[Email Agent] 📸 pendingImageUploads.length: 0
+2025-12-24 07:14:49.11
+75f14ec0
+User
+[Email Agent] 📸 ========== uploadPendingImages called ==========
+2025-12-24 07:14:49.28
+75f14ec0
+User
+4:14:49 AM [express] POST /api/email-agent/webhook 200 in 7875ms :: {"success":false,"message":"Cont…
+2025-12-24 07:15:00.18
+75f14ec0
+User
+[NotificationWorker] Found 0 notifications to process
+2025-12-24 07:15:00.20
+75f14ec0
+User
+Found 0 scheduled newsletters to process
+2025-12-24 07:15:00.20
+75f14ec0
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-12-24 07:15:00.22
+75f14ec0
+User
+Newsletter 808aceec-822b-4bfd-a6f5-1fe8d863e036 exceeded max retries (3)
+2025-12-24 07:15:00.22
+75f14ec0
+User
+Newsletter 9e40c1df-1749-4a46-906e-beb708f73707 exceeded max retries (3)
+2025-12-24 07:15:00.22
+75f14ec0
+User
+Newsletter 12a7a369-0a03-44b7-8ba9-cb60c896aa97 exceeded max retries (3)
+2025-12-24 07:15:00.22
+75f14ec0
+User
+Newsletter c3ee6260-c11b-4a6c-ae52-0c7ed7cd528c exceeded max retries (3)
+2025-12-24 07:15:00.22
+75f14ec0
+User
+Newsletter cc916fa0-77c4-415c-93d8-eee467d96e8d exceeded max retries (3)
+2025-12-24 07:15:00.22
+75f14ec0
+User
+Newsletter 45b1feb0-0e90-4b1a-995e-9c27ca951125 exceeded max retries (3)
+2025-12-24 07:15:00.22
+75f14ec0
+User
+Newsletter 529ad976-9896-4836-acf8-09915600abeb exceeded max retries (3)
+2025-12-24 07:15:00.22
+75f14ec0
+User
+Newsletter 8af42a5f-ed41-4925-b93b-dcb73a4deab3 exceeded max retries (3)
+2025-12-24 07:15:00.22
+75f14ec0
+User
+Newsletter 8a9512bd-9548-4aad-bfa5-ab3ee1eb6664 exceeded max retries (3)
+2025-12-24 07:15:00.22
+75f14ec0
+User
+Newsletter 65ee5de0-8981-41ce-9fb6-abd76f1b684c exceeded max retries (3)
+2025-12-24 07:15:00.22
+75f14ec0
+User
+Newsletter 73bfbf4b-6b14-4d5d-bfc9-1d36b5d8f7f5 exceeded max retries (3)
+2025-12-24 07:15:00.22
+75f14ec0
+User
+Newsletter 45bde1a3-0938-4ba7-a77c-92f2dad75a83 exceeded max retries (3)
+2025-12-24 07:15:00.22
+75f14ec0
+User
+Newsletter dca93d24-ba43-438f-a8f5-fb2d99034189 exceeded max retries (3)
+2025-12-24 07:15:00.22
+75f14ec0
+User
+Newsletter e3796626-1b32-4bdf-9f5d-c6bd2bd3eca5 exceeded max retries (3)
+2025-12-24 07:15:00.22
+75f14ec0
+User
+Newsletter 356c9a40-1c9b-4ac0-b234-804605ee557f exceeded max retries (3)
+2025-12-24 07:15:00.22
+75f14ec0
+User
+Found 17 failed newsletters
+2025-12-24 07:15:00.22
+75f14ec0
+User
+Newsletter b198142c-0bbe-4153-8fce-63297f4b79d0 exceeded max retries (3)
+2025-12-24 07:15:00.22
+75f14ec0
+User
+Newsletter e050da31-ac01-481f-a57b-a7be238c681a exceeded max retries (3)
+2025-12-24 07:15:02.25
+75f14ec0
+User
+[Email Agent] Received webhook from SendGrid
+2025-12-24 07:15:02.25
+75f14ec0
+User
+[Email Agent] Buffer created, size: 18701 bytes
+2025-12-24 07:15:02.25
+75f14ec0
+User
