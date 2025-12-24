@@ -419,17 +419,21 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
             
           } else if (isPdf) {
             // 📄 Process PDF Document
-            console.log(`[Email Agent] 📄 Found PDF document: ${attachment.originalname}`);
+            console.log(`[Email Agent] 📄 Found PDF document: ${attachment.originalname}, size: ${attachment.size} bytes`);
             
             // Extract text for AI analysis
             try {
+              console.log(`[Email Agent] 📄 Starting PDF text extraction...`);
               const extractedText = await extractTextFromPdf(attachment.buffer);
+              console.log(`[Email Agent] 📄 PDF extraction result: ${extractedText ? extractedText.length : 0} chars`);
               
               if (extractedText && extractedText.length > 0) {
                 console.log(`[Email Agent] ✅ Extracted text from PDF: ${extractedText.length} characters`);
+                console.log(`[Email Agent] 📄 PDF text preview: ${extractedText.substring(0, 300)}...`);
                 extractedTextFromDocs += extractedText + "\n\n";
               } else {
-                console.log(`[Email Agent] ⚠️ No text extracted from PDF document`);
+                console.log(`[Email Agent] ⚠️ No text extracted from PDF document - might be scanned/image-based`);
+                // For scanned PDFs, try OCR on each page (future enhancement)
               }
             } catch (extractError) {
               console.error(`[Email Agent] ⚠️ Failed to extract text from PDF:`, extractError);
