@@ -1,0 +1,152 @@
+2025-12-24 08:00:32.79
+a917319f
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-24 08:00:32.79
+a917319f
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-24 08:00:32.79
+a917319f
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-24 08:00:32.79
+a917319f
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-24 08:00:32.81
+a917319f
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-24 08:00:32.82
+a917319f
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-24 08:00:32.82
+a917319f
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-24 08:00:32.84
+a917319f
+User
+[RBAC] User admin-sabq has legacy superuser role (admin), granting all permissions
+2025-12-24 08:00:32.88
+a917319f
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-24 08:00:32.89
+a917319f
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-24 08:00:32.89
+a917319f
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-24 08:00:32.89
+a917319f
+User
+📊 [GET /api/users] Role filter: reporter
+2025-12-24 08:00:32.89
+a917319f
+User
+📋 [GET /api/users] Returned 41 users
+2025-12-24 08:00:32.89
+a917319f
+User
+{
+2025-12-24 08:00:32.89
+a917319f
+User
+name: 'أحمد العبدالله',
+2025-12-24 08:00:32.89
+a917319f
+User
+{ name: 'حامد العلي', email: 'm_no_m@hotmail.com', status: 'active' },
+2025-12-24 08:00:32.89
+a917319f
+User
+status: 'active'
+2025-12-24 08:00:32.89
+a917319f
+User
+email: 'alslimisabq@gmail.com',
+2025-12-24 08:00:32.89
+a917319f
+User
+status: 'active'
+2025-12-24 08:00:32.89
+a917319f
+User
+name: 'خالد السليمي',
+2025-12-24 08:00:32.89
+a917319f
+User
+email: 'al-samer21@hotmail.com',
+2025-12-24 08:00:32.89
+a917319f
+User
+name: 'بندر آل عوض',
+2025-12-24 08:00:32.89
+a917319f
+User
+👥 [GET /api/users] Reporters: [
+2025-12-24 08:00:32.89
+a917319f
+User
+{
+2025-12-24 08:00:32.89
+a917319f
+User
+{
+2025-12-24 08:00:32.89
+a917319f
+User
+},
+2025-12-24 08:00:32.89
+a917319f
+User
+},
+2025-12-24 08:00:32.89
+a917319f
+User
+{
+2025-12-24 08:00:32.89
+a917319f
+User
+status: 'active'
+2025-12-24 08:00:32.89
+a917319f
+User
+name: 'المحرر الافتراضي',
+2025-12-24 08:00:32.89
+a917319f
+User
+status: 'active'
+2025-12-24 08:00:32.89
+a917319f
+User
+email: 'khalidalshamani@gmail.com',
+2025-12-24 08:00:32.89
+a917319f
+User
+},
+2025-12-24 08:00:32.89
+a917319f
+User
+email: 'ahmedalzahrani91@gmail.com',
+2025-12-24 08:00:32.89
+a917319f
+User
+},
+2025-12-24 08:00:32.89
+a917319f
+User
+{
+2025-12-24 08:00:34.69
+a917319f
+User
+5:00:34 AM [express] GET /api/email-agent/logs 200 in 1593ms :: {"logs":[{"id":"06846b59-ed4c-4993-9…
+2025-12-24 08:00:34.69
+a917319f
+User
+5:00:34 AM [express] GET /api/email-agent/logs 200 in 1593ms :: {"logs":[{"id":"06846b59-ed4c-4993-9…
