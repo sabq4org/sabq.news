@@ -650,7 +650,27 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     // 🔗 URL CONTENT EXTRACTION: Check if email contains a news URL to extract
     let urlExtractionResult: any = null;
     let extractedFromUrl = false;
-    const detectedUrls = detectUrls(emailContent);
+    
+    // 🔗 CRITICAL FIX: Extract URLs from HTML href attributes BEFORE stripping HTML
+    // This ensures we don't lose URLs that are only in anchor tags
+    let htmlUrls: string[] = [];
+    if (html) {
+      const hrefRegex = /href\s*=\s*["']([^"']+)["']/gi;
+      let match;
+      while ((match = hrefRegex.exec(html)) !== null) {
+        const url = match[1];
+        if (url && url.startsWith('http')) {
+          htmlUrls.push(url);
+        }
+      }
+      console.log("[Email Agent] 🔗 URLs extracted from HTML hrefs:", htmlUrls.length, htmlUrls);
+    }
+    
+    // Combine URLs from both plain text content AND HTML hrefs
+    const textUrls = detectUrls(emailContent);
+    const combinedUrls = [...htmlUrls, ...textUrls];
+    const detectedUrls = combinedUrls.filter((url, index) => combinedUrls.indexOf(url) === index); // Remove duplicates
+    console.log("[Email Agent] 🔗 All detected URLs (HTML + text):", detectedUrls.length, detectedUrls);
     
     if (detectedUrls.length > 0) {
       console.log("[Email Agent] 🔗 Detected URLs in email:", detectedUrls);
@@ -662,8 +682,14 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
         console.log("[Email Agent] 🔗 Found news URL:", newsUrl);
         
         // Check if this is primarily a URL-only message
-        const isUrlOnly = containsOnlyUrl(emailContent);
-        console.log("[Email Agent] 🔗 Is URL-only message:", isUrlOnly);
+        // For HTML emails, the URL might only exist in href, so check both:
+        // 1. Plain text content has URL only
+        // 2. OR: HTML has URL in href AND content is minimal (just link text like "اقرأ المقال")
+        const textIsUrlOnly = containsOnlyUrl(emailContent);
+        const htmlHasUrlAndMinimalContent = htmlUrls.length > 0 && emailContent.length < 100;
+        const isUrlOnly = textIsUrlOnly || htmlHasUrlAndMinimalContent;
+        console.log("[Email Agent] 🔗 Is URL-only message:", isUrlOnly, 
+          `(textUrlOnly: ${textIsUrlOnly}, htmlUrlWithMinimalContent: ${htmlHasUrlAndMinimalContent})`);
         
         if (isUrlOnly) {
           console.log("[Email Agent] 🌐 Extracting article content from URL...");
