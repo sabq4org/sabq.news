@@ -685,10 +685,10 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
         // Cases to consider:
         // 1. Plain text content has URL only (less than 20 chars after removing URL)
         // 2. HTML has URL in href AND content is minimal (just link text like "اقرأ المقال")
-        // 3. Plain text with URL AND minimal additional content (< 150 chars total) - e.g., short headline + URL
+        // 3. Plain text with URL AND minimal additional content (< 300 chars total) - e.g., headline + URL + source
         const textIsUrlOnly = containsOnlyUrl(emailContent);
-        const htmlHasUrlAndMinimalContent = htmlUrls.length > 0 && emailContent.length < 100;
-        const hasUrlWithMinimalText = textUrls.length > 0 && emailContent.length < 150;
+        const htmlHasUrlAndMinimalContent = htmlUrls.length > 0 && emailContent.length < 150;
+        const hasUrlWithMinimalText = textUrls.length > 0 && emailContent.length < 300;
         const isUrlOnly = textIsUrlOnly || htmlHasUrlAndMinimalContent || hasUrlWithMinimalText;
         console.log("[Email Agent] 🔗 Is URL-only message:", isUrlOnly, 
           `(textUrlOnly: ${textIsUrlOnly}, htmlUrlWithMinimalContent: ${htmlHasUrlAndMinimalContent}, hasUrlWithMinimalText: ${hasUrlWithMinimalText})`);
