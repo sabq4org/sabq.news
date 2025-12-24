@@ -488,6 +488,23 @@ export function containsOnlyUrl(text: string): boolean {
   const urls = detectUrls(trimmed);
   if (urls.length !== 1) return false;
   
-  const withoutUrl = trimmed.replace(urls[0], '').trim();
+  // Remove URL from text - handle both normalized (https://www.) and original (www.) formats
+  let withoutUrl = trimmed;
+  const normalizedUrl = urls[0]; // e.g., "https://www.spa.gov.sa/..."
+  
+  // First try to remove the normalized URL
+  withoutUrl = withoutUrl.replace(normalizedUrl, '');
+  
+  // Also try to remove www. version (without https://)
+  if (normalizedUrl.startsWith('https://www.')) {
+    const wwwVersion = normalizedUrl.replace('https://', '');
+    withoutUrl = withoutUrl.replace(wwwVersion, '');
+  }
+  
+  // Also try to remove http:// and https:// versions of any URL
+  const urlWithoutProtocol = normalizedUrl.replace(/^https?:\/\//, '');
+  withoutUrl = withoutUrl.replace(urlWithoutProtocol, '');
+  
+  withoutUrl = withoutUrl.trim();
   return withoutUrl.length < 20;
 }

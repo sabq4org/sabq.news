@@ -682,14 +682,16 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
         console.log("[Email Agent] 🔗 Found news URL:", newsUrl);
         
         // Check if this is primarily a URL-only message
-        // For HTML emails, the URL might only exist in href, so check both:
-        // 1. Plain text content has URL only
-        // 2. OR: HTML has URL in href AND content is minimal (just link text like "اقرأ المقال")
+        // Cases to consider:
+        // 1. Plain text content has URL only (less than 20 chars after removing URL)
+        // 2. HTML has URL in href AND content is minimal (just link text like "اقرأ المقال")
+        // 3. Plain text with URL AND minimal additional content (< 150 chars total) - e.g., short headline + URL
         const textIsUrlOnly = containsOnlyUrl(emailContent);
         const htmlHasUrlAndMinimalContent = htmlUrls.length > 0 && emailContent.length < 100;
-        const isUrlOnly = textIsUrlOnly || htmlHasUrlAndMinimalContent;
+        const hasUrlWithMinimalText = textUrls.length > 0 && emailContent.length < 150;
+        const isUrlOnly = textIsUrlOnly || htmlHasUrlAndMinimalContent || hasUrlWithMinimalText;
         console.log("[Email Agent] 🔗 Is URL-only message:", isUrlOnly, 
-          `(textUrlOnly: ${textIsUrlOnly}, htmlUrlWithMinimalContent: ${htmlHasUrlAndMinimalContent})`);
+          `(textUrlOnly: ${textIsUrlOnly}, htmlUrlWithMinimalContent: ${htmlHasUrlAndMinimalContent}, hasUrlWithMinimalText: ${hasUrlWithMinimalText})`);
         
         if (isUrlOnly) {
           console.log("[Email Agent] 🌐 Extracting article content from URL...");
