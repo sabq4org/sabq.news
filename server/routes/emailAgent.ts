@@ -757,10 +757,15 @@ router.post("/webhook", upload.any(), async (req: Request, res: Response) => {
     // Extract content from text or HTML
     let emailContent = text || (html ? html.replace(/<[^>]*>/g, '') : '');
     
-    // Add extracted text from Word documents
+    console.log("[Email Agent] 📝 Initial emailContent length:", emailContent.length, "chars");
+    console.log("[Email Agent] 📝 extractedTextFromDocs length:", extractedTextFromDocs.length, "chars");
+    
+    // Add extracted text from Word documents, PDFs, and OCR images
     if (extractedTextFromDocs) {
-      console.log("[Email Agent] 📄 Extracted text from Word docs:", extractedTextFromDocs.length, "chars");
+      console.log("[Email Agent] 📄 Adding extracted text from docs/images:", extractedTextFromDocs.length, "chars");
+      console.log("[Email Agent] 📄 Extracted text preview:", extractedTextFromDocs.substring(0, 300));
       emailContent = extractedTextFromDocs + "\n\n" + emailContent;
+      console.log("[Email Agent] 📝 emailContent length after adding extracted text:", emailContent.length, "chars");
     }
     
     // Remove token from content (support all formats)
