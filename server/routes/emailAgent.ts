@@ -146,10 +146,131 @@ async function extractTextFromPdf(buffer: Buffer): Promise<string> {
   try {
     const data = await (pdfParse as any).default(buffer);
     const text = data.text.trim();
-    console.log(`[Email Agent] 📄 Extracted ${text.length} chars from PDF (${data.numpages} pages)`);
+    console.log(`[Email Agent] 📄 PDF-parse extracted ${text.length} chars from PDF (${data.numpages} pages)`);
+    
+    // If pdf-parse extracted enough text, return it
+    if (text.length > 50) {
+      return text;
+    }
+    
+    // Otherwise, this might be a scanned/image-based PDF - try OCR
+    console.log(`[Email Agent] 📄 PDF text minimal (${text.length} chars), trying OCR on PDF...`);
+    const ocrText = await extractTextFromPdfWithOcr(buffer);
+    if (ocrText && ocrText.length > text.length) {
+      console.log(`[Email Agent] 📄 OCR extracted ${ocrText.length} chars from scanned PDF`);
+      return ocrText;
+    }
+    
     return text;
   } catch (error) {
     console.error("[Email Agent] Error extracting text from PDF:", error);
+    // Try OCR as fallback
+    try {
+      console.log(`[Email Agent] 📄 PDF-parse failed, trying OCR fallback...`);
+      const ocrText = await extractTextFromPdfWithOcr(buffer);
+      if (ocrText && ocrText.length > 20) {
+        return ocrText;
+      }
+    } catch (ocrError) {
+      console.error("[Email Agent] OCR fallback also failed:", ocrError);
+    }
+    return "";
+  }
+}
+
+// OCR for scanned PDFs - convert to images first, then use GPT-4o Vision
+async function extractTextFromPdfWithOcr(buffer: Buffer): Promise<string> {
+  try {
+    const { fromBuffer } = await import("pdf2pic");
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    
+    console.log("[Email Agent] 🔍 Converting PDF to images for OCR...");
+    
+    // Configure pdf2pic to convert PDF pages to PNG images
+    const convert = fromBuffer(buffer, {
+      density: 200,           // DPI - higher for better OCR
+      format: "png",
+      width: 1600,
+      height: 2000,
+      savePath: "/tmp"        // Temporary path
+    });
+    
+    // Convert first 3 pages (or all if fewer)
+    const maxPages = 3;
+    const allExtractedText: string[] = [];
+    
+    for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+      try {
+        console.log(`[Email Agent] 🔍 Converting PDF page ${pageNum} to image...`);
+        const result = await convert(pageNum, { responseType: "base64" });
+        
+        if (!result || !result.base64) {
+          console.log(`[Email Agent] 🔍 No more pages after page ${pageNum - 1}`);
+          break;
+        }
+        
+        // Run OCR on this page image using GPT-4o Vision
+        console.log(`[Email Agent] 🔍 Running OCR on page ${pageNum}...`);
+        const dataUrl = `data:image/png;base64,${result.base64}`;
+        
+        const response = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: `أنت خبير في استخراج النص من المستندات. استخرج كل النص العربي والإنجليزي من هذه الصفحة.
+
+قواعد مهمة:
+1. استخرج النص بالضبط كما يظهر
+2. حافظ على ترتيب النص والفقرات
+3. إذا كانت الصفحة تحتوي على خبر أو بيان صحفي، استخرج كل التفاصيل
+4. لا تضف أي تعليقات أو شروحات، فقط النص المستخرج`
+                },
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: dataUrl,
+                    detail: "high"
+                  }
+                }
+              ]
+            }
+          ],
+          max_tokens: 4000,
+          temperature: 0.1
+        });
+        
+        const pageText = response.choices[0]?.message?.content?.trim() || "";
+        if (pageText && pageText.length > 10 && pageText !== "لا يوجد نص") {
+          console.log(`[Email Agent] 🔍 Page ${pageNum} OCR: ${pageText.length} chars`);
+          allExtractedText.push(pageText);
+        }
+      } catch (pageError: any) {
+        // Page doesn't exist or conversion failed
+        if (pageError.message?.includes("Invalid page") || pageError.message?.includes("out of range")) {
+          console.log(`[Email Agent] 🔍 No page ${pageNum}, stopping`);
+          break;
+        }
+        console.error(`[Email Agent] Error on page ${pageNum}:`, pageError.message);
+        break;
+      }
+    }
+    
+    const combinedText = allExtractedText.join("\n\n---\n\n");
+    
+    if (combinedText.length < 20) {
+      console.log("[Email Agent] 🔍 PDF OCR: No/minimal text extracted");
+      return "";
+    }
+    
+    console.log(`[Email Agent] 🔍 PDF OCR total: ${combinedText.length} chars from ${allExtractedText.length} pages`);
+    console.log(`[Email Agent] 🔍 PDF OCR preview: ${combinedText.substring(0, 200)}...`);
+    return combinedText;
+  } catch (error) {
+    console.error("[Email Agent] Error in PDF OCR:", error);
     return "";
   }
 }
