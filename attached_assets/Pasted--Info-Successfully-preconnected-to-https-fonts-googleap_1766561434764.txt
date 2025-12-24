@@ -1,0 +1,53 @@
+[Info] Successfully preconnected to https://fonts.googleapis.com/
+[Info] Successfully preconnected to https://fonts.gstatic.com/
+[Log] AppSidebar Debug: – Object (index-DZf-_N0y.js, line 1322)
+Object
+[Log] AppSidebar Debug: – Object (index-DZf-_N0y.js, line 1322)
+Object
+[Log] AppSidebar Debug: – Object (index-DZf-_N0y.js, line 1322)
+Object
+[Log] AppSidebar Debug: – Object (index-DZf-_N0y.js, line 1322)
+Object
+[Log] AppSidebar Debug: – Object (index-DZf-_N0y.js, line 1322)
+Object
+[Error] Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+	JC (index-DZf-_N0y.js:40:167)
+	(anonymous function) (index-DZf-_N0y.js:40:391)
+	r3 (index-DZf-_N0y.js:38:15561)
+	y3 (index-DZf-_N0y.js:40:32081)
+	XU (index-DZf-_N0y.js:40:31500)
+	Fde (index-DZf-_N0y.js:40:31050)
+	qde (index-DZf-_N0y.js:40:40963)
+	Em (index-DZf-_N0y.js:40:40316)
+	w3 (index-DZf-_N0y.js:40:36916)
+	rm (index-DZf-_N0y.js:38:3290)
+	(anonymous function) (index-DZf-_N0y.js:40:34289)
+[Error] Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+	JC (index-DZf-_N0y.js:40:167)
+	(anonymous function) (index-DZf-_N0y.js:40:391)
+	r3 (index-DZf-_N0y.js:38:15561)
+	y3 (index-DZf-_N0y.js:40:32081)
+	XU (index-DZf-_N0y.js:40:31500)
+	Fde (index-DZf-_N0y.js:40:31050)
+	qde (index-DZf-_N0y.js:40:40963)
+	Em (index-DZf-_N0y.js:40:40316)
+	w3 (index-DZf-_N0y.js:40:36916)
+	rm (index-DZf-_N0y.js:38:3290)
+	(anonymous function) (index-DZf-_N0y.js:40:34289)
+[Error] Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+	JC (index-DZf-_N0y.js:40:167)
+	(anonymous function) (index-DZf-_N0y.js:40:391)
+	r3 (index-DZf-_N0y.js:38:15561)
+	y3 (index-DZf-_N0y.js:40:32081)
+	XU (index-DZf-_N0y.js:40:31500)
+	Fde (index-DZf-_N0y.js:40:31050)
+	qde (index-DZf-_N0y.js:40:40963)
+	Em (index-DZf-_N0y.js:40:40316)
+	w3 (index-DZf-_N0y.js:40:36916)
+	rm (index-DZf-_N0y.js:38:3290)
+	(anonymous function) (index-DZf-_N0y.js:40:34289)
+[Error] Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+	rm (index-DZf-_N0y.js:38:3381)
+	(anonymous function) (index-DZf-_N0y.js:40:34289)
+> Selected Element
+< <html lang="ar" dir="rtl">…</html>
