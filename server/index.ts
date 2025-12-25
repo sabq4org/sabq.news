@@ -237,6 +237,52 @@ app.use((req, res, next) => {
 // Apply general rate limiter to all API routes
 app.use("/api", generalApiLimiter);
 
+// ============================================
+// APM (Application Performance Monitoring) Middleware
+// ============================================
+const apmStats = {
+  requests: { total: 0, success: 0, errors: 0 },
+  responseTimes: [] as number[],
+  slowRequests: [] as { path: string; method: string; duration: number; timestamp: Date }[],
+  errorPaths: new Map<string, number>(),
+};
+
+// APM stats endpoint
+app.get("/api/apm/stats", (req, res) => {
+  const avgResponseTime = apmStats.responseTimes.length > 0 
+    ? apmStats.responseTimes.reduce((a, b) => a + b, 0) / apmStats.responseTimes.length 
+    : 0;
+  
+  const p95Index = Math.floor(apmStats.responseTimes.length * 0.95);
+  const sortedTimes = [...apmStats.responseTimes].sort((a, b) => a - b);
+  const p95ResponseTime = sortedTimes[p95Index] || 0;
+  
+  res.json({
+    requests: apmStats.requests,
+    performance: {
+      avgResponseTime: Math.round(avgResponseTime),
+      p95ResponseTime: Math.round(p95ResponseTime),
+      samplesCount: apmStats.responseTimes.length,
+    },
+    slowRequests: apmStats.slowRequests.slice(-10), // Last 10 slow requests
+    topErrorPaths: Array.from(apmStats.errorPaths.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5),
+    uptime: process.uptime(),
+    memoryUsage: process.memoryUsage(),
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// Reset APM stats (for testing)
+app.post("/api/apm/reset", (req, res) => {
+  apmStats.requests = { total: 0, success: 0, errors: 0 };
+  apmStats.responseTimes = [];
+  apmStats.slowRequests = [];
+  apmStats.errorPaths.clear();
+  res.json({ message: "APM stats reset successfully" });
+});
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -250,7 +296,39 @@ app.use((req, res, next) => {
 
   res.on("finish", () => {
     const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
+    
+    // APM tracking for API routes
+    if (path.startsWith("/api") && !path.includes("/apm/")) {
+      apmStats.requests.total++;
+      
+      if (res.statusCode >= 200 && res.statusCode < 400) {
+        apmStats.requests.success++;
+      } else if (res.statusCode >= 400) {
+        apmStats.requests.errors++;
+        const errorCount = apmStats.errorPaths.get(path) || 0;
+        apmStats.errorPaths.set(path, errorCount + 1);
+      }
+      
+      // Track response times (keep last 1000 samples)
+      apmStats.responseTimes.push(duration);
+      if (apmStats.responseTimes.length > 1000) {
+        apmStats.responseTimes.shift();
+      }
+      
+      // Track slow requests (>1000ms)
+      if (duration > 1000) {
+        apmStats.slowRequests.push({
+          path,
+          method: req.method,
+          duration,
+          timestamp: new Date(),
+        });
+        if (apmStats.slowRequests.length > 50) {
+          apmStats.slowRequests.shift();
+        }
+        console.warn(`[APM] ⚠️ Slow request: ${req.method} ${path} took ${duration}ms`);
+      }
+      
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;

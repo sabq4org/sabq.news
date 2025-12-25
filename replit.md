@@ -43,6 +43,37 @@ The frontend uses Next.js 15, React 18, Vite, Wouter for routing, TypeScript, an
 ### System Design Choices
 Core data models include Users, Articles, Categories, Comments, Reactions, Bookmarks, Reading History, and Media Library. AI integration leverages OpenAI GPT-5.1. The platform includes scope-aware theme management, a Content Import System, and a Smart Categories architecture. The Media Library provides centralized asset management with AI-powered keyword extraction. Drizzle ORM with versioned migrations manages database schema. The publisher content sales system uses a three-table architecture with RBAC and atomic credit deductions. Article ordering uses a hybrid approach of curated sections and chronological feeds. The iFox Category Management System uses a dedicated endpoint with server-side in-memory caching. The AI Tasks System integrates GPT-5.1 for structured JSON responses, atomic race condition prevention, and automated cleanup jobs.
 
+## Security & Infrastructure
+
+### Security Measures
+-   **Password Hashing:** bcrypt with 12 rounds for stronger protection
+-   **Rate Limiting:** Multi-tier rate limiting system:
+    - General API: 500 requests per 15 minutes per IP
+    - Authentication: 5 attempts per 15 minutes (skip successful requests)
+    - Sensitive Operations: 10 requests per 15 minutes
+-   **Database Encryption:** Neon serverless PostgreSQL uses TLS/SSL by default via WebSocket connections
+-   **Session Security:** httpOnly cookies, secure flag in production, strict sameSite policy
+-   **CSRF Protection:** crypto.randomBytes(32) tokens
+-   **Security Headers:** Comprehensive CSP, HSTS with preload, X-Content-Type-Options, X-Frame-Options
+
+### Database Backup Strategy
+-   **Provider:** Neon Serverless PostgreSQL (automatic backups)
+-   **Automatic Daily Backups:** Neon provides automatic daily backups with 7-day retention (Pro plans have 30-day retention)
+-   **Point-in-Time Recovery (PITR):** Available on Neon Pro/Scale plans for recovering to any point within retention window
+-   **Branching:** Neon supports database branching for safe testing and development
+-   **Manual Exports:** For additional safety, use `pg_dump` for manual backups to Google Cloud Storage
+
+### Application Performance Monitoring (APM)
+-   **Built-in APM Endpoint:** `/api/apm/stats` provides real-time performance metrics
+-   **Metrics Tracked:**
+    - Total/success/error request counts
+    - Average and P95 response times
+    - Slow requests (>1000ms) tracking
+    - Top error paths
+    - Memory usage and uptime
+-   **Pool Monitoring:** Database connection pool stats logged periodically
+-   **Slow Request Alerts:** Automatic console warnings for requests exceeding 1000ms
+
 ## External Dependencies
 
 -   **Authentication & Identity:** Passport.js (`passport-local`, `passport-google-oauth20`, `passport-apple`), `express-session`, `connect-pg-simple`, `apple-signin-auth`
