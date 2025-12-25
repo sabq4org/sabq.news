@@ -179,6 +179,15 @@ export function NativeAdsSection({
                 {ad.title}
               </h3>
 
+              {ad.description && (
+                <p
+                  className="text-xs text-muted-foreground line-clamp-2"
+                  data-testid={`native-ad-description-${ad.id}`}
+                >
+                  {ad.description}
+                </p>
+              )}
+
               <Button
                 size="sm"
                 className="bg-green-600 hover:bg-green-700 text-white border-green-700 w-full justify-center gap-2"

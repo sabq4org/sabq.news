@@ -697,10 +697,10 @@ export default function NativeAdsManagement() {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>الوصف</FormLabel>
+                      <FormLabel>المحتوى</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="وصف مختصر للإعلان"
+                          placeholder="المحتوى الذي سيظهر للقراء"
                           {...field}
                           value={field.value || ""}
                           data-testid="input-description"
