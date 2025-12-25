@@ -1,9 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ExternalLink } from "lucide-react";
 
 interface NativeAd {
   id: string;
@@ -110,24 +108,19 @@ export function NativeAdsSection({
   if (isLoading) {
     return (
       <section
-        className="native-ads-section py-6"
+        className="native-ads-section py-4"
         dir="rtl"
         data-testid="native-ads-section-loading"
       >
-        <div className="mb-4">
-          <Skeleton className="h-8 w-32" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {Array.from({ length: limit }).map((_, i) => (
-            <Card key={i} className="overflow-hidden">
-              <Skeleton className="aspect-video w-full" />
-              <div className="p-3 space-y-2">
-                <Skeleton className="h-4 w-full" />
+        <div className="space-y-3">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div key={i} className="flex gap-3 p-3 rounded-lg bg-muted/30">
+              <Skeleton className="w-24 h-16 rounded flex-shrink-0" />
+              <div className="flex-1 space-y-2">
                 <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-8 w-24" />
-                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-3 w-1/2" />
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       </section>
@@ -140,72 +133,52 @@ export function NativeAdsSection({
 
   return (
     <section
-      className="native-ads-section py-6"
+      className="native-ads-section py-4"
       dir="rtl"
       data-testid="native-ads-section"
     >
       <div className="mb-3 flex items-center gap-2">
         <span
-          className="inline-block text-xs text-muted-foreground/70"
+          className="inline-block text-xs text-muted-foreground/60"
           data-testid="native-ads-header"
         >
           شريك المحتوى
         </span>
-        <div className="flex-1 h-px bg-border/50" />
+        <div className="flex-1 h-px bg-border/30" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="space-y-2">
         {ads.map((ad) => (
-          <Card
+          <article
             key={ad.id}
-            className="overflow-hidden hover-elevate cursor-pointer group"
+            className="flex gap-3 p-3 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors cursor-pointer group"
             data-testid={`native-ad-card-${ad.id}`}
             onClick={() => handleAdClick(ad)}
           >
-            <div className="aspect-video relative overflow-hidden bg-muted">
+            {/* Thumbnail */}
+            <div className="w-24 h-16 flex-shrink-0 rounded overflow-hidden bg-muted">
               <img
                 src={ad.imageUrl}
                 alt={ad.title}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                className="w-full h-full object-cover"
                 loading="lazy"
                 data-testid={`native-ad-image-${ad.id}`}
               />
             </div>
 
-            <div className="p-3 space-y-2">
-              <h3
-                className="font-semibold text-sm line-clamp-2 leading-relaxed"
-                data-testid={`native-ad-title-${ad.id}`}
-              >
-                {ad.title}
-              </h3>
-
-              {ad.description && (
-                <p
-                  className="text-xs text-muted-foreground line-clamp-2"
-                  data-testid={`native-ad-description-${ad.id}`}
+            {/* Content */}
+            <div className="flex-1 min-w-0 flex flex-col justify-center">
+              <div className="flex items-start justify-between gap-2">
+                <h3
+                  className="font-medium text-sm line-clamp-2 leading-snug group-hover:text-primary transition-colors"
+                  data-testid={`native-ad-title-${ad.id}`}
                 >
-                  {ad.description}
-                </p>
-              )}
+                  {ad.title}
+                </h3>
+                <ExternalLink className="h-3 w-3 text-muted-foreground/50 flex-shrink-0 mt-0.5" />
+              </div>
 
-              <Button
-                size="sm"
-                className="bg-green-600 hover:bg-green-700 text-white border-green-700 w-full justify-center gap-2"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAdClick(ad);
-                }}
-                data-testid={`native-ad-cta-${ad.id}`}
-              >
-                <span>{ad.callToAction || "احجز الآن"}</span>
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-
-              <div
-                className="flex items-center gap-1 text-xs text-muted-foreground pt-1"
-                data-testid={`native-ad-advertiser-${ad.id}`}
-              >
+              <div className="flex items-center gap-2 mt-1">
                 {ad.advertiserLogo && (
                   <img
                     src={ad.advertiserLogo}
@@ -213,13 +186,24 @@ export function NativeAdsSection({
                     className="h-4 w-4 rounded-full object-cover"
                   />
                 )}
-                <span className="flex items-center gap-1">
-                  <ArrowLeft className="h-3 w-3" />
+                <span
+                  className="text-xs text-muted-foreground/70"
+                  data-testid={`native-ad-advertiser-${ad.id}`}
+                >
                   {ad.advertiserName}
                 </span>
+                {ad.callToAction && (
+                  <>
+                    <span className="text-muted-foreground/30">•</span>
+                    <span className="text-xs text-muted-foreground/70 flex items-center gap-1 group-hover:text-primary/70 transition-colors">
+                      {ad.callToAction}
+                      <ArrowLeft className="h-3 w-3" />
+                    </span>
+                  </>
+                )}
               </div>
             </div>
-          </Card>
+          </article>
         ))}
       </div>
     </section>
