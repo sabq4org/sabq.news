@@ -112,10 +112,14 @@ export function NativeAdsSection({
         dir="rtl"
         data-testid="native-ads-section-loading"
       >
-        <div className="space-y-1">
+        <div className="space-y-2">
           {Array.from({ length: 2 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-2 py-2">
-              <Skeleton className="h-3 w-3/4" />
+            <div key={i} className="flex gap-2 items-center">
+              <Skeleton className="w-14 h-10 sm:w-16 sm:h-11 rounded flex-shrink-0" />
+              <div className="flex-1 space-y-1">
+                <Skeleton className="h-3 w-3/4" />
+                <Skeleton className="h-2 w-1/3" />
+              </div>
             </div>
           ))}
         </div>
@@ -135,7 +139,7 @@ export function NativeAdsSection({
     >
       <div className="mb-2 flex items-center gap-2">
         <span
-          className="inline-block text-[10px] text-muted-foreground/50 uppercase tracking-wide"
+          className="inline-block text-[10px] text-muted-foreground/50"
           data-testid="native-ads-header"
         >
           شريك المحتوى
@@ -143,29 +147,40 @@ export function NativeAdsSection({
         <div className="flex-1 h-px bg-border/20" />
       </div>
 
-      <div className="divide-y divide-border/20">
+      <div className="space-y-2">
         {ads.map((ad) => (
           <article
             key={ad.id}
-            className="py-2 cursor-pointer group"
+            className="flex gap-2 items-center cursor-pointer group"
             data-testid={`native-ad-card-${ad.id}`}
             onClick={() => handleAdClick(ad)}
           >
-            <div className="flex items-center gap-2">
-              <span
-                className="text-[11px] text-muted-foreground/50"
-                data-testid={`native-ad-advertiser-${ad.id}`}
-              >
-                {ad.advertiserName}
-              </span>
-              <span className="text-muted-foreground/30">|</span>
+            <div className="w-14 h-10 sm:w-16 sm:h-11 flex-shrink-0 rounded overflow-hidden bg-muted">
+              <img
+                src={ad.imageUrl}
+                alt={ad.title}
+                className="w-full h-full object-cover"
+                loading="lazy"
+                data-testid={`native-ad-image-${ad.id}`}
+              />
+            </div>
+
+            <div className="flex-1 min-w-0">
               <h3
-                className="flex-1 text-xs font-normal text-foreground/80 group-hover:text-primary transition-colors line-clamp-1"
+                className="text-xs font-medium text-foreground/80 group-hover:text-primary transition-colors line-clamp-1"
                 data-testid={`native-ad-title-${ad.id}`}
               >
                 {ad.title}
               </h3>
-              <ArrowLeft className="h-3 w-3 text-muted-foreground/40 group-hover:text-primary/60 transition-colors flex-shrink-0" />
+              <div className="flex items-center gap-1 mt-0.5">
+                <span
+                  className="text-[10px] text-muted-foreground/50"
+                  data-testid={`native-ad-advertiser-${ad.id}`}
+                >
+                  {ad.advertiserName}
+                </span>
+                <ArrowLeft className="h-2.5 w-2.5 text-muted-foreground/40 group-hover:text-primary/60 transition-colors" />
+              </div>
             </div>
           </article>
         ))}
