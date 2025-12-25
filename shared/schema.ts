@@ -6028,6 +6028,55 @@ export type AIRecommendation = typeof aiRecommendations.$inferSelect;
 export type AuditLog = typeof auditLogs.$inferSelect;
 
 // ============================================
+// ADVERTISER PROFILES - حسابات المعلنين
+// ============================================
+
+export const advertiserProfiles = pgTable("advertiser_profiles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // بيانات المعلن
+  email: text("email").notNull().unique(),
+  password: text("password").notNull(), // hashed password
+  name: text("name").notNull(),
+  phone: text("phone"),
+  company: text("company"),
+  logo: text("logo"),
+  
+  // حالة الحساب
+  isVerified: boolean("is_verified").default(false).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  
+  // الإحصائيات الإجمالية
+  totalAds: integer("total_ads").default(0).notNull(),
+  totalSpent: integer("total_spent").default(0).notNull(), // بالهللات
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_advertiser_profiles_email").on(table.email),
+  index("idx_advertiser_profiles_active").on(table.isActive),
+]);
+
+export const insertAdvertiserProfileSchema = createInsertSchema(advertiserProfiles).omit({
+  id: true,
+  isVerified: true,
+  isActive: true,
+  totalAds: true,
+  totalSpent: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  email: z.string().email("البريد الإلكتروني غير صحيح"),
+  password: z.string().min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل"),
+  name: z.string().min(2, "الاسم مطلوب"),
+  phone: z.string().optional(),
+  company: z.string().optional(),
+});
+
+export type AdvertiserProfile = typeof advertiserProfiles.$inferSelect;
+export type InsertAdvertiserProfile = z.infer<typeof insertAdvertiserProfileSchema>;
+
+// ============================================
 // NATIVE ADS - المحتوى المدفوع (Sponsored Content)
 // ============================================
 
@@ -6048,6 +6097,7 @@ export const nativeAds = pgTable("native_ads", {
   advertiserPhone: text("advertiser_phone"), // هاتف المعلن
   advertiserCompany: text("advertiser_company"), // اسم الشركة
   isSelfServe: boolean("is_self_serve").default(false).notNull(), // هل أنشأه المعلن بنفسه
+  advertiserId: varchar("advertiser_id").references(() => advertiserProfiles.id, { onDelete: "set null" }), // ربط بحساب المعلن
   
   // الاستهداف
   targetCategories: text("target_categories").array(), // استهداف بالتصنيفات
@@ -6083,6 +6133,7 @@ export const nativeAds = pgTable("native_ads", {
   index("idx_native_ads_dates").on(table.startDate, table.endDate),
   index("idx_native_ads_priority").on(table.priority),
   index("idx_native_ads_device").on(table.targetDevices),
+  index("idx_native_ads_advertiser").on(table.advertiserId),
 ]);
 
 // إحصائيات المحتوى المدفوع

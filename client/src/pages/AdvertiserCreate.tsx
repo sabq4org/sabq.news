@@ -50,6 +50,7 @@ import {
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import type { Category } from "@shared/schema";
+import { useAdvertiserProfile } from "@/hooks/useAdvertiser";
 
 const advertiserInfoSchema = z.object({
   advertiserName: z.string().min(2, "الاسم مطلوب"),
@@ -90,6 +91,8 @@ export default function AdvertiserCreate() {
   const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  
+  const { data: advertiser, isLoading: isLoadingAdvertiser } = useAdvertiserProfile();
 
   useEffect(() => {
     document.title = "إنشاء إعلان جديد - سبق";
@@ -112,6 +115,15 @@ export default function AdvertiserCreate() {
       endDate: null,
     },
   });
+  
+  useEffect(() => {
+    if (advertiser) {
+      form.setValue("advertiserName", advertiser.name || "");
+      form.setValue("email", advertiser.email || "");
+      form.setValue("phone", advertiser.phone || "");
+      form.setValue("company", advertiser.company || "");
+    }
+  }, [advertiser, form]);
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
@@ -126,6 +138,7 @@ export default function AdvertiserCreate() {
           advertiserEmail: values.email,
           advertiserPhone: values.phone,
           advertiserCompany: values.company,
+          advertiserId: advertiser?.id,
           title: values.title,
           description: values.description,
           imageUrl: values.imageUrl,

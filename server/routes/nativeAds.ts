@@ -201,6 +201,7 @@ const selfServeAdSchema = z.object({
   advertiserEmail: z.string().email("البريد الإلكتروني غير صحيح"),
   advertiserPhone: z.string().min(1, "رقم الهاتف مطلوب"),
   advertiserCompany: z.string().optional(),
+  advertiserId: z.string().optional(),
   title: z.string().min(1, "عنوان الإعلان مطلوب").max(100, "العنوان طويل جداً"),
   description: z.string().max(200, "الوصف طويل جداً").optional(),
   imageUrl: z.string().min(1, "صورة الإعلان مطلوبة"),
@@ -215,6 +216,13 @@ router.post("/submit", async (req: Request, res: Response) => {
   try {
     const validatedData = selfServeAdSchema.parse(req.body);
     
+    // Validate advertiserId if provided - must match session or be from valid logged-in advertiser
+    let advertiserId = validatedData.advertiserId || null;
+    if (advertiserId && req.session.advertiserId !== advertiserId) {
+      // Prevent spoofing - if advertiserId doesn't match session, ignore it
+      advertiserId = null;
+    }
+    
     const [newAd] = await db.insert(nativeAds).values({
       title: validatedData.title,
       description: validatedData.description || null,
@@ -225,6 +233,7 @@ router.post("/submit", async (req: Request, res: Response) => {
       advertiserEmail: validatedData.advertiserEmail,
       advertiserPhone: validatedData.advertiserPhone,
       advertiserCompany: validatedData.advertiserCompany || null,
+      advertiserId: advertiserId,
       isSelfServe: true,
       targetCategories: validatedData.targetCategories || [],
       targetDevices: "all",

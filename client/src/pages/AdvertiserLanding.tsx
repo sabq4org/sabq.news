@@ -96,6 +96,16 @@ export default function AdvertiserLanding() {
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
               </Link>
+              <Link href="/advertise/login">
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className="gap-2 text-lg px-8"
+                  data-testid="button-advertiser-login"
+                >
+                  دخول المعلنين
+                </Button>
+              </Link>
             </div>
           </div>
         </div>

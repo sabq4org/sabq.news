@@ -210,6 +210,9 @@ import InfographicStudio from "@/pages/InfographicStudio";
 import LiteFeedPage from "@/pages/lite/LiteFeedPage";
 import AdvertiserLanding from "@/pages/AdvertiserLanding";
 import AdvertiserCreate from "@/pages/AdvertiserCreate";
+import AdvertiserLogin from "@/pages/AdvertiserLogin";
+import AdvertiserRegister from "@/pages/AdvertiserRegister";
+import AdvertiserPortalDashboard from "@/pages/AdvertiserPortalDashboard";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -330,6 +333,9 @@ function Router() {
       <Route path="/chatbot" component={ChatbotPage} />
       
       {/* Advertiser self-service routes */}
+      <Route path="/advertise/dashboard" component={AdvertiserPortalDashboard} />
+      <Route path="/advertise/login" component={AdvertiserLogin} />
+      <Route path="/advertise/register" component={AdvertiserRegister} />
       <Route path="/advertise/create" component={AdvertiserCreate} />
       <Route path="/advertise" component={AdvertiserLanding} />
       
