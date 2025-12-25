@@ -808,7 +808,7 @@ export default function AdvertiserCreate() {
                               )}
                               <div className="flex items-center justify-between">
                                 <span className="text-xs text-muted-foreground">إعلان</span>
-                                <Button size="sm" data-testid="preview-cta-button">
+                                <Button type="button" size="sm" data-testid="preview-cta-button" className="pointer-events-none">
                                   {formValues.callToAction || "اقرأ المزيد"}
                                 </Button>
                               </div>
