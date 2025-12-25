@@ -144,13 +144,14 @@ export function NativeAdsSection({
       dir="rtl"
       data-testid="native-ads-section"
     >
-      <div className="mb-4 flex items-center gap-2">
+      <div className="mb-3 flex items-center gap-2">
         <span
-          className="inline-block bg-muted text-muted-foreground text-sm font-medium px-3 py-1.5 rounded"
+          className="inline-block text-xs text-muted-foreground/70"
           data-testid="native-ads-header"
         >
           شريك المحتوى
         </span>
+        <div className="flex-1 h-px bg-border/50" />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
