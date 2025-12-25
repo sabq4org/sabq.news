@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Upload, X, Image as ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { getCsrfToken } from "@/lib/queryClient";
 
 interface ImageUploadDialogProps {
   open: boolean;
@@ -162,6 +163,13 @@ export function ImageUploadDialog({
       });
 
       xhr.open('POST', '/api/media/upload');
+      
+      // Add CSRF token for security
+      const csrfToken = getCsrfToken();
+      if (csrfToken) {
+        xhr.setRequestHeader('x-csrf-token', csrfToken);
+      }
+      
       xhr.send(formData);
     });
   };

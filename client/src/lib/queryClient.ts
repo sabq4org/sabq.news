@@ -54,7 +54,7 @@ async function refreshCsrfToken(): Promise<string | null> {
   return csrfToken;
 }
 
-function getCsrfToken(): string | null {
+export function getCsrfToken(): string | null {
   return csrfToken || getCsrfTokenFromCookie();
 }
 
