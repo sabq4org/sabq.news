@@ -20,3 +20,7 @@ ios/build
 *.tmp
 *.temp
 backup_unused_assets
+.env
+.config/
+.local/
+.vercel/
