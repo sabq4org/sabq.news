@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { db } from "../db";
 import { eq, and, or, desc, gte, lte, isNull, sql } from "drizzle-orm";
-import { nativeAds, nativeAdImpressions, nativeAdClicks, insertNativeAdSchema } from "@shared/schema";
+import { nativeAds, nativeAdImpressions, nativeAdClicks, insertNativeAdSchema, categories } from "@shared/schema";
 import { requireAuth, requireRole } from "../rbac";
 import { z } from "zod";
 
@@ -61,8 +61,19 @@ router.get("/public", async (req: Request, res: Response) => {
       .limit(maxLimit * 2);
 
     if (category && typeof category === "string") {
+      // Look up category by slug to get ID
+      const [categoryRecord] = await db
+        .select({ id: categories.id })
+        .from(categories)
+        .where(eq(categories.slug, category))
+        .limit(1);
+      
+      const categoryId = categoryRecord?.id;
+      
       ads = ads.filter(ad => 
-        ad.targetCategories?.includes(category) || 
+        // Match by category ID or slug (for flexibility)
+        ad.targetCategories?.includes(categoryId || category) || 
+        ad.targetCategories?.includes(category) ||
         !ad.targetCategories?.length
       );
     }
