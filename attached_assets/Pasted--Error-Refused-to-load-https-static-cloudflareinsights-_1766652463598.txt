@@ -1,0 +1,29 @@
+[Error] Refused to load https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015 because it does not appear in the script-src directive of the Content Security Policy.
+[Info] Successfully preconnected to https://fonts.googleapis.com/
+[Info] Successfully preconnected to https://fonts.gstatic.com/
+[Error] Failed to load resource: the server responded with a status of 401 () (me, line 0)
+[Log] App state changed. Is active? – false (index-Cx1gaFKW.js, line 9335)
+[Log] App state changed. Is active? – true (index-Cx1gaFKW.js, line 9335)
+[Log] [SSE] Connecting to cache invalidation stream... (index-Cx1gaFKW.js, line 7817)
+[Log] [SSE] Connected to cache invalidation stream (index-Cx1gaFKW.js, line 7817)
+[Log] 📡 Connecting to notification stream... (index-Cx1gaFKW.js, line 7792, x2)
+[Log] 📡 SSE connection established (index-Cx1gaFKW.js, line 7792, x2)
+[Error] Failed to load resource: the server responded with a status of 403 () (51617400-6ac2-49f7-b453-fd497e2d338a, line 0)
+[Error] Failed to load resource: the server responded with a status of 403 () (displayed, line 0)
+[Error] Failed to load resource: the server responded with a status of 403 () (displayed, line 0)
+[Error] Failed to load resource: the server responded with a status of 403 () (displayed, line 0)
+[Error] Failed to load resource: the server responded with a status of 403 () (displayed, line 0)
+[Log] [SSE] Closing connection (index-Cx1gaFKW.js, line 7817)
+[Log] 📡 Cleaning up SSE connection (index-Cx1gaFKW.js, line 7792, x2)
+[Log] 📡 Connecting to notification stream... (index-Cx1gaFKW.js, line 7792, x2)
+[Error] Failed to load resource: the server responded with a status of 403 () (impressions, line 0)
+[Log] 📡 SSE connection established (index-Cx1gaFKW.js, line 7792, x2)
+[Error] Failed to load resource: the server responded with a status of 403 () (log, line 0)
+[Error] Failed to load resource: the server responded with a status of 403 () (39248820-4a9c-4683-88b0-5089440f0f14, line 0)
+[Log] [ArticleDetail] Twitter widgets script loaded successfully (index-Cx1gaFKW.js, line 7912)
+[Log] 📡 Cleaning up SSE connection (index-Cx1gaFKW.js, line 7792, x2)
+[Error] Failed to load resource: the server responded with a status of 401 () (stats, line 0)
+[Error] Failed to load resource: the server responded with a status of 401 () (ads, line 0)
+[Error] Failed to load resource: the server responded with a status of 401 () (me, line 0)
+> Selected Element
+< <html lang="en" dir="ltr" class="font-normal light" data-font-size="normal">…</html>
