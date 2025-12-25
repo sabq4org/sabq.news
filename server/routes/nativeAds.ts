@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { db } from "../db";
 import { eq, and, or, desc, gte, lte, isNull, sql } from "drizzle-orm";
-import { nativeAds, nativeAdImpressions, nativeAdClicks, insertNativeAdSchema, categories } from "@shared/schema";
+import { nativeAds, nativeAdImpressions, nativeAdClicks, nativeAdDailySpend, insertNativeAdSchema, categories } from "@shared/schema";
 import { requireAuth, requireRole } from "../rbac";
 import { z } from "zod";
 import multer from "multer";
@@ -85,6 +85,86 @@ function weightedRandomShuffle<T extends { priority: number }>(items: T[]): T[] 
   return result;
 }
 
+// Helper function to check and update daily spend for budget enforcement
+async function checkAndUpdateDailySpend(adId: string, eventType: 'impression' | 'click', costPerClick: number): Promise<{ allowed: boolean; dailySpend: number; dailyBudget: number }> {
+  // Get today's date in Saudi Arabia timezone (UTC+3)
+  const now = new Date();
+  const saudiOffset = 3 * 60 * 60 * 1000; // UTC+3
+  const saudiTime = new Date(now.getTime() + saudiOffset);
+  const today = saudiTime.toISOString().split('T')[0]; // YYYY-MM-DD
+  
+  // Get the ad's daily budget
+  const [ad] = await db.select().from(nativeAds).where(eq(nativeAds.id, adId)).limit(1);
+  if (!ad || !ad.dailyBudgetEnabled || !ad.dailyBudget) {
+    return { allowed: true, dailySpend: 0, dailyBudget: 0 };
+  }
+  
+  // Get or create today's spend record
+  let [spendRecord] = await db.select().from(nativeAdDailySpend)
+    .where(and(
+      eq(nativeAdDailySpend.nativeAdId, adId),
+      eq(nativeAdDailySpend.spendDate, today)
+    )).limit(1);
+  
+  if (!spendRecord) {
+    // Create new record for today
+    [spendRecord] = await db.insert(nativeAdDailySpend).values({
+      nativeAdId: adId,
+      spendDate: today,
+    }).returning();
+  }
+  
+  // Calculate cost for this event (only clicks cost money in CPC model)
+  const eventCost = eventType === 'click' ? (costPerClick || 0) : 0;
+  const newTotal = (spendRecord.amountHalalas || 0) + eventCost;
+  
+  // Check if this would exceed daily budget
+  if (newTotal > ad.dailyBudget) {
+    // Budget exceeded - mark as capped
+    await db.update(nativeAdDailySpend)
+      .set({ isCapped: true, cappedAt: new Date(), updatedAt: new Date() })
+      .where(eq(nativeAdDailySpend.id, spendRecord.id));
+    
+    await db.update(nativeAds)
+      .set({ dailyBudgetExhaustedAt: new Date(), updatedAt: new Date() })
+      .where(eq(nativeAds.id, adId));
+    
+    return { allowed: false, dailySpend: spendRecord.amountHalalas, dailyBudget: ad.dailyBudget };
+  }
+  
+  // Update spend record
+  const updates: any = { updatedAt: new Date() };
+  if (eventType === 'impression') {
+    updates.impressions = sql`${nativeAdDailySpend.impressions} + 1`;
+  } else {
+    updates.clicks = sql`${nativeAdDailySpend.clicks} + 1`;
+    updates.amountHalalas = sql`${nativeAdDailySpend.amountHalalas} + ${eventCost}`;
+  }
+  
+  await db.update(nativeAdDailySpend)
+    .set(updates)
+    .where(eq(nativeAdDailySpend.id, spendRecord.id));
+  
+  return { allowed: true, dailySpend: newTotal, dailyBudget: ad.dailyBudget };
+}
+
+// Helper to get today's date in Saudi timezone for filtering
+function getSaudiToday(): string {
+  const now = new Date();
+  const saudiOffset = 3 * 60 * 60 * 1000; // UTC+3
+  const saudiTime = new Date(now.getTime() + saudiOffset);
+  return saudiTime.toISOString().split('T')[0]; // YYYY-MM-DD
+}
+
+// Check if an ad's budget was exhausted today (Saudi time)
+function isBudgetExhaustedToday(exhaustedAt: Date | null): boolean {
+  if (!exhaustedAt) return false;
+  const saudiOffset = 3 * 60 * 60 * 1000;
+  const exhaustedSaudiTime = new Date(exhaustedAt.getTime() + saudiOffset);
+  const exhaustedDate = exhaustedSaudiTime.toISOString().split('T')[0];
+  return exhaustedDate === getSaudiToday();
+}
+
 router.get("/public", async (req: Request, res: Response) => {
   try {
     const { category, keyword, limit: limitParam } = req.query;
@@ -140,6 +220,12 @@ router.get("/public", async (req: Request, res: Response) => {
         !ad.targetKeywords?.length
       );
     }
+
+    // Filter out ads that have exceeded their daily budget today
+    ads = ads.filter(ad => {
+      if (!ad.dailyBudgetEnabled) return true;
+      return !isBudgetExhaustedToday(ad.dailyBudgetExhaustedAt);
+    });
 
     // Apply weighted random rotation based on priority
     const rotatedAds = weightedRandomShuffle(ads);
@@ -277,6 +363,16 @@ router.post("/:id/impression", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "الإعلان غير موجود" });
     }
 
+    // Check daily budget (impressions don't cost money, but we still track them)
+    const budgetCheck = await checkAndUpdateDailySpend(id, 'impression', ad.costPerClick || 0);
+    if (!budgetCheck.allowed) {
+      return res.status(429).json({ 
+        message: "تم استنفاد الميزانية اليومية لهذا الإعلان",
+        dailySpend: budgetCheck.dailySpend,
+        dailyBudget: budgetCheck.dailyBudget
+      });
+    }
+
     // Only include articleId if it's a valid UUID (36 chars with hyphens)
     const validArticleId = articleId && typeof articleId === 'string' && 
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(articleId) 
@@ -319,6 +415,17 @@ router.post("/:id/click", async (req: Request, res: Response) => {
     const [ad] = await db.select().from(nativeAds).where(eq(nativeAds.id, id)).limit(1);
     if (!ad) {
       return res.status(404).json({ message: "الإعلان غير موجود" });
+    }
+
+    // Check daily budget before recording click (clicks cost money in CPC model)
+    const budgetCheck = await checkAndUpdateDailySpend(id, 'click', ad.costPerClick || 0);
+    if (!budgetCheck.allowed) {
+      console.log(`[NativeAds] Budget exceeded for ad ${id}: spent ${budgetCheck.dailySpend} halalas of ${budgetCheck.dailyBudget} daily budget`);
+      return res.status(429).json({ 
+        message: "تم استنفاد الميزانية اليومية لهذا الإعلان",
+        dailySpend: budgetCheck.dailySpend,
+        dailyBudget: budgetCheck.dailyBudget
+      });
     }
 
     // Only include articleId if it's a valid UUID

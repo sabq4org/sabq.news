@@ -6111,6 +6111,11 @@ export const nativeAds = pgTable("native_ads", {
   totalBudget: integer("total_budget"), // الميزانية الإجمالية بالسنتات
   costPerClick: integer("cost_per_click").default(100), // تكلفة النقرة بالسنتات
   
+  // Daily budget controls
+  dailyBudgetEnabled: boolean("daily_budget_enabled").default(false).notNull(),
+  dailyBudgetExhaustedAt: timestamp("daily_budget_exhausted_at"), // When daily budget was hit (reset daily)
+  dailyBudgetResetHour: integer("daily_budget_reset_hour").default(0).notNull(), // Hour in Saudi time (0-23) to reset budget
+  
   // الإحصائيات
   impressions: integer("impressions").default(0).notNull(),
   clicks: integer("clicks").default(0).notNull(),
@@ -6169,6 +6174,33 @@ export const nativeAdClicks = pgTable("native_ad_clicks", {
   index("idx_native_clicks_impression").on(table.impressionId),
   index("idx_native_clicks_date").on(table.createdAt),
 ]);
+
+// Daily spend tracking for budget enforcement
+export const nativeAdDailySpend = pgTable("native_ad_daily_spend", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nativeAdId: varchar("native_ad_id").references(() => nativeAds.id, { onDelete: "cascade" }).notNull(),
+  spendDate: date("spend_date").notNull(), // The date for this spend record (YYYY-MM-DD)
+  impressions: integer("impressions").default(0).notNull(),
+  clicks: integer("clicks").default(0).notNull(),
+  amountHalalas: integer("amount_halalas").default(0).notNull(), // Amount spent in halalas (cents)
+  isCapped: boolean("is_capped").default(false).notNull(), // Whether daily budget was exceeded
+  cappedAt: timestamp("capped_at"), // When the budget was exceeded
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_daily_spend_ad").on(table.nativeAdId),
+  index("idx_daily_spend_date").on(table.spendDate),
+  index("idx_daily_spend_ad_date").on(table.nativeAdId, table.spendDate),
+]);
+
+export const insertNativeAdDailySpendSchema = createInsertSchema(nativeAdDailySpend).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type NativeAdDailySpend = typeof nativeAdDailySpend.$inferSelect;
+export type InsertNativeAdDailySpend = z.infer<typeof insertNativeAdDailySpendSchema>;
 
 // Insert schemas
 export const insertNativeAdSchema = createInsertSchema(nativeAds).omit({
