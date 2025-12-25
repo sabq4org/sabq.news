@@ -6044,6 +6044,10 @@ export const nativeAds = pgTable("native_ads", {
   // معلومات المعلن
   advertiserName: text("advertiser_name").notNull(), // اسم المعلن
   advertiserLogo: text("advertiser_logo"), // شعار المعلن
+  advertiserEmail: text("advertiser_email"), // بريد المعلن (للخدمة الذاتية)
+  advertiserPhone: text("advertiser_phone"), // هاتف المعلن
+  advertiserCompany: text("advertiser_company"), // اسم الشركة
+  isSelfServe: boolean("is_self_serve").default(false).notNull(), // هل أنشأه المعلن بنفسه
   
   // الاستهداف
   targetCategories: text("target_categories").array(), // استهداف بالتصنيفات
@@ -6137,6 +6141,10 @@ export const insertNativeAdSchema = createInsertSchema(nativeAds).omit({
   destinationUrl: z.string().url("رابط الوجهة غير صحيح"),
   callToAction: z.string().max(30, "زر الإجراء طويل جداً").optional(),
   advertiserName: z.string().min(1, "اسم المعلن مطلوب"),
+  advertiserEmail: z.string().email("البريد الإلكتروني غير صحيح").optional().nullable(),
+  advertiserPhone: z.string().max(20, "رقم الهاتف طويل جداً").optional().nullable(),
+  advertiserCompany: z.string().max(100, "اسم الشركة طويل جداً").optional().nullable(),
+  isSelfServe: z.boolean().default(false),
   targetCategories: z.array(z.string()).optional(),
   targetKeywords: z.array(z.string()).optional(),
   targetDevices: z.enum(["desktop", "mobile", "tablet", "all"]).default("all"),

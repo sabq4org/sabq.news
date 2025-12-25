@@ -121,8 +121,18 @@ export default function AdvertiserCreate() {
       return await apiRequest("/api/native-ads/submit", {
         method: "POST",
         body: JSON.stringify({
-          ...values,
-          status: "pending_approval",
+          advertiserName: values.advertiserName,
+          advertiserEmail: values.email,
+          advertiserPhone: values.phone,
+          advertiserCompany: values.company,
+          title: values.title,
+          description: values.description,
+          imageUrl: values.imageUrl,
+          destinationUrl: values.destinationUrl,
+          callToAction: values.callToAction,
+          targetCategories: values.targetCategories,
+          startDate: values.startDate,
+          endDate: values.endDate,
         }),
         headers: { "Content-Type": "application/json" },
       });

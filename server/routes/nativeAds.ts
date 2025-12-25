@@ -139,6 +139,64 @@ router.get("/public", async (req: Request, res: Response) => {
   }
 });
 
+// Public endpoint for self-serve ad submission (no auth required)
+const selfServeAdSchema = z.object({
+  advertiserName: z.string().min(1, "اسم المعلن مطلوب"),
+  advertiserEmail: z.string().email("البريد الإلكتروني غير صحيح"),
+  advertiserPhone: z.string().min(1, "رقم الهاتف مطلوب"),
+  advertiserCompany: z.string().optional(),
+  title: z.string().min(1, "عنوان الإعلان مطلوب").max(100, "العنوان طويل جداً"),
+  description: z.string().max(200, "الوصف طويل جداً").optional(),
+  imageUrl: z.string().min(1, "صورة الإعلان مطلوبة"),
+  destinationUrl: z.string().url("رابط الوجهة غير صحيح"),
+  callToAction: z.string().max(30).optional(),
+  targetCategories: z.array(z.string()).optional(),
+  startDate: z.coerce.date(),
+  endDate: z.coerce.date().optional().nullable(),
+});
+
+router.post("/submit", async (req: Request, res: Response) => {
+  try {
+    const validatedData = selfServeAdSchema.parse(req.body);
+    
+    const [newAd] = await db.insert(nativeAds).values({
+      title: validatedData.title,
+      description: validatedData.description || null,
+      imageUrl: validatedData.imageUrl,
+      destinationUrl: validatedData.destinationUrl,
+      callToAction: validatedData.callToAction || "اقرأ المزيد",
+      advertiserName: validatedData.advertiserName,
+      advertiserEmail: validatedData.advertiserEmail,
+      advertiserPhone: validatedData.advertiserPhone,
+      advertiserCompany: validatedData.advertiserCompany || null,
+      isSelfServe: true,
+      targetCategories: validatedData.targetCategories || [],
+      targetDevices: "all",
+      startDate: validatedData.startDate,
+      endDate: validatedData.endDate || null,
+      priority: 5,
+      status: "pending_approval",
+    }).returning();
+
+    console.log(`[NativeAds] New self-serve ad submitted: ${newAd.id} by ${validatedData.advertiserEmail}`);
+
+    res.status(201).json({ 
+      success: true, 
+      message: "تم استلام طلبك بنجاح! سيتم مراجعة إعلانك والتواصل معك قريباً.",
+      adId: newAd.id 
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ 
+        message: "بيانات غير صحيحة", 
+        errors: error.errors.map(e => ({ field: e.path.join('.'), message: e.message }))
+      });
+    }
+    console.error("[NativeAds] Error submitting self-serve ad:", error);
+    res.status(500).json({ message: "حدث خطأ أثناء إرسال الطلب" });
+  }
+});
+
 router.post("/:id/impression", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
