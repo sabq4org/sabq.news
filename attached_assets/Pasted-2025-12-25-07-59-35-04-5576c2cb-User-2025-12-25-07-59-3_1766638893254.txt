@@ -1,0 +1,102 @@
+2025-12-25 07:59:35.04
+5576c2cb
+User
+{
+2025-12-25 07:59:35.04
+5576c2cb
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2025-12-25 07:59:35.04
+5576c2cb
+User
+at file:///home/runner/workspace/node_modules/@google-cloud/storage/build/esm/src/nodejs-common/util.js:552:22
+2025-12-25 07:59:35.04
+5576c2cb
+User
+error: [Array],
+2025-12-25 07:59:35.04
+5576c2cb
+User
+corked: 0,
+2025-12-25 07:59:35.04
+5576c2cb
+User
+message: 'The member bindings allUsers and allAuthenticatedUsers are not allowed since public access prevention is enforced.',
+2025-12-25 07:59:35.04
+5576c2cb
+User
+domain: 'global',
+2025-12-25 07:59:35.04
+5576c2cb
+User
+pendingcb: 0,
+2025-12-25 07:59:35.04
+5576c2cb
+User
+errors: [
+2025-12-25 07:59:35.04
+5576c2cb
+User
+}
+2025-12-25 07:59:35.04
+5576c2cb
+User
+},
+2025-12-25 07:59:35.04
+5576c2cb
+User
+locationType: 'header',
+2025-12-25 07:59:48.86
+5576c2cb
+User
+📡 User admin-sabq unsubscribed from notification stream
+2025-12-25 07:59:48.86
+5576c2cb
+User
+📡 SSE connection closed for user: admin-sabq
+2025-12-25 07:59:48.98
+5576c2cb
+User
+📡 User admin-sabq unsubscribed from notification stream
+2025-12-25 07:59:48.98
+5576c2cb
+User
+📡 SSE connection closed for user: admin-sabq
+2025-12-25 07:59:54.21
+5576c2cb
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-25 07:59:54.31
+5576c2cb
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-25 07:59:54.31
+5576c2cb
+User
+📡 SSE connection opened for user: admin-sabq
+2025-12-25 07:59:54.31
+5576c2cb
+User
+📡 User admin-sabq subscribed to notification stream
+2025-12-25 07:59:54.35
+5576c2cb
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-25 07:59:54.37
+5576c2cb
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-25 07:59:54.37
+5576c2cb
+User
+📡 User admin-sabq subscribed to notification stream
+2025-12-25 07:59:54.37
+5576c2cb
+User
+📡 SSE connection opened for user: admin-sabq
+2025-12-25 08:00:00.07
+5576c2cb
+User
+📰 [DIGEST] Starting daily digest processing...
+2025-12-25 08:00:00.07
+5576c2cb

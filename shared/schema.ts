@@ -6126,7 +6126,14 @@ export const insertNativeAdSchema = createInsertSchema(nativeAds).omit({
 }).extend({
   title: z.string().min(1, "عنوان الإعلان مطلوب").max(100, "العنوان طويل جداً"),
   description: z.string().max(200, "الوصف طويل جداً").optional(),
-  imageUrl: z.string().url("رابط الصورة غير صحيح"),
+  imageUrl: z.string().refine(
+    (val) => val.startsWith("http://") || val.startsWith("https://") || val.startsWith("/api/media/proxy/"),
+    { message: "رابط الصورة غير صحيح" }
+  ),
+  advertiserLogo: z.string().refine(
+    (val) => !val || val.startsWith("http://") || val.startsWith("https://") || val.startsWith("/api/media/proxy/"),
+    { message: "رابط شعار المعلن غير صحيح" }
+  ).optional().nullable(),
   destinationUrl: z.string().url("رابط الوجهة غير صحيح"),
   callToAction: z.string().max(30, "زر الإجراء طويل جداً").optional(),
   advertiserName: z.string().min(1, "اسم المعلن مطلوب"),
