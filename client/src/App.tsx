@@ -208,6 +208,8 @@ import AIManagementDashboard from "@/pages/admin/ifox/ai-management";
 import ImageStudio from "@/pages/ifox/ImageStudio";
 import InfographicStudio from "@/pages/InfographicStudio";
 import LiteFeedPage from "@/pages/lite/LiteFeedPage";
+import AdvertiserLanding from "@/pages/AdvertiserLanding";
+import AdvertiserCreate from "@/pages/AdvertiserCreate";
 import NotFound from "@/pages/not-found";
 
 function ScrollRestoration() {
@@ -326,6 +328,10 @@ function Router() {
       
       <Route path="/article/:slug" component={ArticleDetail} />
       <Route path="/chatbot" component={ChatbotPage} />
+      
+      {/* Advertiser self-service routes */}
+      <Route path="/advertise/create" component={AdvertiserCreate} />
+      <Route path="/advertise" component={AdvertiserLanding} />
       
       {/* AI/iFox Routes */}
       <Route path="/ai" component={AIHomePage} />

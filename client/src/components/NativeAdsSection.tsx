@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef } from "react";
+import { Link } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Sparkles } from "lucide-react";
 
 interface NativeAd {
   id: string;
@@ -164,6 +165,15 @@ export function NativeAdsSection({
           شريك المحتوى
         </span>
         <div className="flex-1 h-px bg-border/50" />
+        <Link href="/advertise">
+          <span
+            className="inline-flex items-center gap-1 text-[10px] text-primary/70 hover:text-primary transition-colors cursor-pointer"
+            data-testid="link-advertise-with-us"
+          >
+            <Sparkles className="h-3 w-3" />
+            أعلن معنا
+          </span>
+        </Link>
       </div>
 
       {/* Desktop: Full card grid layout */}
