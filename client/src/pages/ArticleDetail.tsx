@@ -1327,20 +1327,20 @@ export default function ArticleDetail() {
               </>
             )}
 
-            {/* Comments */}
-            <CommentSection
-              articleId={article.id}
-              comments={comments}
-              currentUser={user}
-              onSubmitComment={handleComment}
-            />
-
             {/* Native Ads - Sponsored Content */}
             <NativeAdsSection
               articleId={article.id}
               categorySlug={article.category?.slug}
               keywords={articleTags?.map(tag => tag.nameAr) || []}
               limit={4}
+            />
+
+            {/* Comments */}
+            <CommentSection
+              articleId={article.id}
+              comments={comments}
+              currentUser={user}
+              onSubmitComment={handleComment}
             />
           </article>
 
