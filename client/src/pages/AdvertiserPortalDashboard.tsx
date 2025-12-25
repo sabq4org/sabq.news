@@ -116,17 +116,27 @@ export default function AdvertiserPortalDashboard() {
     return null;
   }
 
+  const toArabicNumerals = (num: number | string) => {
+    const arabicNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    return String(num).replace(/[0-9]/g, (d) => arabicNumerals[parseInt(d)]);
+  };
+
+  const formatNumber = (num: number) => {
+    return toArabicNumerals(num.toLocaleString('en-US'));
+  };
+
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('ar-SA', {
-      style: 'currency',
-      currency: 'SAR',
-      minimumFractionDigits: 0,
-    }).format(amount / 100);
+    const formatted = amount.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    return toArabicNumerals(formatted) + ' ر.س';
   };
 
   const calculateCTR = (clicks: number, impressions: number) => {
-    if (impressions === 0) return "0%";
-    return ((clicks / impressions) * 100).toFixed(2) + "%";
+    if (impressions === 0) return toArabicNumerals("0") + "%";
+    const ctr = ((clicks / impressions) * 100).toFixed(2);
+    return toArabicNumerals(ctr) + "%";
   };
 
   return (
@@ -195,25 +205,25 @@ export default function AdvertiserPortalDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <StatCard 
             title="إجمالي الإعلانات" 
-            value={stats?.totalAds ?? 0} 
+            value={formatNumber(stats?.totalAds ?? 0)} 
             icon={FileText}
             loading={statsLoading}
           />
           <StatCard 
             title="الإعلانات النشطة" 
-            value={stats?.activeAds ?? 0} 
+            value={formatNumber(stats?.activeAds ?? 0)} 
             icon={CheckCircle}
             loading={statsLoading}
           />
           <StatCard 
             title="إجمالي المشاهدات" 
-            value={stats?.totalImpressions?.toLocaleString('ar-SA') ?? 0} 
+            value={formatNumber(stats?.totalImpressions ?? 0)} 
             icon={Eye}
             loading={statsLoading}
           />
           <StatCard 
             title="إجمالي النقرات" 
-            value={stats?.totalClicks?.toLocaleString('ar-SA') ?? 0} 
+            value={formatNumber(stats?.totalClicks ?? 0)} 
             icon={MousePointerClick}
             loading={statsLoading}
           />
@@ -233,7 +243,7 @@ export default function AdvertiserPortalDashboard() {
                 {statsLoading ? (
                   <Skeleton className="h-6 w-8" />
                 ) : (
-                  <Badge variant="secondary" data-testid="stat-pending">{stats?.pendingAds ?? 0}</Badge>
+                  <Badge variant="secondary" data-testid="stat-pending">{formatNumber(stats?.pendingAds ?? 0)}</Badge>
                 )}
               </div>
               <div className="flex justify-between items-center">
@@ -314,12 +324,12 @@ export default function AdvertiserPortalDashboard() {
                               {status.label}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-center">{ad.impressions.toLocaleString('ar-SA')}</TableCell>
-                          <TableCell className="text-center">{ad.clicks.toLocaleString('ar-SA')}</TableCell>
+                          <TableCell className="text-center">{formatNumber(ad.impressions)}</TableCell>
+                          <TableCell className="text-center">{formatNumber(ad.clicks)}</TableCell>
                           <TableCell className="text-center">{calculateCTR(ad.clicks, ad.impressions)}</TableCell>
-                          <TableCell className="text-center">{formatCurrency(ad.totalCost)}</TableCell>
+                          <TableCell className="text-center">{formatCurrency(ad.totalCost || 0)}</TableCell>
                           <TableCell className="text-muted-foreground">
-                            {format(new Date(ad.createdAt), 'dd/MM/yyyy', { locale: ar })}
+                            {toArabicNumerals(format(new Date(ad.createdAt), 'dd/MM/yyyy', { locale: ar }))}
                           </TableCell>
                         </TableRow>
                       );
