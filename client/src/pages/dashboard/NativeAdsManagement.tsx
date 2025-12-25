@@ -533,6 +533,7 @@ export default function NativeAdsManagement() {
                     <TableHead className="text-center">المشاهدات</TableHead>
                     <TableHead className="text-center">النقرات</TableHead>
                     <TableHead className="text-center">CTR</TableHead>
+                    <TableHead className="text-center">التكلفة</TableHead>
                     <TableHead className="text-center">الأولوية</TableHead>
                     <TableHead>التواريخ</TableHead>
                     <TableHead className="text-left">الإجراءات</TableHead>
@@ -621,6 +622,11 @@ export default function NativeAdsManagement() {
                       </TableCell>
                       <TableCell className="text-center" data-testid={`text-ctr-${ad.id}`}>
                         {calculateCTR(ad.impressions, ad.clicks)}
+                      </TableCell>
+                      <TableCell className="text-center" data-testid={`text-cost-${ad.id}`}>
+                        <span className="font-medium">
+                          {((ad.clicks * (ad.costPerClick || 100)) / 100).toFixed(2)} ر.س
+                        </span>
                       </TableCell>
                       <TableCell className="text-center" data-testid={`text-priority-${ad.id}`}>
                         <Badge variant="secondary">{ad.priority}</Badge>
