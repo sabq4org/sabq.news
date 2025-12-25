@@ -116,27 +116,20 @@ export default function AdvertiserPortalDashboard() {
     return null;
   }
 
-  const toArabicNumerals = (num: number | string) => {
-    const arabicNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-    return String(num).replace(/[0-9]/g, (d) => arabicNumerals[parseInt(d)]);
-  };
-
   const formatNumber = (num: number) => {
-    return toArabicNumerals(num.toLocaleString('en-US'));
+    return num.toLocaleString('en-US');
   };
 
   const formatCurrency = (amount: number) => {
-    const formatted = amount.toLocaleString('en-US', {
+    return amount.toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    });
-    return toArabicNumerals(formatted) + ' ر.س';
+    }) + ' ر.س';
   };
 
   const calculateCTR = (clicks: number, impressions: number) => {
-    if (impressions === 0) return toArabicNumerals("0") + "%";
-    const ctr = ((clicks / impressions) * 100).toFixed(2);
-    return toArabicNumerals(ctr) + "%";
+    if (impressions === 0) return "0%";
+    return ((clicks / impressions) * 100).toFixed(2) + "%";
   };
 
   return (
@@ -329,7 +322,7 @@ export default function AdvertiserPortalDashboard() {
                           <TableCell className="text-center">{calculateCTR(ad.clicks, ad.impressions)}</TableCell>
                           <TableCell className="text-center">{formatCurrency(ad.totalCost || 0)}</TableCell>
                           <TableCell className="text-muted-foreground">
-                            {toArabicNumerals(format(new Date(ad.createdAt), 'dd/MM/yyyy', { locale: ar }))}
+                            {format(new Date(ad.createdAt), 'dd/MM/yyyy', { locale: ar })}
                           </TableCell>
                         </TableRow>
                       );
