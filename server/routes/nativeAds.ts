@@ -10,11 +10,12 @@ import fs from "fs";
 
 const router = Router();
 
-// Ensure advertiser uploads directory exists
-const uploadsDir = path.join(process.cwd(), "uploads", "advertiser-ads");
+// Ensure advertiser uploads directory exists in persistent storage
+const uploadsDir = "/home/runner/workspace/uploads/advertiser-ads";
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
+console.log(`[NativeAds] Advertiser uploads directory: ${uploadsDir}`);
 
 // Configure multer for advertiser uploads
 const advertiserUpload = multer({

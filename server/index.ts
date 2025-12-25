@@ -174,8 +174,8 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Serve static files from uploads directory (for thumbnails)
-const uploadsDir = path.join(process.cwd(), 'uploads');
+// Serve static files from uploads directory (for thumbnails and advertiser ads)
+const uploadsDir = '/home/runner/workspace/uploads';
 app.use('/uploads', express.static(uploadsDir));
 console.log(`[Server] ✅ Static uploads directory configured: ${uploadsDir}`);
 
