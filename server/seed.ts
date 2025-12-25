@@ -53,7 +53,7 @@ async function seed() {
     // Create admin user with known password
     const adminUserId = "admin-sabq";
     const adminPassword = "admin123";
-    const adminPasswordHash = await bcrypt.hash(adminPassword, 10);
+    const adminPasswordHash = await bcrypt.hash(adminPassword, 12);
     
     const [adminUser] = await db
       .insert(users)

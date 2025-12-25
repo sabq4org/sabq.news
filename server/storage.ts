@@ -2869,7 +2869,7 @@ export class DatabaseStorage implements IStorage {
     const userId = nanoid();
     // توليد كلمة مرور عشوائية فريدة لكل مستخدم
     const randomPassword = `Temp${nanoid(12)}@${new Date().getFullYear()}`;
-    const passwordHash = await bcrypt.hash(randomPassword, 10);
+    const passwordHash = await bcrypt.hash(randomPassword, 12);
 
     const user = await db.transaction(async (tx) => {
       const [user] = await tx.insert(users).values({
@@ -19264,7 +19264,7 @@ export class DatabaseStorage implements IStorage {
     } else {
       // Create new user
       temporaryPassword = nanoid(12);
-      const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
+      const hashedPassword = await bcrypt.hash(temporaryPassword, 12);
       
       const [newUser] = await db.insert(users).values({
         id: nanoid(),

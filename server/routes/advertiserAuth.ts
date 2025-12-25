@@ -37,7 +37,7 @@ router.post("/register", async (req: Request, res: Response) => {
       return res.status(400).json({ error: "البريد الإلكتروني مستخدم بالفعل" });
     }
     
-    const hashedPassword = await bcrypt.hash(validatedData.password, 10);
+    const hashedPassword = await bcrypt.hash(validatedData.password, 12);
     
     const [newAdvertiser] = await db.insert(advertiserProfiles).values({
       ...validatedData,

@@ -569,7 +569,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Hash password
-      const passwordHash = await bcrypt.hash(password, 10);
+      const passwordHash = await bcrypt.hash(password, 12);
 
       // Determine user role (for development/testing only - production should use proper RBAC flow)
       // In production, only allow 'reader' and require admin approval for elevated roles
@@ -719,7 +719,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
       // Hash token before storing (security: never store plaintext tokens)
-      const tokenHash = await bcrypt.hash(resetToken, 10);
+      const tokenHash = await bcrypt.hash(resetToken, 12);
 
       // Save hashed token to database
       await db.insert(passwordResetTokens).values({
@@ -785,7 +785,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Hash new password
-      const passwordHash = await bcrypt.hash(password, 10);
+      const passwordHash = await bcrypt.hash(password, 12);
 
       // Update user password
       await db
@@ -837,7 +837,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Hash new password
-      const passwordHash = await bcrypt.hash(newPassword, 10);
+      const passwordHash = await bcrypt.hash(newPassword, 12);
 
       // Update user password and set mustChangePassword to false
       await db
@@ -5276,7 +5276,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Hash the new password
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
 
       // Update password
       await db
@@ -30063,7 +30063,7 @@ Allow: /
         }
         
         // Hash password
-        const passwordHash = await bcrypt.hash(userPassword, 10);
+        const passwordHash = await bcrypt.hash(userPassword, 12);
         
         // Get publisher role ID
         const publisherRole = await db.select().from(roles).where(eq(roles.name, 'publisher')).limit(1);

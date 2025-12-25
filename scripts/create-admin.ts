@@ -49,7 +49,7 @@ async function createAdminUser() {
     }
 
     // Hash password
-    const passwordHash = await bcrypt.hash(adminPassword, 10);
+    const passwordHash = await bcrypt.hash(adminPassword, 12);
 
     // Create or update admin user
     const [adminUser] = await db
