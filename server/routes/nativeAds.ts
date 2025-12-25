@@ -119,9 +119,14 @@ router.post("/:id/impression", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "الإعلان غير موجود" });
     }
 
+    // Only include articleId if it's a valid UUID (36 chars with hyphens)
+    const validArticleId = articleId && typeof articleId === 'string' && 
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(articleId) 
+      ? articleId : undefined;
+
     const [impression] = await db.insert(nativeAdImpressions).values({
       nativeAdId: id,
-      articleId,
+      articleId: validArticleId,
       userId,
       sessionId,
       deviceType,
@@ -158,10 +163,15 @@ router.post("/:id/click", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "الإعلان غير موجود" });
     }
 
+    // Only include articleId if it's a valid UUID
+    const validArticleId = articleId && typeof articleId === 'string' && 
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(articleId) 
+      ? articleId : undefined;
+
     await db.insert(nativeAdClicks).values({
       nativeAdId: id,
       impressionId,
-      articleId,
+      articleId: validArticleId,
       userId,
       sessionId,
       deviceType,

@@ -54,6 +54,7 @@ const EXEMPT_PATHS = [
   "/api/correspondent-applications",  // Public reporter registration form
   "/api/accessibility/track",  // Accessibility tracking for anonymous users
   "/api/articles/",  // Article views for anonymous users
+  "/api/native-ads/",  // Native ads tracking (impressions/clicks) for anonymous users
 ];
 
 function isExemptPath(path: string, originalUrl: string): boolean {
