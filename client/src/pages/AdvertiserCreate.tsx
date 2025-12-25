@@ -71,9 +71,19 @@ const targetingSchema = z.object({
   targetCategories: z.array(z.string()).optional(),
   startDate: z.date({ required_error: "تاريخ البداية مطلوب" }),
   endDate: z.date().optional().nullable(),
+  dailyBudgetEnabled: z.boolean().optional().default(false),
+  dailyBudget: z.coerce.number().min(10, "الحد الأدنى 10 ريال").optional(),
 });
 
-const fullSchema = advertiserInfoSchema.merge(adContentSchema).merge(targetingSchema);
+const fullSchema = advertiserInfoSchema.merge(adContentSchema).merge(targetingSchema).refine((data) => {
+  if (data.dailyBudgetEnabled && !data.dailyBudget) {
+    return false;
+  }
+  return true;
+}, {
+  message: "الميزانية اليومية مطلوبة عند تفعيل الحد اليومي",
+  path: ["dailyBudget"],
+});
 
 type FormValues = z.infer<typeof fullSchema>;
 
@@ -113,6 +123,8 @@ export default function AdvertiserCreate() {
       targetCategories: [],
       startDate: new Date(),
       endDate: null,
+      dailyBudgetEnabled: false,
+      dailyBudget: undefined,
     },
   });
   
@@ -147,6 +159,8 @@ export default function AdvertiserCreate() {
           targetCategories: values.targetCategories,
           startDate: values.startDate,
           endDate: values.endDate,
+          dailyBudgetEnabled: values.dailyBudgetEnabled,
+          dailyBudget: values.dailyBudget ? values.dailyBudget * 100 : undefined,
         }),
         headers: { "Content-Type": "application/json" },
       });
@@ -212,6 +226,11 @@ export default function AdvertiserCreate() {
         break;
       case 3:
         fieldsToValidate = ["startDate"];
+        // Add daily budget validation when enabled
+        const dailyBudgetEnabled = form.getValues("dailyBudgetEnabled");
+        if (dailyBudgetEnabled) {
+          fieldsToValidate.push("dailyBudget");
+        }
         break;
     }
 
@@ -721,6 +740,69 @@ export default function AdvertiserCreate() {
                               </FormItem>
                             )}
                           />
+                        </div>
+
+                        <div className="space-y-4 pt-4 border-t">
+                          <FormField
+                            control={form.control}
+                            name="dailyBudgetEnabled"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-start space-x-3 space-x-reverse rtl:space-x-reverse">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                    data-testid="checkbox-daily-budget-enabled"
+                                  />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                  <FormLabel className="cursor-pointer">
+                                    تفعيل حد الميزانية اليومية
+                                  </FormLabel>
+                                  <FormDescription>
+                                    سيتوقف عرض الإعلان تلقائياً عند الوصول للحد اليومي
+                                  </FormDescription>
+                                </div>
+                              </FormItem>
+                            )}
+                          />
+
+                          {form.watch("dailyBudgetEnabled") && (
+                            <FormField
+                              control={form.control}
+                              name="dailyBudget"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>الميزانية اليومية (ريال) *</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      min={10}
+                                      step={1}
+                                      placeholder="مثال: 100"
+                                      value={field.value === undefined || field.value === null ? "" : field.value}
+                                      onChange={(e) => {
+                                        const rawValue = e.target.value;
+                                        if (rawValue === "" || rawValue === null) {
+                                          field.onChange(undefined);
+                                        } else {
+                                          const numValue = parseFloat(rawValue);
+                                          if (!isNaN(numValue)) {
+                                            field.onChange(numValue);
+                                          }
+                                        }
+                                      }}
+                                      data-testid="input-daily-budget"
+                                    />
+                                  </FormControl>
+                                  <FormDescription>
+                                    الحد الأدنى 10 ريال. الميزانية تُحتسب على النقرات فقط.
+                                  </FormDescription>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          )}
                         </div>
                       </>
                     )}

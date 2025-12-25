@@ -297,6 +297,17 @@ const selfServeAdSchema = z.object({
   targetCategories: z.array(z.string()).optional(),
   startDate: z.coerce.date(),
   endDate: z.coerce.date().optional().nullable(),
+  dailyBudgetEnabled: z.boolean().optional().default(false),
+  dailyBudget: z.number().optional(),
+}).refine((data) => {
+  // When dailyBudgetEnabled is true, dailyBudget must be provided and >= 1000 halalas (10 SAR)
+  if (data.dailyBudgetEnabled && (!data.dailyBudget || data.dailyBudget < 1000)) {
+    return false;
+  }
+  return true;
+}, {
+  message: "الميزانية اليومية مطلوبة عند تفعيل الحد اليومي (الحد الأدنى 10 ريال)",
+  path: ["dailyBudget"],
 });
 
 router.post("/submit", async (req: Request, res: Response) => {
@@ -309,6 +320,11 @@ router.post("/submit", async (req: Request, res: Response) => {
       // Prevent spoofing - if advertiserId doesn't match session, ignore it
       advertiserId = null;
     }
+    
+    // Normalize dailyBudget to integer halalas (already in halalas from frontend)
+    const normalizedDailyBudget = validatedData.dailyBudget 
+      ? Math.round(validatedData.dailyBudget) 
+      : null;
     
     const [newAd] = await db.insert(nativeAds).values({
       title: validatedData.title,
@@ -328,6 +344,8 @@ router.post("/submit", async (req: Request, res: Response) => {
       endDate: validatedData.endDate || null,
       priority: 5,
       status: "pending_approval",
+      dailyBudgetEnabled: validatedData.dailyBudgetEnabled || false,
+      dailyBudget: normalizedDailyBudget,
     }).returning();
 
     console.log(`[NativeAds] New self-serve ad submitted: ${newAd.id} by ${validatedData.advertiserEmail}`);

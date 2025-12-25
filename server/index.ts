@@ -14,6 +14,7 @@ import { startNotificationWorker } from "./notificationWorker";
 import { startSeasonalCategoriesJob } from "./jobs/seasonalCategoriesJob";
 import { startDynamicCategoriesJob } from "./jobs/dynamicCategoriesJob";
 import { startCampaignDailyResetJob } from "./jobs/campaignDailyResetJob";
+import { startNativeAdsDailyResetJob } from "./jobs/nativeAdsDailyResetJob";
 import { startAITasksScheduler } from "./jobs/aiTasksJob";
 import { startAiTasksCleanupJob } from "./jobs/aiTasksCleanup";
 import { startIfoxContentGeneratorJob } from "./jobs/ifoxContentGeneratorJob";
@@ -662,6 +663,18 @@ app.use((req, res, next) => {
           } catch (error) {
             console.error("[Server] ⚠️  Error starting campaign daily reset job:", error);
             console.error("[Server] Server will continue running without campaign daily reset automation");
+          }
+        });
+      }
+
+      // Start Native Ads Daily Budget Reset Job (resets daily budget at midnight Saudi time)
+      if (enableBackgroundWorkers) {
+        setImmediate(() => {
+          try {
+            startNativeAdsDailyResetJob();
+          } catch (error) {
+            console.error("[Server] ⚠️  Error starting native ads daily reset job:", error);
+            console.error("[Server] Server will continue running without native ads daily reset automation");
           }
         });
       }
