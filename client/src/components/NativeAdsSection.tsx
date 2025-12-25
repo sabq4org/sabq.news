@@ -132,11 +132,12 @@ export function NativeAdsSection({
           ))}
         </div>
         {/* Mobile skeleton */}
-        <div className="md:hidden space-y-2">
-          {Array.from({ length: 2 }).map((_, i) => (
-            <div key={i} className="flex gap-3 items-center">
-              <Skeleton className="w-20 h-14 rounded flex-shrink-0" />
-              <div className="flex-1 space-y-1">
+        <div className="md:hidden grid grid-cols-2 gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="rounded-lg overflow-hidden border border-border/50">
+              <Skeleton className="aspect-[16/10] w-full" />
+              <div className="p-2.5 space-y-1.5">
+                <Skeleton className="h-4 w-full" />
                 <Skeleton className="h-3 w-3/4" />
                 <Skeleton className="h-2 w-1/2" />
               </div>
@@ -238,33 +239,43 @@ export function NativeAdsSection({
         ))}
       </div>
 
-      {/* Mobile: Compact horizontal list */}
-      <div className="md:hidden space-y-2">
+      {/* Mobile: 2-column grid with content */}
+      <div className="md:hidden grid grid-cols-2 gap-3">
         {ads.map((ad) => (
           <article
             key={ad.id}
-            className="flex gap-3 items-center p-2 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors cursor-pointer group"
+            className="rounded-lg overflow-hidden bg-card border border-border/50 hover:border-border transition-colors cursor-pointer group"
             data-testid={`native-ad-card-mobile-${ad.id}`}
             onClick={() => handleAdClick(ad)}
           >
-            <div className="w-20 h-14 flex-shrink-0 rounded overflow-hidden bg-muted">
+            <div className="aspect-[16/10] overflow-hidden bg-muted">
               <img
                 src={ad.imageUrl}
                 alt={ad.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                 loading="lazy"
               />
             </div>
 
-            <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-medium text-foreground/90 group-hover:text-primary transition-colors line-clamp-2 leading-snug">
+            <div className="p-2.5 space-y-1.5">
+              <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug">
                 {ad.title}
               </h3>
-              <div className="flex items-center gap-1 mt-1">
-                <span className="text-[11px] text-muted-foreground/60">
+              
+              {ad.description && (
+                <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                  {ad.description}
+                </p>
+              )}
+
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-[10px] text-muted-foreground/70">
                   {ad.advertiserName}
                 </span>
-                <ArrowLeft className="h-3 w-3 text-muted-foreground/40" />
+                <span className="text-[10px] text-primary/80 flex items-center gap-0.5">
+                  {ad.callToAction || "المزيد"}
+                  <ArrowLeft className="h-2.5 w-2.5" />
+                </span>
               </div>
             </div>
           </article>
