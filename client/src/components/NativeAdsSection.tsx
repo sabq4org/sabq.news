@@ -87,24 +87,22 @@ export function NativeAdsSection({
     });
   }, [ads, articleId, sessionId]);
 
-  const handleAdClick = async (ad: NativeAd) => {
-    try {
-      await fetch(`/api/native-ads/${ad.id}/click`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          articleId,
-          sessionId,
-        }),
-      });
-    } catch (error) {
-      console.error("Failed to track click:", error);
-    }
-
+  const handleAdClick = (ad: NativeAd) => {
+    // Open URL first (synchronously) to avoid popup blockers on mobile
     if (ad.destinationUrl) {
       window.open(ad.destinationUrl, "_blank", "noopener,noreferrer");
     }
+
+    // Track click asynchronously (fire and forget)
+    fetch(`/api/native-ads/${ad.id}/click`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        articleId,
+        sessionId,
+      }),
+    }).catch((error) => console.error("Failed to track click:", error));
   };
 
   if (isLoading) {
