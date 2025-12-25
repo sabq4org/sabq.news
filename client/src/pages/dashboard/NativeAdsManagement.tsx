@@ -64,8 +64,10 @@ import {
   Trash2,
   Loader2,
   Image as ImageIcon,
-  Calendar
+  Calendar,
+  Upload
 } from "lucide-react";
+import { ImageUploadDialog } from "@/components/ImageUploadDialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useForm } from "react-hook-form";
@@ -163,6 +165,7 @@ export default function NativeAdsManagement() {
   const [adToDelete, setAdToDelete] = useState<NativeAd | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingAd, setEditingAd] = useState<NativeAd | null>(null);
+  const [uploadTarget, setUploadTarget] = useState<"imageUrl" | "advertiserLogo" | null>(null);
 
   useEffect(() => {
     document.title = "إدارة المحتوى المدفوع - لوحة التحكم";
@@ -715,13 +718,25 @@ export default function NativeAdsManagement() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>رابط الصورة *</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="https://example.com/image.jpg"
-                            {...field}
-                            data-testid="input-image-url"
-                          />
-                        </FormControl>
+                        <div className="flex gap-2">
+                          <FormControl>
+                            <Input
+                              placeholder="https://example.com/image.jpg"
+                              {...field}
+                              data-testid="input-image-url"
+                            />
+                          </FormControl>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setUploadTarget("imageUrl")}
+                            title="رفع صورة"
+                            data-testid="button-upload-image"
+                          >
+                            <Upload className="h-4 w-4" />
+                          </Button>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -772,14 +787,26 @@ export default function NativeAdsManagement() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>شعار المعلن</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="https://example.com/logo.png"
-                            {...field}
-                            value={field.value || ""}
-                            data-testid="input-advertiser-logo"
-                          />
-                        </FormControl>
+                        <div className="flex gap-2">
+                          <FormControl>
+                            <Input
+                              placeholder="https://example.com/logo.png"
+                              {...field}
+                              value={field.value || ""}
+                              data-testid="input-advertiser-logo"
+                            />
+                          </FormControl>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setUploadTarget("advertiserLogo")}
+                            title="رفع شعار"
+                            data-testid="button-upload-logo"
+                          >
+                            <Upload className="h-4 w-4" />
+                          </Button>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -1083,6 +1110,20 @@ export default function NativeAdsManagement() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Image Upload Dialog */}
+        <ImageUploadDialog
+          open={uploadTarget !== null}
+          onOpenChange={(open) => {
+            if (!open) setUploadTarget(null);
+          }}
+          onImageUploaded={(url) => {
+            if (uploadTarget) {
+              form.setValue(uploadTarget, url);
+            }
+            setUploadTarget(null);
+          }}
+        />
       </div>
     </DashboardLayout>
   );
