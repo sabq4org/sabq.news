@@ -65,8 +65,17 @@ import {
   Loader2,
   Image as ImageIcon,
   Calendar,
-  Upload
+  Upload,
+  UserCircle,
+  Mail,
+  Phone,
+  Building2
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ImageUploadDialog } from "@/components/ImageUploadDialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -559,7 +568,41 @@ export default function NativeAdsManagement() {
                         )}
                       </TableCell>
                       <TableCell data-testid={`text-advertiser-${ad.id}`}>
-                        {ad.advertiserName}
+                        <div className="flex flex-col gap-1">
+                          <span>{ad.advertiserName}</span>
+                          {(ad as any).isSelfServe && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge variant="secondary" className="text-xs w-fit cursor-help">
+                                  <UserCircle className="h-3 w-3 ml-1" />
+                                  خدمة ذاتية
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom" className="text-right" dir="rtl">
+                                <div className="space-y-1 text-sm">
+                                  {(ad as any).advertiserEmail && (
+                                    <div className="flex items-center gap-2">
+                                      <Mail className="h-3 w-3" />
+                                      <span>{(ad as any).advertiserEmail}</span>
+                                    </div>
+                                  )}
+                                  {(ad as any).advertiserPhone && (
+                                    <div className="flex items-center gap-2">
+                                      <Phone className="h-3 w-3" />
+                                      <span dir="ltr">{(ad as any).advertiserPhone}</span>
+                                    </div>
+                                  )}
+                                  {(ad as any).advertiserCompany && (
+                                    <div className="flex items-center gap-2">
+                                      <Building2 className="h-3 w-3" />
+                                      <span>{(ad as any).advertiserCompany}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Badge
