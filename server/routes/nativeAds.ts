@@ -30,6 +30,37 @@ function getClientIp(req: Request): string {
   return req.ip || req.socket.remoteAddress || "unknown";
 }
 
+// Weighted random shuffle - higher priority ads appear more often but with randomization
+function weightedRandomShuffle<T extends { priority: number }>(items: T[]): T[] {
+  if (items.length <= 1) return items;
+  
+  const result: T[] = [];
+  const remaining = [...items];
+  
+  while (remaining.length > 0) {
+    // Calculate total weight (priority squared for stronger weighting)
+    const totalWeight = remaining.reduce((sum, item) => sum + Math.pow(item.priority + 1, 2), 0);
+    
+    // Pick random value
+    let random = Math.random() * totalWeight;
+    
+    // Find the item
+    let selectedIndex = 0;
+    for (let i = 0; i < remaining.length; i++) {
+      random -= Math.pow(remaining[i].priority + 1, 2);
+      if (random <= 0) {
+        selectedIndex = i;
+        break;
+      }
+    }
+    
+    result.push(remaining[selectedIndex]);
+    remaining.splice(selectedIndex, 1);
+  }
+  
+  return result;
+}
+
 router.get("/public", async (req: Request, res: Response) => {
   try {
     const { category, keyword, limit: limitParam } = req.query;
@@ -86,7 +117,10 @@ router.get("/public", async (req: Request, res: Response) => {
       );
     }
 
-    const publicAds = ads.slice(0, maxLimit).map(ad => ({
+    // Apply weighted random rotation based on priority
+    const rotatedAds = weightedRandomShuffle(ads);
+
+    const publicAds = rotatedAds.slice(0, maxLimit).map(ad => ({
       id: ad.id,
       title: ad.title,
       description: ad.description,
