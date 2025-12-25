@@ -6131,11 +6131,11 @@ export const insertNativeAdSchema = createInsertSchema(nativeAds).omit({
   title: z.string().min(1, "عنوان الإعلان مطلوب").max(100, "العنوان طويل جداً"),
   description: z.string().max(200, "الوصف طويل جداً").optional(),
   imageUrl: z.string().refine(
-    (val) => val.startsWith("http://") || val.startsWith("https://") || val.startsWith("/api/media/proxy/"),
+    (val) => val.startsWith("http://") || val.startsWith("https://") || val.startsWith("/api/media/proxy/") || val.startsWith("/uploads/"),
     { message: "رابط الصورة غير صحيح" }
   ),
   advertiserLogo: z.string().refine(
-    (val) => !val || val.startsWith("http://") || val.startsWith("https://") || val.startsWith("/api/media/proxy/"),
+    (val) => !val || val.startsWith("http://") || val.startsWith("https://") || val.startsWith("/api/media/proxy/") || val.startsWith("/uploads/"),
     { message: "رابط شعار المعلن غير صحيح" }
   ).optional().nullable(),
   destinationUrl: z.string().url("رابط الوجهة غير صحيح"),
