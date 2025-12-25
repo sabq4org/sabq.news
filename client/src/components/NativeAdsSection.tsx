@@ -146,10 +146,10 @@ export function NativeAdsSection({
     >
       <div className="mb-4 flex items-center gap-2">
         <span
-          className="inline-block bg-red-600 text-white text-sm font-bold px-3 py-1.5 rounded"
+          className="inline-block bg-muted text-muted-foreground text-sm font-medium px-3 py-1.5 rounded"
           data-testid="native-ads-header"
         >
-          محتوى مدفوع
+          شريك المحتوى
         </span>
       </div>
 
