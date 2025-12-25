@@ -305,8 +305,16 @@ app.use((req, res, next) => {
         apmStats.requests.success++;
       } else if (res.statusCode >= 400) {
         apmStats.requests.errors++;
-        const errorCount = apmStats.errorPaths.get(path) || 0;
-        apmStats.errorPaths.set(path, errorCount + 1);
+        // Normalize path to avoid memory leak from dynamic IDs
+        // Convert /api/articles/123 to /api/articles/:id
+        const normalizedPath = path.replace(/\/\d+/g, '/:id').replace(/\/[a-f0-9-]{36}/gi, '/:uuid');
+        const errorCount = apmStats.errorPaths.get(normalizedPath) || 0;
+        apmStats.errorPaths.set(normalizedPath, errorCount + 1);
+        // Cap error paths to prevent unbounded growth
+        if (apmStats.errorPaths.size > 100) {
+          const oldestKey = apmStats.errorPaths.keys().next().value;
+          if (oldestKey) apmStats.errorPaths.delete(oldestKey);
+        }
       }
       
       // Track response times (keep last 1000 samples)
