@@ -162,13 +162,15 @@ export default function AdvertiserCreate() {
     formData.append("file", file);
 
     try {
-      const response = await fetch("/api/media/upload", {
+      const response = await fetch("/api/native-ads/upload", {
         method: "POST",
         body: formData,
-        credentials: "include",
       });
 
-      if (!response.ok) throw new Error("فشل في رفع الصورة");
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "فشل في رفع الصورة");
+      }
 
       const data = await response.json();
       form.setValue("imageUrl", data.url);
@@ -176,10 +178,10 @@ export default function AdvertiserCreate() {
         title: "تم رفع الصورة",
         description: "تم رفع الصورة بنجاح",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "خطأ",
-        description: "فشل في رفع الصورة",
+        description: error.message || "فشل في رفع الصورة",
         variant: "destructive",
       });
     } finally {
@@ -619,7 +621,7 @@ export default function AdvertiserCreate() {
                                       data-testid={`checkbox-category-${category.id}`}
                                     />
                                     <Label htmlFor={category.id} className="text-sm cursor-pointer">
-                                      {category.name}
+                                      {category.nameAr}
                                     </Label>
                                   </div>
                                 ))}
@@ -805,7 +807,7 @@ export default function AdvertiserCreate() {
                                 {formValues.targetCategories && formValues.targetCategories.length > 0
                                   ? categories
                                       .filter((c) => formValues.targetCategories?.includes(c.id))
-                                      .map((c) => c.name)
+                                      .map((c) => c.nameAr)
                                       .join("، ")
                                   : "جميع الفئات"
                                 }

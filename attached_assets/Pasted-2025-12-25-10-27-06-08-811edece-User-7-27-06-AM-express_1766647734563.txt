@@ -1,0 +1,108 @@
+2025-12-25 10:27:06.08
+811edece
+User
+7:27:06 AM [express] GET /api/articles/%D9%88%D8%B2%D8%A7%D8%B1%D8%A9-%D8%A7%D9%84%D8%B5%D8%AD%D8%A9…
+2025-12-25 10:27:06.10
+811edece
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-25 10:27:06.10
+811edece
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-25 10:27:06.10
+811edece
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-25 10:27:06.11
+811edece
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-25 10:27:06.11
+811edece
+User
+[CSRF] No X-CSRF-Token header for: /ads/track/impression/1bd51961-eabc-484f-b4db-be5a5d3c37be
+2025-12-25 10:27:06.11
+811edece
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-25 10:27:06.13
+811edece
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-25 10:27:06.13
+811edece
+User
+7:27:06 AM [express] POST /api/ads/track/impression/1bd51961-eabc-484f-b4db-be5a5d3c37be 403 in 74ms…
+2025-12-25 10:27:10.13
+811edece
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-25 10:27:10.15
+811edece
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-25 10:28:00.04
+811edece
+User
+[NotificationWorker] Starting queue processing...
+2025-12-25 10:28:00.04
+811edece
+User
+[AI Task Executor] Checking for pending tasks...
+2025-12-25 10:28:00.05
+811edece
+User
+🔄 Checking for scheduled audio newsletters...
+2025-12-25 10:28:00.05
+811edece
+User
+[ScheduledPublisher] Checking for scheduled articles...
+2025-12-25 10:28:00.08
+811edece
+User
+[NotificationWorker] Queue processing completed
+2025-12-25 10:28:00.08
+811edece
+User
+[NotificationWorker] Found 0 notifications to process
+2025-12-25 10:28:00.18
+811edece
+User
+Found 0 scheduled newsletters to process
+2025-12-25 10:28:00.18
+811edece
+User
+[ScheduledPublisher] Found 0 articles ready to publish
+2025-12-25 10:28:22.76
+811edece
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-25 10:28:22.78
+811edece
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-25 10:28:22.79
+811edece
+User
+[CSRF] No X-CSRF-Token header for: /media/upload
+2025-12-25 10:28:22.81
+811edece
+User
+7:28:22 AM [express] POST /api/media/upload 403 in 211ms :: {"message":"رمز الحماية مطلوب للعمليات ا…
+2025-12-25 10:28:23.16
+811edece
+User
+🔸 DeserializeUser called with id: admin-sabq
+2025-12-25 10:28:23.18
+811edece
+User
+✅ DeserializeUser: User found: admin@sabq.sa
+2025-12-25 10:28:23.24
+811edece
+User
+7:28:23 AM [express] POST /api/accessibility/track 200 in 96ms :: {"success":true,"eventId":"3a82cf0…
+2025-12-25 10:28:23.24
+811edece
+User
+7:28:23 AM [express] POST /api/accessibility/track 200 in 96ms :: {"success":true,"eventId":"3a82cf0…

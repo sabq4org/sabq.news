@@ -4,8 +4,31 @@ import { eq, and, or, desc, gte, lte, isNull, sql } from "drizzle-orm";
 import { nativeAds, nativeAdImpressions, nativeAdClicks, insertNativeAdSchema, categories } from "@shared/schema";
 import { requireAuth, requireRole } from "../rbac";
 import { z } from "zod";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 
 const router = Router();
+
+// Ensure advertiser uploads directory exists
+const uploadsDir = path.join(process.cwd(), "uploads", "advertiser-ads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Configure multer for advertiser uploads
+const advertiserUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max for advertisers
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('نوع الملف غير مسموح. الأنواع المسموحة: JPEG, PNG, WEBP, GIF'));
+    }
+  },
+});
 
 function isAdminOrEditor(req: Request, res: Response, next: NextFunction) {
   requireRole("admin", "editor", "superadmin", "chief_editor")(req, res, next);
@@ -136,6 +159,39 @@ router.get("/public", async (req: Request, res: Response) => {
   } catch (error) {
     console.error("[NativeAds] Error fetching public ads:", error);
     res.status(500).json({ message: "حدث خطأ أثناء جلب الإعلانات" });
+  }
+});
+
+// Public image upload for self-serve advertisers (no auth required)
+router.post("/upload", advertiserUpload.single('file'), async (req: Request, res: Response) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "لم يتم اختيار ملف" });
+    }
+
+    const file = req.file;
+    const timestamp = Date.now();
+    const randomId = Math.random().toString(36).substring(2, 8);
+    const extension = file.originalname.split('.').pop() || 'jpg';
+    const filename = `${timestamp}-${randomId}.${extension}`;
+    const filePath = path.join(uploadsDir, filename);
+
+    // Save file to local uploads directory
+    fs.writeFileSync(filePath, file.buffer);
+
+    // Return the URL that will be served via the static uploads route
+    const publicUrl = `/uploads/advertiser-ads/${filename}`;
+    
+    console.log(`[NativeAds] Advertiser uploaded image: ${filename}`);
+    
+    res.json({ 
+      success: true,
+      url: publicUrl,
+      filename: filename
+    });
+  } catch (error) {
+    console.error("[NativeAds] Error uploading advertiser image:", error);
+    res.status(500).json({ message: "فشل في رفع الصورة" });
   }
 });
 
