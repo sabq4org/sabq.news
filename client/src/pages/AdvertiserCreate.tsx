@@ -87,6 +87,7 @@ export default function AdvertiserCreate() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
@@ -138,11 +139,8 @@ export default function AdvertiserCreate() {
       });
     },
     onSuccess: () => {
-      setIsSubmitted(true);
-      toast({
-        title: "تم إرسال الإعلان بنجاح",
-        description: "سنراجع إعلانك ونتواصل معك قريباً",
-      });
+      // Show success overlay on preview instead of immediately transitioning
+      setShowSuccessOverlay(true);
     },
     onError: (error: any) => {
       toast({
@@ -715,7 +713,35 @@ export default function AdvertiserCreate() {
                     )}
 
                     {currentStep === 4 && (
-                      <div className="space-y-6">
+                      <div className="space-y-6 relative">
+                        {showSuccessOverlay && (
+                          <div className="absolute inset-0 bg-background/95 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-lg p-8 text-center">
+                            <div className="rounded-full bg-green-500/10 p-6 mb-6">
+                              <CheckCircle className="h-16 w-16 text-green-500" />
+                            </div>
+                            <h3 className="text-xl font-bold text-foreground mb-2" data-testid="text-overlay-success">
+                              تم إرسال الإعلان بنجاح!
+                            </h3>
+                            <p className="text-muted-foreground mb-6 max-w-sm">
+                              سيقوم فريقنا بمراجعة إعلانك وسنتواصل معك خلال 24 ساعة
+                            </p>
+                            <div className="flex flex-col sm:flex-row gap-3">
+                              <Button 
+                                onClick={() => setIsSubmitted(true)}
+                                className="gap-2"
+                                data-testid="button-finish"
+                              >
+                                <CheckCircle className="h-4 w-4" />
+                                إنهاء
+                              </Button>
+                              <Link href="/advertise">
+                                <Button variant="outline" className="gap-2" data-testid="button-create-another-overlay">
+                                  إنشاء إعلان آخر
+                                </Button>
+                              </Link>
+                            </div>
+                          </div>
+                        )}
                         <div className="bg-muted/50 rounded-lg p-6">
                           <h3 className="font-semibold mb-4 flex items-center gap-2">
                             <User className="h-5 w-5" />
